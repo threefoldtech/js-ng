@@ -33,3 +33,8 @@ config management/automation framework
 
 ## publishing 
 - `poetry publish`
+
+
+## API Docs
+
+[browsable](https://js-next.github.io/js-ng/api/jumpscale/) at https://js-next.github.io/js-ng/api/jumpscale/
