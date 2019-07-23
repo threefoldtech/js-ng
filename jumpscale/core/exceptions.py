@@ -1,0 +1,4 @@
+class JSException(Exception):
+    pass
+
+

@@ -1,0 +1,3 @@
+class JSLogger:
+    pass
+
