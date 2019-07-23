@@ -5,10 +5,10 @@ cache: pip
 
 install:
   - pip install poetry
-
   
 script: 
-  - poetry run tox
+  - poetry install -vvv
+  - poetry run pytest tests/
 
 after_success:
   - poetry run codecov
