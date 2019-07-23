@@ -3,14 +3,11 @@ python:
   - "3.6"
 
 install:
-  - pip install pytest
-  - pip install hypothesis
-  - pip install pytest-cov
-  - pip install codecov
-  - pip install tox
+  - pip install poetry
+
   
 script: 
-  - tox
+  - poetry run tox
 
 after_success:
-  - codecov
+  - poetry run codecov
