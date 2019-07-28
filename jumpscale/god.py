@@ -2,6 +2,7 @@ import os
 import importlib
 import pkgutil
 import importlib.util
+
 # import lazy_import
 
 """
@@ -25,11 +26,11 @@ project2/
                 ... pkg2
 
 - we get all the paths of the `rootnamespace`
-- we get all the subnamespaces 
+- we get all the subnamespaces
 - we get all the inner packages and import all of them (lazily) or load them eagerly but just once.
 
 
-real example: 
+real example:
 js-ng
 ├── jumpscale   <- root namespace
 │   ├── clients  <- subnamespace where people can register on
@@ -81,12 +82,13 @@ js-ext
 
 """
 
-__all__ = ['j']
+__all__ = ["j"]
 
 
 def load():
     import jumpscale
 
+    loadedspaces = []
     for jsnamespace in jumpscale.__path__:
         for root, dirs, files in os.walk(jsnamespace):
             for d in dirs:
@@ -96,6 +98,7 @@ def load():
                     continue
                 # print("root: {} d: {}".format(root, d))
                 rootbase = os.path.basename(root)
+                loadedspaces.append(rootbase)
                 pkgname = d
                 importedpkgstr = "jumpscale.{}.{}".format(rootbase, pkgname)
                 __all__.append(importedpkgstr)
@@ -103,21 +106,28 @@ def load():
                 # globals()[importedpkgstr] = lazy_import.lazy_module(importedpkgstr)
                 globals()[importedpkgstr] = importlib.import_module(importedpkgstr)
 
+    return loadedspaces
+
 
 class J:
     """
-        Here we simulate god object `j` by delegating the calls to suitable subnamespace    
-    
+        Here we simulate god object `j` by delegating the calls to suitable subnamespace
+
     """
+
     def __init__(self):
         self._loadednames = set()
         self._loadedallsubpackages = False
+        self.__loaded = []
+
+    def __dir__(self):
+        return self.__loaded
 
     def __getattr__(self, name):
         import jumpscale
 
         if not self._loadedallsubpackages:
-            load()
+            self.__loaded = load()
             self._loadedallsubpackages = True
 
         if name not in self._loadednames:
@@ -143,5 +153,6 @@ class J:
                     print("can't dir object: ", obj)
 
         return getattr(jumpscale, name)
+
 
 j = J()
