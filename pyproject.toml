@@ -23,6 +23,7 @@ codecov = "^2.0"
 tox = "^3.13"
 pytest-cov = "^2.7"
 hypothesis = "^4.28"
+ptpython = "^2.0"
 
 [tool.poetry.dev-dependencies]
 
