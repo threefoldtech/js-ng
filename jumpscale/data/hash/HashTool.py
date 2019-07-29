@@ -19,47 +19,47 @@ def get_list_files(dir_name):
 
     return all_files
 
-def md5(string,encod='utf-8'):
-    return hashlib.md5(string.encode(encod)).hexdigest()
+def md5(string,encode='utf-8'):
+    return hashlib.md5(string.encode(encode)).hexdigest()
 
-def sha1(string,encod='utf-8'):
-    return hashlib.sha1(string.encode(encod)).hexdigest()
+def sha1(string,encode='utf-8'):
+    return hashlib.sha1(string.encode(encode)).hexdigest()
 
-def sha224(string,encod='utf-8'):
-    return hashlib.sha224(string.encode(encod)).hexdigest()
+def sha224(string,encode='utf-8'):
+    return hashlib.sha224(string.encode(encode)).hexdigest()
 
-def sha384(string,encod='utf-8'):
-    return hashlib.sha384(string.encode(encod)).hexdigest()
+def sha384(string,encode='utf-8'):
+    return hashlib.sha384(string.encode(encode)).hexdigest()
 
-def sha256(string,encod='utf-8'):
-    return hashlib.sha256(string.encode(encod)).hexdigest()
+def sha256(string,encode='utf-8'):
+    return hashlib.sha256(string.encode(encode)).hexdigest()
 
-def sha512(string,encod='utf-8'):
-    return hashlib.sha512(string.encode(encod)).hexdigest()
+def sha512(string,encode='utf-8'):
+    return hashlib.sha512(string.encode(encode)).hexdigest()
 
-def sha3_224(string,encod='utf-8'):
-    return hashlib.sha3_224(string.encode(encod)).hexdigest()
+def sha3_224(string,encode='utf-8'):
+    return hashlib.sha3_224(string.encode(encode)).hexdigest()
 
-def sha3_256(string,encod='utf-8'):
-    return hashlib.sha3_256(string.encode(encod)).hexdigest()
+def sha3_256(string,encode='utf-8'):
+    return hashlib.sha3_256(string.encode(encode)).hexdigest()
 
-def sha3_384(string,encod='utf-8'):
-    return hashlib.sha3_384(string.encode(encod)).hexdigest()
+def sha3_384(string,encode='utf-8'):
+    return hashlib.sha3_384(string.encode(encode)).hexdigest()
 
-def sha3_512(string,encod='utf-8'):
-    return hashlib.sha3_512(string.encode(encod)).hexdigest()
+def sha3_512(string,encode='utf-8'):
+    return hashlib.sha3_512(string.encode(encode)).hexdigest()
 
-def blake2s(string,encod='utf-8'):
-    return hashlib.blake2s(string.encode(encod)).hexdigest()
+def blake2s(string,encode='utf-8'):
+    return hashlib.blake2s(string.encode(encode)).hexdigest()
 
-def blake2b(string,encod='utf-8'):
-    return hashlib.blake2b(string.encode(encod)).hexdigest()
+def blake2b(string,encode='utf-8'):
+    return hashlib.blake2b(string.encode(encode)).hexdigest()
 
-def shake_128(string,encod='utf-8'):
-    return hashlib.shake_128(string.encode(encod)).hexdigest(16)
+def shake_128(string,encode='utf-8'):
+    return hashlib.shake_128(string.encode(encode)).hexdigest(16)
 
-def shake_256(string,encod='utf-8'):
-    return hashlib.shake_256(string.encode(encod)).hexdigest(16)
+def shake_256(string,encode='utf-8'):
+    return hashlib.shake_256(string.encode(encode)).hexdigest(16)
 
 hash_types={'md5':md5,'sha1':sha1,'sha224':sha224,'sha256':shake_256,'sha384':sha384,'sha512':sha512,
             'sha3_224':sha3_224,'sha3_256':sha3_256,'sha3_384':sha3_384,'sha3_512':sha3_512,
