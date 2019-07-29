@@ -21,3 +21,7 @@
     ],
     "editor.formatOnSave": true,
 ```
+
+### Submitting code
+
+* Make sure the code is tested, documented, then create a draft pull request from your feature branch.
