@@ -19,7 +19,7 @@ def patched_handle_exception(self, e):
     a new handler for ptpython repl exceptions
     it will call excepthook after ommitting all this framework's calls from traceback
 
-    for the original, see ptpython.python_input.PythonInput._handle_exception
+    for the original, see ptpython.repl.PythonInput._handle_exception
     """
     output = self.app.output
 
