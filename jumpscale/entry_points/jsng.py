@@ -29,14 +29,13 @@ def patched_handle_exception(self, e):
     sys.last_type, sys.last_value, sys.last_traceback = t, v, tb
 
     # loop until getting actual traceback
-    last_stdin_tb = None
-    while tb.tb_next:
+    last_stdin_tb = tb
+    while tb:
         if tb.tb_frame.f_code.co_filename == "<stdin>":
             last_stdin_tb = tb
         tb = tb.tb_next
 
-    if last_stdin_tb:
-        sys.excepthook(t, v, last_stdin_tb)
+    sys.excepthook(t, v, last_stdin_tb)
 
     output.write("%s\n" % e)
     output.flush()
