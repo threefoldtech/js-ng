@@ -1,8 +1,6 @@
 import os
 import pathlib
 import sys
-import six
-import traceback
 
 import better_exceptions
 
