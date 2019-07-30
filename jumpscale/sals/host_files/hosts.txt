@@ -1,3 +1,0 @@
-
-159.0.0.0    google.com
-159.0.0.0    google.com
