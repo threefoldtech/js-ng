@@ -3,6 +3,14 @@ import os
 
 
 def get_list_files(dir_name):
+    """[returns a list of directories for all files in a root folder]
+    
+    Arguments:
+        dir_name {[str]} -- [the directory of the root folder]
+    
+    Returns:
+        all_files {[list]} -- [the list of directories for all files in the root folder]
+    """
     # create a list of file and sub directories
     # names in the given directory
     files_list = os.listdir(dir_name)
@@ -21,62 +29,225 @@ def get_list_files(dir_name):
 
 
 def md5(string, encode="utf-8"):
+    """[create a md5 hash string for any string ]
+    
+    Arguments:
+        string {[str]} -- [the string need to be hashed]
+    
+    Keyword Arguments:
+        encode {str} -- [the encoding for the string] (default: {"utf-8"})
+    
+    Returns:
+        [str] -- [the hash string]
+    """
     return hashlib.md5(string.encode(encode)).hexdigest()
 
 
 def sha1(string, encode="utf-8"):
+    """[create a sha1 hash string for any string ]
+    
+    Arguments:
+        string {[str]} -- [the string need to be hashed]
+    
+    Keyword Arguments:
+        encode {str} -- [the encoding for the string] (default: {"utf-8"})
+    
+    Returns:
+        [str] -- [the hash string]
+    """
     return hashlib.sha1(string.encode(encode)).hexdigest()
 
 
 def sha224(string, encode="utf-8"):
+    """[create a sha224 hash string for any string ]
+    
+    Arguments:
+        string {[str]} -- [the string need to be hashed]
+    
+    Keyword Arguments:
+        encode {str} -- [the encoding for the string] (default: {"utf-8"})
+    
+    Returns:
+        [str] -- [the hash string]
+    """
     return hashlib.sha224(string.encode(encode)).hexdigest()
 
 
 def sha384(string, encode="utf-8"):
+    """[create a sha384 hash string for any string ]
+    
+    Arguments:
+        string {[str]} -- [the string need to be hashed]
+    
+    Keyword Arguments:
+        encode {str} -- [the encoding for the string] (default: {"utf-8"})
+    
+    Returns:
+        [str] -- [the hash string]
+    """
     return hashlib.sha384(string.encode(encode)).hexdigest()
 
 
 def sha256(string, encode="utf-8"):
+    """[create a sha256 hash string for any string ]
+    
+    Arguments:
+        string {[str]} -- [the string need to be hashed]
+    
+    Keyword Arguments:
+        encode {str} -- [the encoding for the string] (default: {"utf-8"})
+    
+    Returns:
+        [str] -- [the hash string]
+    """
     return hashlib.sha256(string.encode(encode)).hexdigest()
 
 
 def sha512(string, encode="utf-8"):
+    """[create a sha512 hash string for any string ]
+    
+    Arguments:
+        string {[str]} -- [the string need to be hashed]
+    
+    Keyword Arguments:
+        encode {str} -- [the encoding for the string] (default: {"utf-8"})
+    
+    Returns:
+        [str] -- [the hash string]
+    """
     return hashlib.sha512(string.encode(encode)).hexdigest()
 
 
 def sha3_224(string, encode="utf-8"):
+    """[create a sha3_224 hash string for any string ]
+    
+    Arguments:
+        string {[str]} -- [the string need to be hashed]
+    
+    Keyword Arguments:
+        encode {str} -- [the encoding for the string] (default: {"utf-8"})
+    
+    Returns:
+        [str] -- [the hash string]
+    """
     return hashlib.sha3_224(string.encode(encode)).hexdigest()
 
 
 def sha3_256(string, encode="utf-8"):
+    """[create a sha3_256 hash string for any string ]
+    
+    Arguments:
+        string {[str]} -- [the string need to be hashed]
+    
+    Keyword Arguments:
+        encode {str} -- [the encoding for the string] (default: {"utf-8"})
+    
+    Returns:
+        [str] -- [the hash string]
+    """
     return hashlib.sha3_256(string.encode(encode)).hexdigest()
 
 
 def sha3_384(string, encode="utf-8"):
+    """[create a sha3_384 hash string for any string ]
+    
+    Arguments:
+        string {[str]} -- [the string need to be hashed]
+    
+    Keyword Arguments:
+        encode {str} -- [the encoding for the string] (default: {"utf-8"})
+    
+    Returns:
+        [str] -- [the hash string]
+    """
     return hashlib.sha3_384(string.encode(encode)).hexdigest()
 
 
 def sha3_512(string, encode="utf-8"):
+    """[create a sha3_512 hash string for any string ]
+    
+    Arguments:
+        string {[str]} -- [the string need to be hashed]
+    
+    Keyword Arguments:
+        encode {str} -- [the encoding for the string] (default: {"utf-8"})
+    
+    Returns:
+        [str] -- [the hash string]
+    """
     return hashlib.sha3_512(string.encode(encode)).hexdigest()
 
 
 def blake2s(string, encode="utf-8"):
+    """[create a blake2s hash string for any string ]
+    
+    Arguments:
+        string {[str]} -- [the string need to be hashed]
+    
+    Keyword Arguments:
+        encode {str} -- [the encoding for the string] (default: {"utf-8"})
+    
+    Returns:
+        [str] -- [the hash string]
+    """
     return hashlib.blake2s(string.encode(encode)).hexdigest()
 
 
 def blake2b(string, encode="utf-8"):
+    """[create a blake2b hash string for any string ]
+    
+    Arguments:
+        string {[str]} -- [the string need to be hashed]
+    
+    Keyword Arguments:
+        encode {str} -- [the encoding for the string] (default: {"utf-8"})
+    
+    Returns:
+        [str] -- [the hash string]
+    """
     return hashlib.blake2b(string.encode(encode)).hexdigest()
 
 
 def shake_128(string, encode="utf-8"):
+    """[create a shake_128 hash string for any string ]
+    
+    Arguments:
+        string {[str]} -- [the string need to be hashed]
+    
+    Keyword Arguments:
+        encode {str} -- [the encoding for the string] (default: {"utf-8"})
+    
+    Returns:
+        [str] -- [the hash string]
+    """
     return hashlib.shake_128(string.encode(encode)).hexdigest(16)
 
 
 def shake_256(string, encode="utf-8"):
+    """[create a shake_256 hash string for any string ]
+    
+    Arguments:
+        string {[str]} -- [the string need to be hashed]
+    
+    Keyword Arguments:
+        encode {str} -- [the encoding for the string] (default: {"utf-8"})
+    
+    Returns:
+        [str] -- [the hash string]
+    """
     return hashlib.shake_256(string.encode(encode)).hexdigest(16)
 
 
 def hash_file(directory, hash_type):
+    """[create hash string for a file]
+    
+    Arguments:
+        directory {str} -- [the dir for the file]
+        hash_type {str} -- [the type of the hash]
+    
+    Returns:
+        [str] -- [the hash string]
+    """
     f = open(directory)
     h=hashlib.new(hash_type)
     while True:
@@ -93,6 +264,15 @@ def hash_file(directory, hash_type):
 
 
 def hash_directory(root_dir, hash_type):
+    """[create hash string list for the files in a folder]
+    
+    Arguments:
+        root_dir {str} -- [the dir for the root folder]
+        hash_type {str} -- [the type of the hash]
+    
+    Returns:
+        [str] -- [the hash string]
+    """
     hashes_list = []
     for d in get_list_files(root_dir):
         hashes_list.append(hash_file(d, hash_type))
