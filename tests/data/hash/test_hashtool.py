@@ -57,12 +57,18 @@ def test_hash_files(make_hash, make_list):
         ha = hashlib.new(h)
         ha.update("Your text goes here".encode())
         assert make_hash.hash_file("copy.txt", h) == ha.hexdigest()
+    os.remove('copy.txt')
 
 
 def test_hash_dir(make_hash, make_list):
-    THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
-    print(THIS_FOLDER)
+    os.mkdir('/omar')
+    os.path.join('/omar','hi.txt')
+    file = open("/omar/hi.txt", "w")
+    file.write("hi there")
+    file.close()
     for h in make_list:
-        # assert type(make_hash.hash_directory('C:\\Users\\omarelsheekh\\PycharmProjects\\js-ng\\jumpscale\\data\\hash',h))==type([])
-        # please change the dir above and remove the comment
-        assert True
+        ha = hashlib.new(h)
+        ha.update("hi there".encode())
+        assert make_hash.hash_directory('/omar',h) == [ha.hexdigest()]
+    os.remove('/omar/hi.txt')
+    os.rmdir('/omar')
