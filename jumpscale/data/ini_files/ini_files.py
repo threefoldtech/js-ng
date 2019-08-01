@@ -16,9 +16,9 @@ def _parse(file_directory):
     for line in content:
         if line.startswith("["):
             section = ""
-            section = line[1:-2]  # strip
+            section = line.strip()[1:-1]
             content_as_dict[section] = {}
-        else:
+        elif "=" in line:
             key, value = line.split("=")
             content_as_dict[section][key.strip()] = value.strip()
     return content_as_dict
@@ -54,11 +54,10 @@ def get_value(file_directory, section_name, property_name):
 
 def _write(file_directory, new_content):
     content_list = []
-    for section in new_content:
-        content_list.append("\n[" + section + "]")
-        for key, value in new_content.items():
-            content_list.append("\n" + key + "=" + value)
-
+    for key, value in new_content.items():
+        content_list.append("\n[" + key + "]")
+        for key, value in value.items():
+            content_list.append("\n" + key + " = " + value)
     content_text = "".join(content_list)
     with open(file_directory, "w") as file:
         file.write(content_text)
@@ -76,12 +75,17 @@ def add_property(file_directory, section_name, property_key, property_value):
     _write(file_directory, content)
 
 
-add_section(file, "test")
+def remove_section(file_directory, section_name):
+    content = _parse(file_directory)
+    del content[section_name]
+    _write(file_directory, content)
 
 
-def remove_sec(sec_name,):
-    pass
+def remove_property(file_directory, section_name, property_name):
+    content = _parse(file_directory)
+    del content[section_name][property_name]
+    _write(file_directory, content)
 
 
-def remove_pro(sec_name, propertykey):
-    pass
+remove_property(file, "test", "age")
+
