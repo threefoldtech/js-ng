@@ -61,14 +61,15 @@ def test_hash_files(make_hash, make_list):
 
 
 def test_hash_dir(make_hash, make_list):
-    os.mkdir('/omar')
-    os.path.join('/omar','hi.txt')
-    file = open("/omar/hi.txt", "w")
+    cdir=os.getcwd()
+    os.mkdir(cdir+'/omar')
+    os.path.join(cdir+'/omar','hi.txt')
+    file = open(cdir+"/omar/hi.txt", "w")
     file.write("hi there")
     file.close()
     for h in make_list:
         ha = hashlib.new(h)
         ha.update("hi there".encode())
-        assert make_hash.hash_directory('/omar',h) == [ha.hexdigest()]
-    os.remove('/omar/hi.txt')
-    os.rmdir('/omar')
+        assert make_hash.hash_directory(cdir+'/omar',h) == [ha.hexdigest()]
+    os.remove(cdir+'/omar/hi.txt')
+    os.rmdir(cdir+'/omar')
