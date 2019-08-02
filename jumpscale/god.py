@@ -121,9 +121,12 @@ class J:
         self.__loaded = []
 
     def __dir__(self):
-        return self.__loaded
+        return self.__loaded + ['logger', 'config', 'exceptions']
 
     def __getattr__(self, name):
+        if name in self.__dict__:
+            return self.__dict__[name]
+        
         import jumpscale
 
         if not self._loadedallsubpackages:
@@ -131,7 +134,7 @@ class J:
             self._loadedallsubpackages = True
 
         if name not in self._loadednames:
-            # print("name : ", name)
+            print("name : ", name)
             self._loadednames.add(name)
             # load()
             importlib.import_module("jumpscale.{}".format(name))
@@ -154,5 +157,21 @@ class J:
 
         return getattr(jumpscale, name)
 
+    @property
+    def logger(self):
+        import jumpscale
 
+        return jumpscale.core.logging.logger
+
+    @property
+    def config(self):
+        import jumpscale
+
+        return jumpscale.core.config
+
+    @property
+    def exceptions(self):
+        import jumpscale
+
+        return jumpscale.core.exceptions
 j = J()
