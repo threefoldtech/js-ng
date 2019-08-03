@@ -1,7 +1,7 @@
 import sys
 import os
 from loguru import logger
-from jumpscale.config import get_jumpscale_config, update_jumpscale_config
+from jumpscale.core.config import get_jumpscale_config, update_jumpscale_config
 
 logs_dir = os.path.expanduser(os.path.join("~/.config", "jumpscale", "logs"))
 

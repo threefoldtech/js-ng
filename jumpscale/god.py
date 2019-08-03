@@ -125,18 +125,18 @@ class J:
 
     @property
     def logger(self):
-        import jumpscale.logging
-        return jumpscale.logging.logger
+        import jumpscale.core.logging
+        return jumpscale.core.logging.logger
     
     @property
     def config(self):
-        import jumpscale.config
-        return jumpscale.config
+        import jumpscale.core.config
+        return jumpscale.core.config
 
     @property
     def exceptions(self):
-        import jumpscale.exceptions
-        return jumpscale.exceptions
+        import jumpscale.core.exceptions
+        return jumpscale.core.exceptions
     
     def __getattr__(self, name):
         import jumpscale
