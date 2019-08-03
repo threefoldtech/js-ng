@@ -123,6 +123,21 @@ class J:
     def __dir__(self):
         return self.__loaded
 
+    @property
+    def logger(self):
+        import jumpscale.logging
+        return jumpscale.logging.logger
+    
+    @property
+    def config(self):
+        import jumpscale.config
+        return jumpscale.config
+
+    @property
+    def exceptions(self):
+        import jumpscale.exceptions
+        return jumpscale.exceptions
+    
     def __getattr__(self, name):
         import jumpscale
 

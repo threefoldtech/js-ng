@@ -1,6 +1,6 @@
 import os
 from secretconf import read_config, save_config
-from jumpscale.core.config import JumpscaleConfigEnvironment
+from jumpscale.config import JumpscaleConfigEnvironment
 
 
 class InvalidPrivateKey(Exception):
