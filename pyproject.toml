@@ -24,6 +24,7 @@ tox = "^3.13"
 pytest-cov = "^2.7"
 hypothesis = "^4.28"
 ptpython = "^2.0"
+PyYAML = "^5.1"
 
 [tool.poetry.dev-dependencies]
 
