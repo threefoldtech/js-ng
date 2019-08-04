@@ -1,4 +1,4 @@
-''' This is the code of random names   '''
+""" This is the code of random names   """
 
 from random import choice
 
@@ -171,6 +171,6 @@ right_names = [
 def generate_random_name():
     """ Returns a random name "first name" & "last name """
 
-    name = "%s'_'%s" % (choice(right_names), choice(left_names))
+    name = "%s_%s" % (choice(right_names), choice(left_names))
 
     return name
