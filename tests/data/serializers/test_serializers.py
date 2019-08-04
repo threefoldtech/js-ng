@@ -1,4 +1,5 @@
 import pytest
+import base64
 from jumpscale.god import j
 
 @pytest.fixture
@@ -81,4 +82,13 @@ def test_json(make_serializer):
     jsondict={"name": "John","age": 30,"city": "New York"}
     assert type(make_serializer.load(jsonstr,'json'))==type({'a':'b'})
     assert type(make_serializer.dump(jsondict,'json'))==type("str")
-    
+
+def test_base64(make_serializer):
+    s="hi"
+    b=base64.encodebytes(s.encode())
+    d=make_serializer.load(s,'base64')
+    assert type(d)==type({'a':'b'})
+    d=make_serializer.load(b,'base64')
+    assert type(d)==type({'a':'b'})
+    byte=make_serializer.dump(d,'base64')
+    assert str(type(byte))=="<class 'bytes'>" 

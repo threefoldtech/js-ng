@@ -1,6 +1,7 @@
 import yaml
 import json
 import toml
+import base64
 
 
 def load(string,type):
@@ -22,8 +23,10 @@ def load(string,type):
         return load_toml(string)
     elif type=='json':
         return load_json(string)
+    elif type=='base64':
+        return load_base64(string)
     else:
-        raise Exception ('the type must be yaml,toml,json or')
+        raise Exception ('the type must be yaml,toml,json,base64 or ...')
 
 def dump(dict,type):
     """convert dict to formated string
@@ -44,8 +47,10 @@ def dump(dict,type):
         return dump_toml(dict)
     elif type=='json':
         return dump_json(dict)
+    elif type=='base64':
+        return dump_base64(dict)
     else:
-        raise Exception ('the type must be yaml,toml,dict or')
+        raise Exception ('the type must be yaml,toml,dict,base or ...')
 
 def load_yaml(string):
     """convert yaml string to dict
@@ -118,3 +123,31 @@ def dump_json(dict):
     """
     s=json.dumps(dict)
     return s
+
+def load_base64(data):
+    """convert base string or bytes to dict
+    
+    Arguments:
+        data {str or dict} -- the base64 string or bytes
+    
+    Returns:
+        dict -- the converted dict
+    """
+    d={}
+    if str(type(data))=="<class 'bytes'>":
+        d={'bytes':data,'string':base64.decodebytes(data)}
+    else:
+        d={'bytes':base64.encodebytes(data.encode()),'string':data}
+    return d
+
+def dump_base64(dict):
+    """convert dict to base64 bytes
+    
+    Arguments:
+        dict {dict} -- the dict will be converted
+    
+    Returns:
+        byte -- the json bytes in dict
+    """
+    return dict['bytes']
+
