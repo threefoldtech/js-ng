@@ -20,8 +20,10 @@ def load(string,type):
         return load_yaml(string)
     elif type=='toml':
         return load_toml(string)
+    elif type=='json':
+        return load_json(string)
     else:
-        raise Exception ('the type must be yaml,toml or')
+        raise Exception ('the type must be yaml,toml,json or')
 
 def dump(dict,type):
     """convert dict to formated string
@@ -40,8 +42,10 @@ def dump(dict,type):
         return dump_yaml(dict)
     elif type=='toml':
         return dump_toml(dict)
+    elif type=='json':
+        return dump_json(dict)
     else:
-        raise Exception ('the type must be yaml,toml or')
+        raise Exception ('the type must be yaml,toml,dict or')
 
 def load_yaml(string):
     """convert yaml string to dict
@@ -89,4 +93,28 @@ def dump_toml(dict):
         str -- the toml string generated from dict
     """
     s=toml.dumps(dict)
+    return s
+
+def load_json(string):
+    """convert json string to dict
+    
+    Arguments:
+        string {str} -- the json string
+    
+    Returns:
+        dict -- the converted dict
+    """
+    d=json.loads(string.replace('\'','\"'))
+    return d
+
+def dump_json(dict):
+    """convert dict to json string
+    
+    Arguments:
+        dict {dict} -- the dict will be converted
+    
+    Returns:
+        str -- the json string generated from dict
+    """
+    s=json.dumps(dict)
     return s

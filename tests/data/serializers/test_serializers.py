@@ -75,3 +75,10 @@ def test_toml(make_serializer):
       'clients': {'data': [['gamma', 'delta'], [1, 2]], 'hosts': ['alpha', 'omega']}}}
     assert type(make_serializer.load(tomstr,'toml'))==type({'a':'b'})
     assert type(make_serializer.dump(tomdict,'toml'))==type("str")
+
+def test_json(make_serializer):
+    jsonstr='{ "name":"John", "age":30, "city":"New York"}'
+    jsondict={"name": "John","age": 30,"city": "New York"}
+    assert type(make_serializer.load(jsonstr,'json'))==type({'a':'b'})
+    assert type(make_serializer.dump(jsondict,'json'))==type("str")
+    
