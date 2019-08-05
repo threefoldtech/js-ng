@@ -1,4 +1,4 @@
-from Jumpscale import j
+from jumpscale.god import j
 import random
 import string
 import uuid
@@ -24,16 +24,15 @@ def generateIncrID(incrTypeId, reset=False):
     return j.core.db.incr(key)
 
 
-x = 0
+
 
 
 def getID(incrTypeId, objectUniqueSeedInfo, reset=False):
-    global x
-    """
+        """
         get a unique id for an object uniquely identified
         remembers previously given id's
         """
-    key = "idint_%s_%s" % (incrTypeId, objectUniqueSeedInfo)
+     key = "idint_%s_%s" % (incrTypeId, objectUniqueSeedInfo)
     if j.core.db.exists(key) and reset is False:
         id = int(j.core.db.get(key))
         return id
@@ -51,11 +50,11 @@ def generateGUID(self):
     return str(uuid.uuid4())
 
 
-i = 0
+
 
 
 def generateXCharID(x):
-    global i
+    
     r = "1234567890abcdefghijklmnopqrstuvwxyz"
     l = len(r)
     out = ""
@@ -65,22 +64,22 @@ def generateXCharID(x):
     return out
 
 
-i = 0
+
 
 
 def generateXByteID(x):
-    global i
+    
     out = bytearray()
     for i in range(0, x):
         out.append(i.generateRandomInt(0, 255))
     return out
 
 
-i = 0
+
 
 
 def generatePasswd(x, al=string.printable):
-    global i
+    
     l = len(al)
     out = ""
     for i in range(0, x):
