@@ -31,8 +31,8 @@ Table:
     yamdict={'Section': {'heading': 'Heading 1', 'font': {'name': 'Times New Roman', 'size': 22, 'color_theme':
 'ACCENT_2'}}, 'SubSection': {'heading': 'Heading 3', 'font': {'name': 'Times New Roman', 'size': 15, 'color_theme': 'ACCENT_2'}},
 'Paragraph': {'font': {'name': 'Times New Roman', 'size': 11, 'color_theme': 'ACCENT_2'}}, 'Table': {'style': 'MediumGrid3-Accent2'}}
-    assert type(make_serializer.dump(yamdict,'yaml'))==type('just string')
-    assert type(make_serializer.load(yamstr,'yaml'))==type({'dict':'test'})
+    assert isinstance(make_serializer.dump(yamdict,'yaml'),str)
+    assert isinstance(make_serializer.load(yamstr,'yaml'),dict)
 
 def test_toml(make_serializer):
     tomstr = """
@@ -74,21 +74,21 @@ def test_toml(make_serializer):
      'dob':'none','database': {'server': '192.168.1.1', 'ports': [8001, 8001, 8002], 'connection_max': 5000, 'enabled': True},
      'servers': {'alpha': {'ip': '10.0.0.1', 'dc': 'eqdc10'}, 'beta': {'ip': '10.0.0.2', 'dc': 'eqdc10'}},
       'clients': {'data': [['gamma', 'delta'], [1, 2]], 'hosts': ['alpha', 'omega']}}}
-    assert type(make_serializer.load(tomstr,'toml'))==type({'a':'b'})
-    assert type(make_serializer.dump(tomdict,'toml'))==type("str")
+    assert isinstance(make_serializer.load(tomstr,'toml'),dict)
+    assert isinstance(make_serializer.dump(tomdict,'toml'),str)
 
 def test_json(make_serializer):
     jsonstr='{ "name":"John", "age":30, "city":"New York"}'
     jsondict={"name": "John","age": 30,"city": "New York"}
-    assert type(make_serializer.load(jsonstr,'json'))==type({'a':'b'})
-    assert type(make_serializer.dump(jsondict,'json'))==type("str")
+    assert isinstance(make_serializer.load(jsonstr,'json'),dict)
+    assert isinstance(make_serializer.dump(jsondict,'json'),str)
 
 def test_base64(make_serializer):
     s="hi"
     b=base64.encodebytes(s.encode())
     d=make_serializer.load(s,'base64')
-    assert type(d)==type({'a':'b'})
+    assert isinstance(d,dict)
     d=make_serializer.load(b,'base64')
-    assert type(d)==type({'a':'b'})
+    assert isinstance(d,dict)
     byte=make_serializer.dump(d,'base64')
-    assert str(type(byte))=="<class 'bytes'>" 
+    assert isinstance(byte,bytes) 

@@ -26,7 +26,7 @@ def load(string,type):
     elif type=='base64':
         return load_base64(string)
     else:
-        raise Exception ('the type must be yaml,toml,json,base64 or ...')
+        raise Exception ('the type must be yaml,toml,json, or base64')
 
 def dump(dict,type):
     """convert dict to formated string
@@ -50,7 +50,7 @@ def dump(dict,type):
     elif type=='base64':
         return dump_base64(dict)
     else:
-        raise Exception ('the type must be yaml,toml,dict,base or ...')
+        raise Exception ('the type must be yaml,toml,dict, or base')
 
 def load_yaml(string):
     """convert yaml string to dict
@@ -134,7 +134,7 @@ def load_base64(data):
         dict -- the converted dict
     """
     d={}
-    if str(type(data))=="<class 'bytes'>":
+    if isinstance(data,bytes):
         d={'bytes':data,'string':base64.decodebytes(data)}
     else:
         d={'bytes':base64.encodebytes(data.encode()),'string':data}
