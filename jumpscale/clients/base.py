@@ -1,66 +1,117 @@
 import os
 from secretconf import read_config, save_config
+
+from jumpscale.core.base import Base, Factory
 from jumpscale.core.config import JumpscaleConfigEnvironment
 
 
 class InvalidPrivateKey(Exception):
     pass
 
-class SecureConfigSource:
 
+class ConfigStore:
+    """a config storage interface"""
+
+    def __init__(self, type_):
+        self.type = type_
+
+    def get(self, instance_name):
+        raise NotImplementedError
+
+    def get_all(self):
+        raise NotImplementedError
+
+    def save(self, instance_name, data):
+        raise NotImplementedError
+
+
+class FileSystemStore(ConfigStore):
+    def __init__(self, type_):
+        self.js_config = JumpscaleConfigEnvironment()
+        self.priv_key = self.js_config.get_private_key()
+
+        if not self.priv_key:
+            raise InvalidPrivateKey
+
+        self.root = self.js_config.get_secure_config_path()
+        self.location = os.path.join(*type_.__module__.split("."))
+        self.type_root = os.path.join(self.root, self.location)
+
+        super(FileSystemStore, self).__init__(type_)
+
+    def get_path(self, instance_name):
+        return os.path.join(self.type_root, instance_name)
+
+    def get(self, instance_name):
+        path = self.get_path(instance_name)
+        if not os.path.exists(path):
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            os.mknod(path)
+        return read_config(instance_name, path, self.priv_key)[instance_name]
+
+    def get_all(self):
+        configs = {}
+        if not os.path.exists(self.type_root):
+            return configs
+
+        for name in os.listdir(self.type_root):
+            configs[name] = self.get(name)
+        return configs
+
+    def save(self, instance_name, data):
+        path = self.get_path(instance_name)
+        return save_config(instance_name, data, path, self.priv_key)
+
+    def delete(self, instance_name):
+        path = self.get_path(instance_name)
+        if os.path.exists:
+            os.remove(path)
+
+
+class SecureConfigSource:
     def __init__(self, obj):
         self.owner = obj
+        self.store = FileSystemStore(type(obj))
         self._instance_name = obj.instance_name
-        self._client_name = obj.__class__.__name__.lower()
-
-    @property
-    def client_name(self):
-        return self._client_name
 
     @property
     def instance_name(self):
         return self._instance_name
 
-    def set_appconfig(self, appconfigenv):
-        self._appconfigenv = appconfigenv
-
-    @property
-    def instance_config_path(self):
-        return self._get_instance_config_path()
-        
-    def _get_instance_config_path(self):
-        instance_filename = "{}__{}".format(self.client_name, self.instance_name)
-        return os.path.join(self._appconfigenv.get_secure_config_path(), instance_filename)
-
-    def _get_instance_config(self):
-        if not os.path.exists(self.instance_config_path):
-            os.makedirs(os.path.dirname(self.instance_config_path), exist_ok=True)
-            os.mknod(self.instance_config_path)
-        if not self._appconfigenv:
-            raise InvalidPrivateKey()
-
-        return read_config(self.instance_name, self.instance_config_path, self._appconfigenv.get_private_key())
-    
-    def _save_config(self, data):
-        if not self._appconfigenv:
-            raise InvalidPrivateKey()
-
-        return save_config(self.instance_name, data, self.instance_config_path, self._appconfigenv.get_private_key())
-    
     @property
     def data(self):
         try:
-            return self._get_instance_config()[self.instance_name]
+            return self.store.get(self.instance_name)
         except Exception:
             return {}
-    
+
     @data.setter
     def data(self, data):
-        return self._save_config(data)
+        return self.store.save(self.instance_name, data)
 
 
-class SecureClient:
+class SecureClient(Base):
     def __init__(self, client):
         self.config = SecureConfigSource(client)
-        self.config.set_appconfig(JumpscaleConfigEnvironment())
+
+
+class ClientFactory(Factory):
+    def __init__(self, type_):
+        self.store = FileSystemStore(type_)
+        super(ClientFactory, self).__init__(type_)
+        self.load()
+
+    def new(self, name, *args, **kwargs):
+        if not "instance_name" in kwargs:
+            kwargs["instance_name"] = name
+
+        return super(ClientFactory, self).new(name, *args, **kwargs)
+
+    def load(self):
+        for name, _ in self.store.get_all().items():
+            self.new(name)
+
+    def delete(self, name):
+        self.store.delete(name)
+        super(ClientFactory, self).delete(name)
 
