@@ -32,6 +32,8 @@ ipdb = "^0.12.1"
 
 [tool.poetry.scripts]
 jsng = "jumpscale.entry_points.jsng:run"
+jsctl = "jumpscale.entry_points.jsctl:cli"
+
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"

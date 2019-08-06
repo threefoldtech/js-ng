@@ -2,7 +2,7 @@ import os
 from secretconf import read_config, save_config
 
 from jumpscale.core.base import Base, Factory
-from jumpscale.core.config import JumpscaleConfigEnvironment
+from jumpscale.core.config import Environment
 
 
 class InvalidPrivateKey(Exception):
@@ -27,13 +27,13 @@ class ConfigStore:
 
 class FileSystemStore(ConfigStore):
     def __init__(self, type_):
-        self.js_config = JumpscaleConfigEnvironment()
-        self.priv_key = self.js_config.get_private_key()
+        self.config_env = Environment()
+        self.priv_key = self.config_env.get_private_key()
 
         if not self.priv_key:
             raise InvalidPrivateKey
 
-        self.root = self.js_config.get_secure_config_path()
+        self.root = self.config_env.get_secure_config_path()
         self.location = os.path.join(*type_.__module__.split("."))
         self.type_root = os.path.join(self.root, self.location)
 
@@ -49,14 +49,13 @@ class FileSystemStore(ConfigStore):
             os.mknod(path)
         return read_config(instance_name, path, self.priv_key)[instance_name]
 
-    def get_all(self):
-        configs = {}
+    def get_all_names(self):
         if not os.path.exists(self.type_root):
-            return configs
+            return []
+        return os.listdir(self.type_root)
 
-        for name in os.listdir(self.type_root):
-            configs[name] = self.get(name)
-        return configs
+    def get_all(self):
+        return {name: self.get(name) for name in self.get_all_names()}
 
     def save(self, instance_name, data):
         path = self.get_path(instance_name)
@@ -108,7 +107,7 @@ class ClientFactory(Factory):
         return super(ClientFactory, self).new(name, *args, **kwargs)
 
     def load(self):
-        for name, _ in self.store.get_all().items():
+        for name in self.store.get_all_names():
             self.new(name)
 
     def delete(self, name):
