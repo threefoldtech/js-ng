@@ -4,22 +4,32 @@ import re
 class HostsFile:
     def __init__(self, hosts_file_path):
         self.path = hosts_file_path
+        self.content = self._parse()
 
-    def exists(self, ip):
-        """
-        check for the existence of the ip in hosts file.
-        Args:
-            ip (str) : the ip address
-        Return:
-            boolen True or None
-        """
+    def _parse(self):
         with open(self.path, "r") as file:
-            file_content = file.read()
-        result = re.search(f"{ip}", file_content)
-        if result:
-            return True
-        else:
-            return False
+            content_text = file.read()
+        content_lines = content_text.splitlines()
+        ip_lines = []
+        regex = """\d+\.\d+\.\d+\.\d+"""
+        for line in content_lines:
+            if re.search(regex, line):
+                ip_lines.append(line)
+        content_dict = {}
+        for line in ip_lines:
+            key, value = line.split("\t")[0], line.split("\t")[1]
+            content_dict[key] = value
+        return content_dict
+
+    def write(self):
+        """
+        write the changes into the file.
+        """
+        content_text = ""
+        for key, value in self.content.items():
+            content_text += f"\n{key}\t{value}"
+        with open(self.path, "w") as file:
+            file.write(content_text)
 
     def remove(self, ip):
         """
@@ -27,13 +37,7 @@ class HostsFile:
         Args:
             ip (str) : the ip address
         """
-        with open(self.path, "r") as file:
-            lines = file.readlines()
-        for line in lines:
-            if line.startswith(f"{ip}"):
-                lines.remove(line)
-        with open(self.path, "w") as file:
-            file.write("".join(lines))
+        del self.content[ip]
 
     def add(self, ip, domain):
         """
@@ -42,8 +46,7 @@ class HostsFile:
             ip (str) : the ip address
             domain (str) : the host name
         """
-        with open(self.path, "a") as file:
-            file.write(f"\n{ip}\t{domain}\n")
+        self.content[ip] = domain
 
     def set_hostname(self, ip, domain):
         """
@@ -52,23 +55,24 @@ class HostsFile:
             ip (str) : the ip address
             domain (str) : the host name           
         """
-        self.remove(ip)
-        self.add(ip, domain)
+        self.content[ip] = domain
+
+    def exists(self, ip):
+        """
+        check for the existence of the ip in hosts file.
+        Args:
+            ip (str) : the ip address
+        Return:
+            boolen expression
+        """
+        return ip in self.content
 
     def get_hostname(self, ip):
         """
         get the hostname for ip
         Args:
             ip (str) : the ip address
-            domain (str) : the host name             
+        Returns:
+            the hostname for the ip address
         """
-        if self.exists(ip):
-            with open(self.path, "r") as file:
-                lines = file.readlines()
-            for line in lines:
-                if re.search(f"{ip}", line):
-                    hostname = line.split("\t")[1]
-            return hostname.strip()
-        else:
-            return "ip does not exist"
-
+        return self.content[ip]
