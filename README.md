@@ -22,7 +22,8 @@ config management/automation framework
 ## Development environment
 - clone repo
 - `poetry install`
-- `poetry shell` 
+- `poetry shell`
+- `poetry run jsng`
 
 ## Running tests
 - `make tests`
@@ -34,7 +35,7 @@ config management/automation framework
 ## building dists
 - `poetry build`
 
-## publishing 
+## publishing
 - `poetry publish`
 
 
