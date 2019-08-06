@@ -2,8 +2,12 @@ import tarfile
 
 
 class Tar(tarfile.TarFile):
-    def __init__(self, path):
-        self.path = path
+    def __init__(self, tarfile_path):
+        """"
+        Args:
+            path (str) : the path for the tar file.
+        """
+        self.path = tarfile_path
 
     def is_tar(self):
         """
