@@ -19,7 +19,7 @@ class HostsFile:
         if result:
             return True
         else:
-            return None
+            return False
 
     def remove(self, ip):
         """
@@ -43,7 +43,7 @@ class HostsFile:
             domain (str) : the host name
         """
         with open(self.path, "a") as file:
-            file.write(f"\n{ip}\t{domain}")
+            file.write(f"\n{ip}\t{domain}\n")
 
     def set_hostname(self, ip, domain):
         """
@@ -68,6 +68,7 @@ class HostsFile:
             for line in lines:
                 if re.search(f"{ip}", line):
                     hostname = line.split("\t")[1]
-            return hostname
+            return hostname.strip()
         else:
             return "ip does not exist"
+
