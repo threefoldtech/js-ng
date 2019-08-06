@@ -1,1 +1,1 @@
-from .HashTool import *
+from .hash import *

@@ -38,9 +38,11 @@ def md5(string, encode="utf-8"):
         encode {str} -- [the encoding for the string] (default: {"utf-8"})
     
     Returns:
-        [str] -- [the hash string]
+        [byte] -- [the hash bytes]
     """
-    return hashlib.md5(string.encode(encode)).hexdigest()
+    if isinstance(string, str):
+        return hashlib.md5(string.encode(encode))
+    return hashlib.md5(string)
 
 
 def sha1(string, encode="utf-8"):
@@ -53,9 +55,11 @@ def sha1(string, encode="utf-8"):
         encode {str} -- [the encoding for the string] (default: {"utf-8"})
     
     Returns:
-        [str] -- [the hash string]
+        [byte] -- [the hash bytes]
     """
-    return hashlib.sha1(string.encode(encode)).hexdigest()
+    if isinstance(string, str):
+        return hashlib.sha1(string.encode(encode))
+    return hashlib.sha1(string)
 
 
 def sha224(string, encode="utf-8"):
@@ -68,9 +72,11 @@ def sha224(string, encode="utf-8"):
         encode {str} -- [the encoding for the string] (default: {"utf-8"})
     
     Returns:
-        [str] -- [the hash string]
+        [byte] -- [the hash bytes]
     """
-    return hashlib.sha224(string.encode(encode)).hexdigest()
+    if isinstance(string, str):
+        return hashlib.sha224(string.encode(encode))
+    return hashlib.sha224(string)
 
 
 def sha384(string, encode="utf-8"):
@@ -83,9 +89,11 @@ def sha384(string, encode="utf-8"):
         encode {str} -- [the encoding for the string] (default: {"utf-8"})
     
     Returns:
-        [str] -- [the hash string]
+        [byte] -- [the hash bytes]
     """
-    return hashlib.sha384(string.encode(encode)).hexdigest()
+    if isinstance(string, str):
+        return hashlib.sha384(string.encode(encode))
+    return hashlib.sha384(string)
 
 
 def sha256(string, encode="utf-8"):
@@ -98,9 +106,11 @@ def sha256(string, encode="utf-8"):
         encode {str} -- [the encoding for the string] (default: {"utf-8"})
     
     Returns:
-        [str] -- [the hash string]
+        [byte] -- [the hash bytes]
     """
-    return hashlib.sha256(string.encode(encode)).hexdigest()
+    if isinstance(string, str):
+        return hashlib.sha256(string.encode(encode))
+    return hashlib.sha256(string)
 
 
 def sha512(string, encode="utf-8"):
@@ -113,9 +123,11 @@ def sha512(string, encode="utf-8"):
         encode {str} -- [the encoding for the string] (default: {"utf-8"})
     
     Returns:
-        [str] -- [the hash string]
+        [byte] -- [the hash bytes]
     """
-    return hashlib.sha512(string.encode(encode)).hexdigest()
+    if isinstance(string, str):
+        return hashlib.sha512(string.encode(encode))
+    return hashlib.sha512(string)
 
 
 def sha3_224(string, encode="utf-8"):
@@ -128,9 +140,11 @@ def sha3_224(string, encode="utf-8"):
         encode {str} -- [the encoding for the string] (default: {"utf-8"})
     
     Returns:
-        [str] -- [the hash string]
+        [byte] -- [the hash bytes]
     """
-    return hashlib.sha3_224(string.encode(encode)).hexdigest()
+    if isinstance(string, str):
+        return hashlib.sha3_224(string.encode(encode))
+    return hashlib.sha3_224(string)
 
 
 def sha3_256(string, encode="utf-8"):
@@ -143,9 +157,11 @@ def sha3_256(string, encode="utf-8"):
         encode {str} -- [the encoding for the string] (default: {"utf-8"})
     
     Returns:
-        [str] -- [the hash string]
+        [byte] -- [the hash bytes]
     """
-    return hashlib.sha3_256(string.encode(encode)).hexdigest()
+    if isinstance(string, str):
+        return hashlib.sha3_256(string.encode(encode))
+    return hashlib.sha3_256(string)
 
 
 def sha3_384(string, encode="utf-8"):
@@ -158,9 +174,11 @@ def sha3_384(string, encode="utf-8"):
         encode {str} -- [the encoding for the string] (default: {"utf-8"})
     
     Returns:
-        [str] -- [the hash string]
+        [byte] -- [the hash bytes]
     """
-    return hashlib.sha3_384(string.encode(encode)).hexdigest()
+    if isinstance(string, str):
+        return hashlib.sha3_384(string.encode(encode))
+    return hashlib.sha3_384(string)
 
 
 def sha3_512(string, encode="utf-8"):
@@ -173,9 +191,11 @@ def sha3_512(string, encode="utf-8"):
         encode {str} -- [the encoding for the string] (default: {"utf-8"})
     
     Returns:
-        [str] -- [the hash string]
+        [byte] -- [the hash bytes]
     """
-    return hashlib.sha3_512(string.encode(encode)).hexdigest()
+    if isinstance(string, str):
+        return hashlib.sha3_512(string.encode(encode))
+    return hashlib.sha3_512(string)
 
 
 def blake2s(string, encode="utf-8"):
@@ -188,9 +208,11 @@ def blake2s(string, encode="utf-8"):
         encode {str} -- [the encoding for the string] (default: {"utf-8"})
     
     Returns:
-        [str] -- [the hash string]
+        [byte] -- [the hash bytes]
     """
-    return hashlib.blake2s(string.encode(encode)).hexdigest()
+    if isinstance(string, str):
+        return hashlib.blake2s(string.encode(encode))
+    return hashlib.blake2s(string)
 
 
 def blake2b(string, encode="utf-8"):
@@ -203,9 +225,11 @@ def blake2b(string, encode="utf-8"):
         encode {str} -- [the encoding for the string] (default: {"utf-8"})
     
     Returns:
-        [str] -- [the hash string]
+        [byte] -- [the hash bytes]
     """
-    return hashlib.blake2b(string.encode(encode)).hexdigest()
+    if isinstance(string, str):
+        return hashlib.blake2b(string.encode(encode))
+    return hashlib.blake2b(string)
 
 
 def shake_128(string, encode="utf-8"):
@@ -218,9 +242,11 @@ def shake_128(string, encode="utf-8"):
         encode {str} -- [the encoding for the string] (default: {"utf-8"})
     
     Returns:
-        [str] -- [the hash string]
+        [byte] -- [the hash bytes]
     """
-    return hashlib.shake_128(string.encode(encode)).hexdigest(16)
+    if isinstance(string, str):
+        return hashlib.shake_128(string.encode(encode))
+    return hashlib.shake_128(string)
 
 
 def shake_256(string, encode="utf-8"):
@@ -233,9 +259,11 @@ def shake_256(string, encode="utf-8"):
         encode {str} -- [the encoding for the string] (default: {"utf-8"})
     
     Returns:
-        [str] -- [the hash string]
+        [byte] -- [the hash bytes]
     """
-    return hashlib.shake_256(string.encode(encode)).hexdigest(16)
+    if isinstance(string, str):
+        return hashlib.shake_256(string.encode(encode))
+    return hashlib.shake_256(string)
 
 
 def hash_file(directory, hash_type):
@@ -246,21 +274,18 @@ def hash_file(directory, hash_type):
         hash_type {str} -- [the type of the hash]
     
     Returns:
-        [str] -- [the hash string]
+        [byte] -- [the hash bytes]
     """
     f = open(directory)
-    h=hashlib.new(hash_type)
+    h = hashlib.new(hash_type)
     while True:
-        data = f.read(2**20)
+        data = f.read(2 ** 20)
         if not data:
             break
-        data=data.encode(f.encoding)
+        data = data.encode(f.encoding)
         h.update(data)
     f.close()
-    if hash_type.split('_')[0]=='shake':
-        return h.hexdigest(16)
-    else:
-        return h.hexdigest()
+    return h
 
 
 def hash_directory(root_dir, hash_type):
@@ -271,9 +296,12 @@ def hash_directory(root_dir, hash_type):
         hash_type {str} -- [the type of the hash]
     
     Returns:
-        [str] -- [the hash string]
+        [list] -- [the hashes list]
     """
     hashes_list = []
     for d in get_list_files(root_dir):
         hashes_list.append(hash_file(d, hash_type))
     return hashes_list
+
+print(md5('hi').hexdigest()==hashlib.md5(b'hi').hexdigest())
+print(md5(b'hi'))
