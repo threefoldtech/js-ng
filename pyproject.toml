@@ -25,6 +25,10 @@ pytest-cov = "^2.7"
 hypothesis = "^4.28"
 ptpython = "^2.0"
 PyYAML = "^5.1"
+blosc = "^1.8"
+pylzma = "^0.5.0"
+msgpack = "^0.6.1"
+pickle-mixin = "^1.0"
 
 [tool.poetry.dev-dependencies]
 
