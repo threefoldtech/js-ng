@@ -1,28 +1,30 @@
 import tarfile
+import os
 
 
-class Tar(tarfile.TarFile):
+class TarReader:
     def __init__(self, tarfile_path):
         """"
         Args:
-            path (str) : the path for the tar file.
+            tarfile_path (str) : the path for the tar file.
         """
         self.path = tarfile_path
+        self.file = self.__enter__()
 
-    def is_tar(self):
-        """
-        check if the file is an archive or not.
-        Return:
-            boolen expresion
-        """
-        return tarfile.is_tarfile(self.path)
+    def __enter__(self):
+        self.file = tarfile.TarFile.open(self.path, "r")
+        return self.file
 
-    def extract(self):
+    def __exit__(self, type, value, traceback):
+        self.file.close()
+
+    def extract(self, output):
         """
         extract all the files on the archive to a directory in the path where the tar file is.
+        Args:
+            output (str) : the path for the output folder
         """
-        with tarfile.open(self.path, "r") as file:
-            file.extractall()
+        self.file.extractall(output)
 
     def get_content(self):
         """
@@ -30,9 +32,8 @@ class Tar(tarfile.TarFile):
         Returns:
             list of the content
         """
-        with tarfile.open(self.path, "r") as file:
-            content = file.getnames()
-        return content
+
+        return self.file.getnames()
 
     def extract_file(self, file_name):
         """
@@ -40,16 +41,24 @@ class Tar(tarfile.TarFile):
         Args:
             file_name (str) : the name of the file in the archive.
         """
-        with tarfile.open(self.path, "r") as file:
-            file.extract(file_name)
+        self.file.extract(file_name)
 
 
-def archive(source, archive_name):
+def istar(path):
+    """
+    check if the file is an archive or not.
+    Returns:
+        boolen expresion
+    """
+    return tarfile.is_tarfile(path)
+
+
+def archive(source_path, archive_path):
     """
     make an archive from a directory
     Args:
-        source (str) : the directory will be archived.
-        archive_name (str) : the name of the new archive.
+        source_path (str) : the directory will be archived.
+        archive_path (str) : where the archive will be stored.
     """
-    with tarfile.open(archive_name, "w") as file:
-        file.add(source)
+    with tarfile.TarFile.open(archive_path, "w") as file:
+        file.add(source_path)
