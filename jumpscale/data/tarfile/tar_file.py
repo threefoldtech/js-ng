@@ -13,18 +13,10 @@ class TarReader:
 
     def __enter__(self):
         self.file = tarfile.TarFile.open(self.path, "r")
-        return self.file
+        return self
 
     def __exit__(self, type, value, traceback):
         self.file.close()
-
-    def extract(self, output):
-        """
-        extract all the files on the archive to a directory in the path where the tar file is.
-        Args:
-            output (str) : the path for the output folder
-        """
-        self.file.extractall(output)
 
     def get_content(self):
         """
@@ -35,13 +27,21 @@ class TarReader:
 
         return self.file.getnames()
 
-    def extract_file(self, file_name):
+    def extract(self, output):
+        """
+        extract all the files on the archive to a directory in the path where the tar file is.
+        Args:
+            output (str) : the path for the output folder
+        """
+        self.file.extractall(path=output)
+
+    def extract_file(self, output, file_name):
         """
         extract a specific file on the archive to a directory in the path where the tar file is.
         Args:
             file_name (str) : the name of the file in the archive.
         """
-        self.file.extract(file_name)
+        self.file.extract(file_name, path=output)
 
 
 def istar(path):
