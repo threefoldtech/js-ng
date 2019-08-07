@@ -31,7 +31,7 @@ def guid():
 
 
 def n_from_choices(n, choices):
-    """ 
+    """generate a string composed of n randomely chosen strings from choices
     
     Arguments:
         n {[type]} -- [description]
@@ -97,4 +97,3 @@ def capnp_id():
 
     # the bitwise is for validating the id check capnp/parser.c++
     return hex(random.randint(0, 2 ** 64) | 1 << 63)
-    
