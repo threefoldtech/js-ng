@@ -1,10 +1,41 @@
+"""
+This is a module with a general tree implementation.
+A sample usage of the Tree class as a file manager
+```
+if __name__ == "__main__":
+    tree = Tree()
+    tree.add_node_by_path("root", {"file_name": "root",
+                                   "modified": "12/3/2019"})
+    tree.add_node_by_path("etc", {"file_name": "etc",
+                                  "modified": "13/3/2018"})
+    tree.add_node_by_path("etc.hosts", {"file_name": "hosts",
+                                        "modified": "14/3/2017"})
+    tree.add_node_by_path("etc.passwd", {"file_name": "passwd",
+                                         "modified": "14/3/2016"})
+    pred = lambda x: x.data["modified"].split("/")[-1] < "2018"
+    too_old = tree.search_custom(pred)
+    print("Too old files (before 2018):\n")
+    for f in too_old:
+        print(f.name + "\n")
+    print("Tree before removing /etc/hosts")
+    print(tree)
+    print("Tree after removing /etc/hosts")
+    tree.remove_node_by_path("etc.hosts")
+    print(tree)
+    passwd_file = tree.get_by_path("etc.passwd")
+    passwd_date = passwd_file.data["modified"]
+    print("Last time /etc/passwd was modified is: " + passwd_date)
+```
+"""
+
+
 class TreeNode:
     def __init__(self, name, parent, data=None):
         """
-        name     (str)                 : The name associated with the node
-        children (dict[str:TreeNode])  : A mapping between names and child nodes
-        parent   (TreeNode or None)    : The parent TreeNode (None for the root)
-        data                           : Data associated with the node
+        name     (str)               : The name associated with the node
+        children (dict[str:TreeNode]): A mapping between names and child nodes
+        parent   (TreeNode or None)  : The parent TreeNode (None for the root)
+        data                         : Data associated with the node
         """
         self.name = name
         self.parent = parent
@@ -105,7 +136,8 @@ class TreeNode:
         """Returns a string representing the node's subtree
 
         Args:
-            indentation (int, optional): The level to which the representation will be indented. Defaults to 0.
+            indentation (int, optional): The level to which the representation
+                                         will be indented. Defaults to 0.
 
         Returns:
             str: The tree representation
@@ -248,23 +280,3 @@ class Tree:
     def __str__(self):
         "Return a string representation of the tree"
         return self.root.__str__(0)
-
-
-if __name__ == "__main__":
-    tree = Tree()
-    tree.add_node_by_path("root", {"file_name": "root", "modified": "12/3/2019"})
-    tree.add_node_by_path("etc", {"file_name": "etc", "modified": "13/3/2018"})
-    tree.add_node_by_path("etc.hosts", {"file_name": "hosts", "modified": "14/3/2017"})
-    tree.add_node_by_path("etc.passwd", {"file_name": "passwd", "modified": "14/3/2016"})
-    too_old = tree.search_custom(lambda x: x.data["modified"].split("/")[-1] < "2018")
-    print("Too old files (before 2018):\n")
-    for f in too_old:
-        print(f.name + "\n")
-    print("Tree before removing /etc/hosts")
-    print(tree)
-    print("Tree after removing /etc/hosts")
-    tree.remove_node_by_path("etc.hosts")
-    print(tree)
-    passwd_file = tree.get_by_path("etc.passwd")
-    passwd_date = passwd_file.data["modified"]
-    print("Last time /etc/passwd was modified is: " + passwd_date)
