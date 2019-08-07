@@ -132,6 +132,20 @@ class TreeNode:
             del self.children[name]
             return node
 
+    def get_path(self):
+        """Retrieves the path of the node
+        
+        Returns:
+            str: The path
+        """
+        if self.name == "":
+            return ""
+        parent_path = self.parent.get_path()
+        if parent_path == "":
+            return self.name
+        else:
+            return parent_path + "." + self.name
+
     def __str__(self, indentation=0):
         """Returns a string representing the node's subtree
 
@@ -230,7 +244,7 @@ class Tree:
         """
         if node == self.root:
             raise RuntimeError("Can't remove the root node")
-        node.parent.remove_child(node.name)
+        node.parent.remove_child(node)
         return node
 
     def add_node_by_path(self, path, data=None):
