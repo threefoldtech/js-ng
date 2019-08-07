@@ -1,5 +1,7 @@
 import pytest
+
 from jumpscale.god import j
+from jumpscale.data.treemanager.exceptions import NameExistsError, EmptyNameError, RootRemoveError
 
 
 def convert_to_names_dict(subtree):
@@ -83,7 +85,7 @@ def test_remove_node(fs, names_dict):
     fs.remove_node(fs.get_by_path("etc"))
     del names_dict["etc"]
     assert same_names(fs.root, names_dict)
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RootRemoveError):
         fs.remove_node(fs.root)
 
 
@@ -100,7 +102,7 @@ def test_add_node_by_path(fs, names_dict):
         "file_name": "omar",
         "modified": "0/0/0",
     }
-    with pytest.raises(RuntimeError):
+    with pytest.raises(EmptyNameError):
         fs.add_node_by_path("root..omar", None)
 
 
@@ -124,7 +126,7 @@ def test_add_child(fs, names_dict):
     node.add_child(added_node)
     names_dict["root"]["desktop"]["passwd"]["creep"] = {}
     assert same_names(fs.root, names_dict)
-    with pytest.raises(RuntimeError):
+    with pytest.raises(NameExistsError):
         node.add_child(added_node)
 
 
