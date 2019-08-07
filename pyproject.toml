@@ -24,14 +24,17 @@ tox = "^3.13"
 pytest-cov = "^2.7"
 hypothesis = "^4.28"
 ptpython = "^2.0"
-PyYAML = "^5.1"
-blosc = "^1.8"
-pylzma = "^0.5.0"
-msgpack = "^0.6.1"
-pickle-mixin = "^1.0"
+loguru = "^0.3.2"
+fabric = "^2.4"
 
 [tool.poetry.dev-dependencies]
+ipdb = "^0.12.1"
+
+[tool.poetry.scripts]
+jsng = "jumpscale.entry_points.jsng:run"
+jsctl = "jumpscale.entry_points.jsctl:cli"
 
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
+
