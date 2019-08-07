@@ -22,8 +22,7 @@ class TreeNode:
         """
         child_name = node.name
         if child_name in self.children:
-            # throw an error or override? (overriding for now)
-            pass
+            raise RuntimeError("A child with the given name already exists")
         self.children[child_name] = node
         return node
 
@@ -191,7 +190,7 @@ class Tree:
             current_node = next_node
         return current_node
 
-    def remove_node(self, node):  # todo: return the removed node
+    def remove_node(self, node):
         """Remove a node from the tree.
 
         Args:
@@ -200,12 +199,12 @@ class Tree:
         if node == self.root:
             raise RuntimeError("Can't remove the root node")
         node.parent.remove_child(node.name)
+        return node
 
-    def add_node_by_path(self, path, data=None):  # todo: no empty names
-        """
-        Add a node designated by the given path
+    def add_node_by_path(self, path, data=None):
+        """Add a node designated by the given path
 
-        Arguments:
+        Args:
             path (str): A string of names separated by a '.' that reaches
              the desired node when followed
 
@@ -218,16 +217,17 @@ class Tree:
         path_arr = path.split(".")
         current_node = self.root
         for path_name in path_arr[:-1]:
+            if path_name == "":
+                raise RuntimeError("Nodes with empty names are not allowed")
             next_node = current_node.get_child_by_name(path_name)
             if next_node is None:
-                # Create along the way or throw an error? (creating for now)
                 next_node = TreeNode(path_name, current_node)
                 current_node.add_child(next_node)
             current_node = next_node
         new_node = TreeNode(path_arr[-1], current_node, data)
         return current_node.add_child(new_node)
 
-    def remove_node_by_path(self, path, data=None):  # todo: remove data, return the node
+    def remove_node_by_path(self, path):
         """Remove a node designated by the given path
 
         Args:
