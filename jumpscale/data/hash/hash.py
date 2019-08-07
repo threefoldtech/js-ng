@@ -10,10 +10,10 @@ def encode_string(obj, encode):
 
 def get_list_files(dir_name):
     """returns a list of directories for all files in a root folder
-    
+
     Arguments:
         dir_name (str) : the directory of the root folder
-    
+
     Returns:
         all_files (list) : the list of directories for all files in the root folder
     """
@@ -35,14 +35,14 @@ def get_list_files(dir_name):
 
 
 def md5(string, encode="utf-8"):
-    """create a md5 hash string for any string 
-    
+    """create a md5 hash string for any string
+
     Arguments:
         string (str): the string need to be hashed
-    
+
     Keyword Arguments:
         encode (str): the encoding for the string (default: {"utf-8"})
-    
+
     Returns:
         list of byte: the hash bytes
     """
@@ -50,14 +50,14 @@ def md5(string, encode="utf-8"):
 
 
 def sha1(string, encode="utf-8"):
-    """create a sha1 hash string for any string 
-    
+    """create a sha1 hash string for any string
+
     Arguments:
         string (str): the string need to be hashed
-    
+
     Keyword Arguments:
         encode (str): the encoding for the string (default: {"utf-8"})
-    
+
     Returns:
         list of byte: the hash bytes
     """
@@ -65,14 +65,14 @@ def sha1(string, encode="utf-8"):
 
 
 def sha224(string, encode="utf-8"):
-    """create a sha224 hash string for any string 
-    
+    """create a sha224 hash string for any string
+
     Arguments:
         string (str): the string need to be hashed
-    
+
     Keyword Arguments:
         encode (str): the encoding for the string (default: {"utf-8"})
-    
+
     Returns:
         list of byte: the hash bytes
     """
@@ -80,14 +80,14 @@ def sha224(string, encode="utf-8"):
 
 
 def sha384(string, encode="utf-8"):
-    """create a sha384 hash string for any string 
-    
+    """create a sha384 hash string for any string
+
     Arguments:
         string (str): the string need to be hashed
-    
+
     Keyword Arguments:
         encode (str): the encoding for the string (default: {"utf-8"})
-    
+
     Returns:
         list of byte: the hash bytes
     """
@@ -95,14 +95,14 @@ def sha384(string, encode="utf-8"):
 
 
 def sha256(string, encode="utf-8"):
-    """create a sha256 hash string for any string 
-    
+    """create a sha256 hash string for any string
+
     Arguments:
         string (str): the string need to be hashed
-    
+
     Keyword Arguments:
         encode (str): the encoding for the string (default: {"utf-8"})
-    
+
     Returns:
         list of byte: the hash bytes
     """
@@ -110,14 +110,14 @@ def sha256(string, encode="utf-8"):
 
 
 def sha512(string, encode="utf-8"):
-    """create a sha512 hash string for any string 
-    
+    """create a sha512 hash string for any string
+
     Arguments:
         string (str): the string need to be hashed
-    
+
     Keyword Arguments:
         encode (str): the encoding for the string (default: {"utf-8"})
-    
+
     Returns:
         list of byte: the hash bytes
     """
@@ -125,14 +125,14 @@ def sha512(string, encode="utf-8"):
 
 
 def sha3_224(string, encode="utf-8"):
-    """create a sha3_224 hash string for any string 
-    
+    """create a sha3_224 hash string for any string
+
     Arguments:
         string (str): the string need to be hashed
-    
+
     Keyword Arguments:
         encode (str): the encoding for the string (default: {"utf-8"})
-    
+
     Returns:
         list of byte: the hash bytes
     """
@@ -140,14 +140,14 @@ def sha3_224(string, encode="utf-8"):
 
 
 def sha3_256(string, encode="utf-8"):
-    """create a sha3_256 hash string for any string 
-    
+    """create a sha3_256 hash string for any string
+
     Arguments:
         string (str): the string need to be hashed
-    
+
     Keyword Arguments:
         encode (str): the encoding for the string (default: {"utf-8"})
-    
+
     Returns:
         list of byte: the hash bytes
     """
@@ -155,14 +155,14 @@ def sha3_256(string, encode="utf-8"):
 
 
 def sha3_384(string, encode="utf-8"):
-    """create a sha3_384 hash string for any string 
-    
+    """create a sha3_384 hash string for any string
+
     Arguments:
         string (str): the string need to be hashed
-    
+
     Keyword Arguments:
         encode (str): the encoding for the string (default: {"utf-8"})
-    
+
     Returns:
         list of byte: the hash bytes
     """
@@ -170,14 +170,14 @@ def sha3_384(string, encode="utf-8"):
 
 
 def sha3_512(string, encode="utf-8"):
-    """create a sha3_512 hash string for any string 
-    
+    """create a sha3_512 hash string for any string
+
     Arguments:
         string (str): the string need to be hashed
-    
+
     Keyword Arguments:
         encode (str): the encoding for the string (default: {"utf-8"})
-    
+
     Returns:
         list of byte: the hash bytes
     """
@@ -185,14 +185,14 @@ def sha3_512(string, encode="utf-8"):
 
 
 def blake2s(string, encode="utf-8"):
-    """create a blake2s hash string for any string 
-    
+    """create a blake2s hash string for any string
+
     Arguments:
         string (str): the string need to be hashed
-    
+
     Keyword Arguments:
         encode (str): the encoding for the string (default: {"utf-8"})
-    
+
     Returns:
         list of byte: the hash bytes
     """
@@ -200,14 +200,14 @@ def blake2s(string, encode="utf-8"):
 
 
 def blake2b(string, encode="utf-8"):
-    """create a blake2b hash string for any string 
-    
+    """create a blake2b hash string for any string
+
     Arguments:
         string (str): the string need to be hashed
-    
+
     Keyword Arguments:
         encode (str): the encoding for the string (default: {"utf-8"})
-    
+
     Returns:
         list of byte: the hash bytes
     """
@@ -215,14 +215,14 @@ def blake2b(string, encode="utf-8"):
 
 
 def shake_128(string, encode="utf-8"):
-    """create a shake_128 hash string for any string 
-    
+    """create a shake_128 hash string for any string
+
     Arguments:
         string (str): the string need to be hashed
-    
+
     Keyword Arguments:
         encode (str): the encoding for the string (default: {"utf-8"})
-    
+
     Returns:
         list of byte: the hash bytes
     """
@@ -230,14 +230,14 @@ def shake_128(string, encode="utf-8"):
 
 
 def shake_256(string, encode="utf-8"):
-    """create a shake_256 hash string for any string 
-    
+    """create a shake_256 hash string for any string
+
     Arguments:
         string (str): the string need to be hashed
-    
+
     Keyword Arguments:
         encode (str): the encoding for the string (default: {"utf-8"})
-    
+
     Returns:
         list of byte: the hash bytes
     """
@@ -245,12 +245,12 @@ def shake_256(string, encode="utf-8"):
 
 
 def hash_alg(name, data, **kwargs):
-    """create a hash object 
-    
+    """create a hash object
+
     Arguments:
         name (str) : name of algorithm name
         data (str) : data need to be hashed
-    
+
     Returns:
         list of byte : the hash bytes
     """
@@ -259,11 +259,11 @@ def hash_alg(name, data, **kwargs):
 
 def hash_file(path, hash_type):
     """create hash string for a file
-    
+
     Arguments:
         path (str) : the path for the file
         hash_type (str) : the type of the hash
-    
+
     Returns:
         list of byte : the hash bytes
     """
@@ -279,11 +279,11 @@ def hash_file(path, hash_type):
 
 def hash_directory(root_dir, hash_type):
     """create hash string list for the files in a folder
-    
+
     Arguments:
         root_dir (str) : the dir for the root folder
         hash_type (str) : the type of the hash
-    
+
     Returns:
         dict : the hashes dict, keys are full paths and values are hexdigests
     """
