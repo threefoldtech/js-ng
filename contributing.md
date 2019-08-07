@@ -1,6 +1,7 @@
 # Contributing
 
 * Follow PEP8 as much as you can (use [pylint](https://pypi.org/project/pylint/), default in [vscode](https://code.visualstudio.com/docs/python/linting))
+* Use [google-style](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html) docstrings.
 
 ### Naming conventions:
 
