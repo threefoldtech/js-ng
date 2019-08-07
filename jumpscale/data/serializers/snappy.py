@@ -1,9 +1,9 @@
 import snappy
 
 
-def dumps(self, obj):
+def dumps(obj):
     return snappy.compress(obj)
 
 
-def loads(self, s):
+def loads(s):
     return snappy.decompress(s)

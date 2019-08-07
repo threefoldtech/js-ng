@@ -1,9 +1,9 @@
 import pickle
 
 
-def dumps(self, obj):
+def dumps(obj):
     return pickle.dumps(obj)
 
 
-def loads(self, s):
+def loads(s):
     return pickle.loads(s)
