@@ -1,11 +1,11 @@
 from configparser import ConfigParser
 
 
-class IniFile(ConfigParser):
+class IniFile:
     """
-    the IniFile object parses the content of the file provided by the file_path argument
+    the IniFile object parses the content of the file provided by the path argument
     Args:
-        file_path (str) : where the file.ini stored
+        path (str) : the path to file.ini
     """
 
     def __init__(self, path):
