@@ -14,9 +14,7 @@ def get_default_config():
     return {
         "debug": True,
         "ssh_key_path": "",
-        "logging": {
-            "handlers": [{"sink": sys.stdout, "format": "{time} - {message}"}, {"sink": "file.log", "serialize": True}]
-        },
+        "logging": {"handlers": []},
         "log_to_redis": False,
         "log_to_files": True,
         "log_level": 15,
