@@ -133,3 +133,5 @@ nosetests.xml
 .project
 .pydevproject
 
+# vscode workspace
+.vscode
