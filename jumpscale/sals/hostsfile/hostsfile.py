@@ -11,7 +11,7 @@ class HostsFile:
             content_text = file.read()
         content_lines = content_text.splitlines()
         ip_lines = []
-        regex = """\d+\.\d+\.\d+\.\d+"""
+        regex = r"""\d+\.\d+\.\d+\.\d+"""
         for line in content_lines:
             if re.search(regex, line):
                 ip_lines.append(line)

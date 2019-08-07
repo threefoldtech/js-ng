@@ -1,7 +1,8 @@
+import tempfile
 from jumpscale.god import j
-import pytest
 
-hf = j.sals.hostsfile.HostsFile("sample.txt")
+tmp = tempfile.NamedTemporaryFile(suffix=".txt")
+hf = j.sals.hostsfile.HostsFile(tmp.name)
 
 
 def test_add():
