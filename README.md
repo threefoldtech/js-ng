@@ -20,9 +20,16 @@ config management/automation framework
 - Tests
 
 ## Development environment
-- clone repo
-- `poetry install`
-- `poetry shell` 
+- clone this repository, then
+    - `poetry install`
+
+- make sure to generate a private key to be used by configuration manager:
+    - `poetry shell`
+    - `hush_keygen --name /path/to/your/key`
+    - `jsctl config update --name=private_key_path --value=/path/to/your/key`
+
+- now you can open the shell
+    - `jsng`
 
 ## Running tests
 - `make tests`
@@ -34,7 +41,7 @@ config management/automation framework
 ## building dists
 - `poetry build`
 
-## publishing 
+## publishing
 - `poetry publish`
 
 
