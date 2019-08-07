@@ -5,9 +5,11 @@ cache: pip
 
 install:
   - pip install poetry
-  
-script: 
+
+script:
   - poetry install -vvv
+  - hush_keygen --name test
+  - poetry run jsctl config update --name=private_key_path --value="`pwd`/test.priv"
   - poetry run pytest tests/
 
 after_success:
