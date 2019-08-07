@@ -57,4 +57,3 @@ class SSH(JSException):
 
 class SSHTimeout(JSException):
     pass
-
