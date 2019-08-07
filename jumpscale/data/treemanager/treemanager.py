@@ -34,7 +34,7 @@ class Tree:
     def search_by_value(self, value):
         pass
 
-    def search_by_name(self, nane):
+    def search_by_name(self, name):
         pass
 
     def search_custom(self, func):
