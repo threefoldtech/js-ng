@@ -355,6 +355,7 @@ def getBaseName(path, removeExtension=False):
         if "." in name:
             name = ".".join(name.split(".")[:-1])
     return name
+basename = getBaseName
 
 # NO DECORATORS HERE
 def pathShorten(path):
