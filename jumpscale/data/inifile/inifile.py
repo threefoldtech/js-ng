@@ -13,9 +13,9 @@ class IniFile:
         self.parser = ConfigParser()
         self.parser.read(self.path)
 
-    def _write(self):
+    def write(self):
         """
-        apply the changes
+        apply all the changes to the file
         """
         with open(self.path, "w") as file:
             self.parser.write(file)
@@ -110,7 +110,6 @@ class IniFile:
             section_name (str) : the section name
         """
         self.parser[section_name] = {}
-        self._write()
 
     def add_property(self, section_name, property_key, property_value):
         """
@@ -121,7 +120,6 @@ class IniFile:
             property_value (str) : the value of the property
         """
         self.parser[section_name] = {property_key: property_value}
-        self._write()
 
     def remove_section(self, section_name):
         """
@@ -130,7 +128,6 @@ class IniFile:
             section_name (str) : the section name
         """
         self.parser.remove_section(section_name)
-        self._write()
 
     def remove_property(self, section_name, property_name):
         """
@@ -140,5 +137,4 @@ class IniFile:
             property_key (str) : the name of the property
         """
         self.parser.remove_option(section_name, property_name)
-        self._write()
 
