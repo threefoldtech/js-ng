@@ -37,6 +37,9 @@ class Tree:
     def search_by_name(self, nane):
         pass
 
+    def search_custom(self, func):
+        pass
+
     def get_by_path(self, path):
         pass
 
