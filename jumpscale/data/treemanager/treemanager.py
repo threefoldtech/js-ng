@@ -1,24 +1,63 @@
 class TreeNode:
     def __init__(self, name, parent, data=None):
+        """
+        name     (str)                 : The name associated with the node
+        children (dict[str:TreeNode])  : A mapping between names and child nodes
+        parent   (TreeNode or None)    : The parent TreeNode (None for the root)
+        data                           : Data associated with the node
+        """
         self.name = name
         self.parent = parent
         self.data = data
         self.children = {}
 
     def add_child(self, node):
+        """Adds a new child
+
+        Args:
+            node (TreeNode): The node to be added
+
+        Returns:
+            TreeNode: The newly added node
+        """
         child_name = node.name
         if child_name in self.children:
             # throw an error or override? (overriding for now)
             pass
         self.children[child_name] = node
+        return node
 
     def search_by_name(self, name):
+        """Search in the node's subtree for nodes with the given name
+
+        Args:
+            name (str): The name to be searched for
+
+        Returns:
+            list[TreeNode]: The found nodes
+        """
         return self.search_custom(lambda x: x.name == name)
 
-    def search_by_value(self, val):
-        return self.search_custom(lambda x: x.value == val)
+    def search_by_data(self, data):
+        """Search in the node's subtree for nodes with the given data
+
+        Args:
+            data: The data to be searched for
+
+        Returns:
+            list[TreeNode]: The found nodes
+        """
+        return self.search_custom(lambda x: x.data == data)
 
     def search_custom(self, func):
+        """Search the node's subtree the nodes satisfying the given predicate
+
+        Args:
+            func (function): A predicate the recieves a TreeNode
+
+        Returns:
+            list: The nodes found
+        """
         result = []
         for v in self.children.values():
             result.extend(v.search_custom(func))
@@ -28,22 +67,61 @@ class TreeNode:
         return result
 
     def get_child_by_name(self, name):
+        """Get the child with the given name
+
+        Args:
+            name (str): The name of the child
+
+        Returns:
+            TreeNode: The reqiested child. None if it doesn't exist.
+        """
         return self.children.get(name)
 
     def remove_child(self, node):
-        self.remove_child_by_name(node.name)
+        """Remove the node from the children if it exists
+
+        Args:
+            node (TreeNode): The node to be deleted
+
+        Returns:
+            TreeNode: The deleted node
+        """
+        return self.remove_child_by_name(node.name)
 
     def remove_child_by_name(self, name):
+        """Remove the node from the children
+
+        Args:
+            node (TreeNode): The node to be deleted
+
+        Returns:
+            TreeNode: The deleted node. None if it doesn't exist
+        """
         if name in self.children:
+            node = self.children[name]
             del self.children[name]
+            return node
 
     def __str__(self, indentation=0):
+        """Returns a string representing the node's subtree
+
+        Args:
+            indentation (int, optional): The level to which the representation will be indented. Defaults to 0.
+
+        Returns:
+            str: The tree representation
+        """
         result = "\t" * indentation + self._string_repr() + "\n"
         for v in self.children.values():
             result += v.__str__(indentation + 1)
         return result
 
     def _string_repr(self):
+        """A helper function to return the node's name and data as a string
+
+        Returns:
+            str: The node's string representation
+        """
         if self.name == "":
             return "dummy_root"
         else:
@@ -51,19 +129,59 @@ class TreeNode:
 
 
 class Tree:
+    """"
+    A class to represent a tree
+    """
+
     def __init__(self):
         self.root = TreeNode("", None)
 
-    def search_by_value(self, value):
-        return self.root.search_by_value(value)
+    def search_by_data(self, data):
+        """Search the nodes in the tree with the given data
+
+        Args:
+            func (function): A predicate the recieves a TreeNode
+
+        Returns:
+            list: The nodes found
+        """
+        return self.root.search_by_data(data)
 
     def search_by_name(self, name):
+        """Search the nodes in the tree with the passed name
+
+        Args:
+            func (function): A predicate the recieves a TreeNode
+
+        Returns:
+            list: The nodes found
+        """
         return self.root.search_by_name(name)
 
     def search_custom(self, func):
+        """Search the nodes in the tree satisfying the given predicate
+
+        Args:
+            func (function): A predicate the recieves a TreeNode
+
+        Returns:
+            list: The nodes found
+        """
         return self.root.search_custom(func)
 
     def get_by_path(self, path):
+        """Retrieves a node designated by the given path
+
+        Args:
+            path (str): A string of names separated by a '.' that reaches
+             the desired node when followed
+
+            data: The data associated with the newly added node
+
+        Returns:
+            None if an intermidiate node is not found.
+            Else the searched node is returned
+        """
         path_arr = path.split(".")
         current_node = self.root
         for name in path_arr:
@@ -73,12 +191,30 @@ class Tree:
             current_node = next_node
         return current_node
 
-    def remove_node(self, node):
+    def remove_node(self, node):  # todo: return the removed node
+        """Remove a node from the tree.
+
+        Args:
+            node (TreeNode): The node to be removed
+        """
         if node == self.root:
             raise RuntimeError("Can't remove the root node")
         node.parent.remove_child(node.name)
 
-    def add_node_by_path(self, path, data=None):
+    def add_node_by_path(self, path, data=None):  # todo: no empty names
+        """
+        Add a node designated by the given path
+
+        Arguments:
+            path (str): A string of names separated by a '.' that reaches
+             the desired node when followed
+
+            data: The data associated with the newly added node
+
+        Notes:
+            If intermidiate nodes are not found while traversing the path,
+            they are created with data=None.
+        """
         path_arr = path.split(".")
         current_node = self.root
         for path_name in path_arr[:-1]:
@@ -91,7 +227,13 @@ class Tree:
         new_node = TreeNode(path_arr[-1], current_node, data)
         return current_node.add_child(new_node)
 
-    def remove_node_by_path(self, path, data=None):
+    def remove_node_by_path(self, path, data=None):  # todo: remove data, return the node
+        """Remove a node designated by the given path
+
+        Args:
+            path (str): A string of names separated by a '.' that reaches
+             the desired node when followed
+        """
         path_arr = path.split(".")
         current_node = self.root
         parent_node = None
@@ -104,6 +246,7 @@ class Tree:
         return parent_node.remove_child(current_node)
 
     def __str__(self):
+        "Return a string representation of the tree"
         return self.root.__str__(0)
 
 
