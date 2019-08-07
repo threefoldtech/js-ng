@@ -27,6 +27,7 @@ if __name__ == "__main__":
     print("Last time /etc/passwd was modified is: " + passwd_date)
 ```
 """
+from .exceptions import NameExistsError, EmptyNameError, RootRemoveError
 
 
 class TreeNode:
@@ -53,7 +54,7 @@ class TreeNode:
         """
         child_name = node.name
         if child_name in self.children:
-            raise RuntimeError("A child with the given name already exists")
+            raise NameExistsError("A child with the given name already exists")
         self.children[child_name] = node
         return node
 
@@ -64,7 +65,7 @@ class TreeNode:
             name (str): The name to be searched for
 
         Returns:
-            list[TreeNode]: The found nodes
+            list of TreeNode: The found nodes
         """
         return self.search_custom(lambda x: x.name == name)
 
@@ -75,7 +76,7 @@ class TreeNode:
             data: The data to be searched for
 
         Returns:
-            list[TreeNode]: The found nodes
+            list of TreeNode: The found nodes
         """
         return self.search_custom(lambda x: x.data == data)
 
@@ -86,7 +87,7 @@ class TreeNode:
             func (function): A predicate the recieves a TreeNode
 
         Returns:
-            list: The nodes found
+            list of TreeNode: The nodes found
         """
         result = []
         for v in self.children.values():
@@ -134,7 +135,7 @@ class TreeNode:
 
     def get_path(self):
         """Retrieves the path of the node
-        
+
         Returns:
             str: The path
         """
@@ -150,7 +151,7 @@ class TreeNode:
         """Returns a string representing the node's subtree
 
         Args:
-            indentation (int, optional): The level to which the representation
+            indentation (int, optional): The level to which the representation\
                                          will be indented. Defaults to 0.
 
         Returns:
@@ -188,7 +189,7 @@ class Tree:
             func (function): A predicate the recieves a TreeNode
 
         Returns:
-            list: The nodes found
+            list of TreeNode: The nodes found
         """
         return self.root.search_by_data(data)
 
@@ -199,7 +200,7 @@ class Tree:
             func (function): A predicate the recieves a TreeNode
 
         Returns:
-            list: The nodes found
+            list of TreeNode: The nodes found
         """
         return self.root.search_by_name(name)
 
@@ -210,7 +211,7 @@ class Tree:
             func (function): A predicate the recieves a TreeNode
 
         Returns:
-            list: The nodes found
+            list of TreeNode: The nodes found
         """
         return self.root.search_custom(func)
 
@@ -218,13 +219,13 @@ class Tree:
         """Retrieves a node designated by the given path
 
         Args:
-            path (str): A string of names separated by a '.' that reaches
+            path (str): A string of names separated by a '.' that reaches\
              the desired node when followed
 
             data: The data associated with the newly added node
 
         Returns:
-            None if an intermidiate node is not found.
+            None if an intermidiate node is not found.\
             Else the searched node is returned
         """
         path_arr = path.split(".")
@@ -243,7 +244,7 @@ class Tree:
             node (TreeNode): The node to be removed
         """
         if node == self.root:
-            raise RuntimeError("Can't remove the root node")
+            raise RootRemoveError("Can't remove the root node")
         node.parent.remove_child(node)
         return node
 
@@ -251,20 +252,20 @@ class Tree:
         """Add a node designated by the given path
 
         Args:
-            path (str): A string of names separated by a '.' that reaches
+            path (str): A string of names separated by a '.' that reaches\
              the desired node when followed
 
             data: The data associated with the newly added node
 
         Notes:
-            If intermidiate nodes are not found while traversing the path,
+            If intermidiate nodes are not found while traversing the path,\
             they are created with data=None.
         """
         path_arr = path.split(".")
         current_node = self.root
         for path_name in path_arr[:-1]:
             if path_name == "":
-                raise RuntimeError("Nodes with empty names are not allowed")
+                raise EmptyNameError("Nodes with empty names are not allowed")
             next_node = current_node.get_child_by_name(path_name)
             if next_node is None:
                 next_node = TreeNode(path_name, current_node)
@@ -277,7 +278,7 @@ class Tree:
         """Remove a node designated by the given path
 
         Args:
-            path (str): A string of names separated by a '.' that reaches
+            path (str): A string of names separated by a '.' that reaches\
              the desired node when followed
         """
         path_arr = path.split(".")
