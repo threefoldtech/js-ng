@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from yaml import load, load_all,Loader, dump, dump_all,resolver,Dumper
+from yaml import load, load_all,Loader, dump, dump_all,resolver,Dumper,SafeLoader
 
 
 def dumps(obj):
@@ -7,7 +7,7 @@ def dumps(obj):
 
 
 def loads(s):
-    return load(s)
+    return load(s,Loader=SafeLoader)
 
 
 def ordered_load(stream, Loader=Loader, object_pairs_hook=OrderedDict):

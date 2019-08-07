@@ -1,5 +1,5 @@
 import pytoml
-from .dict import merge
+from .Dict import merge
 
 
 def fancydumps(obj, secure=False):
