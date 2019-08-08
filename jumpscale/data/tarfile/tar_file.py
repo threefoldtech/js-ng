@@ -1,64 +1,51 @@
 import tarfile
-import os
-
-
-class TarReader:
-    def __init__(self, tarfile_path):
-        """"
-        Args:
-            tarfile_path (str) : the path for the tar file.
-        """
-        self.path = tarfile_path
-        self.file = self.__enter__()
-
-    def __enter__(self):
-        self.file = tarfile.TarFile.open(self.path, "r")
-        return self
-
-    def __exit__(self, type, value, traceback):
-        self.file.close()
-
-    def get_content(self):
-        """
-        get the names of all the content in the archive without extraction.
-        Returns:
-            list of the content
-        """
-
-        return self.file.getnames()
-
-    def extract(self, output):
-        """
-        extract all the files on the archive to a directory in the path where the tar file is.
-        Args:
-            output (str) : the path for the output folder
-        """
-        self.file.extractall(path=output)
-
-    def extract_file(self, output, file_name):
-        """
-        extract a specific file on the archive to a directory in the path where the tar file is.
-        Args:
-            file_name (str) : the name of the file in the archive.
-        """
-        self.file.extract(file_name, path=output)
 
 
 def istar(path):
-    """
-    check if the file is an archive or not.
-    Returns:
-        boolen expresion
+    """check if the file is .tar format
+    
+    Arguments:
+        path (str) : the path for the file
     """
     return tarfile.is_tarfile(path)
 
 
-def archive(source_path, archive_path):
+def compress(source, output):
+    """make an archive file from directory or file
+    
+    Arguments:
+        source (str) : the path for the file or the directory
+        output (str) : the path for the output
     """
-    make an archive from a directory
-    Args:
-        source_path (str) : the directory will be archived.
-        archive_path (str) : where the archive will be stored.
+    with tarfile.open(output, "w") as output:
+        output.add(source)
+
+
+class Reader:
+    """handle the reading operation on tar file
+    
+    Arguments:
+        path (str) : the path for tar file
     """
-    with tarfile.TarFile.open(archive_path, "w") as file:
-        file.add(source_path)
+
+    def __init__(self, path):
+
+        self.path = path
+        self.file = tarfile.TarFile.open(self.path, "r")
+
+    def __enter__(self):
+        return self.file
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        self.file.close()
+
+    def get_content(self):
+        """get list of the content in tar file"""
+        return self.file.getnames()
+
+    def extract(self, output):
+        """extract all the files from the archive to a directory.
+        Args:
+            output (str) : the path for the output folder
+        """
+        self.file.extractall(path=output)
