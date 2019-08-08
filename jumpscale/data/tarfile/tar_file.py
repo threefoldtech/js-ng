@@ -34,7 +34,7 @@ class Reader:
         self.file = tarfile.TarFile.open(self.path, "r")
 
     def __enter__(self):
-        return self.file
+        return self
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
         self.file.close()
