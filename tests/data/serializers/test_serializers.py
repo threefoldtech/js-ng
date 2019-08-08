@@ -1,40 +1,42 @@
 import pytest
-from jumpscale.god import j
 import base64
 import blosc
 import pylzma
 import msgpack
 import yaml
+from jumpscale.god import j
 
 
 def test_base64():
-    assert j.data.serializers.Base64.encode("omar") == base64.b64encode("omar".encode())
-    assert j.data.serializers.Base64.encode(b"omar") == base64.b64encode(b"omar")
-    assert j.data.serializers.Base64.decode("omar") == base64.b64decode("omar".encode())
-    assert j.data.serializers.Base64.decode(b"omar") == base64.b64decode(b"omar")
+    assert j.data.serializers.base64.encode("omar") == base64.b64encode("omar".encode())
+    assert j.data.serializers.base64.encode(b"omar") == base64.b64encode(b"omar")
+    assert j.data.serializers.base64.decode("omar") == base64.b64decode("omar".encode())
+    assert j.data.serializers.base64.decode(b"omar") == base64.b64decode(b"omar")
 
 
 def test_blosc():
     obj = blosc.compress(b"omar", typesize=8)
-    assert j.data.serializers.Blosc.compress(b"omar") == obj
-    assert j.data.serializers.Blosc.decompress(obj) == blosc.decompress(obj)
+    assert j.data.serializers.blosc.compress(b"omar") == obj
+    assert j.data.serializers.blosc.decompress(obj) == blosc.decompress(obj)
 
 
 def test_int():
-    assert j.data.serializers.Int.dumps(123) == str(123)
-    assert j.data.serializers.Int.loads("123") == int("123")
+    assert j.data.serializers.integer.dumps(123) == str(123)
+    assert j.data.serializers.integer.loads("123") == int("123")
 
 
 def test_lzma():
     obj = pylzma.compress(b"omar")
-    assert j.data.serializers.Lzma.dumps(b"omar") == obj
-    assert j.data.serializers.Lzma.loads(obj) == pylzma.decompress(obj)
+    assert j.data.serializers.lzma.compress(b"omar") == obj
+    assert j.data.serializers.lzma.decompress(obj) == pylzma.decompress(obj)
+
 
 def test_msgpack():
-    obj=msgpack.packb(b'omar', use_bin_type=True)
-    assert j.data.serializers.MSGPack.dumps(b'omar')==obj
-    assert j.data.serializers.MSGPack.loads(obj)==msgpack.unpackb(obj, raw=False)
-    assert j.data.serializers.MSGPack.loads('omar')==False
+    obj = msgpack.packb(b"omar", use_bin_type=True)
+    assert j.data.serializers.msgpack.dumps(b"omar") == obj
+    assert j.data.serializers.msgpack.loads(obj) == msgpack.unpackb(obj, raw=False)
+    assert j.data.serializers.msgpack.loads("omar") == False
+
 
 def test_toml():
     testtemplate = """
@@ -75,10 +77,10 @@ list3 = [ "a", " b ", "   c  " ]
 list4 = [ "ab" ]
 list5 = "d,a,a,b,c"
 """
-    ddict = j.data.serializers.Toml.loads(testtoml)
-    template = j.data.serializers.Toml.loads(testtemplate)
+    ddict = j.data.serializers.toml.loads(testtoml)
+    template = j.data.serializers.toml.loads(testtemplate)
 
-    ddictout, errors = j.data.serializers.Toml.merge(template, ddict, listunique=True)
+    ddictout, errors = j.data.serializers.toml.merge(template, ddict, listunique=True)
 
     ddicttest = {
         "name": "something",
@@ -98,12 +100,12 @@ list5 = "d,a,a,b,c"
         "list5": ["a", "b", "c", "d"],
     }
 
-    assert ddictout['name'] == ddicttest['name']
+    assert ddictout["name"] == ddicttest["name"]
 
     ddictmerge = {"nr": 88}
 
     # start from previous one, update
-    ddictout, errors = j.data.serializers.Toml.merge(ddicttest, ddictmerge, listunique=True)
+    ddictout, errors = j.data.serializers.toml.merge(ddicttest, ddictmerge, listunique=True)
 
     ddicttest = {
         "name": "something",
@@ -139,7 +141,7 @@ list5 = "d,a,a,b,c"
     ddictmerge["list1"] = []
     for i in range(20):
         ddictmerge["list1"].append("this is a test %s" % i)
-    ddictout, errors = j.data.serializers.Toml.merge(ddicttest, ddictmerge, listunique=True)
+    ddictout, errors = j.data.serializers.toml.merge(ddicttest, ddictmerge, listunique=True)
     template = {
         "login": "",
         "first_name": "",
@@ -191,7 +193,7 @@ list5 = "d,a,a,b,c"
         "title": ["Researcher"],
     }
 
-    result, errors = j.data.serializers.Toml.merge(
+    result, errors = j.data.serializers.toml.merge(
         template, toupdate, keys_replace={"name": "first_name"}, add_non_exist=False, die=False, errors=[]
     )
 
@@ -200,8 +202,9 @@ list5 = "d,a,a,b,c"
     assert "ilian.virgil@gmail.com" in result["email"]
     assert "company_id" not in result  # should not be in
 
+
 def test_yaml():
-    yamstr="""Section:
+    yamstr = """Section:
     heading: Heading 1
     font: 
         name: Times New Roman
@@ -222,7 +225,8 @@ Paragraph:
 Table:
     style: MediumGrid3-Accent2
 """
-    
-    obj=yaml.dump(yamstr, default_flow_style=False, default_style="", indent=4, line_break="\n")
-    assert j.data.serializers.Yaml.dumps(yamstr)==obj
-    assert j.data.serializers.Yaml.loads(obj)==yaml.load(obj,Loader=yaml.SafeLoader)
+
+    obj = yaml.dump(yamstr, default_flow_style=False, default_style="", indent=4, line_break="\n")
+    assert j.data.serializers.yaml.dumps(yamstr) == obj
+    assert j.data.serializers.yaml.loads(obj) == yaml.load(obj, Loader=yaml.SafeLoader)
+

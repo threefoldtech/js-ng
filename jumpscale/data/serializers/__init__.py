@@ -1,11 +1,10 @@
-from .Base64 import*
-from .Blosc import*
-from .Dict import*
-from .Int import*
-from .Json import*
-from .Lzma import*
-from .MSGPack import*
-from .Pickle import*
-#from .Snappy import*
-from .Toml import*
-from .Yaml import*
+from . import base64
+from . import blosc
+from . import dictionary
+from . import integer
+from . import json
+from . import lzma
+from . import msgpack
+from . import pickle
+from . import toml
+from . import yaml
