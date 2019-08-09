@@ -84,11 +84,9 @@ js-ext
 
 __all__ = ["j"]
 
-
 def load():
     import jumpscale
-
-    loadedspaces = []
+    loadeddict = {'jumpscale':{}}
     for jsnamespace in jumpscale.__path__:
         for root, dirs, files in os.walk(jsnamespace):
             for d in dirs:
@@ -98,16 +96,32 @@ def load():
                     continue
                 # print("root: {} d: {}".format(root, d))
                 rootbase = os.path.basename(root)
-                loadedspaces.append(rootbase)
+                loadeddict['jumpscale'].setdefault(rootbase, {})
                 pkgname = d
                 importedpkgstr = "jumpscale.{}.{}".format(rootbase, pkgname)
                 __all__.append(importedpkgstr)
                 # print("import: ", importedpkgstr)
                 # globals()[importedpkgstr] = lazy_import.lazy_module(importedpkgstr)
-                globals()[importedpkgstr] = importlib.import_module(importedpkgstr)
+                m = importlib.import_module(importedpkgstr)
+                if rootbase == "clients":
+                    # print("rootbase: ", rootbase, importedpkgstr)
+                    # print(m.factory)
+                    loadeddict['jumpscale'][rootbase][pkgname] = m.factory
+                    # loadeddict[importedpkgstr] = m.factory
+                else:
+                    loadeddict['jumpscale'][rootbase][pkgname] = m
 
-    return loadedspaces
+    return loadeddict
 
+
+class Group:
+    def __init__(self, d):
+        self.d = d
+    def __getattr__(self, a):
+        return self.d[a]
+    
+    def __dir__(self):
+        return list(self.d.keys())
 
 class J:
     """
@@ -116,12 +130,12 @@ class J:
     """
 
     def __init__(self):
-        self._loadednames = set()
-        self._loadedallsubpackages = False
-        self.__loaded = []
+        self.__loaded = False
+        self.__loaded_dict = {}
 
     def __dir__(self):
-        return self.__loaded
+        self._load()
+        return self.__loaded_dict['jumpscale']
 
     @property
     def logger(self):
@@ -138,36 +152,19 @@ class J:
         import jumpscale.core.exceptions
         return jumpscale.core.exceptions
     
+    def reload(self):
+        self.__loaded = False
+        self.__loaded_dict = {}
+
+    def _load(self):
+        if not self.__loaded:
+            self.__loaded_dict = load()
+
     def __getattr__(self, name):
-        import jumpscale
-
-        if not self._loadedallsubpackages:
-            self.__loaded = load()
-            self._loadedallsubpackages = True
-
-        if name not in self._loadednames:
-            # print("name : ", name)
-            self._loadednames.add(name)
-            # load()
-            importlib.import_module("jumpscale.{}".format(name))
-            for m in [x for x in globals() if "jumpscale." in x]:
-                parts = m.split(".")[1:]
-                obj = jumpscale
-                while parts:
-                    p = parts.pop(0)
-                    obj = getattr(obj, p)
-                    # print(obj)
-                try:
-                    for attr in dir(obj):
-                        try:
-                            # print("getting attr {} from obj {}".format(attr, obj))
-                            getattr(obj, attr)
-                        except Exception:
-                            pass
-                except:
-                    print("can't dir object: ", obj)
-
-        return getattr(jumpscale, name)
-
+        self._load()
+        
+        d = self.__loaded_dict['jumpscale'][name]
+        return Group(d)
+       
 
 j = J()
