@@ -117,6 +117,8 @@ def load():
 class Group:
     def __init__(self, d):
         self.d = d
+        for k,v in d.items():
+            setattr(self, k, v)
     def __getattr__(self, a):
         return self.d[a]
     
