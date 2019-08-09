@@ -137,22 +137,19 @@ class J:
 
     def __dir__(self):
         self._load()
-        return self.__loaded_dict['jumpscale']
+        return list(self.__loaded_dict['jumpscale'].keys()) + ['config', 'exceptions', 'logger']
 
     @property
     def logger(self):
-        import jumpscale.core.logging
-        return jumpscale.core.logging.logger
+        return self.__loaded_dict['jumpscale']['core']['logging'].logger
     
     @property
     def config(self):
-        import jumpscale.core.config
-        return jumpscale.core.config
+        return self.__loaded_dict['jumpscale']['core']['config']
 
     @property
     def exceptions(self):
-        import jumpscale.core.exceptions
-        return jumpscale.core.exceptions
+        return self.__loaded_dict['jumpscale']['core']['exceptions']
     
     def reload(self):
         self.__loaded = False
