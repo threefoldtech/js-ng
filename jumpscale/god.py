@@ -102,14 +102,19 @@ def load():
                 __all__.append(importedpkgstr)
                 # print("import: ", importedpkgstr)
                 # globals()[importedpkgstr] = lazy_import.lazy_module(importedpkgstr)
-                m = importlib.import_module(importedpkgstr)
-                if rootbase == "clients":
-                    # print("rootbase: ", rootbase, importedpkgstr)
-                    # print(m.factory)
-                    loadeddict['jumpscale'][rootbase][pkgname] = m.factory
-                    # loadeddict[importedpkgstr] = m.factory
+                try:
+                    m = importlib.import_module(importedpkgstr)
+                except Exception as e:
+                    print("[-] ", e)
+                    continue
                 else:
-                    loadeddict['jumpscale'][rootbase][pkgname] = m
+                    if rootbase == "clients":
+                        # print("rootbase: ", rootbase, importedpkgstr)
+                        # print(m.factory)
+                        loadeddict['jumpscale'][rootbase][pkgname] = m.factory
+                        # loadeddict[importedpkgstr] = m.factory
+                    else:
+                        loadeddict['jumpscale'][rootbase][pkgname] = m
 
     return loadeddict
 
@@ -128,9 +133,7 @@ class Group:
 class J:
     """
         Here we simulate god object `j` by delegating the calls to suitable subnamespace
-
     """
-
     def __init__(self):
         self.__loaded = False
         self.__loaded_dict = {}
@@ -167,3 +170,5 @@ class J:
        
 
 j = J()
+
+
