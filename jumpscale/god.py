@@ -2,7 +2,6 @@ import os
 import importlib
 import pkgutil
 import importlib.util
-
 # import lazy_import
 
 """
@@ -168,7 +167,57 @@ class J:
         d = self.__loaded_dict['jumpscale'][name]
         return Group(d)
        
-
 j = J()
 
+# jcode = """
+# class J_codegen:
+
+#     def __init__(self):
+#         self.__loaded = False
+#         self.__loaded_dict = {}
+
+#     # def __dir__(self):
+#     #     self._load()
+#     #     return list(self.__loaded_dict['jumpscale'].keys()) + ['config', 'exceptions', 'logger']
+
+#     @property
+#     def logger(self):
+#         return self.__loaded_dict['jumpscale']['core']['logging'].logger
+    
+#     @property
+#     def config(self):
+#         return self.__loaded_dict['jumpscale']['core']['config']
+
+#     @property
+#     def exceptions(self):
+#         return self.__loaded_dict['jumpscale']['core']['exceptions']
+    
+#     def reload(self):
+#         self.__loaded = False
+#         self.__loaded_dict = {}
+
+#     def _load(self):
+#         if not self.__loaded:
+#             self.__loaded_dict = load()
+
+#     {% for group, _ in groups.items() %}
+#     @property
+#     def {{group}}(self):
+#         self._load()
+
+#         return Group(self.__loaded_dict['jumpscale']['{{group}}'])
+
+#     {% endfor %}
+
+# """
+
+# def get_j_class():
+#    import jinja2
+#     jtemplate = jinja2.Template(jcode)
+#     return jtemplate.render(groups=load()['jumpscale'])
+
+# jclass = get_j_class()
+# print(jclass)
+# exec(jclass)
+# j = J_codegen()
 
