@@ -12,6 +12,9 @@ class Factory:
         super(Factory, self).__init__()
 
     def new(self, name, *args, **kwargs):
+        if not name.isidentifier():
+            raise ValueError("%s is not a valid identifier" % name)
+
         try:
             self.find(name)
         except AttributeError:
@@ -24,7 +27,10 @@ class Factory:
         raise DuplicateError
 
     def find(self, name):
-        return getattr(self, name)
+        instance = getattr(self, name)
+        if not isinstance(instance, self.type):
+            raise ValueError("%s is an internal attribute" % name)
+        return instance
 
     def get(self, name, *args, **kwargs):
         try:
