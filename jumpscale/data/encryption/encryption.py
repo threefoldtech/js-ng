@@ -32,3 +32,32 @@ def decrypt(message, private_key, sender_public_key):
     nacl_obj = j.data.nacl.NACL(private_key=private_key)
     message = nacl_obj.decrypt(message, sender_public_key)
     return message
+
+
+def encrypt_symmetric(message, symmetric_key):
+    """Encrypt the message using the secret key.
+
+    Args:
+        message (bytes): The message.
+        symmetric_key (bytes): The secret key.
+
+    Returns:
+        bytes: The encryption of the message.
+    """
+    nacl_obj = j.data.nacl.NACL(symmetric_key=symmetric_key)
+    return nacl_obj.encrypt_symmetric(message)
+
+
+def decrypt_symmetric(message, symmetric_key):
+    """Decrypt the message using the secret key.
+
+    Args:
+        message (bytes): The message.
+        symmetric_key (bytes): The secret key.
+
+    Returns:
+        bytes: The decryption of the message.
+    """
+    nacl_obj = j.data.nacl.NACL(symmetric_key=symmetric_key)
+    return nacl_obj.decrypt_symmetric(message, symmetric_key)
+
