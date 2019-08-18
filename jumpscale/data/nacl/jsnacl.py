@@ -8,11 +8,12 @@ from nacl.signing import SigningKey, VerifyKey
 class NACL:
     KEY_SIZE = 32
 
-    def __init__(self, private_key=None, symmetric_key=None, signing_seed=None):
+    def __init__(self, private_key=None, symmetric_key=None):
         self.private_key = PrivateKey.generate() if private_key is None else PrivateKey(private_key)
+        private_key = self.get_private_key()
         self.public_key = self.private_key.public_key
         self.symmetric_key = nacl.utils.random(NACL.KEY_SIZE) if symmetric_key is None else symmetric_key
-        self.signing_key = SigningKey.generate() if signing_seed is None else SigningKey(signing_seed)
+        self.signing_key = SigningKey(private_key)
         self.symmetric_box = SecretBox(self.symmetric_key)
 
     def encrypt(self, message, reciever_public_key):
