@@ -6,10 +6,10 @@ from .exceptions import FailedChecksumError
 
 wordlist = []
 
-with open("data/encryption/wordlist.txt", "r") as f:
+with open("jumpscale/data/encryption/wordlist.txt", "r") as f:
     wordlist = [line.strip() for line in f.readlines()]
 
-# Todo: change default value of wordlist
+# Todo: change default value of wordlist -> fakes
 def generate_mnemonic(strength=256, wordlist=wordlist):
     """Generate random mnemonic
     
@@ -52,7 +52,7 @@ def mnemonic_to_key(mnemonic, wordlist=wordlist):
         bytes: The key
     """
     words = mnemonic.split(" ")
-    indexes = list(map(_word_index, words))
+    indexes = list(map(lambda x: _word_index(x, wordlist), words))
     total_length = len(indexes) * 11
     strength = total_length * 32 // 33
     checksum_length = total_length - strength
