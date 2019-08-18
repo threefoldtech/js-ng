@@ -32,6 +32,7 @@ gevent = "^1.4"
 faker = "^2.0"
 terminaltables = "^3.1"
 pillow = "^6.1"
+distro = "^1.4"
 
 [tool.poetry.dev-dependencies]
 ipdb = "^0.12.1"
