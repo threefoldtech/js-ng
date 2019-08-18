@@ -1,11 +1,10 @@
 from jumpscale.god import j
-from .exceptions import CoudntVerifyAuthorError
 from .mnemonic import key_to_mnemonic, mnemonic_to_key, generate_mnemonic
 
 
 def encrypt(message, private_key, receiver_public_key):
     """Encrypt the message using the public key of the reciever and the sender's private key.
-    
+
     Args:
         message (bytes): The message.
         private_key (bytes): sender's private key.
@@ -21,12 +20,12 @@ def encrypt(message, private_key, receiver_public_key):
 
 def decrypt(message, private_key, sender_public_key):
     """Decrypt the message using the private key of the reciever and the sender's public key.
-    
+
     Args:
         message (bytes): The message.
         private_key (bytes): reciever's private key.
         sender_public_key (bytes): sender's public key.
-    
+
     Returns:
         bytes: The decryption of the message.
     """
