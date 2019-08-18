@@ -6,7 +6,7 @@ from .exceptions import FailedChecksumError
 
 wordlist = []
 
-with open("jumpscale/data/encryption/wordlist.txt", "r") as f:
+with open(os.path.join(os.path.dirname(__file__), "wordlist.txt"), "r") as f:
     wordlist = [line.strip() for line in f.readlines()]
 
 # Todo: change default value of wordlist -> fakes
