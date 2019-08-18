@@ -141,4 +141,5 @@ def execute(cmd, **command_ctx):
     """
     ## use formatter to format command
     command_ctx = command_ctx or {}
-    return invoke.run(cmd, **command_ctx)
+    res = invoke.run(cmd, **command_ctx)
+    return res.return_code, res.stdout, res.stderr
