@@ -349,8 +349,11 @@ def _args2cmd(args, sep=' '):
     return ''.join(result)
 
 
+def is_linux():
+    return sys.platform.lower() == "linux"
 
+def is_osx():
+    return sys.platform.lower() == "darwin"
 
-
-if sys.platform.lower() == "linux":
+if is_unix():
     from distro import *
