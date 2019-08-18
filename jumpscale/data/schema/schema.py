@@ -116,6 +116,10 @@ def _parse_prop(line):
         name = name[:-1]
     if not _name_in_correct_form(name):
         raise RuntimeError("Name must consist of a sequence of digits, chars, or _ and start with a char or _")
+    if name == "id":
+        raise RuntimeError("id can't be the name of propery.")
+    if name == "name":
+        prop.index = True
     prop.name = name
     pointer_type = None
     if "!" in desc:
