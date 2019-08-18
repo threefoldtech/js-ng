@@ -19,7 +19,7 @@ def encrypt(message, private_key, receiver_public_key):
     return message
 
 
-def decypt(message, private_key, sender_public_key):
+def decrypt(message, private_key, sender_public_key):
     """Decrypt the message using the private key of the reciever and the sender's public key.
     
     Args:
