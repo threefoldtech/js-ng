@@ -23,14 +23,14 @@ def get_list_files(dir_name):
         if os.path.isdir(full_path):
             all_files = all_files + get_list_files(full_path)
         else:
-            path_split = full_path.split(".")
-            if path_split[len(path_split) - 1] in ["jpg", "jpeg", "png"]:
+            path_split = os.path.splitext(full_path)
+            if path_split[1] in [".jpg", ".jpeg", ".png"]:
                 all_files.append(full_path)
 
     return all_files
 
 
-def imageObjectGet(path):
+def get_image(path):
     """returns an PIL.Image object by path
     
     Arguments:
@@ -55,14 +55,14 @@ def resize(path, pathnew, width=1024):
     Returns:
         (string) : True if image resized successfully or the exception message if not
     """
-    im = imageObjectGet(path)
+    im = get_image(path)
     xnew = width
     x, y = im.size
     ynew = int(float(y) / (float(x) / float(xnew)))
     imnew = im.resize((xnew, ynew), Image.ANTIALIAS)
     try:
         imnew.save(pathnew)
-        return 'True'
+        return "True"
     except Exception as e:
         return str(e)
 
@@ -82,8 +82,9 @@ def resize_images_in_dir(folder, foldernew, width=1024):
             statue : True if image resized successfully or the exception message if not
     """
     img_list = get_list_files(folder)
-    img_statue={}
+    print(img_list)
+    img_statue = {}
     for img in img_list:
-        statue=resize(img, os.path.join(foldernew, os.path.basename(img)), width=width)
-        img_statue[img]=statue
+        statue = resize(img, os.path.join(foldernew, os.path.basename(img)), width=width)
+        img_statue[img] = statue
     return img_statue
