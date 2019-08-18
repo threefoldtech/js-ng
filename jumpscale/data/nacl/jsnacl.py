@@ -11,7 +11,7 @@ class NACL:
 
     def __init__(self, private_key=None, symmetric_key=None):
         """Constructor for nacl object
-    
+
         Args:
             private_key (bytes, optional): The private key used to sign and encrypt the data. Generated randomly if not given.
             symmetric_key (bytes, optional): The key used for symmetric encryption. Generated randomly if not given.
@@ -25,11 +25,11 @@ class NACL:
 
     def encrypt(self, message, reciever_public_key):
         """Encrypt the message to send to a receiver. (public key encryption)
-    
+
         Args:
             message (bytes): The message to be encrypted.
             reciever_public_key (bytes): The receiver's public key.
-    
+
         Returns:
             bytes: The encrypted message
         """
@@ -37,11 +37,11 @@ class NACL:
 
     def decrypt(self, message, sender_public_key):
         """Decrypt a received message. (public key encryption)
-    
+
         Args:
             message (bytes): The encrypted message.
             sender_public_key (bytes): The public key of the sender.
-    
+
         Returns:
             bytes: The decrypted message
         """
@@ -49,10 +49,10 @@ class NACL:
 
     def encrypt_symmetric(self, message):
         """Encrypt the message to send to a receiver. (secret key encryption)
-    
+
         Args:
             message (bytes): The message to be encrypted.
-    
+
         Returns:
             bytes: The encrypted message
         """
@@ -60,10 +60,10 @@ class NACL:
 
     def decrypt_symmetric(self, message, symmetric_key):
         """Decrypt the receiver message. (secret key encryption)
-    
+
         Args:
             message (bytes): The message to be decrypted.
-    
+
         Returns:
             bytes: The decrypted message
         """
@@ -71,10 +71,10 @@ class NACL:
 
     def sign(self, message):
         """Sign the message and return the messsage and the signature.
-    
+
         Args:
             message (bytes): The message to be signed
-    
+
         Returns:
             bytes, bytes: The message and the signature.
         """
@@ -83,12 +83,12 @@ class NACL:
 
     def verify(self, message, signature, verification_key):
         """Verify that the signature using the verification key
-    
+
         Args:
             message (bytes): The received message.
             signature (bytes): The recieved signature.
             verification_key (bytes): The verification key.
-    
+
         Returns:
             bool: True if the verification succeeds.
         """
@@ -100,7 +100,7 @@ class NACL:
 
     def get_signing_seed(self):
         """Returns the signing seed (same as the private key).
-    
+
         Returns:
             bytes: The 32-bit signing key.
         """
@@ -108,7 +108,7 @@ class NACL:
 
     def get_verification_key(self):
         """Returns the verification key.
-    
+
         Returns:
             bytes: The verification key.
         """
@@ -116,7 +116,7 @@ class NACL:
 
     def get_public_key(self):
         """Getter for the public key.
-    
+
         Returns:
             bytes: The public key.
         """
@@ -124,7 +124,7 @@ class NACL:
 
     def get_private_key(self):
         """Getter for the private key.
-    
+
         Returns:
             bytes: The private key.
         """
@@ -132,7 +132,7 @@ class NACL:
 
     def get_symmetric_key(self):
         """Getter for the symmetric key.
-    
+
         Returns:
             bytes: The symmetric key.
         """
