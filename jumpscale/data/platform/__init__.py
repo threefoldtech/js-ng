@@ -355,5 +355,5 @@ def is_linux():
 def is_osx():
     return sys.platform.lower() == "darwin"
 
-if is_unix():
+if is_linux():
     from distro import *
