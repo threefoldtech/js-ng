@@ -153,7 +153,7 @@ def get_python_info():
     return ret
 
 
-def get_profile(**kwargs):
+def get_profile(scrub=False):
     """The main entrypoint to platform. Calling this will return a
     JSON-serializable dictionary of information about the current
     process.
@@ -167,9 +167,6 @@ def get_profile(**kwargs):
     username. Values are replaced with '-', but for compatibility keys
     remain in place.
     """
-    scrub = kwargs.pop('scrub', False)
-    if kwargs:
-        raise TypeError('unexpected keyword arguments: %r' % (kwargs.keys(),))
     ret = {}
     try:
         ret['username'] = getpass.getuser()
