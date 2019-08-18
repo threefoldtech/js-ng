@@ -1,5 +1,5 @@
 import sys
-
+import traceback
 import better_exceptions
 
 from functools import partial
@@ -7,6 +7,7 @@ from functools import partial
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.formatted_text import ANSI
 from prompt_toolkit.shortcuts import print_formatted_text
+from prompt_toolkit.completion import Completion
 
 from ptpython.prompt_style import PromptStyle
 
@@ -41,6 +42,77 @@ def patched_handle_exception(self, e):
     output.write("%s\n" % e)
     output.flush()
 
+
+def eval_code(stmts, locals_=None, globals_=None):
+    """
+    a helper function to ignore incomplete syntax erros when evaluating code
+    while typing incomplete lines, e.g.: j.clien...
+    """
+    if not stmts:
+        return
+
+    try:
+        code = compile(stmts, filename="<kosmos>", mode="eval")
+    except SyntaxError:
+        return
+
+    return eval(code, globals_, locals_)
+def get_current_line(document):
+    tbc = document.current_line_before_cursor
+    if tbc:
+        line = tbc.split(".")
+        parent, member = ".".join(line[:-1]), line[-1]
+        if member.startswith("__"):  # then we want to show private methods
+            prefix = "__"
+        elif member.startswith("_"):  # then we want to show private methods
+            prefix = "_"
+        else:
+            prefix = ""
+        return parent, member, prefix
+    raise ValueError("nothing is written")
+
+def get_completions(self, document, complete_event):
+    """
+    get completions for j objects (using _method_) and others (using dir)
+    :rtype: `Completion` generator
+    """
+
+    def colored_completions(names, color):
+        for name in names:
+            if not name:
+                continue
+            if name.startswith(member):
+                completion = name[len(member) :]
+                yield Completion(
+                    completion, 0, display=name, style="bg:%s fg:ansiblack" % color, selected_style="bg:ansidarkgray"
+                )
+
+    try:
+        parent, member, prefix = get_current_line(document)
+    except ValueError:
+        return
+
+    obj = eval_code(parent, self.get_locals(), self.get_globals())
+    if obj:
+        members = sorted(dir(obj), key=sort_children_key)
+        yield from colored_completions(members, "ansigray")
+
+
+def sort_children_key(name):
+    """Sort members of an object
+    :param name: name
+    :type name: str
+    :return: the order of sorting
+    :rtype: int
+    """
+    if name.startswith("__"):
+        return 3
+    elif name.startswith("_"):
+        return 2
+    elif name.isupper():
+        return 1
+    else:
+        return 0
 
 def ptconfig(repl):
     repl.exit_message = "Bye!"
@@ -163,3 +235,32 @@ def ptconfig(repl):
     repl._handle_exception = partial(patched_handle_exception, repl)
     better_exceptions.hook()
 
+
+    old_get_completions = repl._completer.__class__.get_completions
+
+
+    def custom_get_completions(self, document, complete_event):
+        try:
+            _, _, prefix = get_current_line(document)
+        except ValueError:
+            return
+
+        completions = []
+        try:
+            completions = list(get_completions(self, document, complete_event))
+        except Exception:
+            RuntimeError("Error while getting completions\n" + traceback.format_exc())
+
+        if not completions:
+            completions = old_get_completions(self, document, complete_event)
+        def filter_completions_on_prefix(completions, prefix=None):
+            HIDDEN_PREFIXES = ("_", "__")
+
+            for completion in completions:
+                text = completion.text
+                if prefix not in HIDDEN_PREFIXES and text.startswith(HIDDEN_PREFIXES):
+                    continue
+                yield completion
+        yield from filter_completions_on_prefix(completions, prefix)
+
+    repl._completer.__class__.get_completions = custom_get_completions
