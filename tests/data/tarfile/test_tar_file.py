@@ -31,7 +31,3 @@ def test_extract():
     with j.data.tarfile.Reader("/tmp/x") as tar:
         tar.extract(out_dir)
     assert os.path.isdir(f"{out_dir}/tmp")
-
-
-#
-
