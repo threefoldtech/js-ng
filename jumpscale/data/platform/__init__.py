@@ -1,4 +1,25 @@
+"""
+JS-NG> j.data.platform.codename()                                                                                                 
+'bionic'
+
+JS-NG> j.data.platform.lsb_release_info()                                                                                         
+{'distributor_id': 'Ubuntu', 'description': 'Ubuntu 18.04.3 LTS', 'release': '18.04', 'codename': 'bionic'}
+
+JS-NG> j.data.platform.get_profile()                                                                                              
+{'username': 'xmonader', 'guid': 'ce5a52d09920b248b602caf28539073', 'hostname': 'xmonader-ThinkPad-E580', 'hostfqdn': 'xmonader-Th
+inkPad-E580', 'uname': {'system': 'Linux', 'node': 'xmonader-ThinkPad-E580', 'release': '4.15.0-55-generic', 'version': '#60-Ubunt
+u SMP Tue Jul 2 18:22:20 UTC 2019', 'machine': 'x86_64', 'processor': 'x86_64'}, 'linux_dist_name': 'debian', 'linux_dist_version'
+: 'buster/sid', 'cpu_count': 8, 'fs_encoding': 'utf-8', 'ulimit_soft': 1024, 'ulimit_hard': 1048576, 'cwd': '/home/xmonader/wspace
+/js-next/js-ng', 'umask': '0o2', 'python': {'argv': 'jsng', 'bin': '/home/xmonader/.cache/pypoetry/virtualenvs/js-ng-py3.7/bin/pyt
+hon', 'version': '3.7.4 (default, Jul 12 2019, 20:57:46) [GCC 5.4.0 20160609]', 'compiler': 'GCC 5.4.0 20160609', 'build_date': 'J
+ul 12 2019 20:57:46', 'version_info': [3, 7, 4, 'final', 0], 'features': {'openssl': 'OpenSSL 1.0.2s  28 May 2019', 'expat': 'expa
+t_2.2.7', 'sqlite': '3.29.0', 'tkinter': '', 'zlib': '1.2.11', 'unicode_wide': True, 'readline': True, '64bit': True, 'ipv6': True
+, 'threading': True, 'urandom': True}}, 'time_utc': '2019-08-18 11:24:23.636866', 'time_utc_offset': 2.0}
+
+"""
+
 # from boltons.ecoutils
+
 import re
 import os
 import sys
