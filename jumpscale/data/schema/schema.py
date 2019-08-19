@@ -1,3 +1,6 @@
+import re
+
+
 class Property:
     def __init__(self):
         self.index = False
@@ -18,72 +21,106 @@ class Schema:
 
 
 def _normalize_string(text):
+    """Trims the text, removes all the spaces from text and replaces every sequence of lines with a single line.
+    
+    Args:
+        text (str): The schema definition.
+    
+    Returns:
+        str: The normalized text.
+    """
     text = text.strip()
     result = ""
     whitespaces = [" ", "\t"]
     in_comment = False
-    for i, c in enumerate(text):
+    for c in text:
         if c == "#":
             in_comment = True
         if c == "\n":
             in_comment = False
         if not in_comment and c in whitespaces:
             continue
-        if not in_comment and c == "\n" and text[i - 1] == "\n":
+        if not in_comment and c == "\n" and result.endswith("\n"):
             continue
         result += c
     return result
 
 
 def _correct_url_number(text):
+    """Checks that the schema definition contains only one url definition.
+    
+    Args:
+        text (str): The schema definition.
+    
+    Returns:
+        bool: Whether only one url is defined.
+    """
     url_count = text.count("@url")
     return url_count == 1
 
 
 def _parse_system_prop(line):
+    """Returns the name and value of a system property (The line is preceded by @).
+    
+    Args:
+        line (str): The definition of the system property.
+    
+    Returns:
+        str, str: Pair of name, value.
+    """
     return line[1:].split("#")[0].split("=")
 
 
 def _name_in_correct_form(name):
-    for c in name:
-        if c != "_" and not (
-            ord(c) >= ord("a")
-            and ord(c) <= ord("z")
-            or ord(c) >= ord("A")
-            and ord(c) <= ord("Z")
-            or ord(c) >= ord("0")
-            and ord(c) <= ord("9")
-        ):
-            return False
-    return (
-        name[0] == "_"
-        or ord(name[0]) >= ord("a")
-        and ord(name[0]) <= ord("z")
-        or ord(name[0]) >= ord("A")
-        and ord(name[0]) <= ord("Z")
-    )
-
-
-def _is_int(value):
-    for e in value:
-        if ord(e) < ord("0") or ord(e) > ord("9"):
-            return False
-    return True
+    """Checks whether the name is a sequence of alphanumberic characters and _ and starts with _.
+    
+    Args:
+        name (str): The name of the property.
+    
+    Returns:
+        bool: True if the name is well formed. False otherwise.
+    """
+    return name[0] == "_" or name[0].isalpha() and name.replace("_", "").isalnum()
 
 
 def _is_float(value):
+    """Checks if the value is float. Which means it contains two non empty integer parts separated by .
+    
+    Args:
+        value (str): The value.
+    
+    Returns:
+        bool: True if the value represents a float.
+    """
     if "." not in value:
         return False
     a, b = value.split(".", 1)
-    return _is_int(a) and _is_int(b)
+    return a.isdigit() and b.isdigit()
 
 
 def _infer_type(value):
-    if value[0] == '"' and value[-1] == '"' or value[0] == "'" and value[-1] == "'":
+    """Infers the type from the value.
+    one of:
+    1. int: contains digits only.
+    2. float: two nonempty parts of integers separated by .
+    3. string: nonempty sequence of characters inside " or '
+    4. bool: literals true or false.
+    5. list: equals []
+    
+    Args:
+        value (str): The value which the type is infered from.
+    
+    Raises:
+        RuntimeError: If no types can be infered
+    
+    Returns:
+        str: The type of the value.
+    """
+    if len(value) >= 2 and (value[0] == '"' and value[-1] == '"' or value[0] == "'" and value[-1] == "'"):
         return "str"
     elif _is_float(value):
         return "float"
-    elif _is_int(value):
+    elif value.isdigit():
         return "i"
     elif value == "[]":
         return "ls"
@@ -94,58 +131,53 @@ def _infer_type(value):
 
 
 def _parse_prop(line):
+    """Parses a line which defines a property.
+    
+    Args:
+        line (str): The property description.
+    
+    Raises:
+        RuntimeError: If the description is malformed.
+    
+    Returns:
+        str, Property: Name of the property and Property object defining the property.
+    """
+    RE = r"(&?)([^=*]+)((?:\*|\*\*|\*\*\*)?)\=([^(!#]*)((?:\(.*?\))?)((?:\![^#]*)?)((?:#.*)?)"
+    match = re.match(RE, line)
+    if match is None:
+        raise RuntimeError("Can't parse schema")
     prop = Property()
-    if "#" in line:
-        line, comment = line.split("#", 1)
-        prop.comment = comment
-
-    if line.count("=") != 1:
-        raise RuntimeError("The numebr of = in one line must be exactly one")
-    name, desc = line.split("=")
-    prop.unique = name.startswith("&")
-    prop.index_text = name.endswith("***")
-    prop.index_key = not prop.index_text and name.endswith("**")
-    prop.index = prop.unique or not prop.index_text and not prop.index_key and name.endswith("*")
-    if name.startswith("&"):
-        name = name[1:]
-    if name.endswith("***"):
-        name = name[:-3]
-    elif name.endswith("**"):
-        name = name[:-2]
-    elif name.endswith("*"):
-        name = name[:-1]
-    if not _name_in_correct_form(name):
-        raise RuntimeError("Name must consist of a sequence of digits, chars, or _ and start with a char or _")
-    if name == "id":
-        raise RuntimeError("id can't be the name of propery.")
-    if name == "name":
-        prop.index = True
+    unique, name, qualifier, default_value, prop_type, pointer_type, comment = match.groups()
+    pointer_type = pointer_type[1:] if pointer_type else pointer_type
+    prop_type = prop_type[1:-1] if prop_type else prop_type
+    comment = comment[1:] if comment else comment
     prop.name = name
-    pointer_type = None
-    if "!" in desc:
-        desc, pointer_type = desc.split("!", 1)
-        if "(" not in desc:
-            raise RuntimeError("Type must be specified when supplying a pointer type")
-
-    if "(" in desc:
-        prop_type = desc.split("(", 1)[1].split(")", 1)[0]
-        default_value = pointer_type or desc.split("(", 1)[0]
-    else:
-        default_value = desc
-        prop_type = _infer_type(default_value)
-
-    if prop_type == "str":
-        if not (default_value[0] == '"' and default_value[-1] == '"') and not (
-            default_value[0] == "'" and default_value[-1] == "'"
-        ):
-            raise RuntimeError("String data type must be enclosed between quotes")
+    prop.unique = unique == "&"
+    prop.index = prop.unique or qualifier == "*"
+    prop.index_key = qualifier == "**"
+    prop.index_text = qualifier == "***"
+    prop.type = prop_type or _infer_type(default_value)
+    if len(default_value) >= 2 and (
+        default_value[0] == "'" and default_value[-1] == "'" or default_value[0] == '"' and default_value[-1] == '"'
+    ):
         default_value = default_value[1:-1]
-    prop.type = prop_type
-    prop.defaultvalue = default_value
+    prop.defaultvalue = pointer_type or default_value
+    prop.comment = comment
     return prop.name, prop
 
 
 def parse_schema(text):
+    """Parses a schema from string.
+    
+    Args:
+        text (str): The schema definition.
+    
+    Raises:
+        RuntimeError: Thrown when the schema can't be parsed.
+    
+    Returns:
+        Schema: Schema object representing the schema.
+    """
     text = _normalize_string(text)
     if text.count("@url") != 1:
         raise RuntimeError("The number of urls must be equal to one.")
