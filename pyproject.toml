@@ -30,6 +30,13 @@ msgpack = "^0.6.1"
 blosc = "^1.8"
 pylzma = "^0.5.0"
 PyYAML = "^5.1"
+arrow = "^0.14.5"
+colorama = "^0.4.1"
+gevent = "^1.4"
+faker = "^2.0"
+terminaltables = "^3.1"
+pillow = "^6.1"
+distro = "^1.4"
 
 [tool.poetry.dev-dependencies]
 ipdb = "^0.12.1"
