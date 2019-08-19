@@ -47,3 +47,18 @@ def test_n_from_choices():
         and str4[4] in choices
     )
 
+
+def tests_chars():
+    str1 = j.data.idgenerator.chars(2)
+    str2 = j.data.idgenerator.chars(4)
+    str3 = j.data.idgenerator.chars(6)
+    str4 = j.data.idgenerator.chars(8)
+
+    assert len(str1) == 2 
+    assert len(str2) == 4  
+    assert len(str3) == 6   
+    assert len(str4) == 8  
+
+def n_bytes():
+     
+
