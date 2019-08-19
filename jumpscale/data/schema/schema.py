@@ -105,7 +105,7 @@ def _infer_type(value):
     2. float: two nonempty parts of integers separated by .
     3. string: nonempty sequence of characters inside " or '
     4. bool: literals true or false.
-    5. list: equals []
+    5. list: equals surrounded by [].
     
     Args:
         value (str): The value which the type is infered from.
@@ -148,12 +148,14 @@ def _parse_prop(line):
         raise RuntimeError("Can't parse schema")
     prop = Property()
     unique, name, qualifier, default_value, prop_type, pointer_type, comment = match.groups()
+    if name == "id":
+        raise NameError("id is reserved and can't be a name of property.")
     pointer_type = pointer_type[1:] if pointer_type else pointer_type
     prop_type = prop_type[1:-1] if prop_type else prop_type
     comment = comment[1:] if comment else comment
     prop.name = name
     prop.unique = unique == "&"
-    prop.index = prop.unique or qualifier == "*"
+    prop.index = name == "name" or prop.unique or qualifier == "*"
     prop.index_key = qualifier == "**"
     prop.index_text = qualifier == "***"
     prop.type = prop_type or _infer_type(default_value)
