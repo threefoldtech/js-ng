@@ -19,7 +19,7 @@ import copy
 
 
 
-def copyFile(fileFrom, to, createDirIfNeeded=False, overwriteFile=True):
+def copy_file(fileFrom, to, create_dirIfNeeded=False, overwritefile=True):
     """Copy file
 
     Copies the file from C{fileFrom} to the file or directory C{to}.
@@ -37,19 +37,19 @@ def copyFile(fileFrom, to, createDirIfNeeded=False, overwriteFile=True):
     """
     # Create target folder first, otherwise copy fails
     target_folder = os.path.dirname(to)
-    if createDirIfNeeded:
-        createDir(target_folder)
+    if create_dirIfNeeded:
+        create_dir(target_folder)
     if exists(to):
         if os.path.samefile(fileFrom, to):
             raise j.exceptions.Input("{src} and {dest} are the same file".format(src=fileFrom, dest=to))
-        if overwriteFile is False:
+        if overwritefile is False:
             if os.path.samefile(to, target_folder):
                 destfilename = os.path.join(to, os.path.basename(fileFrom))
                 if exists(destfilename):
                     return
             else:
                 return
-        elif isFile(to):
+        elif is_file(to):
             # overwriting some open  files is frustrating and may not work
             # due to locking [delete/copy is a better strategy]
             remove(to)
@@ -57,7 +57,7 @@ def copyFile(fileFrom, to, createDirIfNeeded=False, overwriteFile=True):
     
 
 
-def moveFile(source, destin):
+def move_file(source, destin):
     """Move a  File from source path to destination path
     @param source: string (Source file path)
     @param destination: string (Destination path the file should be moved to )
@@ -65,7 +65,7 @@ def moveFile(source, destin):
     
     _move(source, destin)
 
-def renameFile(filePath, new_name):
+def rename_file(filePath, new_name):
     """
     OBSOLETE
     """
@@ -73,13 +73,13 @@ def renameFile(filePath, new_name):
     return _move(filePath, new_name)
 
 
-def removeIrrelevantFiles(path, followSymlinks=True):
+def remove_irrelevant_files(path, followSymlinks=True):
     """Will remove files having extensions: pyc, bak
     @param path: string (path to search in)
     """
     ext = ["pyc", "bak"]
-    for path in listFilesInDir(path, recursive=True, followSymlinks=followSymlinks):
-        if getFileExtension(path) in ext:
+    for path in list_files_in_dir(path, recursive=True, followSymlinks=followSymlinks):
+        if get_file_extension(path) in ext:
             remove(path)
 
 
@@ -90,7 +90,7 @@ def remove(path):
     return j.core.tools.delete(path)
 
 
-def createEmptyFile(filename):
+def create_empty_file(filename):
     """Create an empty file
     @param filename: string (file path name to be created)
     """
@@ -99,7 +99,7 @@ def createEmptyFile(filename):
     
 
 
-def createDir(newdir, unlink=False):
+def create_dir(newdir, unlink=False):
     """Create new Directory
     @param newdir: string (Directory path/name)
     if newdir was only given as a directory name, the new directory will be created on the default path,
@@ -109,14 +109,14 @@ def createDir(newdir, unlink=False):
         raise j.exceptions.RuntimeError("Cannot use file notation here")
     
     if exists(newdir):
-        if isLink(newdir) and unlink:
+        if is_link(newdir) and unlink:
             unlink(newdir)
 
 
     else:
         head, tail = os.path.split(newdir)
-        if head and (not exists(head) or not isDir(head)):
-            createDir(head, unlink=False)
+        if head and (not exists(head) or not is_dir(head)):
+            create_dir(head, unlink=False)
         if tail:
             os.mkdir(newdir)
             # try:
@@ -128,13 +128,13 @@ def createDir(newdir, unlink=False):
 
         
 
-def copyDirTree(
+def copy_dir_tree(
     
     src,
     dst,
     keepsymlinks=False,
     deletefirst=False,
-    overwriteFiles=True,
+    overwritefiles=True,
     ignoredir=None,
     ignorefiles=None,
     rsync=True,
@@ -142,7 +142,7 @@ def copyDirTree(
     sshport=22,
     recursive=True,
     rsyncdelete=True,
-    createdir=False,
+    create_dir=False,
     showout=False,
 ):
     """Recursively copy an entire directory tree rooted at src.
@@ -155,11 +155,11 @@ def copyDirTree(
     :param ignorefiles: the following are always in, no need to specify: ["*.egg-info","*.pyc","*.bak"]
     @param ssh:  bool (copy to remote)
     @param sshport int (ssh port)
-    @param createdir:   bool (when ssh creates parent directory)
+    @param create_dir:   bool (when ssh creates parent directory)
     @param dst: string (path directory to be copied to...should not already exist)
     @param keepsymlinks: bool (True keeps symlinks instead of copying the content of the file)
     @param deletefirst: bool (Set to True if you want to erase destination first, be carefull, this can erase directories)
-    @param overwriteFiles: if True will overwrite files, otherwise will not overwrite when destination exists
+    @param overwritefiles: if True will overwrite files, otherwise will not overwrite when destination exists
     """
 
     default_ignore_dir = [".egg-info", ".dist-info", "__pycache__"]
@@ -181,57 +181,57 @@ def copyDirTree(
         
         if (src is None) or (dst is None):
             raise j.exceptions.Value(
-                "Not enough parameters passed in system.fs.copyDirTree to copy directory from %s to %s "
+                "Not enough parameters passed in system.fs.copy_dir_tree to copy directory from %s to %s "
                 % (src, dst)
             )
-        if isDir(src):
+        if is_dir(src):
             names = os.listdir(src)
 
             if not exists(dst):
-                createDir(dst)
+                create_dir(dst)
 
             errors = []
             for name in names:
                 # is only for the name
                 name2 = name
 
-                srcname = joinPaths(src, name)
-                dstname = joinPaths(dst, name2)
+                srcname = join_path(src, name)
+                dstname = join_path(dst, name2)
 
-                if isDir(srcname) and name in ignoredir:
+                if is_dir(srcname) and name in ignoredir:
                     continue
-                if isFile(srcname) and name in ignorefiles:
+                if is_file(srcname) and name in ignorefiles:
                     continue
 
                 if deletefirst and exists(dstname):
-                    if isDir(dstname, False):
+                    if is_dir(dstname, False):
                         remove(dstname)
-                    elif isLink(dstname):
+                    elif is_link(dstname):
                         unlink(dstname)
 
-                if isLink(srcname):
-                    linkto = readLink(srcname)
+                if is_link(srcname):
+                    linkto = read_link(srcname)
                     if keepsymlinks:
-                        symlink(linkto, dstname, overwriteFiles)
+                        symlink(linkto, dstname, overwritefiles)
                         continue
                     else:
                         srcname = linkto
-                if isDir(srcname):
+                if is_dir(srcname):
                     # print "1:%s %s"%(srcname,dstname)
-                    copyDirTree(
+                    copy_dir_tree(
                         srcname,
                         dstname,
                         keepsymlinks,
                         deletefirst,
-                        overwriteFiles=overwriteFiles,
+                        overwritefiles=overwritefiles,
                         ignoredir=ignoredir,
                         ignorefiles=ignorefiles,
                     )
-                if isFile(srcname):
+                if is_file(srcname):
                     # print "2:%s %s"%(srcname,dstname)
-                    copyFile(srcname, dstname, createDirIfNeeded=False, overwriteFile=overwriteFiles)
+                    copy_file(srcname, dstname, create_dirIfNeeded=False, overwritefile=overwritefiles)
         else:
-            raise j.exceptions.RuntimeError("Source path %s in system.fs.copyDirTree is not a directory" % src)
+            raise j.exceptions.RuntimeError("Source path %s in system.fs.copy_dir_tree is not a directory" % src)
     else:
         excl = " "
         for item in ignoredir:
@@ -245,7 +245,7 @@ def copyDirTree(
         src = src.replace("//", "/")
 
         # ":" is there to make sure we support ssh
-        if ":" not in src and j.sal.fs.isDir(src):
+        if ":" not in src and j.sal.fs.is_dir(src):
             if src[-1] != "/":
                 src += "/"
             if dstpath[-1] != "/":
@@ -263,28 +263,28 @@ def copyDirTree(
             cmd += " --delete --delete-excluded "
         if ssh:
             cmd += " -e 'ssh -o StrictHostKeyChecking=no -p %s' " % sshport
-            if createdir:
-                cmd += "--rsync-path='mkdir -p %s && rsync' " % getParent(dstpath2)
+            if create_dir:
+                cmd += "--rsync-path='mkdir -p %s && rsync' " % get_parent(dstpath2)
         else:
-            createDir(getParent(dstpath))
+            create_dir(get_parent(dstpath))
         cmd += " '%s' '%s'" % (src, dst)
         cmd += " --verbose"
         # print(cmd)
         rc, out, err = j.sal.process.execute(cmd, showout=showout)
 
 
-def changeDir(path):
+def change_dir(path):
     """Changes Current Directory
     @param path: string (Directory path to be changed to)
     """
     
     os.chdir(path)
-    newcurrentPath = os.getcwd()
+    current_path = os.getcwd()
     
-    return newcurrentPath
+    return current_path
 
 
-def moveDir(source, destin):
+def move_dir(source, destin):
     """Move Directory from source to destination
     @param source: string (Source path where the directory should be removed from)
     @param destin: string (Destination path where the directory should be moved into)
@@ -293,7 +293,7 @@ def moveDir(source, destin):
     _move(source, destin)
     
 
-def joinPaths(*args):
+def join_path(*args):
     """Join one or more path components.
     If any component is an absolute path, all previous components are thrown away, and joining continues.
     @param path1: string
@@ -318,15 +318,15 @@ def joinPaths(*args):
     return os.path.join(*args)
 
 
-def getDirName(path, lastOnly=False, levelsUp=None):
+def get_dir_name(path, lastOnly=False, levelsUp=None):
     """
     Return a directory name from pathname path.
     @param path the path to find a directory within
     @param lastOnly means only the last part of the path which is a dir (overrides levelsUp to 0)
     @param levelsUp means, return the parent dir levelsUp levels up
-        e.g. ...getDirName("/opt/qbase/bin/something/test.py", levelsUp=0) would return something
-        e.g. ...getDirName("/opt/qbase/bin/something/test.py", levelsUp=1) would return bin
-        e.g. ...getDirName("/opt/qbase/bin/something/test.py", levelsUp=10) would raise an error
+        e.g. ...get_dir_name("/opt/qbase/bin/something/test.py", levelsUp=0) would return something
+        e.g. ...get_dir_name("/opt/qbase/bin/something/test.py", levelsUp=1) would return bin
+        e.g. ...get_dir_name("/opt/qbase/bin/something/test.py", levelsUp=10) would raise an error
     """
     
     dname = os.path.dirname(path)
@@ -347,7 +347,7 @@ def getDirName(path, lastOnly=False, levelsUp=None):
     return dname + os.sep if dname else dname
 
 
-def getBaseName(path, removeExtension=False):
+def get_base_name(path, removeExtension=False):
     """Return the base name of pathname path."""
     
     name = os.path.basename(path.rstrip(os.path.sep))
@@ -355,77 +355,60 @@ def getBaseName(path, removeExtension=False):
         if "." in name:
             name = ".".join(name.split(".")[:-1])
     return name
-basename = getBaseName
+basename = get_base_name
 
 # NO DECORATORS HERE
-def pathShorten(path):
-    """
-    Clean path (change /var/www/../lib to /var/lib). On Windows, if the
-    path exists, the short path name is returned.
-
-    @param path: Path to clean
-    @type path: string
-    @return: Cleaned (short) path
-    @rtype: string
-    """
-    return pathShorten(path)
-
-# NO DECORATORS HERE
-def pathClean(path):
+def path_clean(path):
     """
     goal is to get a equal representation in / & \ in relation to os.sep
     """
-    return pathClean(path)
+    return os.path.normcase(path)
 
 # NO DECORATORS HERE
-def pathDirClean(path):
-    return pathDirClean(path)
+def path_dir_clean(path):
+    return os.path.normpath(path)
 
 # NO DECORATORS HERE
-def dirEqual(path1, path2):
-    return dirEqual(path)
-
-# NO DECORATORS HERE
-def pathNormalize(path):
+def path_normalize(path):
     """
     paths are made absolute & made sure they are in line with os.sep
     @param path: path to normalize
     """
-    return pathNormalize(path)
+    return os.path.abspath(path)
 
-def pathRemoveDirPart(path, toremove, removeTrailingSlash=False):
+def path_remove_dir_part(path, toremove, removeTrailingSlash=False):
     """
     goal remove dirparts of a dirpath e,g, a basepath which is not needed
     will look for part to remove in full path but only full dirs
     """
-    path = pathNormalize(path)
-    toremove = pathNormalize(toremove)
+    path = path_normalize(path)
+    toremove = path_normalize(toremove)
 
-    if pathClean(toremove) == pathClean(path):
+    if path_clean(toremove) == path_clean(path):
         return ""
-    path = pathClean(path)
-    path = path.replace(pathDirClean(toremove), "")
+    path = path_clean(path)
+    path = path.replace(path_dir_clean(toremove), "")
     if removeTrailingSlash:
         if len(path) > 0 and path[0] == os.sep:
             path = path[1:]
-    path = pathClean(path)
+    path = path_clean(path)
     return path
 
-def processPathForDoubleDots(path):
+def process_path_for_double_dots(path):
     """
     /root/somepath/.. would become /root
     /root/../somepath/ would become /somepath
 
     result will always be with / slashes
     """
-    # print "processPathForDoubleDots:%s"%path
-    path = pathClean(path)
+    # print "process_path_for_double_dots:%s"%path
+    path = path_clean(path)
     path = path.replace("\\", "/")
     result = []
     for item in path.split("/"):
         if item == "..":
             if result == []:
-                raise j.exceptions.RuntimeError("Cannot processPathForDoubleDots for paths with only ..")
+                raise j.exceptions.RuntimeError("Cannot process_path_for_double_dots for paths with only ..")
             else:
                 result.pop()
         else:
@@ -433,7 +416,7 @@ def processPathForDoubleDots(path):
     return "/".join(result)
 
 
-def getParent(path):
+def get_parent(path):
     """
     Returns the parent of the path:
     /dir1/dir2/file_or_dir -> /dir1/dir2/
@@ -447,7 +430,7 @@ def getParent(path):
         return os.sep
     return os.sep.join(parts)
 
-def getParentWithDirname(path="", dirname=".git", die=False):
+def get_parent_with_dir_name(path="", dirname=".git", die=False):
     """
     looks for parent which has $dirname in the parent dir, if found return
     if not found will return None or die
@@ -468,14 +451,14 @@ def getParentWithDirname(path="", dirname=".git", die=False):
         if j.sal.fs.exists("%s/%s" % (curdir, dirname)):
             return curdir
         # look for parent
-        curdir = j.sal.fs.getParent(curdir)
+        curdir = j.sal.fs.get_parent(curdir)
     if die:
         raise j.exceptions.Base("Could not find %s dir as parent of:'%s'" % (dirname, path))
     else:
         return None
 
 
-def getFileExtension(path):
+def get_file_extension(path):
     ext = os.path.splitext(path)[1]
     return ext.strip(".")
 
@@ -534,7 +517,7 @@ def chmod(path, permissions):
                     raise j.exceptions.RuntimeError("%s" % e)
 
 
-def pathParse(path, baseDir="", existCheck=True, checkIsFile=False):
+def path_parse(path, baseDir="", existCheck=True, checkis_file=False):
     """
     parse paths of form /root/tmp/33_adoc.doc into the path, priority which is numbers before _ at beginning of path
     also returns filename
@@ -543,7 +526,7 @@ def pathParse(path, baseDir="", existCheck=True, checkIsFile=False):
     if basedir specified that part of path will be removed
 
     example:
-    j.sal.fs.pathParse("/opt/qbase3/apps/specs/myspecs/definitions/cloud/datacenter.txt","/opt/qbase3/apps/specs/myspecs/",existCheck=False)
+    j.sal.fs.path_parse("/opt/qbase3/apps/specs/myspecs/definitions/cloud/datacenter.txt","/opt/qbase3/apps/specs/myspecs/",existCheck=False)
     @param path is existing path to a file
     @param baseDir, is the absolute part of the path not required
     @return list of dirpath,filename,extension,priority
@@ -552,17 +535,17 @@ def pathParse(path, baseDir="", existCheck=True, checkIsFile=False):
     # make sure only clean path is left and the filename is out
     if existCheck and not exists(path):
         raise j.exceptions.RuntimeError("Cannot find file %s when importing" % path)
-    if checkIsFile and not isFile(path):
+    if checkis_file and not is_file(path):
         raise j.exceptions.RuntimeError("Path %s should be a file (not e.g. a dir), error when importing" % path)
     extension = ""
-    if isDir(path):
+    if is_dir(path):
         name = ""
-        path = pathClean(path)
+        path = path_clean(path)
     else:
-        name = getBaseName(path)
-        path = pathClean(path)
+        name = get_base_name(path)
+        path = path_clean(path)
         # make sure only clean path is left and the filename is out
-        path = getDirName(path)
+        path = get_dir_name(path)
         # find extension
         regexToFindExt = "\.\w*$"
         if j.data.regex.match(regexToFindExt, name):
@@ -573,10 +556,10 @@ def pathParse(path, baseDir="", existCheck=True, checkIsFile=False):
             )
 
     if baseDir != "":
-        path = pathRemoveDirPart(path, baseDir)
+        path = path_remove_dir_part(path, baseDir)
 
     if name == "":
-        dirOrFilename = getDirName(path, lastOnly=True)
+        dirOrFilename = get_dir_name(path, lastOnly=True)
     else:
         dirOrFilename = name
     # check for priority
@@ -601,7 +584,7 @@ def getcwd():
     return os.getcwd()
 
 
-def readLink(path):
+def read_link(path):
     """Works only for unix
     Return a string representing the path to which the symbolic link points.
     returns the source location (non relative)
@@ -612,28 +595,28 @@ def readLink(path):
     if j.core.platformtype.myplatform.platform_is_unix or j.core.platformtype.myplatform.platform_is_osx:
         res = os.readlink(path)
     elif j.core.platformtype.myplatform.platform_is_windows:
-        raise j.exceptions.RuntimeError("Cannot readLink on windows")
+        raise j.exceptions.RuntimeError("Cannot read_link on windows")
     else:
         raise j.exceptions.Base("cant read link, dont understand platform")
 
     if res.startswith(".."):
-        srcDir = getDirName(path)
-        res = pathNormalize("%s%s" % (srcDir, res))
-    elif getBaseName(res) == res:
-        res = joinPaths(getParent(path), res)
+        srcDir = get_dir_name(path)
+        res = path_normalize("%s%s" % (srcDir, res))
+    elif get_base_name(res) == res:
+        res = join_path(get_parent(path), res)
     return res
 
 
-def removeLinks(path):
+def remove_links(path):
     """
     find all links & remove
     """
-    items = _listAllInDir(path=path, recursive=True, followSymlinks=False, listSymlinks=True)
-    items = [item for item in items[0] if isLink(item)]
+    items = _list_all_in_dir(path=path, recursive=True, followSymlinks=False, listSymlinks=True)
+    items = [item for item in items[0] if is_link(item)]
     for item in items:
         unlink(item)
 
-def _listInDir(path, followSymlinks=True):
+def _list_in_dir(path, followSymlinks=True):
     """returns array with dirs & files in directory
     @param path: string (Directory path to list contents under)
     """
@@ -641,7 +624,7 @@ def _listInDir(path, followSymlinks=True):
     return names
 
 
-def listFilesInDir(
+def list_files_in_dir(
     
     path,
     recursive=False,
@@ -676,7 +659,7 @@ def listFilesInDir(
         depth = None
     # if depth is not None:
     #     depth+=1
-    filesreturn, depth = _listAllInDir(
+    filesreturn, depth = _list_all_in_dir(
         path,
         recursive,
         filter,
@@ -692,7 +675,7 @@ def listFilesInDir(
     return filesreturn
 
 
-def listFilesAndDirsInDir(
+def list_files_and_dirs_in_dir(
     
     path,
     recursive=True,
@@ -726,7 +709,7 @@ def listFilesAndDirsInDir(
         depth = None
     # if depth is not None:
     #     depth+=1
-    filesreturn, _ = _listAllInDir(
+    filesreturn, _ = _list_all_in_dir(
         path,
         recursive,
         filter,
@@ -739,7 +722,7 @@ def listFilesAndDirsInDir(
     )
     return filesreturn
 
-def _listAllInDir(
+def _list_all_in_dir(
     
     path,
     recursive,
@@ -759,7 +742,7 @@ def _listAllInDir(
     # 2. `sensitive`: case-sensitive comparison
     # 3. `insensitive`: case-insensitive comparison
     """
-    dircontent = _listInDir(path)
+    dircontent = _list_in_dir(path)
     filesreturn = []
 
     if case_sensitivity.lower() == "sensitive":
@@ -773,16 +756,16 @@ def _listAllInDir(
         matcher = fnmatch.fnmatch
 
     for direntry in dircontent:
-        fullpath = joinPaths(path, direntry)
+        fullpath = join_path(path, direntry)
 
-        if isLinkAndBroken(fullpath):
+        if is_link_and_broken(fullpath):
             continue
 
         if followSymlinks:
-            if isLink(fullpath):
-                fullpath = readLink(fullpath)
+            if is_link(fullpath):
+                fullpath = read_link(fullpath)
 
-        if isFile(fullpath) and "f" in type:
+        if is_file(fullpath) and "f" in type:
             includeFile = False
             if (filter is None) or matcher(direntry, filter):
                 if (minmtime is not None) or (maxmtime is not None):
@@ -799,9 +782,9 @@ def _listAllInDir(
                             includeFile = False
                 if includeFile:
                     filesreturn.append(fullpath)
-        elif isDir(fullpath):
+        elif is_dir(fullpath):
             if "d" in type:
-                # if not(listSymlinks==False and isLink(fullpath)):
+                # if not(listSymlinks==False and is_link(fullpath)):
                 filesreturn.append(fullpath)
             if recursive:
                 newdepth = depth
@@ -814,8 +797,8 @@ def _listAllInDir(
                             if matcher(fullpath, excludeItem):
                                 exclmatch = True
                     if exclmatch is False:
-                        if not (followSymlinks is False and isLink(fullpath, check_valid=True)):
-                            r, _ = _listAllInDir(
+                        if not (followSymlinks is False and is_link(fullpath, check_valid=True)):
+                            r, _ = _list_all_in_dir(
                                 fullpath,
                                 recursive,
                                 filter,
@@ -830,15 +813,15 @@ def _listAllInDir(
                             if len(r) > 0:
                                 filesreturn.extend(r)
         # and followSymlinks==False and listSymlinks:
-        elif isLink(fullpath) and followSymlinks == False and listSymlinks:
+        elif is_link(fullpath) and followSymlinks == False and listSymlinks:
             filesreturn.append(fullpath)
 
     return filesreturn, depth
 
-def getPathOfRunningFunction(function):
+def get_path_of_running_function(function):
     return inspect.getfile(function)
 
-def changeFileNames(
+def change_file_names(
     toReplace, replaceWith, pathToSearchIn, recursive=True, filter=None, minmtime=None, maxmtime=None
 ):
     """
@@ -849,16 +832,16 @@ def changeFileNames(
         raise j.exceptions.Value("Can't change file names, toReplace can't be empty")
     if not replaceWith:
         raise j.exceptions.Value("Can't change file names, replaceWith can't be empty")
-    paths = listFilesInDir(pathToSearchIn, recursive, filter, minmtime, maxmtime)
+    paths = list_files_in_dir(pathToSearchIn, recursive, filter, minmtime, maxmtime)
     for path in paths:
-        dir_name = getDirName(path)
-        file_name = getBaseName(path)
+        dir_name = get_dir_name(path)
+        file_name = get_base_name(path)
         new_file_name = file_name.replace(toReplace, replaceWith)
         if new_file_name != file_name:
-            new_path = joinPaths(dir_name, new_file_name)
-            renameFile(path, new_path)
+            new_path = join_path(dir_name, new_file_name)
+            rename_file(path, new_path)
 
-def replaceWordsInFiles(
+def replace_words_in_files(
     pathToSearchIn, templateengine, recursive=True, filter=None, minmtime=None, maxmtime=None
 ):
     """
@@ -869,34 +852,34 @@ def replaceWordsInFiles(
         te.add("description",ayses.description)
         te.add("version",ayses.version)
     """
-    paths = listFilesInDir(pathToSearchIn, recursive, filter, minmtime, maxmtime)
+    paths = list_files_in_dir(pathToSearchIn, recursive, filter, minmtime, maxmtime)
     for path in paths:
         templateengine.replaceInsideFile(path)
 
 
-def listDirsInDir(path, recursive=False, dirNameOnly=False, findDirectorySymlinks=True, followSymlinks=True):
+def list_dirs_in_dir(path, recursive=False, dirNameOnly=False, findDirectorySymlinks=True, followSymlinks=True):
     """ Retrieves list of directories found in the specified directory
     @param path: string represents directory path to search in
     @rtype: list
     """
 
 
-    items = _listInDir(path)
+    items = _list_in_dir(path)
     filesreturn = []
     for item in items:
         fullpath = os.path.join(path, item)
         if item.startswith("Icon"):
             continue
-        if isDir(fullpath, findDirectorySymlinks):
+        if is_dir(fullpath, findDirectorySymlinks):
             if dirNameOnly:
                 filesreturn.append(item)
             else:
                 filesreturn.append(fullpath)
-        if recursive and isDir(fullpath, followSymlinks):
-            if isLink(fullpath):
-                fullpath = readLink(fullpath)
+        if recursive and is_dir(fullpath, followSymlinks):
+            if is_link(fullpath):
+                fullpath = read_link(fullpath)
             filesreturn.extend(
-                listDirsInDir(
+                list_dirs_in_dir(
                     fullpath,
                     recursive=recursive,
                     dirNameOnly=dirNameOnly,
@@ -907,13 +890,13 @@ def listDirsInDir(path, recursive=False, dirNameOnly=False, findDirectorySymlink
     return filesreturn
 
 
-def listPyScriptsInDir(path, recursive=True, filter="*.py"):
+def list_py_scripts_in_dir(path, recursive=True, filter="*.py"):
     """ Retrieves list of python scripts (with extension .py) in the specified directory
     @param path: string represents the directory path to search in
     @rtype: list
     """
     result = []
-    for file in listFilesInDir(path, recursive=recursive, filter=filter):
+    for file in list_files_in_dir(path, recursive=recursive, filter=filter):
         if file.endswith(".py"):
             # filename = file.split(os.sep)[-1]
             # scriptname = filename.rsplit(".", 1)[0]
@@ -923,8 +906,8 @@ def listPyScriptsInDir(path, recursive=True, filter="*.py"):
 
 def _move(source, destin):
     """Main Move function
-    @param source: string (If the specified source is a File....Calls moveFile function)
-    (If the specified source is a Directory....Calls moveDir function)
+    @param source: string (If the specified source is a File....Calls move_file function)
+    (If the specified source is a Directory....Calls move_dir function)
     """
     if not exists(source):
         raise j.exceptions.IO("%s does not exist" % source)
@@ -947,8 +930,8 @@ def exists(path, followlinks=True):
         pass
     if found and followlinks and stat.S_ISLNK(st.st_mode):
         
-        relativelink = readLink(path)
-        newpath = joinPaths(getParent(path), relativelink)
+        relativelink = read_link(path)
+        newpath = join_path(get_parent(path), relativelink)
         return exists(newpath)
     if found:
         return True
@@ -968,9 +951,9 @@ def symlink(path, target, overwriteTarget=False):
         target = target[:-1]
 
     if overwriteTarget and exists(target):
-        if isLink(target):
+        if is_link(target):
             remove(target)
-        elif isDir(target):
+        elif is_dir(target):
             remove(target)
         else:
             remove(target)
@@ -978,9 +961,9 @@ def symlink(path, target, overwriteTarget=False):
     if os.path.islink(target):
         remove(target)
 
-    dir = getDirName(target)
+    dir = get_dir_name(target)
     if not exists(dir):
-        createDir(dir)
+        create_dir(dir)
 
     if j.core.platformtype.myplatform.platform_is_unix or j.core.platformtype.myplatform.platform_is_osx:
         
@@ -988,20 +971,20 @@ def symlink(path, target, overwriteTarget=False):
     elif j.core.platformtype.myplatform.platform_is_windows:
         path = path.replace("+", ":")
         cmd = 'junction "%s" "%s"' % (
-            pathNormalize(target).replace("\\", "/"),
-            pathNormalize(path).replace("\\", "/"),
+            path_normalize(target).replace("\\", "/"),
+            path_normalize(path).replace("\\", "/"),
         )
         print(cmd)
         j.sal.process.execute(cmd)
 
 
-def symlinkFilesInDir(src, dest, delete=True, includeDirs=False, makeExecutable=False):
+def symlink_files_in_dir(src, dest, delete=True, includeDirs=False, makeExecutable=False):
     if includeDirs:
-        items = listFilesAndDirsInDir(src, recursive=False, followSymlinks=False, listSymlinks=False)
+        items = list_files_and_dirs_in_dir(src, recursive=False, followSymlinks=False, listSymlinks=False)
     else:
-        items = listFilesInDir(src, recursive=False, followSymlinks=True, listSymlinks=True)
+        items = list_files_in_dir(src, recursive=False, followSymlinks=True, listSymlinks=True)
     for item in items:
-        dest2 = "%s/%s" % (dest, getBaseName(item))
+        dest2 = "%s/%s" % (dest, get_base_name(item))
         dest2 = dest2.replace("//", "/")
         
         symlink(item, dest2, overwriteTarget=delete)
@@ -1011,7 +994,7 @@ def symlinkFilesInDir(src, dest, delete=True, includeDirs=False, makeExecutable=
             chmod(item, 0o770)
 
 
-def hardlinkFile(source, destin):
+def hardlink_file(source, destin):
     """Create a hard link pointing to source named destin. Availability: Unix.
     @param source: string
     @param destin: string
@@ -1025,48 +1008,48 @@ def hardlinkFile(source, destin):
         raise j.exceptions.RuntimeError("Cannot create a hard link on windows")
 
 
-def checkDirParam(path):
+def check_dir_param(path):
     if path.strip() == "":
         raise j.exceptions.Value("path parameter cannot be empty.")
-    path = pathNormalize(path)
+    path = path_normalize(path)
     if path[-1] != "/":
         path = path + "/"
     return path
 
 
-def isDir(path, followSoftlink=False):
+def is_dir(path, followSoftlink=False):
     """Check if the specified Directory path exists
     @param path: string
     @param followSoftlink: boolean
     @rtype: boolean (True if directory exists)
     """
-    if isLink(path):
+    if is_link(path):
         if not followSoftlink:
             return False
-        path = readLink(path)
+        path = read_link(path)
     return os.path.isdir(path)
 
 
-def isEmptyDir(path):
+def is_empty_dir(path):
     """Check if the specified directory path is empty
     @param path: string
     @rtype: boolean (True if directory is empty)
     """
-    if _listInDir(path) == []:
+    if _list_in_dir(path) == []:
         
         return True
     
     return False
 
 
-def isFile(path, followSoftlink=True):
+def is_file(path, followSoftlink=True):
     """Check if the specified file exists for the given path
     @param path: string
     @param followSoftlink: boolean
     @rtype: boolean (True if file exists for the given path)
     """
     
-    if not followSoftlink and isLink(path):
+    if not followSoftlink and is_link(path):
         
         return True
 
@@ -1078,13 +1061,13 @@ def isFile(path, followSoftlink=True):
     return False
 
 
-def isExecutable(path):
-    statobj = statPath(path, follow_symlinks=False)
+def is_executable(path):
+    statobj = stat_path(path, follow_symlinks=False)
     return not (stat.S_IXUSR & statobj.st_mode == 0)
 
-def isLinkAndBroken(path, remove_if_broken=True):
+def is_link_and_broken(path, remove_if_broken=True):
     if os.path.islink(path):
-        rpath = readLink(path)
+        rpath = read_link(path)
         if not exists(rpath):
             if remove_if_broken:
                 j.sal.fs.remove(path)
@@ -1092,7 +1075,7 @@ def isLinkAndBroken(path, remove_if_broken=True):
     return False
 
 
-def isLink(path, checkJunction=False, check_valid=False):
+def is_link(path, checkJunction=False, check_valid=False):
     """Check if the specified path is a link
     @param path: string
     @rtype: boolean (True if the specified path is a link)
@@ -1121,15 +1104,13 @@ def isLink(path, checkJunction=False, check_valid=False):
 
     if os.path.islink(path):
         if check_valid:
-            j.shell()
-            w
-        
+            j.shell()        
         return True
     
     return False
 
 
-def isMount(path):
+def is_mount(path):
     """Return true if pathname path is a mount point:
     A point in a file system where a different file system has been mounted.
     """
@@ -1139,14 +1120,14 @@ def isMount(path):
     return os.path.ismount(path)
 
 
-def statPath(path, follow_symlinks=True):
+def stat_path(path, follow_symlinks=True):
     """Perform a stat() system call on the given path
     @rtype: object whose attributes correspond to the members of the stat structure
     """
     return os.stat(path, follow_symlinks=follow_symlinks)
 
 
-def renameDir(dirname, newname, overwrite=False):
+def rename_dir(dirname, newname, overwrite=False):
     """Rename Directory from dirname to newname
     @param dirname: string (Directory original name)
     @param newname: string (Directory new name to be changed to)
@@ -1155,14 +1136,14 @@ def renameDir(dirname, newname, overwrite=False):
     if dirname == newname:
         return
     if overwrite and exists(newname):
-        if isDir(newname):
+        if is_dir(newname):
             remove(newname)
         else:
             remove(newname)
     os.rename(dirname, newname)
 
 
-def unlinkFile(filename):
+def unlink_file(filename):
     """Remove the file path (only for files, not for symlinks)
     @param filename: File path to be removed
     """
@@ -1180,12 +1161,12 @@ def unlink(filename):
 
     if j.core.platformtype.myplatform.platform_is_windows:
         cmd = "junction -d %s 2>&1 > null" % (filename)
-        _log_info(cmd)
+        #_log_info(cmd)
         os.system(cmd)
     os.unlink(filename)
 
 
-def readFile(filename, binary=False, encoding="utf-8"):
+def readfile(filename, binary=False, encoding="utf-8"):
     """Read a file and get contents of that file
     @param filename: string (filename to open for reading )
     @rtype: string representing the file contents
@@ -1200,62 +1181,26 @@ def readFile(filename, binary=False, encoding="utf-8"):
             data = fp.read()
     return data
 
-#
-# 
-# def fileGetUncommentedContents(filename):
-#     """Read a file and get uncommented contents of that file
-#     @param filename: string (filename to open for reading )
-#     @rtype: list of lines of uncommented file contents
-#     """
-#     
-#     # 
-#     with open(filename) as fp:
-#         data = fp.readlines()
-#         uncommented = list()
-#         for line in data:
-#             if not line.strip().startswith('#') and not line.startswith('\n'):
-#                 line = line.replace('\n', '')
-#                 uncommented.append(line)
-#         
-#         return uncommented
-#
-# 
-# def fileGetTextContents(filename):
-#     """Read a UTF-8 file and get contents of that file. Takes care of the [BOM](http://en.wikipedia.org/wiki/Byte_order_mark)
-#     @param filename: string (filename to open for reading)
-#     @rtype: string representing the file contents
-#     """
-#     with open(filename, encoding='utf8') as f:  # enforce utf8 encoding
-#         s = f.read()
-#
-#         boms = [codecs.BOM_UTF8]
-#         for bom in boms:  # we can add more BOMs later:
-#             if s.startswith(bom.decode()):
-#                 s = s.replace(bom.decode(), '', 1)
-#                 break
-#         return s
-
-
 def touch(paths):
     """
     can be single path or multiple (then list)
     """
     if j.data.types.list.check(paths):
         for item in paths:
-            touch(item, overwrite=overwrite)
+            touch(item)
     path = paths
-    createDir(getDirName(path))
+    create_dir(get_dir_name(path))
     if not exists(path=path):
-        writeFile(path, "")
+        writefile(path, "")
 
 
-def writeFile(filename, contents, append=False):
+def writefile(filename, contents, append=False):
     """
     Open a file and write file contents, close file afterwards
     @param contents: string (file contents to be written)
     """
     if contents is None:
-        raise j.exceptions.Value("Passed None parameters in system.fs.writeFile")
+        raise j.exceptions.Value("Passed None parameters in system.fs.writefile")
     filename = j.core.tools.text_replace(filename)
     if append is False:
         fp = open(filename, "wb")
@@ -1270,15 +1215,15 @@ def writeFile(filename, contents, append=False):
     fp.close()
 
 
-def fileSize(filename):
-    """Get Filesize of file in bytes
-    @param filename: the file u want to know the filesize of
+def file_size(filename):
+    """Get file_size of file in bytes
+    @param filename: the file u want to know the file_size of
     @return: int representing file size
     """
     return os.path.getsize(filename)
 
 
-def writeObjectToFile(filelocation, obj):
+def write_object_to_file(filelocation, obj):
     """
     Write a object to a file(pickle format)
     @param filelocation: location of the file to which we write
@@ -1291,20 +1236,21 @@ def writeObjectToFile(filelocation, obj):
         pcl = pickle.dumps(obj)
     except Exception as e:
         raise Exception("Could not create pickle from the object \nError: %s" % (str(e)))
-    writeFile(filelocation, pcl)
+    writefile(filelocation, pcl)
     if not exists(filelocation):
         raise Exception("File isn't written to the filesystem")
 
 
-def readObjectFromFile(filelocation):
+def read_object_from_file(filelocation):
     """
     Read a object from a file(file contents in pickle format)
     @param filelocation: location of the file
     @return: object
     """
     
-    contents = fileGetContents(filelocation)
-    
+    file=os.open(filelocation)
+    contents=file.readfile()
+    file.close()
     return pickle.loads(contents)
 
 
@@ -1327,29 +1273,29 @@ def md5sum(filename):
     return digest.hexdigest()
 
 
-def getFolderMD5sum(folder):
-    files = sorted(walk(folder, recurse=1))
+def get_folder_md5sum(folder):
+    files = sorted(os.walk(folder))
     return md5sum(files)
 
-def getTmpDirPath(name="", create=True):
+def get_tmp_dir_path(name="", create=True):
     """
     create a tmp dir name and makes sure the dir exists
     """
     if name:
-        tmpdir = joinPaths(j.dirs.TMPDIR, name)
+        tmpdir = join_path(j.dirs.TMPDIR, name)
     else:
-        tmpdir = joinPaths(j.dirs.TMPDIR, j.data.idgenerator.generateXCharID(10))
+        tmpdir = join_path(j.dirs.TMPDIR, j.data.idgenerator.generateXCharID(10))
     if create is True:
-        createDir(tmpdir)
+        create_dir(tmpdir)
     return tmpdir
 
-def getTmpFilePath(cygwin=False):
+def get_tmp_file_path(cygwin=False):
     """Generate a temp file path
     Located in temp dir of qbase
     @rtype: string representing the path of the temp file generated
     """
     tmpdir = j.dirs.TMPDIR + "/jumpscale/"
-    j.sal.fs.createDir(tmpdir)
+    j.sal.fs.create_dir(tmpdir)
     fd, path = tempfile.mkstemp(dir=tmpdir)
     try:
         real_fd = os.fdopen(fd)
@@ -1365,7 +1311,7 @@ def _file_path_tmp_get(ext="sh"):
     return j.core.tools._file_path_tmp_get(ext)
 
 
-def isAsciiFile(filename, checksize=4096):
+def is_asxii_file(filename, checksize=4096):
     # TODO: let's talk about checksize feature.
     try:
         with open(filename, encoding="ascii") as f:
@@ -1375,11 +1321,11 @@ def isAsciiFile(filename, checksize=4096):
         return False
 
 
-def isBinaryFile(filename, checksize=4096):
-    return not isAsciiFile(filename, checksize)
+def is_binary_file(filename, checksize=4096):
+    return not is_asxii_file(filename, checksize)
 
 
-def isAbsolute(path):
+def is_absolute(path):
     return os.path.isabs(path)
 
 # THERE IS A tools.lock implementation we need to use that one
@@ -1390,7 +1336,7 @@ def isAbsolute(path):
 # unlock_ = staticmethod(unlock_)
 
 
-def validateFilename(filename, platform=None):
+def validate_filename(filename, platform=None):
     """Validate a filename for a given (or current) platform
 
     Check whether a given filename is valid on a given platform, or the
@@ -1526,7 +1472,7 @@ def grep(fileregex, lineregex):
                     print(("%s: %s" % (filename, line)))
 
 
-def constructDirPathFromArray(array):
+def construct_dir_path_from_array(array):
     """
     Create a path using os specific seperators from a list being passed with directoy.
 
@@ -1541,18 +1487,18 @@ def constructDirPathFromArray(array):
         path = path.replace("//", "/")
     return path
 
-def constructFilePathFromArray(array):
+def construct_file_path_from_array(array):
     """
     Add file name  to dir path.
 
     @param array str: list including dir path then file name
     """
-    path = constructDirPathFromArray(array)
+    path = construct_dir_path_from_array(array)
     if path[-1] == "/":
         path = path[0:-1]
     return path
 
-def pathToUnicode(path):
+def path_to_unicode(path):
     """
     Convert path to unicode. Use the local filesystem encoding. Will return
     path unmodified if path already is unicode.
@@ -1566,10 +1512,10 @@ def pathToUnicode(path):
     """
     from Jumpscale.core.Dirs import Dirs
 
-    return Dirs.pathToUnicode(path)
+    return Dirs.path_to_unicode(path)
 
 
-def targzCompress(
+def targz_compress(
     
     sourcepath,
     destinationpath,
@@ -1598,8 +1544,8 @@ def targzCompress(
     import tarfile
 
     
-    if not exists(getDirName(destinationpath)):
-        createDir(getDirName(destinationpath))
+    if not exists(get_dir_name(destinationpath)):
+        create_dir(get_dir_name(destinationpath))
     t = tarfile.open(name=destinationpath, mode="w:gz")
     if not (
         followlinks
@@ -1616,13 +1562,13 @@ def targzCompress(
         def addToTar(params, path):
             tarfile = params["t"]
             destInTar = params["destintar"]
-            destpath = joinPaths(destInTar, pathRemoveDirPart(path, sourcepath))
-            if isLink(path) and followlinks:
-                path = readLink(path)
+            destpath = join_path(destInTar, path_remove_dir_part(path, sourcepath))
+            if is_link(path) and followlinks:
+                path = read_link(path)
             
             # print "fstar: add file %s to tar" % path
             if not (j.core.platformtype.myplatform.platform_is_windows and j.sal.windows.checkFileToIgnore(path)):
-                if isFile(path) or isLink(path):
+                if is_file(path) or is_link(path):
                     tarfile.add(path, destpath)
                 else:
                     raise j.exceptions.RuntimeError("Cannot add file %s to destpath" % destpath)
@@ -1648,7 +1594,7 @@ def targzCompress(
             for extrafile in extrafiles:
                 source = extrafile[0]
                 destpath = extrafile[1]
-                t.add(source, joinPaths(destInTar, destpath))
+                t.add(source, join_path(destInTar, destpath))
     t.close()
 
 
@@ -1677,7 +1623,7 @@ def gunzip(sourceFile, destFile):
     """
     import gzip
 
-    createDir(getDirName(destFile))
+    create_dir(get_dir_name(destFile))
     f_in = gzip.open(sourceFile, "rb")
     f_out = open(destFile, "wb")
     f_out.writelines(f_in)
@@ -1685,7 +1631,7 @@ def gunzip(sourceFile, destFile):
     f_in.close()
 
 
-def targzUncompress(sourceFile, destinationdir, removeDestinationdir=True):
+def targz_uncompress(sourceFile, destinationdir, removeDestinationdir=True):
     """
     compress dirname recursive
     @param sourceFile: file to uncompress
@@ -1694,7 +1640,7 @@ def targzUncompress(sourceFile, destinationdir, removeDestinationdir=True):
     if removeDestinationdir:
         remove(destinationdir)
     if not exists(destinationdir):
-        createDir(destinationdir)
+        create_dir(destinationdir)
     import tarfile
 
     # The tar of python does not create empty directories.. this causes
