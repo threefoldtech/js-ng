@@ -70,3 +70,34 @@ class Boolen:
             return False
         else:
             return None
+
+
+class Float:
+    def __init__(self, default=None):
+        if not default:
+            default = 0.0
+        self.default = self.from_str(default)
+
+    def check(self, value):
+        """Check whether provided string represent integer value
+        
+        Arguments:
+            value (str)
+        """
+        try:
+            float(value)
+            return True
+        except ValueError:
+            return False
+
+    def from_str(self, value):
+        """get integer value from tha string
+        
+        Arguments:
+            value (str)
+        """
+        try:
+            return float(value)
+        except ValueError:
+            return None
+
