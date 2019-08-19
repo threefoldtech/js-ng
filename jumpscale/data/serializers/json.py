@@ -1,15 +1,7 @@
 import json
 
 
-class Encoder(object):
-    @staticmethod
-    def get(encoding="ascii"):
-        kls = json.JSONEncoder
-        kls.ENCODING = encoding
-        return kls
-
-
-def dumps(obj, sort_keys=False, indent=False, encoding="ascii"):
+def dumps(obj):
     """dump dict object into json stream 
     
     Arguments:
@@ -18,7 +10,7 @@ def dumps(obj, sort_keys=False, indent=False, encoding="ascii"):
     Returns:
         string : the json stream
     """
-    return json.dumps(obj, ensure_ascii=False, sort_keys=sort_keys, indent=indent, cls=Encoder.get(encoding=encoding))
+    return json.dumps(obj)
 
 
 def loads(s):

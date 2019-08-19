@@ -10,7 +10,7 @@ def compress(obj):
     Returns:
         bytes : the compressed bytes
     """
-    return blosc.compress(obj, typesize=8)
+    return blosc.compress(obj)
 
 
 def decompress(s):

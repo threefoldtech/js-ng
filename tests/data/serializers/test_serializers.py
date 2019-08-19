@@ -4,6 +4,7 @@ import blosc
 import pylzma
 import msgpack
 import yaml
+import pickle
 from jumpscale.god import j
 
 
@@ -15,14 +16,36 @@ def test_base64():
 
 
 def test_blosc():
-    obj = blosc.compress(b"omar", typesize=8)
+    obj = blosc.compress(b"omar")
     assert j.data.serializers.blosc.compress(b"omar") == obj
     assert j.data.serializers.blosc.decompress(obj) == blosc.decompress(obj)
 
 
-def test_int():
-    assert j.data.serializers.integer.dumps(123) == str(123)
-    assert j.data.serializers.integer.loads("123") == int("123")
+def test_pickle():
+    obj = pickle.dumps(b"omar")
+    assert j.data.serializers.pickle.compress(b"omar") == obj
+    assert j.data.serializers.pickle.decompress(obj) == pickle.loads(obj)
+
+
+def test_json():
+    jsonstr = """{
+        "firstName": "John",
+        "lastName": "Smith",
+        "address": {
+            "streetAddress": "21 2nd Street",
+            "city": "New York",
+            "state": "NY",
+            "postalCode": 10021
+        },
+        "phoneNumbers": [
+            "212 555-1234",
+            "646 555-4567"
+        ]
+    }
+    """
+    jsondict = j.data.serializers.json.loads(jsonstr)
+    assert isinstance(jsondict, dict)
+    assert isinstance(j.data.serializers.json.dumps(jsondict), str)
 
 
 def test_lzma():
@@ -39,168 +62,19 @@ def test_msgpack():
 
 
 def test_toml():
-    testtemplate = """
-name = ''
-multiline = ''
-nr = 0
-nr2 = 0
-nr3 = 0
-nr4 = 0.0
-nr5 = 0.0
-bbool = true
-bbool2 = true
-bbool3 = true
-list1 = [ ]
-list2 = [ ]
-list3 = [ ]
-list4 = [ ]
-list5 = [ ]
-"""
-
-    testtoml = """
-name = 'something'
-multiline = '''
-    these are multiple lines
-    next line
-    '''
-nr = 87
-nr2 = ""
-nr3 = "1"
-nr4 = "34.4"
-nr5 = 34.4
-bbool = 1
-bbool2 = true
-bbool3 = 0
-list1 = "4,1,2,3"
-list2 = [ 3, 1, 2, 3 ]
-list3 = [ "a", " b ", "   c  " ]
-list4 = [ "ab" ]
-list5 = "d,a,a,b,c"
-"""
-    ddict = j.data.serializers.toml.loads(testtoml)
-    template = j.data.serializers.toml.loads(testtemplate)
-
-    ddictout, errors = j.data.serializers.toml.merge(template, ddict, listunique=True)
-
-    ddicttest = {
-        "name": "something",
-        "multiline": "these are multiple lines\nnext line\n",
-        "nr": 87,
-        "nr2": 0,
-        "nr3": 1,
-        "nr4": 34.4,
-        "nr5": 34.4,
-        "bbool": True,
-        "bbool2": True,
-        "bbool3": False,
-        "list1": ["1", "2", "3", "4"],
-        "list2": [1, 2, 3],
-        "list3": ["a", "b", "c"],
-        "list4": ["ab"],
-        "list5": ["a", "b", "c", "d"],
-    }
-
-    assert ddictout["name"] == ddicttest["name"]
-
-    ddictmerge = {"nr": 88}
-
-    # start from previous one, update
-    ddictout, errors = j.data.serializers.toml.merge(ddicttest, ddictmerge, listunique=True)
-
-    ddicttest = {
-        "name": "something",
-        "multiline": "these are multiple lines\nnext line\n",
-        "nr": 88,
-        "nr2": 0,
-        "nr3": 1,
-        "nr4": 34.4,
-        "nr5": 34.4,
-        "bbool": True,
-        "bbool2": True,
-        "bbool3": False,
-        "list1": ["1", "2", "3", "4"],
-        "list2": [1, 2, 3],
-        "list3": ["a", "b", "c"],
-        "list4": ["ab"],
-        "list5": ["a", "b", "c", "d"],
-    }
-
-    assert ddictout == ddicttest
-
-    ddictmerge = {"nr_nonexist": 88}
-
-    # needs to throw error
-    try:
-        error = 0
-        ddictout, errors = merge(ddicttest, ddictmerge, listunique=True)
-    except:
-        error = 1
-    assert 1
-
-    ddictmerge = {}
-    ddictmerge["list1"] = []
-    for i in range(20):
-        ddictmerge["list1"].append("this is a test %s" % i)
-    ddictout, errors = j.data.serializers.toml.merge(ddicttest, ddictmerge, listunique=True)
-    template = {
-        "login": "",
-        "first_name": "",
-        "last_name": "",
-        "locations": [],
-        "companies": [],
-        "departments": [],
-        "languageCode": "en-us",
-        "title": [],
-        "description_internal": "",
-        "description_public_friendly": "",
-        "description_public_formal": "",
-        "experience": "",
-        "hobbies": "",
-        "pub_ssh_key": "",
-        "skype": "",
-        "telegram": "",
-        "itsyou_online": "",
-        "reports_into": "",
-        "mobile": [],
-        "email": [],
-        "github": "",
-        "linkedin": "",
-        "links": [],
-    }
-    toupdate = {
-        "companies": ["threefold"],
-        "company_id": [2],
-        "departments": ["threefold:engineering", "threefold:varia"],
-        "description_internal": "Researcher who develops new ideas for Threefold and creates concise explanations of difficult concepts",
-        "description_public_formal": "Develops new ideas for Threefold and creates concise explanations of difficult concepts.",
-        "description_public_friendly": "Virgil is a researcher and innovator who is always looking to improve the world around him both on a macro and micro scale.\n\nFor the past 11 years he has been working with new technologies, helping organizations integrate them into their existing services and create their new products.  \nHe holds a PhD in autonomous robotics, artificial intelligence and reliability.\n\nVirgil also lectures at a technical university and an academy.\n\n",
-        "email": ["ilian.virgil@gmail.com", "ilian@threefold.tech"],
-        "name": "virgil",
-        "github": "Virgil3",
-        "hobbies": "generative coding, movies, diving, languages",
-        "itsyou_online": "ilian@threefold.tech",
-        "languageCode": "en-us",
-        "last_name": "ilian",
-        "linkedin": "https://www.linkedin.com/in/ilian-virgil-342b8471",
-        "links": [],
-        "locations": ["bucharest"],
-        "login": "",
-        "mobile": ["+40721543908"],
-        "pub_ssh_key": "",
-        "reports_into": "Kristof",
-        "skype": "ilian.virgil",
-        "telegram": "@virgil_ilian",
-        "title": ["Researcher"],
-    }
-
-    result, errors = j.data.serializers.toml.merge(
-        template, toupdate, keys_replace={"name": "first_name"}, add_non_exist=False, die=False, errors=[]
-    )
-
-    assert [("company_id", [2])] == errors
-    assert "bucharest" in result["locations"]
-    assert "ilian.virgil@gmail.com" in result["email"]
-    assert "company_id" not in result  # should not be in
+    tomlstr = """title = "config"
+   [feature1]
+   enable = true
+   userids = [
+     "12345", "67890"
+   ]
+   
+   [feature2]
+   enable = false
+   """
+    tomldict = j.data.serializers.toml.loads(tomlstr)
+    assert isinstance(tomldict, dict)
+    assert isinstance(j.data.serializers.toml.dumps(tomldict), str)
 
 
 def test_yaml():
@@ -226,7 +100,7 @@ Table:
     style: MediumGrid3-Accent2
 """
 
-    obj = yaml.dump(yamstr, default_flow_style=False, default_style="", indent=4, line_break="\n")
-    assert j.data.serializers.yaml.dumps(yamstr) == obj
-    assert j.data.serializers.yaml.loads(obj) == yaml.load(obj, Loader=yaml.SafeLoader)
+    yamldict = j.data.serializers.yaml.loads(yamstr)
+    assert isinstance(yamldict, dict)
+    assert isinstance(j.data.serializers.yaml.dumps(yamldict), str)
 
