@@ -2,7 +2,6 @@ import sys
 import re
 from jumpscale.god import j
 import os
-import os.path
 import hashlib
 import fnmatch
 import inspect  # needed for getPathOfRunningFunction
@@ -19,7 +18,7 @@ import copy
 
 
 
-def copy_file(fileFrom, to, create_dir_ifneeded=False, overwritefile=True):
+def copy_file(filefrom, to, create_dir_ifneeded=False, overwritefile=True):
     """Copy file
 
     Copies the file from C{fileFrom} to the file or directory C{to}.
@@ -40,11 +39,11 @@ def copy_file(fileFrom, to, create_dir_ifneeded=False, overwritefile=True):
     if create_dir_ifneeded:
         create_dir(target_folder)
     if exists(to):
-        if os.path.samefile(fileFrom, to):
-            raise j.exceptions.Input("{src} and {dest} are the same file".format(src=fileFrom, dest=to))
+        if os.path.samefile(filefrom, to):
+            raise j.exceptions.Input("{src} and {dest} are the same file".format(src=filefrom, dest=to))
         if overwritefile is False:
             if os.path.samefile(to, target_folder):
-                destfilename = os.path.join(to, os.path.basename(fileFrom))
+                destfilename = os.path.join(to, os.path.basename(filefrom))
                 if exists(destfilename):
                     return
             else:
@@ -53,7 +52,7 @@ def copy_file(fileFrom, to, create_dir_ifneeded=False, overwritefile=True):
             # overwriting some open  files is frustrating and may not work
             # due to locking [delete/copy is a better strategy]
             remove(to)
-    shutil.copy(fileFrom, to)
+    shutil.copy(filefrom, to)
     
 
 
@@ -87,7 +86,7 @@ def remove(path):
     """Remove a File
     @param path: string (File path required to be removed)
     """
-    return j.core.tools.delete(path)
+    return os.remove(path)
 
 
 def create_empty_file(filename):
@@ -127,151 +126,14 @@ def create_dir(newdir, unlink=False):
             #         raise
 
         
-
-def copy_dir_tree(
-    
-    src,
-    dst,
-    keepsymlinks=False,
-    deletefirst=False,
-    overwritefiles=True,
-    ignoredir=None,
-    ignorefiles=None,
-    rsync=True,
-    ssh=False,
-    sshport=22,
-    recursive=True,
-    rsyncdelete=True,
-    create_dir=False,
-    showout=False,
-):
-    """Recursively copy an entire directory tree rooted at src.
-    The dst directory may already exist; if not,
-    it will be created as well as missing parent directories
-    @param src: string (source of directory tree to be copied)
-    @param rsyncdelete will remove files on dest which are not on source (default)
-    @param recursive:  recursively look in all subdirs
-    :param ignoredir: the following are always in, no need to specify ['.egg-info', '.dist-info', '__pycache__']
-    :param ignorefiles: the following are always in, no need to specify: ["*.egg-info","*.pyc","*.bak"]
-    @param ssh:  bool (copy to remote)
-    @param sshport int (ssh port)
-    @param create_dir:   bool (when ssh creates parent directory)
-    @param dst: string (path directory to be copied to...should not already exist)
-    @param keepsymlinks: bool (True keeps symlinks instead of copying the content of the file)
-    @param deletefirst: bool (Set to True if you want to erase destination first, be carefull, this can erase directories)
-    @param overwritefiles: if True will overwrite files, otherwise will not overwrite when destination exists
-    """
-
-    default_ignore_dir = [".egg-info", ".dist-info", "__pycache__"]
-    if ignoredir is None:
-        ignoredir = []
-    if ignorefiles is None:
-        ignorefiles = []
-    for item in default_ignore_dir:
-        if item not in ignoredir:
-            ignoredir.append(item)
-    default_ignorefiles = ["*.egg-info", "*.pyc", "*.bak"]
-    for item in default_ignorefiles:
-        if item not in ignorefiles:
-            ignorefiles.append(item)
-
-    if not rsync:
-        if src.find("file://") != -1 or dst.find("file://") != -1:
-            raise j.exceptions.RuntimeError("Cannot use file notation here")
-        
-        if (src is None) or (dst is None):
-            raise j.exceptions.Value(
-                "Not enough parameters passed in system.fs.copy_dir_tree to copy directory from %s to %s "
-                % (src, dst)
-            )
-        if is_dir(src):
-            names = os.listdir(src)
-
-            if not exists(dst):
-                create_dir(dst)
-
-            errors = []
-            for name in names:
-                # is only for the name
-                name2 = name
-
-                srcname = join_path(src, name)
-                dstname = join_path(dst, name2)
-
-                if is_dir(srcname) and name in ignoredir:
-                    continue
-                if is_file(srcname) and name in ignorefiles:
-                    continue
-
-                if deletefirst and exists(dstname):
-                    if is_dir(dstname, False):
-                        remove(dstname)
-                    elif is_link(dstname):
-                        unlink(dstname)
-
-                if is_link(srcname):
-                    linkto = read_link(srcname)
-                    if keepsymlinks:
-                        symlink(linkto, dstname, overwritefiles)
-                        continue
-                    else:
-                        srcname = linkto
-                if is_dir(srcname):
-                    # print "1:%s %s"%(srcname,dstname)
-                    copy_dir_tree(
-                        srcname,
-                        dstname,
-                        keepsymlinks,
-                        deletefirst,
-                        overwritefiles=overwritefiles,
-                        ignoredir=ignoredir,
-                        ignorefiles=ignorefiles,
-                    )
-                if is_file(srcname):
-                    # print "2:%s %s"%(srcname,dstname)
-                    copy_file(srcname, dstname, create_dir_ifneeded=False, overwritefile=overwritefiles)
+def copy_dir_tree(src,dst, symlinks=False, ignore=None):
+    for item in os.listdir(src):
+        s = os.path.join(src, item)
+        d = os.path.join(dst, item)
+        if os.path.isdir(s):
+            shutil.copytree(s, d, symlinks, ignore)
         else:
-            raise j.exceptions.RuntimeError("Source path %s in system.fs.copy_dir_tree is not a directory" % src)
-    else:
-        excl = " "
-        for item in ignoredir:
-            excl += "--exclude '*%s/' " % item
-
-        dstpath2 = dst.split(":")[1] if ":" in dst else dst  # OTHERWISE CANNOT WORK FOR SSH
-
-        dstpath = dst
-        dstpath = dstpath.replace("//", "/")
-
-        src = src.replace("//", "/")
-
-        # ":" is there to make sure we support ssh
-        if ":" not in src and j.sal.fs.is_dir(src):
-            if src[-1] != "/":
-                src += "/"
-            if dstpath[-1] != "/":
-                dstpath += "/"
-
-        cmd = "rsync --no-owner --no-group"
-        if keepsymlinks:
-            # -l is keep symlinks, -L follow
-            cmd += " -rlt --partial %s" % excl
-        else:
-            cmd += " -rLt --partial %s" % excl
-        if not recursive:
-            cmd += ' --exclude "*/"'
-        if rsyncdelete:
-            cmd += " --delete --delete-excluded "
-        if ssh:
-            cmd += " -e 'ssh -o StrictHostKeyChecking=no -p %s' " % sshport
-            if create_dir:
-                cmd += "--rsync-path='mkdir -p %s && rsync' " % get_parent(dstpath2)
-        else:
-            create_dir(get_parent(dstpath))
-        cmd += " '%s' '%s'" % (src, dst)
-        cmd += " --verbose"
-        # print(cmd)
-        rc, out, err = j.sal.process.execute(cmd, showout=showout)
-
+            shutil.copy2(s, d)
 
 def change_dir(path):
     """Changes Current Directory
@@ -303,7 +165,7 @@ def join_path(*args):
     @rtype: Concatenation of path1, and optionally path2, etc...,
     with exactly one directory separator (os.sep) inserted between components, unless path2 is empty.
     """
-    args = [j.core.text.toStr(x) for x in args]
+    args = [str(x) for x in args]
     
     if args is None:
         raise j.exceptions.Value("Not enough parameters %s" % (str(args)))
@@ -362,7 +224,8 @@ def path_clean(path):
     """
     goal is to get a equal representation in / & \ in relation to os.sep
     """
-    return os.path.normcase(path)
+    
+    return path.replace('\\',os.sep).replace('/',os.sep).lower()
 
 # NO DECORATORS HERE
 def path_dir_clean(path):
@@ -1608,7 +1471,7 @@ def gzip(sourcefile, destfile):
     import gzip
 
     f_in = open(sourcefile, "rb")
-    f_out = gzip.open(destFile, "wb")
+    f_out = gzip.open(destfile, "wb")
     f_out.writelines(f_in)
     f_out.close()
     f_in.close()
