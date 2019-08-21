@@ -397,9 +397,9 @@ def read_link(path):
     while path[-1] == "/" or path[-1] == "\\":
         path = path[:-1]
     
-    if j.core.platformtype.myplatform.platform_is_unix or j.core.platformtype.myplatform.platform_is_osx:
+    if j.data.platform.is_linux() or j.data.platform.is_osx():
         res = os.readlink(path)
-    elif j.core.platformtype.myplatform.platform_is_windows:
+    elif j.data.platform.is_windows():
         raise RuntimeError("Cannot read_link on windows")
     else:
         raise RuntimeError("cant read link, dont understand platform")
@@ -770,10 +770,14 @@ def symlink(path, target, overwritetarget=False):
     if not exists(dir):
         create_dir(dir)
 
-    if j.core.platformtype.myplatform.platform_is_unix or j.core.platformtype.myplatform.platform_is_osx:
-        
-        os.symlink(path, target)
-    elif j.core.platformtype.myplatform.platform_is_windows:
+    if j.data.platform.is_linux() or j.data.platform.is_osx():        
+        try:
+            os.symlink(path, target)
+        except Exception as e:
+            os.remove(target)
+            os.symlink(path, target)
+
+    elif j.data.platform.is_windows():
         path = path.replace("+", ":")
         cmd = 'junction "%s" "%s"' % (
             path_normalize(target).replace("\\", "/"),
@@ -782,7 +786,7 @@ def symlink(path, target, overwritetarget=False):
         print(cmd)
 
 
-def symlink_files_in_dir(src, dest, delete=True, includedirs=False, makeExecutable=False):
+def symlink_files_in_dir(src, dest, delete=True, includedirs=False, makeexecutable=False):
     if includedirs:
         items = list_files_and_dirs_in_dir(src, recursive=False, followsymlinks=False, listsymlinks=False)
     else:
@@ -792,7 +796,7 @@ def symlink_files_in_dir(src, dest, delete=True, includedirs=False, makeExecutab
         dest2 = dest2.replace("//", "/")
         
         symlink(item, dest2, overwritetarget=delete)
-        if makeExecutable:
+        if makeexecutable:
             # print("executable:%s" % dest2)
             chmod(dest2, 0o770)
             chmod(item, 0o770)
@@ -806,7 +810,7 @@ def hardlink_file(source, destin):
     with exactly one directory separator (os.sep) inserted between components, unless path2 is empty
     """
     
-    if j.core.platformtype.myplatform.platform_is_unix or j.core.platformtype.myplatform.platform_is_osx:
+    if j.data.platform.is_linux() or j.data.platform.is_osx():
         return os.link(source, destin)
     else:
         raise RuntimeError("Cannot create a hard link on windows")
@@ -816,8 +820,8 @@ def check_dir_param(path):
     if path.strip() == "":
         raise RuntimeError("path parameter cannot be empty.")
     path = path_normalize(path)
-    if path[-1] != "/":
-        path = path + "/"
+    if path[-1] != '/':
+        path = path + '/'
     return path
 
 
@@ -889,7 +893,7 @@ def is_link(path, checkjunction=False, check_valid=False):
     if path[-1] == os.sep:
         path = path[:-1]
 
-    if checkjunction and j.core.platformtype.myplatform.platform_is_windows:
+    if checkjunction and j.data.platform.is_windows():
         cmd = "junction %s" % path
         try:
             result=[]
@@ -965,7 +969,7 @@ def unlink(filename):
     """
     
 
-    if j.core.platformtype.myplatform.platform_is_windows:
+    if j.data.platform.is_windows():
         cmd = "junction -d %s 2>&1 > null" % (filename)
         #_log_info(cmd)
         os.system(cmd)
@@ -1288,7 +1292,7 @@ def construct_dir_path_from_array(array):
     for item in array:
         path = path + os.sep + item
     path = path + os.sep
-    if j.core.platformtype.myplatform.platform_is_unix or j.core.platformtype.myplatform.platform_is_osx:
+    if j.data.platform.is_linux() or j.data.platform.is_osx():
         path = path.replace("//", "/")
         path = path.replace("//", "/")
     return path
@@ -1373,7 +1377,7 @@ def targz_compress(
                 path = read_link(path)
             
             # print "fstar: add file %s to tar" % path
-            if not (j.core.platformtype.myplatform.platform_is_windows and j.sals.windows.checkFileToIgnore(path)):
+            if not (j.data.platform.is_windows() and j.sals.windows.checkFileToIgnore(path)):
                 if is_file(path) or is_link(path):
                     tarfile.add(path, destpath)
                 else:
@@ -1451,7 +1455,7 @@ def targz_uncompress(sourcefile, destinationdir, removedestinationdir=True):
 
     # The tar of python does not create empty directories.. this causes
     # many problem while installing so we choose to use the linux tar here
-    if j.core.platformtype.myplatform.platform_is_windows:
+    if j.data.platform.is_windows():
         tar = tarfile.open(sourcefile)
         tar.extractall(destinationdir)
         tar.close()
