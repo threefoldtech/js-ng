@@ -101,3 +101,29 @@ def test_path_clean():
     p = "home/user/pics\\animal\CaTs"
     assert j.sals.fs.path_clean(p) == "home/user/pics/animal/cats"
 
+
+def test_path_remove_dir_part():
+    p = "home/user/pics/animal/cats"
+    assert j.sals.fs.path_remove_dir_part(p, "pics/animal") == "home/user/cats"
+
+
+def test_get_parent():
+    assert j.sals.fs.get_parent("dir1/dir2/dir3") == "dir1/dir2"
+
+
+def test_get_file_extension():
+    assert j.sals.fs.get_file_extension("home/user/docs/book.pdf") == "pdf"
+
+
+# TODO test chown(), chmod() , read_link() , remove_link() , is_link()
+
+def test_list_files_in_dir():
+    folder=tempfile.mkdtemp()
+    f1 = open(os.path.join(folder, "test1.txt"), "w")
+    f2 = open(os.path.join(folder, "test2.txt"), "w")
+    f3 = open(os.path.join(folder, "test3.txt"), "w")
+    f1.close()
+    f2.close()
+    f3.close()
+
+
