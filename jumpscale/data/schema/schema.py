@@ -8,7 +8,7 @@ class Property:
         self.index_key = False
         self.index_text = False
         self.unique = False
-        self.type = ""
+        self.type = None
         self.comment = ""
         self.defaultvalue = ""
         self.name = ""
@@ -126,7 +126,7 @@ def _infer_type(value):
     elif value == "[]":
         return "L"
     elif value == "true" or value == "false":
-        return "bool"
+        return "B"
     else:
         raise RuntimeError(f"Can't infer the type of {value}")
 
