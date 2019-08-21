@@ -1,4 +1,5 @@
 import re
+from jumpscale.god import j
 
 
 class Property:
@@ -117,13 +118,13 @@ def _infer_type(value):
         str: The type of the value.
     """
     if len(value) >= 2 and (value[0] == '"' and value[-1] == '"' or value[0] == "'" and value[-1] == "'"):
-        return "str"
+        return "S"
     elif _is_float(value):
-        return "float"
+        return "F"
     elif value.isdigit():
-        return "i"
+        return "I"
     elif value == "[]":
-        return "ls"
+        return "L"
     elif value == "true" or value == "false":
         return "bool"
     else:
@@ -158,12 +159,13 @@ def _parse_prop(line):
     prop.index = name == "name" or prop.unique or qualifier == "*"
     prop.index_key = qualifier == "**"
     prop.index_text = qualifier == "***"
-    prop.type = prop_type or _infer_type(default_value)
+    prop_type = prop_type or _infer_type(default_value)
     if len(default_value) >= 2 and (
         default_value[0] == "'" and default_value[-1] == "'" or default_value[0] == '"' and default_value[-1] == '"'
     ):
         default_value = default_value[1:-1]
     prop.defaultvalue = pointer_type or default_value
+    prop.type = j.data.types.get_js_type(prop_type, prop.defaultvalue)
     prop.comment = comment
     return prop.name, prop
 
