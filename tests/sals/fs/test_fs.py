@@ -218,5 +218,59 @@ def test_is_file():
     assert not j.sals.fs.is_file(os.path.join(new_folder_path, "omar.txt"))
 
 
-# TODO test is_executable()
+# TODO test is_executable() , is_link_and_broken() , is_mount()
 
+def test_is_link():
+    f=tempfile.NamedTemporaryFile()
+    d=tempfile.NamedTemporaryFile()
+    j.sals.fs.symlink(d.name,f.name)
+    assert j.sals.fs.is_link(f.name)
+
+def test_stat_path():
+    f=tempfile.NamedTemporaryFile()
+    s=str(j.sals.fs.stat_path(f.name))
+    assert 'st_size' in s and 'st_dev' in s and 'st_uid' in s
+
+def test_rename_dir():
+    d=tempfile.mkdtemp()
+    dd=os.path.join(d,'ahmed')
+    os.mkdir(dd)
+    j.sals.fs.rename_dir(dd,os.path.join(d,'omar'))
+    assert os.path.isdir(os.path.join(d,'omar'))
+
+def test_unlink_file():
+    f=tempfile.NamedTemporaryFile()
+    j.sals.fs.unlink_file(f.name)
+    assert not os.path.isfile(f.name)
+
+def test_unlink():
+    f=tempfile.NamedTemporaryFile()
+    j.sals.fs.unlink(f.name)
+    assert not os.path.isfile(f.name)
+
+def test_readfile():
+    d=tempfile.mkdtemp()
+    f=os.path.join(d,'omar.txt')
+    with open(f,'w') as file:
+        file.write('hello there !')
+    assert j.sals.fs.readfile(f)=='hello there !'
+
+def test_touch():
+    d=tempfile.mkdtemp()
+    f1=os.path.join(d,'test1.txt')
+    f2=os.path.join(d,'test2.txt')
+    f3=os.path.join(d,'test3.txt')
+    l=[f1,f2,f3]
+    j.sals.fs.touch(l)
+    assert os.path.isfile(f1)
+    assert os.path.isfile(f2)
+    assert os.path.isfile(f3)
+
+def test_writefile():
+    f=tempfile.NamedTemporaryFile()
+    j.sals.fs.writefile(f.name,'hi there')
+    with open(f.name,'r') as file:
+        assert file.read()=='hi there'
+
+def test_file_size():
+    assert isinstance(j.sals.fs.file_size(tempfile.NamedTemporaryFile().name),int)

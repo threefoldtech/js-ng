@@ -995,13 +995,14 @@ def touch(paths):
     """
     can be single path or multiple (then list)
     """
-    if j.data.types.list.check(paths):
+    if isinstance(paths,list):
         for item in paths:
             touch(item)
-    path = paths
-    create_dir(get_dir_name(path))
-    if not exists(path=path):
-        writefile(path, "")
+    else:
+        path = paths
+        create_dir(get_dir_name(path))
+        if not exists(path=path):
+            writefile(path, "")
 
 
 def writefile(filename, contents, append=False):
@@ -1011,13 +1012,13 @@ def writefile(filename, contents, append=False):
     """
     if contents is None:
         raise RuntimeError("Passed None parameters in system.fs.writefile")
-    filename = j.core.tools.text_replace(filename)
+    #filename = j.core.tools.text_replace(filename)
     if append is False:
         fp = open(filename, "wb")
     else:
         fp = open(filename, "ab")
     
-    if j.data.types.string.check(contents):
+    if isinstance(contents,str):
         fp.write(bytes(contents, "UTF-8"))
     else:
         fp.write(contents)
