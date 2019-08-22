@@ -123,9 +123,9 @@ class List:
         default = default or "[]"
         self.default = self.from_str(default)
 
-    def _deep_shick(self, value):
+    def _deep_check(self, value):
         for e in value:
-            if isinstance(self.subtype, List) and not self.subtype._deep_shick(e):
+            if isinstance(self.subtype, List) and not self.subtype._deep_check(e):
                 return False
             elif not isinstance(self.subtype, List) and not self.subtype.check(str(e)):
                 return False
@@ -136,7 +136,7 @@ class List:
         if not valid:
             return False
         try:
-            return self._deep_shick(ast.literal_eval(value))
+            return self._deep_check(ast.literal_eval(value))
         except:
             return False
         return True

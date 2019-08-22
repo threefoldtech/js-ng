@@ -15,8 +15,8 @@ def test_schema():
     
     date_start = 0 (I)
     
-       description* = ""        
-    description2 ** = (S)
+       description* = "hello world"        
+    description2 ** = 'creature asd"asd ,xzc'(S)
     llist4*** = [1,2,3] (LI)
     llist5 = [1,2,3] (LI)
     llist6 = [1,2,3] (LI)
@@ -107,11 +107,11 @@ def test_schema():
     assert "description" in schema.props
     assert (
         isinstance(schema.props["description"].type, j.data.types.String)
-        and schema.props["description"].type.default == ""
+        and schema.props["description"].type.default == "hello world"
     )
     del schema.props["description"].type
     assert schema.props["description"].__dict__ == {
-        "defaultvalue": "",
+        "defaultvalue": "hello world",
         "index": True,
         "index_key": False,
         "index_text": False,
@@ -123,11 +123,11 @@ def test_schema():
     assert "description" in schema.props
     assert (
         isinstance(schema.props["description2"].type, j.data.types.String)
-        and schema.props["description2"].type.default == ""
+        and schema.props["description2"].type.default == 'creature asd"asd ,xzc'
     )
     del schema.props["description2"].type
     assert schema.props["description2"].__dict__ == {
-        "defaultvalue": "",
+        "defaultvalue": 'creature asd"asd ,xzc',
         "index": False,
         "index_key": True,
         "index_text": False,
