@@ -9,9 +9,19 @@ class Email:
         self.regex = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
 
     def check(self, value):
+        """Check whether provided value is a valid email representation
+        Arguments:
+            value (str)
+        Returbs:
+            Boolean expresion"""
         return re.search(self.regex, value) is not None
 
     def from_str(self, value):
+        """get the value from the string
+        Arguments:
+            value (str)
+        Returbs:
+            value (str)"""
         return value
 
 
@@ -20,18 +30,23 @@ class Path:
         if not default:
             default = ""
         self.default = default
-        self.regex = r"^(?:\.{2})?(?:\/\.{2})*(\/[a-zA-Z0-9]+)+$"
+        self.regex = r"^(/[^/ ]*)+/?$"
 
     def check(self, value):
-        value = self._clean(value)
+        """Check whether provided value is a valid path representation
+        Arguments:
+            value (str)
+        Returbs:
+            Boolean expresion"""
         return re.search(self.regex, value) is not None
 
     def from_str(self, value):
+        """get the value from the string
+        Arguments:
+            value (str)
+        Returbs:
+            value (str)"""
         return value
-
-    def _clean(self, value):
-        if value is not None:
-            return value.replace("\\", "/")
 
 
 class URL:
@@ -42,9 +57,19 @@ class URL:
         self.regex = r"^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$"
 
     def check(self, value):
+        """Check whether provided value is a valid URL representation
+        Arguments:
+            value (str)
+        Returbs:
+            Boolean expresion"""
         return re.search(self.regex, value) is not None
 
     def from_str(self, value):
+        """get the value from the string
+        Arguments:
+            value (str)
+        Returbs:
+            value (str)"""
         return value
 
 
@@ -56,10 +81,20 @@ class Tel:
         self.regex = r"^\+?[0-9]{6,15}(?:x[0-9]+)?$"
 
     def check(self, value):
+        """Check whether provided value is a valid Telephone number representation
+        Arguments:
+            value (str)
+        Returbs:
+            Boolean expresion"""
         value = self._clean(value)
         return re.search(self.regex, value) is not None
 
     def from_str(self, value):
+        """get the value from the string
+        Arguments:
+            value (str)
+        Returbs:
+            value (str)"""
         return value
 
     def _clean(self, value):
@@ -77,28 +112,48 @@ class IPAddress:
         if not default:
             default = ""
         self.default = default
-        self.regex = r"[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/[0-9]{1,2}"
+        self.regex = r"[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}"
 
     def check(self, value):
+        """Check whether provided value is a valid IPaddress representation
+        Arguments:
+            value (str)
+        Returbs:
+            Boolean expresion"""
         return re.search(self.regex, value) is not None
 
     def from_str(self, value):
+        """get the value from the string
+        Arguments:
+            value (str)
+        Returbs:
+            value (str)"""
         return value
 
 
 class DateTime:
-    """Support yyyy-mm-dd hh:mm format"""
+    """Supported format: yyyy-mm-dd hh:mm"""
 
     def __init__(self, default=None):
         if not default:
             default = ""
         self.default = default
-        self.regex = r"[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1]) (2[0-3]|[01][0-9]):[0-5][0-9]"
+        self.regex = r"^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1]) (2[0-3]|[01][0-9]):[0-5][0-9]$"
 
     def check(self, value):
+        """Check whether provided value is a valid datetime representation
+        Arguments:
+            value (str)
+        Returbs:
+            Boolean expresion"""
         return re.search(self.regex, value) is not None
 
     def from_str(self, value):
+        """get the value from the string
+        Arguments:
+            value (str)
+        Returbs:
+            value (str)"""
         return value
 
 
@@ -112,14 +167,24 @@ class Date:
         self.regex = r"[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])"
 
     def check(self, value):
+        """Check whether provided value is a valid date representation
+        Arguments:
+            value (str)
+        Returbs:
+            Boolean expresion"""
         return re.search(self.regex, value) is not None
 
     def from_str(self, value):
+        """get the value from the string
+        Arguments:
+            value (str)
+        Returbs:
+            value (str)"""
         return value
 
 
 class Time:
-    """Support hh:mm format"""
+    """Supported format : hh:mm"""
 
     def __init__(self, default=None):
         if not default:
@@ -128,23 +193,41 @@ class Time:
         self.regex = r"(2[0-3]|[01][0-9]):[0-5][0-9]"
 
     def check(self, value):
+        """Check whether provided value is a valid time representation
+        Arguments:
+            value (str)
+        Returbs:
+            Boolean expresion"""
         return re.search(self.regex, value) is not None
 
     def from_str(self, value):
+        """Get the value from string
+            value (str)
+        Returbs:
+            value (str)"""
         return value
 
 
 class Duration:
-    """Support (int)d (int)h (int)m (int)s format"""
+    """Supported format : (n)y (n)m (n)d (n)h (n)m (n)s"""
 
     def __init__(self, default=None):
         if not default:
             default = ""
         self.default = default
-        self.regex = r"((\d{1,2}d\s?)?(\d{1,2}h\s?)?(\d{1,2}m\s?)?(\d{1,2}s\s?)?)|\d{1,2}"
+        self.regex = r"((\d{1,2}y\s?)?(\d{1,2}m\s?)?(\d{1,2}d\s?)?(\d{1,2}h\s?)?(\d{1,2}m\s?)?(\d{1,2}s\s?)?)|\d{1,2}"
 
     def check(self, value):
+        """Check whether provided value is a valid duration representation
+        Arguments:
+            value (str)
+        Returbs:
+            Boolean expresion"""
         return re.search(self.regex, value) is not None
 
     def from_str(self, value):
+        """Get the value from string
+            value (str)
+        Returbs:
+            value (str)"""
         return value
