@@ -111,9 +111,19 @@ class JSObject:
         self.default = self.from_str(default)
 
     def check(self, value):
+        """Check whether provided string represent JSObject value. (Any string will do).
+        
+        Arguments:
+            value (str)
+        """
         return isinstance(value, str)
 
     def from_str(self, value):
+        """Return value as is.
+        
+        Arguments:
+            value (str)
+        """
         return value
 
 
@@ -124,6 +134,16 @@ class List:
         self.default = self.from_str(default)
 
     def _deep_check(self, value):
+        """Check that the value represents a list with proper elements of the specified subtype.
+        
+        Args:
+            value (list): The list to be checked.
+        
+        Returns:
+            Boolean: True if the list is valid.
+        """
+        if not isinstance(value, list):
+            return False
         for e in value:
             if isinstance(self.subtype, List) and not self.subtype._deep_check(e):
                 return False
@@ -132,6 +152,14 @@ class List:
         return True
 
     def check(self, value):
+        """Check that the value represents a list with proper elements of the specified subtype.
+        
+        Args:
+            value (list): The list to be checked.
+        
+        Returns:
+            Boolean: True if the list is valid.
+        """
         valid = len(value) >= 2 and value[0] == "[" and value[-1] == "]"
         if not valid:
             return False
@@ -142,20 +170,57 @@ class List:
         return True
 
     def _deep_parse(self, value):
+        """parses the subelements (if they are of different python type it's converted using the subtype parser)
+        
+        Args:
+            value (list): The list to be parsed.
+        
+        Returns:
+            list: The parsed list.
+        """
+        result = []
         if isinstance(self.subtype, List):
             for i, e in enumerate(value):
-                value[i] = self.subtype._deep_parse(value)
+                value[i] = self.subtype._deep_parse(e)
         else:
             for i, e in enumerate(value):
                 value[i] = self.subtype.from_str(str(e))
         return value
 
     def from_str(self, value):
-        return self._deep_parse(ast.literal_eval(value))
+        """parses the string value into a list.
+        
+        Args:
+            value (str): The string to be parsed.
+        
+        Returns:
+            list: The parsed list.
+        """
+        if isinstance(self.subtype, JSObject):
+            return value
+        else:
+            return self._deep_parse(ast.literal_eval(value))
 
 
 def get_js_type(type_str, default_value=None):
-    types = {"": String, "S": String, "I": Integer, "bool": Boolean, "F": Float, "O": JSObject}
+    """Gets the js type from a string.
+
+    1. "S" -> String
+    2. "B" -> Boolean
+    3. "I" -> Integer
+    4. "O" -> JSObject
+    4. "F" -> Float
+    5. "L.*" -> List with subtype .*
+    6. "" -> empty defaults to String
+    
+    Args:
+        type_str (str): type description.
+        default_value (any, optional): The default value. Defaults to None.
+    
+    Returns:
+        Object: A js type object.
+    """
+    types = {"": String, "S": String, "I": Integer, "B": Boolean, "F": Float, "O": JSObject}
     if len(type_str) == 0 or type_str[0] != "L":
         return types[type_str](default_value)
     else:
