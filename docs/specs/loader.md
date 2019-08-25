@@ -128,7 +128,7 @@ def load():
 
 ### Group represents a subnamespace
 
-A group is subnamespace like (sals, tools, clients)
+A group is subnamespace like (sals, tools, clients) basically a simple dictionary that allows getattr to be used with `j.sals.fs` instead of `j.sals['fs']`
 ```python3
 class Group:
     def __init__(self, d):
@@ -144,6 +144,11 @@ class Group:
 ```
 
 ### God object J
+
+- Here we make sure to load the namespaces once using `_load`
+- Provide `__dir__` for autocompletion
+- Allow reloading using `reload`
+- Give shortcuts to `core.exceptions`, `core.logging`, `core.config`
 
 ```python3
 class J:
