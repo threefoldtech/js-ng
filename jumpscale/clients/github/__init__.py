@@ -1,5 +1,5 @@
-from jumpscale.clients.base import ClientFactory
+from jumpscale.clients.base import StoredFactory
 from .github import Github
 
 
-factory = ClientFactory(Github)
+factory = StoredFactory(Github)

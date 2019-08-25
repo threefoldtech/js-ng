@@ -54,7 +54,7 @@ def copyFile(fileFrom, to, createDirIfNeeded=False, overwriteFile=True):
             # due to locking [delete/copy is a better strategy]
             remove(to)
     shutil.copy(fileFrom, to)
-    
+
 
 
 def moveFile(source, destin):
@@ -62,14 +62,14 @@ def moveFile(source, destin):
     @param source: string (Source file path)
     @param destination: string (Destination path the file should be moved to )
     """
-    
+
     _move(source, destin)
 
 def renameFile(filePath, new_name):
     """
     OBSOLETE
     """
-    
+
     return _move(filePath, new_name)
 
 
@@ -94,9 +94,9 @@ def createEmptyFile(filename):
     """Create an empty file
     @param filename: string (file path name to be created)
     """
-    
+
     open(filename, "w").close()
-    
+
 
 
 def createDir(newdir, unlink=False):
@@ -107,7 +107,7 @@ def createDir(newdir, unlink=False):
     """
     if newdir.find("file://") != -1:
         raise j.exceptions.RuntimeError("Cannot use file notation here")
-    
+
     if exists(newdir):
         if isLink(newdir) and unlink:
             unlink(newdir)
@@ -126,10 +126,10 @@ def createDir(newdir, unlink=False):
             #     if e.errno != os.errno.EEXIST:  # File exists
             #         raise
 
-        
+
 
 def copyDirTree(
-    
+
     src,
     dst,
     keepsymlinks=False,
@@ -178,7 +178,7 @@ def copyDirTree(
     if not rsync:
         if src.find("file://") != -1 or dst.find("file://") != -1:
             raise j.exceptions.RuntimeError("Cannot use file notation here")
-        
+
         if (src is None) or (dst is None):
             raise j.exceptions.Value(
                 "Not enough parameters passed in system.fs.copyDirTree to copy directory from %s to %s "
@@ -277,10 +277,10 @@ def changeDir(path):
     """Changes Current Directory
     @param path: string (Directory path to be changed to)
     """
-    
+
     os.chdir(path)
     newcurrentPath = os.getcwd()
-    
+
     return newcurrentPath
 
 
@@ -289,9 +289,9 @@ def moveDir(source, destin):
     @param source: string (Source path where the directory should be removed from)
     @param destin: string (Destination path where the directory should be moved into)
     """
-    
+
     _move(source, destin)
-    
+
 
 def joinPaths(*args):
     """Join one or more path components.
@@ -304,7 +304,7 @@ def joinPaths(*args):
     with exactly one directory separator (os.sep) inserted between components, unless path2 is empty.
     """
     args = [j.core.text.toStr(x) for x in args]
-    
+
     if args is None:
         raise j.exceptions.Value("Not enough parameters %s" % (str(args)))
     if os.sys.platform.startswith("win"):
@@ -328,7 +328,7 @@ def getDirName(path, lastOnly=False, levelsUp=None):
         e.g. ...getDirName("/opt/qbase/bin/something/test.py", levelsUp=1) would return bin
         e.g. ...getDirName("/opt/qbase/bin/something/test.py", levelsUp=10) would raise an error
     """
-    
+
     dname = os.path.dirname(path)
     dname = dname.replace("/", os.sep)
     dname = dname.replace("//", os.sep)
@@ -349,7 +349,7 @@ def getDirName(path, lastOnly=False, levelsUp=None):
 
 def getBaseName(path, removeExtension=False):
     """Return the base name of pathname path."""
-    
+
     name = os.path.basename(path.rstrip(os.path.sep))
     if removeExtension:
         if "." in name:
@@ -453,7 +453,7 @@ def getParentWithDirname(path="", dirname=".git", die=False):
     if not found will return None or die
 
     Raises:
-        RuntimeError -- if die 
+        RuntimeError -- if die
 
     Returns:
         string -- the path which has the dirname or None
@@ -597,7 +597,7 @@ def getcwd():
     """get current working directory
     @rtype: string (current working directory path)
     """
-    
+
     return os.getcwd()
 
 
@@ -608,7 +608,7 @@ def readLink(path):
     """
     while path[-1] == "/" or path[-1] == "\\":
         path = path[:-1]
-    
+
     if j.core.platformtype.myplatform.platform_is_unix or j.core.platformtype.myplatform.platform_is_osx:
         res = os.readlink(path)
     elif j.core.platformtype.myplatform.platform_is_windows:
@@ -642,7 +642,7 @@ def _listInDir(path, followSymlinks=True):
 
 
 def listFilesInDir(
-    
+
     path,
     recursive=False,
     filter=None,
@@ -671,7 +671,7 @@ def listFilesInDir(
     """
     if depth is not None:
         depth = int(depth)
-    
+
     if depth == 0:
         depth = None
     # if depth is not None:
@@ -693,7 +693,7 @@ def listFilesInDir(
 
 
 def listFilesAndDirsInDir(
-    
+
     path,
     recursive=True,
     filter=None,
@@ -721,7 +721,7 @@ def listFilesAndDirsInDir(
     """
     if depth is not None:
         depth = int(depth)
-    
+
     if depth == 0:
         depth = None
     # if depth is not None:
@@ -740,7 +740,7 @@ def listFilesAndDirsInDir(
     return filesreturn
 
 def _listAllInDir(
-    
+
     path,
     recursive,
     filter=None,
@@ -946,13 +946,13 @@ def exists(path, followlinks=True):
     except (OSError, AttributeError):
         pass
     if found and followlinks and stat.S_ISLNK(st.st_mode):
-        
+
         relativelink = readLink(path)
         newpath = joinPaths(getParent(path), relativelink)
         return exists(newpath)
     if found:
         return True
-    
+
     return False
 
 
@@ -962,7 +962,7 @@ def symlink(path, target, overwriteTarget=False):
     @param target: destination path required to create the symbolic link at
     @param overwriteTarget: boolean indicating whether target can be overwritten
     """
-    
+
 
     if target[-1] == "/":
         target = target[:-1]
@@ -983,7 +983,7 @@ def symlink(path, target, overwriteTarget=False):
         createDir(dir)
 
     if j.core.platformtype.myplatform.platform_is_unix or j.core.platformtype.myplatform.platform_is_osx:
-        
+
         os.symlink(path, target)
     elif j.core.platformtype.myplatform.platform_is_windows:
         path = path.replace("+", ":")
@@ -1003,7 +1003,7 @@ def symlinkFilesInDir(src, dest, delete=True, includeDirs=False, makeExecutable=
     for item in items:
         dest2 = "%s/%s" % (dest, getBaseName(item))
         dest2 = dest2.replace("//", "/")
-        
+
         symlink(item, dest2, overwriteTarget=delete)
         if makeExecutable:
             # print("executable:%s" % dest2)
@@ -1018,7 +1018,7 @@ def hardlinkFile(source, destin):
     @rtype: concatenation of dirname, and optionally linkname, etc.
     with exactly one directory separator (os.sep) inserted between components, unless path2 is empty
     """
-    
+
     if j.core.platformtype.myplatform.platform_is_unix or j.core.platformtype.myplatform.platform_is_osx:
         return os.link(source, destin)
     else:
@@ -1053,9 +1053,9 @@ def isEmptyDir(path):
     @rtype: boolean (True if directory is empty)
     """
     if _listInDir(path) == []:
-        
+
         return True
-    
+
     return False
 
 
@@ -1065,16 +1065,16 @@ def isFile(path, followSoftlink=True):
     @param followSoftlink: boolean
     @rtype: boolean (True if file exists for the given path)
     """
-    
+
     if not followSoftlink and isLink(path):
-        
+
         return True
 
     if os.path.isfile(path):
-        
+
         return True
 
-    
+
     return False
 
 
@@ -1123,9 +1123,9 @@ def isLink(path, checkJunction=False, check_valid=False):
         if check_valid:
             j.shell()
             w
-        
+
         return True
-    
+
     return False
 
 
@@ -1133,7 +1133,7 @@ def isMount(path):
     """Return true if pathname path is a mount point:
     A point in a file system where a different file system has been mounted.
     """
-    
+
     if path is None:
         raise j.exceptions.Value("Path is passed null in system.fs.isMount")
     return os.path.ismount(path)
@@ -1151,7 +1151,7 @@ def renameDir(dirname, newname, overwrite=False):
     @param dirname: string (Directory original name)
     @param newname: string (Directory new name to be changed to)
     """
-    
+
     if dirname == newname:
         return
     if overwrite and exists(newname):
@@ -1166,7 +1166,7 @@ def unlinkFile(filename):
     """Remove the file path (only for files, not for symlinks)
     @param filename: File path to be removed
     """
-    
+
     os.unlink(filename)
 
 
@@ -1176,7 +1176,7 @@ def unlink(filename):
     @param filename: File path to be removed
     @type filename: string
     """
-    
+
 
     if j.core.platformtype.myplatform.platform_is_windows:
         cmd = "junction -d %s 2>&1 > null" % (filename)
@@ -1191,7 +1191,7 @@ def readFile(filename, binary=False, encoding="utf-8"):
     @rtype: string representing the file contents
     @param encoding utf-8 or ascii
     """
-    
+
     if binary:
         with open(filename, mode="rb") as fp:
             data = fp.read()
@@ -1201,14 +1201,14 @@ def readFile(filename, binary=False, encoding="utf-8"):
     return data
 
 #
-# 
+#
 # def fileGetUncommentedContents(filename):
 #     """Read a file and get uncommented contents of that file
 #     @param filename: string (filename to open for reading )
 #     @rtype: list of lines of uncommented file contents
 #     """
-#     
-#     # 
+#
+#     #
 #     with open(filename) as fp:
 #         data = fp.readlines()
 #         uncommented = list()
@@ -1216,10 +1216,10 @@ def readFile(filename, binary=False, encoding="utf-8"):
 #             if not line.strip().startswith('#') and not line.startswith('\n'):
 #                 line = line.replace('\n', '')
 #                 uncommented.append(line)
-#         
+#
 #         return uncommented
 #
-# 
+#
 # def fileGetTextContents(filename):
 #     """Read a UTF-8 file and get contents of that file. Takes care of the [BOM](http://en.wikipedia.org/wiki/Byte_order_mark)
 #     @param filename: string (filename to open for reading)
@@ -1254,18 +1254,11 @@ def writeFile(filename, contents, append=False):
     Open a file and write file contents, close file afterwards
     @param contents: string (file contents to be written)
     """
-    if contents is None:
-        raise j.exceptions.Value("Passed None parameters in system.fs.writeFile")
-    filename = j.core.tools.text_replace(filename)
     if append is False:
         fp = open(filename, "wb")
     else:
         fp = open(filename, "ab")
-    
-    if j.data.types.string.check(contents):
-        fp.write(bytes(contents, "UTF-8"))
-    else:
-        fp.write(contents)
+    fp.write(contents)
     # fp.write(contents)
     fp.close()
 
@@ -1286,7 +1279,7 @@ def writeObjectToFile(filelocation, obj):
     """
     if not obj:
         raise j.exceptions.Value("You should provide a filelocation or a object as parameters")
-    
+
     try:
         pcl = pickle.dumps(obj)
     except Exception as e:
@@ -1302,9 +1295,9 @@ def readObjectFromFile(filelocation):
     @param filelocation: location of the file
     @return: object
     """
-    
+
     contents = fileGetContents(filelocation)
-    
+
     return pickle.loads(contents)
 
 
@@ -1313,7 +1306,7 @@ def md5sum(filename):
     @param filename: string (filename to get the hex digest of it) or list of files
     @rtype: md5 of the file
     """
-    
+
     if not isinstance(filename, list):
         filename = [filename]
     digest = hashlib.md5()
@@ -1570,7 +1563,7 @@ def pathToUnicode(path):
 
 
 def targzCompress(
-    
+
     sourcepath,
     destinationpath,
     followlinks=False,
@@ -1597,7 +1590,7 @@ def targzCompress(
     import os.path
     import tarfile
 
-    
+
     if not exists(getDirName(destinationpath)):
         createDir(getDirName(destinationpath))
     t = tarfile.open(name=destinationpath, mode="w:gz")
@@ -1619,7 +1612,7 @@ def targzCompress(
             destpath = joinPaths(destInTar, pathRemoveDirPart(path, sourcepath))
             if isLink(path) and followlinks:
                 path = readLink(path)
-            
+
             # print "fstar: add file %s to tar" % path
             if not (j.core.platformtype.myplatform.platform_is_windows and j.sal.windows.checkFileToIgnore(path)):
                 if isFile(path) or isLink(path):

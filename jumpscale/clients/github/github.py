@@ -1,24 +1,25 @@
-from jumpscale.clients.base import SecureClient
+from jumpscale.clients.base import Client, StoredFactory
+from jumpscale.core import fields
+from jumpscale.core.base import Base
 from jumpscale.god import j
 
-class Github(SecureClient):
-    def __init__(self, instance_name='myinstance'):
-        self.instance_name = instance_name
-        super().__init__(self)
-    
+
+class Email(Base):
+    address = fields.String()
+    main = fields.Boolean()
+
+
+class User(Base):
+    username = fields.String()
+    password = fields.String()
+
+    emails = StoredFactory(Email)
+
+
+class Github(Client):
+    users = StoredFactory(User)
+
     def hi(self):
         print("hii")
-        j.sals.fs.basename('aa')
+        j.sals.fs.basename("aa")
 
-
-if __name__ == "__main__":
-    g = Github('xmon')
-    print(g.config.data)
-    g.config.data = {"a": "1", "__pass": "abce"}
-
-    print(g.config.data)
-
-    gogs = Gogs('main')
-    print(gogs.config.data)
-    gogs.config.data = {"user":"ahmed", "__tok":"ghijk"}
-    print(gogs.config.data)
