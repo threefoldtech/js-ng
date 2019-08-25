@@ -245,7 +245,7 @@ def copyDirTree(
         src = src.replace("//", "/")
 
         # ":" is there to make sure we support ssh
-        if ":" not in src and j.sal.fs.isDir(src):
+        if ":" not in src and j.sals.fs.isDir(src):
             if src[-1] != "/":
                 src += "/"
             if dstpath[-1] != "/":
@@ -460,15 +460,15 @@ def getParentWithDirname(path="", dirname=".git", die=False):
 
     """
     if path == "":
-        path = j.sal.fs.getcwd()
+        path = j.sals.fs.getcwd()
 
     # first check if there is no .jsconfig in parent dirs
     curdir = copy.copy(path)
     while curdir.strip() != "":
-        if j.sal.fs.exists("%s/%s" % (curdir, dirname)):
+        if j.sals.fs.exists("%s/%s" % (curdir, dirname)):
             return curdir
         # look for parent
-        curdir = j.sal.fs.getParent(curdir)
+        curdir = j.sals.fs.getParent(curdir)
     if die:
         raise j.exceptions.Base("Could not find %s dir as parent of:'%s'" % (dirname, path))
     else:
@@ -543,7 +543,7 @@ def pathParse(path, baseDir="", existCheck=True, checkIsFile=False):
     if basedir specified that part of path will be removed
 
     example:
-    j.sal.fs.pathParse("/opt/qbase3/apps/specs/myspecs/definitions/cloud/datacenter.txt","/opt/qbase3/apps/specs/myspecs/",existCheck=False)
+    j.sals.fs.pathParse("/opt/qbase3/apps/specs/myspecs/definitions/cloud/datacenter.txt","/opt/qbase3/apps/specs/myspecs/",existCheck=False)
     @param path is existing path to a file
     @param baseDir, is the absolute part of the path not required
     @return list of dirpath,filename,extension,priority
@@ -1087,7 +1087,7 @@ def isLinkAndBroken(path, remove_if_broken=True):
         rpath = readLink(path)
         if not exists(rpath):
             if remove_if_broken:
-                j.sal.fs.remove(path)
+                j.sals.fs.remove(path)
             return True
     return False
 
@@ -1349,7 +1349,7 @@ def getTmpFilePath(cygwin=False):
     @rtype: string representing the path of the temp file generated
     """
     tmpdir = j.dirs.TMPDIR + "/jumpscale/"
-    j.sal.fs.createDir(tmpdir)
+    j.sals.fs.createDir(tmpdir)
     fd, path = tempfile.mkstemp(dir=tmpdir)
     try:
         real_fd = os.fdopen(fd)
@@ -1630,7 +1630,7 @@ def targzCompress(
         params = {}
         params["t"] = t
         params["destintar"] = destInTar
-        j.sal.fswalker.walk(
+        j.sals.fswalker.walk(
             root=sourcepath,
             callback=addToTar,
             arg=params,
