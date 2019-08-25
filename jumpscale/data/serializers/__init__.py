@@ -1,5 +1,4 @@
 from . import base64
-from . import blosc
 from . import json
 from . import lzma
 from . import msgpack
