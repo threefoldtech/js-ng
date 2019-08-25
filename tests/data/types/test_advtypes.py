@@ -4,18 +4,27 @@ from jumpscale.god import j
 def test_email_check():
     e = j.data.types.Email()
     assert e.check("name@example.com")
+    assert e.check("oa3@gmail.com")
+    assert e.check("o_a_15@gmail.com")
+    assert not e.check("test.com")
+    assert not e.check("me@cs")
     assert not e.check("anothername@example")
 
 
 def test_path_check():
     p = j.data.types.Path()
     assert p.check("/home/me")
+    assert p.check("/../../hi")
+    assert p.check("/../hi")
+    assert p.check("/..")
     assert not p.check("not path")
 
 
 def test_url_check():
     u = j.data.types.URL()
     assert u.check("https://www.google.com")
+    assert u.check("http://fb.com")
+    assert u.check("http://255.255.255.255")
     assert not u.check("www.google")
 
 
@@ -29,6 +38,7 @@ def test_tel_check():
     tel = j.data.types.Tel()
     assert tel.check("010055471466")
     assert tel.check("(+20) 100 48 5555")
+    assert not tel.check("0200/46")
 
 
 def test_datetime_check():

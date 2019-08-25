@@ -54,7 +54,7 @@ class URL:
         if not default:
             default = ""
         self.default = default
-        self.regex = r"^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$"
+        self.regex = r"^(https?|ftp)://[^\s/$.?#].[^\s]*$"
 
     def check(self, value):
         """Check whether provided value is a valid URL representation
