@@ -88,19 +88,12 @@ class Formatters:
 lexers = Lexers()
 formatters = Formatters()
 
-def print_python(text, formatter="terminal"):
-    C = text
-    print(pygments.highlight(C, lexers.get("python"), formatters.get(formatter)))
-
-def print_toml(text, formatter="terminal"):
-    C = text
-    print(pygments.highlight(C, lexers.get("toml"), formatters.get(formatter)))
-
-
 def print_highlighted(txt, lexer=None, formatter="terminal"):
     lexer = lexer or guess_lexer(txt)
     print(pygments.highlight(txt, lexer, formatters.get(formatter)))
 
+print_python = print_highlighted
+print_toml = print_highlighted
 
 def test():
     C = """
