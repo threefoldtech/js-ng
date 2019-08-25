@@ -1,6 +1,5 @@
 import pytest
 import base64
-import blosc
 import pylzma
 import msgpack
 import yaml
@@ -14,11 +13,6 @@ def test_base64():
     assert j.data.serializers.base64.decode("omar") == base64.b64decode("omar".encode())
     assert j.data.serializers.base64.decode(b"omar") == base64.b64decode(b"omar")
 
-
-def test_blosc():
-    obj = blosc.compress(b"omar")
-    assert j.data.serializers.blosc.compress(b"omar") == obj
-    assert j.data.serializers.blosc.decompress(obj) == blosc.decompress(obj)
 
 
 def test_pickle():
