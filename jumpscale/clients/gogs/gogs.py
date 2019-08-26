@@ -1,5 +1,5 @@
 from jumpscale.clients.base import Client
-from jumpscale.core import fields
+from jumpscale.core.base import fields
 
 
 class Gogs(Client):

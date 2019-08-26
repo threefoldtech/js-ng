@@ -1,6 +1,5 @@
-from jumpscale.clients.base import Client, StoredFactory
-from jumpscale.core import fields
-from jumpscale.core.base import Base
+from jumpscale.clients.base import Client
+from jumpscale.core.base import Base, fields
 from jumpscale.god import j
 
 
@@ -13,11 +12,11 @@ class User(Base):
     username = fields.String()
     password = fields.String()
 
-    emails = StoredFactory(Email)
+    emails = fields.Factory(Email)
 
 
 class Github(Client):
-    users = StoredFactory(User)
+    users = fields.Factory(User)
 
     def hi(self):
         print("hii")

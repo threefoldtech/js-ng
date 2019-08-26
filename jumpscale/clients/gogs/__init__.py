@@ -1,5 +1,4 @@
-from jumpscale.clients.base import StoredFactory
-
+from jumpscale.core.base import StoredFactory
 from .gogs import Gogs
 
 
