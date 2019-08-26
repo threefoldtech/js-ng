@@ -19,23 +19,23 @@ def get_field_property(name, field):
             field.validate(value)
 
         setattr(self, inner_name, value)
-        self.data_updated(name, value)
+        self._data_updated(name, value)
 
     return property(fget=getter, fset=setter)
 
 
 def new_get_factory_info_method(factory_info):
-    def get_factory_info(self):
+    def _get_factory_info(self):
         return factory_info
 
-    return get_factory_info
+    return _get_factory_info
 
 
 def new_get_fields_method(fields):
-    def get_fields(self):
+    def _get_fields(self):
         return fields
 
-    return get_fields
+    return _get_fields
 
 
 FactoryInfo = namedtuple("FactoryInfo", ["name", "type", "factory"])
@@ -62,38 +62,38 @@ class BaseMeta(type):
                 new_attrs[key] = obj
 
         new_class = super(BaseMeta, cls).__new__(cls, name, based, new_attrs)
-        new_class.get_fields = new_get_fields_method(fields)
-        new_class.get_factory_info = new_get_factory_info_method(factories)
+        new_class._get_fields = new_get_fields_method(fields)
+        new_class._get_factory_info = new_get_factory_info_method(factories)
         return new_class
 
 
 class Base(SimpleNamespace, metaclass=BaseMeta):
-    def get_fields(self):
+    def _get_fields(self):
         return {}
 
-    def get_factory_info(self):
+    def _get_factory_info(self):
         return []
 
     def __init__(self):
-        for name, field in self.get_fields().items():
+        for name, field in self._get_fields().items():
             setattr(self, f"__{name}", field.default)
 
-        for info in self.get_factory_info():
+        for info in self._get_factory_info():
             setattr(self, info.name, info.factory(info.type))
 
-    def get_factories(self):
-        return {info.name: getattr(self, info.name) for info in self.get_factory_info()}
+    def _get_factories(self):
+        return {info.name: getattr(self, info.name) for info in self._get_factory_info()}
 
-    def get_data(self):
-        return {name: getattr(self, name) for name in self.get_fields().keys()}
+    def _get_data(self):
+        return {name: getattr(self, name) for name in self._get_fields().keys()}
 
-    def set_data(self, new_data):
-        for name in self.get_fields().keys():
+    def _set_data(self, new_data):
+        for name in self._get_fields().keys():
             if name in new_data:
                 try:
                     setattr(self, name, new_data[name])
                 except Exception:  # should be ValidationError
                     pass
 
-    def data_updated(self, name, value):
+    def _data_updated(self, name, value):
         pass
