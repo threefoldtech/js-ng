@@ -26,129 +26,186 @@ def printcolors(s):
     print(format(s))
 
 
-def ask_password(prompt, forbidden=[], traceback=""):
+def ask_password(prompt="Password : ", forbiddens=[]):
+    """Prompt the user for a password without echoing
+    
+    Keyword Arguments:
+        prompt {str} -- the question message (default: {"Password : "})
+        forbiddens {list} -- the list of bad passwords (default: {[]})
+    
+    Returns:
+        str -- the appropriate input password
+    """
     password = getpass.getpass(prompt)
-    if password not in forbidden:
+    if password not in forbiddens:
         return password
     else:
-        raise ValueError(traceback)
+        return ask_password(prompt, forbiddens)
 
 
-def ask_yes_no(prompt, default="y", valid=["y", "n"], traceback=""):
+def ask_yes_no(prompt="[y/n] :", default="y", valid=["y", "n"]):
+    """Display a yes/no question and loop until a valid answer is entered
+    
+    Keyword Arguments:
+        prompt {str} -- the question message (default: {'[y/n] :'})
+        default {str} -- the default answer if there is no answer (default: {"y"})
+        valid {list} -- the list of appropriate answers (default: {["y", "n"]})
+    
+    Returns:
+        str -- the answer
+    """
+
     answer = input(prompt)
     if answer in valid:
         return answer
     elif answer == "":
-        answer = default
-        return answer
+        return default
     else:
-        raise ValueError(traceback)
+        return ask_yes_no(prompt, default, valid)
 
 
-def ask_int(prompt="Type int : ", traceback="", mini=None, maxi=None):
-    answer = input(prompt)
-    answer = int(answer)
+def ask_int(prompt="Type int :"):
+    try:
+        return int(input(prompt))
+    except ValueError:
+        return ask_int(prompt)
 
-    if mini is not None and maxi is not None:
+
+def ask_int_in_range(mini, maxi, prompt="Type int :"):
+    """Get an integer response between two integer on asked question
+    
+    Arguments:
+        mini {int} -- the minimum value for the number
+        maxi {int} -- the maximum value for the number
+    
+    Keyword Arguments:
+        prompt {str} -- the question message (default: {"Type int :"})
+    
+    Returns:
+        int -- the input number on the range provided
+    """
+    try:
+        answer = int(input(prompt))
         if mini <= answer <= maxi:
             return answer
         else:
-            raise ValueError(traceback)
-
-    elif mini is not None and maxi is None:
-        if mini <= answer:
-            return answer
-        else:
-            raise ValueError(traceback)
-
-    elif mini is None and maxi is not None:
-        if answer <= maxi:
-            return answer
-        else:
-            raise ValueError(traceback)
-
-    else:
-        return answer
+            return ask_int_in_range(mini, maxi, prompt)
+    except ValueError:
+        return ask_int_in_range(mini, maxi, prompt)
 
 
-def ask_float(prompt="Type float : ", traceback="", mini=None, maxi=None):
-    answer = input(prompt)
-    answer = float(answer)
+def ask_float(prompt="Type float :"):
+    try:
+        return float(input(prompt))
+    except ValueError:
+        return ask_float(prompt)
 
-    if mini is not None and maxi is not None:
+
+def ask_float_in_range(mini, maxi, prompt="Type float :"):
+    """Get an float response between two float on asked question
+    
+    Arguments:
+        mini {float} -- the minimum value for the number
+        maxi {float} -- the maximum value for the number
+    
+    Keyword Arguments:
+        prompt {str} -- the question message (default: {"Type float :"})
+    
+    Returns:
+        float -- the input number on the range provided
+    """
+    try:
+        answer = float(input(prompt))
         if mini <= answer <= maxi:
             return answer
         else:
-            raise ValueError(traceback)
-
-    elif mini is not None and maxi is None:
-        if mini <= answer:
-            return answer
-        else:
-            raise ValueError(traceback)
-
-    elif mini is None and maxi is not None:
-        if answer <= maxi:
-            return answer
-        else:
-            raise ValueError(traceback)
-
-    else:
-        return answer
+            return ask_float_in_range(mini, maxi, prompt)
+    except ValueError:
+        return ask_float_in_range(mini, maxi, prompt)
 
 
-def ask_choice(prompt="Make your choice : ", choices_list=[], traceback="We don't have that"):
+def _print_choices(choices_list):
+    """Helper function : clear screen and print the choices in numbers"""
+    os.system("clear")
     number = 0
     for choice in choices_list:
         number += 1
         print(f"{number}. " + choice)
-    answer = input(prompt)
 
+
+def ask_choice(prompt="Type choice number : ", choices_list=[]):
+    """Get an option from provided list
+    
+    Keyword Arguments:
+        prompt {str} -- the question message (default: {"Type choice number : "})
+        choices_list {list} -- the available options (default: {[]})
+    
+    Returns:
+        str -- the chosen option
+    """
+    _print_choices(choices_list)
+    answer = input(prompt)
     try:
         return choices_list[int(answer) - 1]
-
-    except ValueError:
-        if answer in choices_list:
-            return answer
-        else:
-            raise IndexError(traceback)
+    except (IndexError, ValueError):
+        return ask_choice(prompt, choices_list)
 
 
-def ask_multi_choices(prompt="Add to choices : ", choices_list=[], traceback="Not found", tosave="s", toquit="q"):
+def ask_multi_choices(prompt="Add to choices : ", choices_list=[], to_save="s", to_quit="q"):
+    """Collect multi choices from list
+    
+    Keyword Arguments:
+        prompt {str} -- the question method (default: {"Add to choices : "})
+        choices_list {list} -- the available options (default: {[]})
+        to_save {str} -- escape and save choices (default: {"s"})
+        to_quit {str} -- escape without saving (default: {"q"})
+    
+    Returns:
+        list -- list of the selected choices
+    """
     selected_choices = []
-    print(f"'{tosave}' to save and '{toquit}' to quit")
-    number = 0
-    for choice in choices_list:
-        number += 1
-        print(f"{number}. " + choice)
+    print(f"'{to_save}' to save and '{to_quit}' to quit")
+    _print_choices(choices_list)
 
     while True:
         answer = input(prompt)
-        if answer == toquit:
+        if answer == to_quit:
             return []
-        elif answer == tosave or answer == "":
+        elif answer == to_save or answer == "":
             return selected_choices
         else:
             try:
                 selected_choices.append(choices_list[int(answer) - 1])
-
-            except ValueError:
-                if answer in choices_list:
-                    selected_choices.append(answer)
-                else:
-                    raise IndexError(traceback)
+            except (IndexError, ValueError):
+                return ask_multi_choices(prompt, choices_list, to_save, to_quit)
 
 
-def ask_multi_lines(prompt="", escape_string="."):
+def ask_multi_lines(prompt="Type :", escape_string="."):
+    """Get input from user provided multilines
+    
+    Keyword Arguments:
+        prompt {str} -- the question message (default: {"Type :"})
+        escape_string {str} -- escape character (default: {"."})
+    
+    Returns:
+        str -- the text seperated by lines
+    """
     text = []
     user_input = input(prompt)
     while user_input != escape_string:
         text.append(user_input)
-        user_input = input()
+        user_input = input(prompt)
     return "\n".join(text)
 
 
-def ask_string(prompt):
-    answer = input(prompt)
-    return answer
+def ask_string(prompt="Type :"):
+    """Just input function
+    
+    Keyword Arguments:
+        prompt {str} -- the question message (default: {"Type :"})
+    
+    Returns:
+        str -- the string input
+    """
+    return input(prompt)
 
