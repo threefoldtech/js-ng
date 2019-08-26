@@ -147,3 +147,9 @@ def ask_multi_lines(prompt="", escape_string="."):
         user_input = input()
     return "\n".join(text)
 
+def ask_string(prompt):
+    answer =  input(prompt)
+    return answer
+
+
+
