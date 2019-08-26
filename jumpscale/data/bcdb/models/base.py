@@ -10,15 +10,6 @@ class JSObjBase:
     def set_from_dict(self):
         pass
     
-    def get_by(self, key, value):
-        pass
-
-    def get_range(self, key, min, max):
-        pass
-    
-    def get_pattern(self, key, pattern):
-        pass
-    
     def save(self):
         pass
     
@@ -45,3 +36,13 @@ class ModelBase:
 
     def _incr_id(self):
         pass
+    
+    def get_by(self, key, value):
+        pass
+
+    def get_range(self, key, min, max):
+        pass
+    
+    def get_pattern(self, key, pattern):
+        pass
+    
