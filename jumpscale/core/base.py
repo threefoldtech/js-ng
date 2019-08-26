@@ -155,7 +155,10 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
     def set_data(self, new_data):
         for name in self.get_fields().keys():
             if name in new_data:
-                setattr(self, name, new_data[name])
+                try:
+                    setattr(self, name, new_data[name])
+                except Exception:  # should be ValidationError
+                    pass
 
     def data_updated(self, name, value):
         pass

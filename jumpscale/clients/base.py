@@ -127,6 +127,11 @@ class StoredFactory(Factory):
         self.store.delete(name)
         super(StoredFactory, self).delete(name)
 
+    def __iter__(self):
+        for value in vars(self).values():
+            if isinstance(value, self.type):
+                yield value
+
 
 class Client(Base):
     pass
