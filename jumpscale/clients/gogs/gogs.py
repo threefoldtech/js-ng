@@ -1,6 +1,6 @@
-from jumpscale.clients.base import SecureClient
+from jumpscale.clients.base import Client
+from jumpscale.core.base import fields
 
-class Gogs(SecureClient):
-    def __init__(self, instance_name="myinstance"):
-        self.instance_name = instance_name
-        super().__init__(self)
+
+class Gogs(Client):
+    access_token = fields.String()

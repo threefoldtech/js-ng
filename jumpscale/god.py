@@ -93,6 +93,10 @@ def load():
                     continue
                 if os.path.basename(root) == "jumpscale":
                     continue
+
+                
+                if os.path.dirname(root) != jsnamespace:
+                    continue
                 # print("root: {} d: {}".format(root, d))
                 rootbase = os.path.basename(root)
                 loadeddict['jumpscale'].setdefault(rootbase, {})
