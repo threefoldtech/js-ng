@@ -49,3 +49,9 @@ def ask_int(prompt, traceback="", mini=None, maxi=None):
     # answer = int(answer)
     return answer
 
+def ask_string(prompt):
+    answer =  input(prompt)
+    return answer
+
+
+
