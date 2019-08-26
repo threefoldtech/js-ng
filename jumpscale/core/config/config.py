@@ -1,6 +1,8 @@
-import sys
 import os
 import pytoml as toml
+import nacl.utils
+from nacl.public import PrivateKey, Box
+import nacl.encoding
 
 
 __all__ = ["config_path", "get_default_config", "get_config", "update_config", "Environment"]
@@ -39,6 +41,18 @@ def update_config(data):
         toml.dump(data, f)
 
 
+def generate_key(basepath):
+    hsk = PrivateKey.generate()
+    hpk = hsk.public_key
+    skpath = basepath + ".priv"
+    pkpath = basepath + ".pub"
+    with open(skpath, "wb") as f:
+        f.write(hsk.encode(nacl.encoding.Base64Encoder()))
+    with open(pkpath, "wb") as f:
+        f.write(hpk.encode(nacl.encoding.Base64Encoder()))
+    return skpath
+
+
 class Environment:
     def get_private_key_path(self):
         config = get_config()
@@ -46,7 +60,14 @@ class Environment:
         return private_key_path
 
     def get_private_key(self):
-        return open(self.get_private_key_path(), "rb").read()
+        private_key_path = self.get_private_key_path()
+        if not private_key_path:
+            keypath = os.path.join(config_root, "privatekey")
+            private_key_path = generate_key(keypath)
+            config = get_config()
+            config["private_key_path"] = private_key_path
+            update_config(config)
+        return open(private_key_path, "rb").read()
 
     def get_secure_config_path(self):
         config = get_config()

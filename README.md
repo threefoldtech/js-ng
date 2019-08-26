@@ -24,11 +24,6 @@ config management/automation framework
 - clone this repository, then
     - `poetry install`
 
-- make sure to generate a private key to be used by configuration manager:
-    - `poetry shell`
-    - `hush_keygen --name /path/to/your/key`
-    - `jsctl config update --name=private_key_path --value=/path/to/your/key`
-
 - now you can open the shell
     - `jsng`
 
