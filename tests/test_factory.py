@@ -2,8 +2,7 @@ import unittest
 
 
 # TODO: move fields to fields or types module
-from jumpscale.core.base import Base, Factory, DuplicateError
-from jumpscale.core import fields
+from jumpscale.core.base import Base, Factory, DuplicateError, fields
 
 
 class Address(Base):

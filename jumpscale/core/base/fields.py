@@ -1,7 +1,20 @@
-from .meta import Field
 from .factory import StoredFactory
 
 # TODO: validation/serialization using https://marshmallow.readthedocs.io/en/stable/ or http://alecthomas.github.io/voluptuous/docs/_build/html/index.html
+
+
+class ValidationError(Exception):
+    pass
+
+
+class Field:
+    def __init__(self, **kwargs):
+        self.default = None
+        self.required = False
+        self.kwargs = kwargs
+
+    def validate(self, value):
+        pass
 
 
 class Typed(Field):
