@@ -1,20 +1,8 @@
 from jumpscale.god import j
 
 class JSObjBase:
-    def __init__(self, schema, model, **kwargs):
+    def __init__(self):
         pass
-
-    def get_dict(self):
-        pass
-    
-    def set_from_dict(self):
-        pass
-    
-    def save(self):
-        pass
-    
-    def get_url(self):
-        return self.model.url
 
     
 
@@ -29,20 +17,42 @@ class ModelBase:
         return j.data.schema.parse_schema(self._schema)
     
     def create_obj(self, **kwargs):
-        return JSObjBase(self.schema, self, **kwargs)
+        o = JSObjBase()
+        self.set_from_dict(o, kwargs)
+        return o
 
     def save_obj(self, obj):
         self.bcdb.save_obj(obj)
 
     def _incr_id(self):
-        pass
+        return self.bcdb.model_id_incr(self.url)
     
     def get_by(self, key, value):
-        pass
+        return self.bcdb.get_prop_from_index(self.url, key, value)
 
     def get_range(self, key, min, max):
-        pass
+        return self.bcdb.get_prop_from_index_set(self.url, key, min, max)
     
     def get_pattern(self, key, pattern):
-        pass
+        return self.bcdb.get_prop_from_index_text(self.url, key, pattern)
     
+    def get_dict(self, obj):
+        d = {}
+        for prop in self.schema.props:
+            prop_name = prop.name
+            d[prop_name] = getattr(obj, prop_name)
+        return d
+
+    def set_from_dict(self, d, o):
+        for prop in self.schema.props:
+            prop_name = prop.name
+            if prop_name in kwargs:
+                if not prop.check(kwatgs[prop_name])
+                    raise ValueError("Wrong form")
+                setattr(o, prop, kwargs[prop_name])
+            else:
+                setattr(o, prop, prop.defaulvalue)
+        return o
+
+    def get_url(self):
+        return self.url

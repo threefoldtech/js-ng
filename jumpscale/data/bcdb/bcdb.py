@@ -10,12 +10,6 @@ class BCDB:
         self.indexer_set = indexer_set
         self.indexer_text = indexer_text
     
-    def generate_model(self, schema_url):
-        schema_obj = models.schema_model.SchemaModel().create_obj({
-            "definition": f"@url = {schema_url}"
-        })
-        schema_obj.generate_model()
-    
     def save(self, obj):
         prop_name = f"{self.ns}.{obj.get_url()}://{obj.id}"
         self.storage.set(prop_name, json.dumps(obj.get_dict()))
