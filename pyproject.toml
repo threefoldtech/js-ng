@@ -37,6 +37,7 @@ terminaltables = "^3.1"
 pillow = "^6.1"
 distro = "^1.4"
 libtmux = "^0.8.2"
+redis = "^3.3"
 dnspython = "^1.16"
 
 [tool.poetry.dev-dependencies]

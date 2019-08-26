@@ -1,6 +1,5 @@
-from jumpscale.clients.base import ClientFactory
-
+from jumpscale.core.base import StoredFactory
 from .gogs import Gogs
 
 
-factory = ClientFactory(Gogs)
+factory = StoredFactory(Gogs)
