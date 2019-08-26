@@ -8,9 +8,9 @@ class ValidationError(Exception):
 
 
 class Field:
-    def __init__(self, **kwargs):
-        self.default = None
-        self.required = False
+    def __init__(self, default=None, required=False, **kwargs):
+        self.default = default
+        self.required = required
         self.kwargs = kwargs
 
     def validate(self, value):
