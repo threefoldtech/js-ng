@@ -1,13 +1,12 @@
 from jumpscale.clients.base import Client
 from jumpscale.core.base import Base, fields
 from jumpscale.god import j
-from github import Github as git
-from github import GithubObject
+from github import Github, GithubObject
 
 NotSet = GithubObject.NotSet
 
 
-class Github(Client):
+class GithubClient(Client):
     username = fields.String()
     password = fields.String()
     accesstoken = fields.String()
@@ -20,9 +19,9 @@ class Github(Client):
     def github_client(self):
         if not self.__client:
             if self.accesstoken:
-                g = git(self.accesstoken)
+                g = Github(self.accesstoken)
             else:
-                g = git(self.username, self.password)
+                g = Github(login_or_token=self.username, password=self.password)
             self.__client = g
         return self.__client
 
@@ -41,7 +40,7 @@ class Github(Client):
             l.append(o.login)
         return l
 
-    def get_data(self):
+    def get_userdata(self):
         u = self.github_client.get_user()
         el = []
         for e in u.get_emails():
