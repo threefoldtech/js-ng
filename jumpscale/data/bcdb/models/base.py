@@ -8,7 +8,7 @@ class JSObjBase:
 
 class ModelBase:
     _schema = ""
-    def __init__(self, bcdb):
+    def __init__(self, bcdb, model_name):
         self.schema = self._load_schema()
         self.schema.props["id"] = Property()
         self.schema.props["id"].unique = True
@@ -17,7 +17,7 @@ class ModelBase:
         self.schema.props["id"].name = "id"
         
         self.bcdb = bcdb
-        self.url = self.schema.system_props["url"]
+        self.name = model_name
 
     def _load_schema(self):
         return j.data.schema.parse_schema(self._schema)
@@ -32,7 +32,7 @@ class ModelBase:
         self.bcdb.save_obj(self, obj)
 
     def _incr_id(self):
-        return self.bcdb.model_id_incr(self.url)
+        return self.bcdb.model_id_incr(self.name)
     
     def get_by(self, key, value):
         return self.bcdb.get_item_from_index(self, key, value)
@@ -65,7 +65,3 @@ class ModelBase:
         o = JSObjBase()
         self.set_from_dict(o, d)
         return o
-
-
-    def get_url(self):
-        return self.url
