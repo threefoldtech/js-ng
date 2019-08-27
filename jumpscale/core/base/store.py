@@ -16,6 +16,14 @@ class InvalidPrivateKey(Exception):
 
 
 class Location:
+    """dot-separated auto-location for any type
+
+    for example, if we have a class in jumpscale/clients/redis/<type>
+    location name will be jumpscale.clients.redis.<type>
+
+    it can have a parent of any name
+    """
+
     def __init__(self, type_, parent_name):
         self.type = type_
 
@@ -59,6 +67,8 @@ class EncryptionMixin:
 
 
 class ConfigStore(ABC):
+    """the interface every config store should implement"""
+
     @abstractmethod
     def read(self, instance_name):
         pass
