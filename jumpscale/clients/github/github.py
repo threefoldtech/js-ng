@@ -18,30 +18,31 @@ class Github(Client):
 
     @property
     def github_client(self):
-        if self.accesstoken:
-            g = git(self.accesstoken)
-        else:
-            g = git(self.username, self.password)
-        self.__client = g
+        if not self.__client:
+            if self.accesstoken:
+                g = git(self.accesstoken)
+            else:
+                g = git(self.username, self.password)
+            self.__client = g
         return self.__client
 
     def get_repo(self, repo_name):
-        return self.__client.get_user().get_repo(repo_name)
+        return self.github_client.get_user().get_repo(repo_name)
 
     def get_repos(self):
         l = []
-        for r in self.__client.get_user().get_repos():
+        for r in self.github_client.get_user().get_repos():
             l.append(r.name)
         return l
 
     def get_orgs(self):
         l = []
-        for o in self.__client.get_user().get_orgs():
+        for o in self.github_client.get_user().get_orgs():
             l.append(o.login)
         return l
 
     def get_data(self):
-        u = self.__client.get_user()
+        u = self.github_client.get_user()
         el = []
         for e in u.get_emails():
             el.append(e)
@@ -60,7 +61,7 @@ class Github(Client):
         gitignore_template=NotSet,
     ):
 
-        return self.__client.get_user().create_repo(
+        return self.github_client.get_user().create_repo(
             name,
             description=description,
             homepage=homepage,
