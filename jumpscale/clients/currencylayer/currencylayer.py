@@ -3,7 +3,7 @@ import cryptocompare as cc
 from jumpscale.clients.base import Client
 from jumpscale.core.base import fields
 from jumpscale.god import j
-from currencies import CURRENCIES, CURRNECIES_IDS
+from .currencies import CURRENCIES, CURRNECIES_IDS
 from pprint import pprint
 
 
