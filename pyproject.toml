@@ -39,6 +39,7 @@ distro = "^1.4"
 libtmux = "^0.8.2"
 redis = "^3.3"
 dnspython = "^1.16"
+PyGithub = "^1.43"
 
 [tool.poetry.dev-dependencies]
 ipdb = "^0.12.1"

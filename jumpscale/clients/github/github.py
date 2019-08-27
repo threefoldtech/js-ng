@@ -1,24 +1,76 @@
 from jumpscale.clients.base import Client
 from jumpscale.core.base import Base, fields
 from jumpscale.god import j
+from github import Github as git
+from github import GithubObject
 
-
-class Email(Base):
-    address = fields.String()
-    main = fields.Boolean()
-
-
-class User(Base):
-    username = fields.String()
-    password = fields.String()
-
-    emails = fields.Factory(Email)
+NotSet = GithubObject.NotSet
 
 
 class Github(Client):
-    users = fields.Factory(User)
+    username = fields.String()
+    password = fields.String()
+    accesstoken = fields.String()
 
-    def hi(self):
-        print("hii")
-        j.sals.fs.basename("aa")
+    def __init__(self):
+        super().__init__()
+        self.__client = None
 
+    @property
+    def github_client(self):
+        if self.accesstoken:
+            g = git(self.accesstoken)
+        else:
+            g = git(self.username, self.password)
+        self.__client = g
+        return self.__client
+
+    def get_repo(self, repo_name):
+        return self.__client.get_user().get_repo(repo_name)
+
+    def get_repos(self):
+        l = []
+        for r in self.__client.get_user().get_repos():
+            l.append(r.name)
+        return l
+
+    def get_orgs(self):
+        l = []
+        for o in self.__client.get_user().get_orgs():
+            l.append(o.login)
+        return l
+
+    def get_data(self):
+        u = self.__client.get_user()
+        el = []
+        for e in u.get_emails():
+            el.append(e)
+        return {"name": u.name, "emails": el, "avatar_url": u.avatar_url}
+
+    def create_repo(
+        self,
+        name,
+        description=NotSet,
+        homepage=NotSet,
+        private=NotSet,
+        has_issues=NotSet,
+        has_wiki=NotSet,
+        has_downloads=NotSet,
+        auto_init=NotSet,
+        gitignore_template=NotSet,
+    ):
+
+        return self.__client.get_user().create_repo(
+            name,
+            description=description,
+            homepage=homepage,
+            private=private,
+            has_issues=has_issues,
+            has_wiki=has_wiki,
+            has_downloads=has_downloads,
+            auto_init=auto_init,
+            gitignore_template=gitignore_template,
+        )
+
+    def delete_repo(self, repo_name):
+        return self.get_repo(repo_name).delete()
