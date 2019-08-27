@@ -1,4 +1,5 @@
 import os
+import shutil
 
 import redis
 
@@ -149,8 +150,11 @@ class FileSystemStore(EncryptedConfigStore):
     def config_root(self):
         return os.path.join(self.root, self.location.path)
 
-    def get_path(self, instance_name):
+    def get_instance_root(self, instance_name):
         return os.path.join(self.config_root, instance_name)
+
+    def get_path(self, instance_name):
+        return os.path.join(self.get_instance_root(instance_name), "data")
 
     def make_path(self, path):
         if not os.path.exists(path):
@@ -159,25 +163,23 @@ class FileSystemStore(EncryptedConfigStore):
 
     def read(self, instance_name):
         path = self.get_path(instance_name)
-        return readFile(path, binary=True)
-
-    def list_files(self, dir_path):
-        return [f for f in os.listdir(dir_path) if os.path.isfile(os.path.join(dir_path, f))]
+        return readFile(path)
 
     def list_all(self):
         if not os.path.exists(self.config_root):
             return []
-        return self.list_files(self.config_root)
+        return os.listdir(self.config_root)
 
     def write(self, instance_name, data):
         path = self.get_path(instance_name)
         self.make_path(path)
-        return writeFile(path, data)
+        return writeFile(path, data.encode())
 
     def delete(self, instance_name):
-        path = self.get_path(instance_name)
-        if os.path.exists:
-            os.remove(path)
+        path = self.get_instance_root(instance_name)
+        if os.path.exists(path):
+            # TODO: replace with sal fs
+            shutil.rmtree(path)
 
 
 class RedisStore(EncryptedConfigStore):
@@ -191,10 +193,16 @@ class RedisStore(EncryptedConfigStore):
     def read(self, instance_name):
         return self.redis_client.get(self.get_key(instance_name))
 
+    def get_type_keys(self):
+        return self.redis_client.keys(f"{self.location.name}.*")
+
+    def get_instance_keys(self, instance_name):
+        return self.redis_client.keys(f"{self.location.name}.{instance_name}*")
+
     def list_all(self):
         names = []
 
-        keys = self.redis_client.keys(f"{self.location.name}.*")
+        keys = self.get_type_keys()
         for key in keys:
             name = key.decode().replace(self.location.name, "").lstrip(".")
             if "." not in name:
@@ -205,5 +213,5 @@ class RedisStore(EncryptedConfigStore):
         return self.redis_client.set(self.get_key(instance_name), data)
 
     def delete(self, instance_name):
-        return self.redis_client.delete(self.get_key(instance_name))
+        return self.redis_client.delete(*self.get_instance_keys(instance_name))
 

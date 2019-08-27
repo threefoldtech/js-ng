@@ -83,7 +83,7 @@ class StoredFactory(Factory):
         self._save_instance(name)
 
     def _get_sub_factory_location_name(self, parent_name, factory_name):
-        return ".".join([self.store.location.name, f"{parent_name}_{factory_name}"])
+        return ".".join([self.store.location.name, parent_name, factory_name])
 
     def new(self, name, *args, **kwargs):
         instance = super().new(name, *args, **kwargs)
