@@ -45,10 +45,7 @@ class CurrencyLayerClient(Client):
         self._cur2id = {}
         self.fake = True
 
-    def load(self, reset=False):
-        """ kosmos 'j.clients.currencylayer.load()'
-        """
-
+    def load(self):
         # data = self._cache.get("currency_data", get, expire=3600 * 24)
         data = get_currency_data(self.api_key, fake=False)
         self._data_cur = data
@@ -78,21 +75,12 @@ class CurrencyLayerClient(Client):
         return self._cur2id
 
     def id2cur_print(self):
-        """
-        kosmos 'j.clients.currencylayer.id2cur_print()'
-        """
         pprint(self.id2cur)
 
     def cur2id_print(self):
-        """
-        kosmos 'j.clients.currencylayer.cur2id_print()'
-        """
         pprint(self.cur2id)
 
     def test(self):
-        """
-        kosmos 'j.clients.currencylayer.test()'
-        """
         self._log_info(self.cur2usd)
         assert "aed" in self.cur2usd
 
