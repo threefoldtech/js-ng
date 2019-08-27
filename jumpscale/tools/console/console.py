@@ -19,3 +19,7 @@ def printcolors(s):
         s {[type]} -- [description]
     """
     print(format(s))
+
+def printobj(obj):
+    from pprint import pprint
+    pprint(obj)
