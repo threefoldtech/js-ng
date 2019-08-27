@@ -57,6 +57,8 @@ def eval_code(stmts, locals_=None, globals_=None):
         return
 
     return eval(code, globals_, locals_)
+
+
 def get_current_line(document):
     tbc = document.current_line_before_cursor
     if tbc:
@@ -70,6 +72,7 @@ def get_current_line(document):
             prefix = ""
         return parent, member, prefix
     raise ValueError("nothing is written")
+
 
 def get_completions(self, document, complete_event):
     """
@@ -113,6 +116,7 @@ def sort_children_key(name):
         return 1
     else:
         return 0
+
 
 def ptconfig(repl):
     repl.exit_message = "Bye!"
@@ -235,9 +239,7 @@ def ptconfig(repl):
     repl._handle_exception = partial(patched_handle_exception, repl)
     better_exceptions.hook()
 
-
     old_get_completions = repl._completer.__class__.get_completions
-
 
     def custom_get_completions(self, document, complete_event):
         try:
@@ -253,6 +255,7 @@ def ptconfig(repl):
 
         if not completions:
             completions = old_get_completions(self, document, complete_event)
+
         def filter_completions_on_prefix(completions, prefix=None):
             HIDDEN_PREFIXES = ("_", "__")
 
@@ -261,6 +264,7 @@ def ptconfig(repl):
                 if prefix not in HIDDEN_PREFIXES and text.startswith(HIDDEN_PREFIXES):
                     continue
                 yield completion
+
         yield from filter_completions_on_prefix(completions, prefix)
 
     repl._completer.__class__.get_completions = custom_get_completions

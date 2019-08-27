@@ -209,3 +209,8 @@ def ask_string(prompt="Type :"):
     """
     return input(prompt)
 
+    print(format(s))
+
+def printobj(obj):
+    from pprint import pprint
+    pprint(obj)
