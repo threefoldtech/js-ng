@@ -17,8 +17,6 @@ class RedisClient(Client):
             self.__client = Redis(self.hostname, self.port)
         return self.__client
 
-    def set(self, k, v):
-        return self.redis_client.set(k, v)
-
-    def get(self, k):
-        return self.redis_client.get(k)
+    def __getattr__(self, k):
+        # forward non found attrs to self.redis_client
+        return getattr(self.redis_client, k)
