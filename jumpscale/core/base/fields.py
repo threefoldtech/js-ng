@@ -54,5 +54,9 @@ class String(Typed):
         super().__init__(type_=str, **kwargs)
 
 
+class Secret(String):
+    pass
+
+
 class Factory(StoredFactory):
     pass

@@ -1,7 +1,5 @@
 from functools import partial
 
-from jumpscale.data.serializers import json
-
 from .store import FileSystemStore, RedisStore
 
 
@@ -76,8 +74,7 @@ class StoredFactory(Factory):
         return self.STORE(self.type, self.__parent_name)
 
     def _save_instance(self, name):
-        data = self.get(name)._get_data()
-        self.store.save(name, json.dumps(data))
+        self.store.save(name, self.get(name)._get_data())
 
     def _instance_updated(self, name, prop_name, new_value):
         self._save_instance(name)
@@ -102,7 +99,7 @@ class StoredFactory(Factory):
     def _load(self):
         for name in self.store.list_all():
             instance = self.new(name)
-            instance._set_data(json.loads(self.store.get(name)))
+            instance._set_data(self.store.get(name))
 
     def delete(self, name):
         self.store.delete(name)

@@ -2,7 +2,7 @@ from collections import namedtuple
 from types import SimpleNamespace
 
 from .factory import Factory, DuplicateError
-from .fields import Field, ValidationError
+from .fields import Field, Secret, ValidationError
 
 
 def get_field_property(name, field):
@@ -85,7 +85,16 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
         return {info.name: getattr(self, info.name) for info in self._get_factory_info()}
 
     def _get_data(self):
-        return {name: getattr(self, name) for name in self._get_fields().keys()}
+        data = {}
+
+        for name, field in self._get_fields().items():
+            value = getattr(self, name)
+            if isinstance(field, Secret):
+                data[f"__{name}"] = value
+            else:
+                data[name] = value
+
+        return data
 
     def _set_data(self, new_data):
         for name in self._get_fields().keys():
