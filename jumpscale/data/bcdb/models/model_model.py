@@ -2,9 +2,9 @@ from jumpscale.god import j
 
 from .base import ModelBase, JSObjBase
 
-class SchemaModel(ModelBase):
+class ModelModel(ModelBase):
     _schema = """
-    @url = schema
+    @url = model
+    name* = "" (S)
     model_class = "" (S)
-    url = "" (S)
     """

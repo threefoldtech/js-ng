@@ -9,9 +9,9 @@ class BCDB:
         self.indexer = indexer
         self.indexer_set = indexer_set
         self.indexer_text = indexer_text
-        self.schema_model = models.SchemaModel(self) 
+        self.model_model = models.ModelModel(self) 
         self.loaded_models = {
-            "schema": self.schema_model
+            "model": self.model_model
         }
 
     
@@ -57,20 +57,22 @@ class BCDB:
                     found.append(loaded_obj)
         return found
 
-    def get_model_by_schema_url(self, schema_url):
-        if schema_url not in self.loaded_models:
-            schema = self.get_item_from_index(self.schema_model, "url", schema_url)
+    def get_model_by_name(self, model_name):
+        if model_name not in self.loaded_models:
+            schema = self.get_item_from_index(self.model_model, "name", model_name)
             if schema is None:
                 raise RuntimeError("Schema not registered")
-            self.loaded_models[schema_url] = getattr(models, schema.model_class)(self)
-        return self.loaded_models[schema_url]
+            self.loaded_models[model_name] = getattr(models, schema.model_class)(self)
+        return self.loaded_models[model_name]
 
     def get_model_by_schema_id(self, schema_id):
+        """
         prop_name = self._get_prop_name("schema", schema_id)
         schema_desc = self.storage.get(prop_name)
         if schema_desc is None:
                 raise RuntimeError("Schema not registered")
-        schema = self.schema_model.load_obj_from_dict(json.loads(schema_desc))
+        schema = self.model_model.load_obj_from_dict(json.loads(schema_desc))
         if schema.url not in self.loaded_models:
             self.loaded_models[schema.url] = getattr(models, schema.model_class)(self)
         return self.loaded_models[schema.url]
+        """

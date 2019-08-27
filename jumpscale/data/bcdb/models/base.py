@@ -6,8 +6,6 @@ class JSObjBase:
     def __init__(self):
         pass
 
-    
-
 class ModelBase:
     _schema = ""
     def __init__(self, bcdb):

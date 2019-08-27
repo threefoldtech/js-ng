@@ -1,3 +1,4 @@
 from .base import *
-from .schema_model import *
+from .model_model import *
 from .proj_model import *
+from .test_model import *
