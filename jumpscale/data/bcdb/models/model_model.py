@@ -8,3 +8,4 @@ class ModelModel(ModelBase):
     name* = "" (S)
     model_class = "" (S)
     """
+    _name = "model"    

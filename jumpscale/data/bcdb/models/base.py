@@ -1,14 +1,25 @@
 from jumpscale.god import j
 from jumpscale.data.schema import Property
 from jumpscale.data.types import Integer
+import json
 
 class JSObjBase:
-    def __init__(self):
-        pass
+    def __init__(self, model):
+        self.model = model
+
+    def get_dict(self):
+        return self.model.get_dict(self)
+
+    def save(self):
+        return self.model.save_obj(self)
+
+    def __str__(self):
+        return json.dumps(self.get_dict(), indent=4)
 
 class ModelBase:
     _schema = ""
-    def __init__(self, bcdb, model_name):
+    _name = ""
+    def __init__(self, bcdb):
         self.schema = self._load_schema()
         self.schema.props["id"] = Property()
         self.schema.props["id"].unique = True
@@ -17,25 +28,33 @@ class ModelBase:
         self.schema.props["id"].name = "id"
         
         self.bcdb = bcdb
-        self.name = model_name
+        self.name = self._name
 
     def _load_schema(self):
         return j.data.schema.parse_schema(self._schema)
     
     def create_obj(self, data):
-        o = JSObjBase()
+        o = JSObjBase(self)
         data['id'] = self._incr_id()
         self.set_from_dict(o, data)
         return o
 
+    def _assert_uniqueness(self, obj):
+        for prop in self.schema.props.values():
+            if prop.unique:
+                dbobj = self.get_by(prop.name, getattr(obj, prop.name))
+                if dbobj is not None and dbobj.id != obj.id:
+                    raise RuntimeError(f"{prop.name} is unique. One already exists.")
+    
     def save_obj(self, obj):
+        self._assert_uniqueness(obj)
         self.bcdb.save_obj(self, obj)
 
     def _incr_id(self):
-        return self.bcdb.model_id_incr(self.name)
+        return self.bcdb.model_id_incr(self)
     
     def get_by(self, key, value):
-        return self.bcdb.get_item_from_index(self, key, value)
+        return self.bcdb.get_entry(self, key, value)
 
     def get_range(self, key, min, max):
         return self.bcdb.get_item_from_index_set(self, key, min, max)
@@ -62,6 +81,6 @@ class ModelBase:
         return o
 
     def load_obj_from_dict(self, d):
-        o = JSObjBase()
+        o = JSObjBase(self)
         self.set_from_dict(o, d)
         return o

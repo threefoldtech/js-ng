@@ -5,3 +5,4 @@ class TestModel(ModelBase):
     @url = test
     a = 1 (I)
     """
+    _name = "test"

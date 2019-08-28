@@ -4,54 +4,87 @@ from jumpscale.data.bcdb import models as models
 from .clients import *
 
 class BCDB:
-    def __init__(self, ns, storage, indexer, indexer_set, indexer_text):
+    def __init__(self, ns):
         self.ns = ns
         self.storage = RedisStorageClient(ns)
         self.indexer = RedisIndexClient(ns)
-        self.indexer_set = indexer_set
-        self.indexer_text = indexer_text
-        self.model_model = models.ModelModel(self, "model") 
-        self.loaded_models = {
-            "model": self.model_model
+        self.indexer_set = SQLiteIndexSetClient(ns)
+        self.indexer_text = RedisStorageClient(ns)
+        self.models = {
+            
         }
+        self.loaded_models = {
 
+        }
+        self.detect_models()
+        self.model_model = self.models["model"](self)
+
+    def detect_models(self):
+        for model_name in dir(models):
+            model = getattr(models, model_name)
+            if isinstance(model, type) and issubclass(model, models.ModelBase):
+                self.models[model._name] = model
+    
     def save_obj(self, model, obj):
-        prop_name = self._get_prop_name(model.name, obj.id)
+        self.indexer_set.set(model, obj)
         for prop in model.schema.props.values():
+            old_obj = model.get_by('id', obj.id)
+            prop_name = prop.name
+            index_prop = getattr(obj, prop.name)
+            old_index = getattr(old_obj, prop.name) if old_obj else None
             if prop.index:
-                prop_name = prop.name
-                index_prop = getattr(obj, prop.name)
-                old_obj = model.get_by('id', obj.id)
-                old_index = getattr(old_obj, prop.name)
-                print(old_index)
                 self.indexer.set(model, prop_name, index_prop, obj.id, old_index)
         self.storage.set(model, obj.id, obj)
 
-    def _get_prop_name(self, name, id):
-        return f"{self.ns}.{name}://{id}"
-    
-    def model_id_incr(self, name):
-        model_id_prop = f"{self.ns}.{name}.lastid"
-        return self.storage.incr_id(model_id_prop)
+    def model_id_incr(self, model):
+        return self.storage.incr_id(model)
 
     def get_item_by_id(self, model, id):
         return self.storage.get(model, id)
 
+    def get_entry(self, model, key, val):
+        if key not in model.schema.props:
+            raise RuntimeError(f"{key} is not a part of {model.name}'s schema")
+        if model.schema.props[key].index:
+            return self.get_item_from_index(model, key, val)
+        elif model.schema.props[key].index_key:
+            found = self.get_item_from_index_set(model, key, val, val)
+            return found[0] if found else None
+        else:
+            for obj in self.storage.get_keys_in_model(model):
+                if getattr(obj, key) == val:
+                    return obj
+        return None
+
+    def get_range(self, model, key, min, max):
+        if key not in model.schema.props:
+            raise RuntimeError(f"{key} is not a part of {model.name}'s schema")
+        if not model.schema.props[key].index_key:
+            return self.get_item_from_index_set(model, key, min, max)
+        else:
+            result = []
+            for obj in self.storage.get_keys_in_model(model):
+                    obj_val = getattr(obj, key)
+                    if obj_val >= min and obj_val <= max:
+                        result.append(obj)
+            return result
+            
+
     def get_item_from_index(self, model, key, val):
+        if key not in model.schema.props:
+            raise RuntimeError(f"{key} is not a part of {model.name}'s schema")
+        if not model.schema.props[key].index:
+            raise RuntimeError(f"{key} is not indexed.")
         keyid = self.indexer.get(model, key, val)
-        return self.get_item_by_id(model, keyid)
+        return self.get_item_by_id(model, keyid) if keyid else None
 
     def get_item_from_index_set(self, model, key, min, max):
-        pass
-        # keys = self.storage.keys()
-        # found = []
-        # for db_key in keys:
-        #     if db_key.startswith(f"{self.ns}.{model.name}://".encode()):
-        #         loaded_obj = model.load_obj_from_dict(json.loads(self.storage.get(db_key)))
-        #         targeted_value = getattr(loaded_obj, key)
-        #         if targeted_value >= min and targeted_value <= max:
-        #             found.append(loaded_obj)
-        # return found
+        if key not in model.schema.props:
+            raise RuntimeError(f"{key} is not a part of {model.name}'s schema")
+        if not model.schema.props[key].index_key:
+            raise RuntimeError(f"{key} is not indexed.")
+        return [self.get_item_by_id(model, x[0]) for x in self.indexer_set.get(model, key, min, max)]
+        
 
     def get_item_from_index_text(self, model, key, pattern):
         pass
@@ -67,20 +100,7 @@ class BCDB:
 
     def get_model_by_name(self, model_name):
         if model_name not in self.loaded_models:
-            schema = self.get_item_from_index(self.model_model, "name", model_name)
-            if schema is None:
-                raise RuntimeError("Schema not registered")
-            self.loaded_models[model_name] = getattr(models, schema.model_class)(self, model_name)
+            if model_name not in self.models:
+                raise RuntimeError("Model not registered")
+            self.loaded_models[model_name] = self.models[model_name](self)
         return self.loaded_models[model_name]
-
-    def get_model_by_schema_id(self, schema_id):
-        """
-        prop_name = self._get_prop_name("schema", schema_id)
-        schema_desc = self.storage.get(prop_name)
-        if schema_desc is None:
-                raise RuntimeError("Schema not registered")
-        schema = self.model_model.load_obj_from_dict(json.loads(schema_desc))
-        if schema.name not in self.loaded_models:
-            self.loaded_models[schema.name] = getattr(models, schema.model_class)(self)
-        return self.loaded_models[schema.name]
-        """

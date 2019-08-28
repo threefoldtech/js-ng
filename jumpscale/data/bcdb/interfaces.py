@@ -1,29 +1,29 @@
 class StorageInterface:
-    def get(self, model_name, obj_id):
+    def get(self, model, obj_id):
         pass
     
-    def set(self, model_name, obj_id, value):
+    def set(self, model, obj_id, value):
         pass
 
 class IndexInterface:
-    def get(self, model_name, index_prop, index_value):
+    def get(self, model, index_prop, index_value):
         pass
 
-    def set(self, model_name, index_prop, index_value, old_value=None):
+    def set(self, model, index_prop, index_value, old_value=None):
         pass
 
 class IndexSetInterface:
-    def get(self, model_name, index_prop, index_min, index_max):
+    def get(self, model, index_prop, index_min, index_max):
         pass
 
-    def set(self, model_name, index_prop, index_value, old_value=None):
+    def set(self, model, obj):
         pass
 
 class IndexTextInterface:
-    def get(self, model_name, index_prop, pattern):
+    def get(self, model, index_prop, pattern):
         pass
     
-    def set(self, model_name, index_prop, index_value, old_value=None):
+    def set(self, model, index_prop, index_value, old_value=None):
         pass
 
 class SerializerInterface:

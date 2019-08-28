@@ -7,3 +7,4 @@ class ProjModel(ModelBase):
     employees = 0 (I)
     company = "" (S)
     """
+    _name = "proj"
