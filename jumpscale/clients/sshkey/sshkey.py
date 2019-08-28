@@ -15,10 +15,9 @@ class SSHKeyClient(Client):
         super().__init__()
 
     def load_from_file_system(self):
-        pub_key_path = "{}.pub".format(self.private_key_path)
-        self.public_key = j.sals.fs.readFile(pub_key_path)
-        self.private_key = j.sals.fs.readFile(private_key_path)
-
+        self.public_key = j.sals.fs.readFile(self.public_key_path)
+        self.private_key = j.sals.fs.readFile(self.private_key_path)
+        
 
     def generate_keys(self):
         if self.passphrase and len(self.passphrase) < 5:
