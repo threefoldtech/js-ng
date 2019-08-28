@@ -34,14 +34,24 @@ def _normalize_string(text):
     result = ""
     whitespaces = [" ", "\t"]
     in_comment = False
+    in_string = False
+    string_char = None
     for c in text:
         if c == "#":
             in_comment = True
         if c == "\n":
             in_comment = False
-        if not in_comment and c in whitespaces:
+        if c == "\"" or c == "'":
+            if in_string and c == string_char:
+                in_string = False
+            elif not in_string:
+                in_string = True
+                string_char  = c
+        
+
+        if not in_comment and not in_string and c in whitespaces:
             continue
-        if not in_comment and c == "\n" and result.endswith("\n"):
+        if c == "\n" and result.endswith("\n"):
             continue
         result += c
     return result

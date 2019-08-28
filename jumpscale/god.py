@@ -93,6 +93,10 @@ def load():
                     continue
                 if os.path.basename(root) == "jumpscale":
                     continue
+
+                
+                if os.path.dirname(root) != jsnamespace:
+                    continue
                 # print("root: {} d: {}".format(root, d))
                 rootbase = os.path.basename(root)
                 loadeddict['jumpscale'].setdefault(rootbase, {})
@@ -104,7 +108,7 @@ def load():
                 try:
                     m = importlib.import_module(importedpkgstr)
                 except Exception as e:
-                    print("[-] ", e)
+                    print("[-] {} at {} ".format(e, importedpkgstr))
                     continue
                 else:
                     if rootbase == "clients":
