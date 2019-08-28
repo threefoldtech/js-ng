@@ -1,0 +1,1408 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.6.3" />
+<title>jumpscale.sals.process API documentation</title>
+<meta name="description" content="" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase;cursor:pointer}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>jumpscale.sals.process</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">import os
+import os.path
+import re
+import time
+import sys
+
+# import select
+# import threading
+# import queue
+import random
+
+try:
+    import psutil
+except:
+    pass
+import subprocess
+import signal
+from subprocess import Popen
+import select
+from jumpscale.god import j
+
+# for execute
+from fcntl import fcntl, F_GETFL, F_SETFL
+from os import O_NONBLOCK, read
+
+
+def executeWithoutPipe(command, die=True, printCommandToStdout=False):
+    &#34;&#34;&#34;
+
+    Execute command without opening pipes, returns only the exitcode
+    This is platform independent
+    @param command: command to execute
+    @param die: boolean to die if got non zero exitcode
+    @param printCommandToStdout: boolean to show/hide output to stdout
+    @param showout: Deprecated. Use &#39;printCommandToStdout&#39; instead.
+    @rtype: integer represents the exitcode
+    if exitcode is not zero then the executed command returned with errors
+    &#34;&#34;&#34;
+
+    exitcode = os.system(command)
+
+    if exitcode != 0 and die:
+        
+        raise j.exceptions.RuntimeError(&#34;Error during execution!\nCommand: %s\nExitcode: %s&#34; % (command, exitcode))
+
+    return exitcode
+
+def execute(
+    cmd,
+    showout=True,
+    useShell=True,
+    cwd=None,
+    timeout=600,
+    die=True,
+    async_=False,
+    env=None,
+    interactive=False,
+    replace=False,
+    args={},
+):
+    &#34;&#34;&#34;
+
+    :param command:
+    :param showout: show the output while executing
+    :param useShell: use a shell when executing, std True
+    :param cwd: directory to go to when executing
+    :param timeout: timout in sec, std 10 min
+    :param die: die when not ok
+    :param async_: return the pipe, don&#39;t wait
+    :param env: is arguments which will be replaced om the command core.text_replace(... feature)
+    :return: (rc,out,err)
+    &#34;&#34;&#34;
+    return j.core.executors.run_local(
+        cmd=cmd,
+        timeout=timeout,
+        env=env,
+    )
+
+
+def executeInteractive(command, die=True):
+    exitcode = os.system(command)
+    if exitcode != 0 and die:
+        raise j.exceptions.Base(&#34;Could not execute %s&#34; % command)
+    return exitcode
+
+def isPidAlive(pid):
+    &#34;&#34;&#34;Checks whether this pid is alive.
+        For unix, a signal is sent to check that the process is alive.
+        For windows, the process information is retrieved and it is double checked that the process is python.exe
+        or pythonw.exe
+    &#34;&#34;&#34;
+    
+    if j.data.platform.is_linux():
+        # Unix strategy: send signal SIGCONT to process pid
+        # Achilles heal: another process which happens to have the same pid could be running
+        # and incorrectly considered as this process
+        import signal
+
+        try:
+            os.kill(pid, 0)
+        except OSError:
+            return False
+
+        return True
+
+
+
+def checkInstalled(cmdname):
+    &#34;&#34;&#34;
+    @param cmdname is cmd to check e.g. curl
+    &#34;&#34;&#34;
+    return j.core.tools.cmd_installed(cmdname)
+
+def kill(pid, sig=None):
+    &#34;&#34;&#34;
+    Kill a process with a signal
+    @param pid: pid of the process to kill
+    @param sig: signal. If no signal is specified signal.SIGKILL is used
+    &#34;&#34;&#34;
+    pid = int(pid)
+    
+    if j.data.platform.is_linux():
+        try:
+            if sig is None:
+                sig = signal.SIGKILL
+
+            os.kill(pid, sig)
+
+        except OSError as e:
+            raise j.exceptions.RuntimeError(&#34;Could not kill process with id %s.\n%s&#34; % (pid, e))
+
+
+def psfind(name):
+    rc, out, err = execute(&#34;ps ax | grep %s&#34; % name, showout=False)
+    for line in out.split(&#34;\n&#34;):
+        if line.strip() == &#34;&#34;:
+            continue
+        if &#34;grep&#34; in line:
+            continue
+        return True
+    return False
+
+def killall(name):
+    rc, out, err = execute(&#34;ps ax | grep %s&#34; % name, showout=False)
+    for line in out.split(&#34;\n&#34;):
+        # print(&#34;L:%s&#34; % line)
+        if line.strip() == &#34;&#34;:
+            continue
+        if &#34;grep&#34; in line:
+            continue
+        line = line.strip()
+        pid = line.split(&#34; &#34;)[0]
+        
+        kill(pid)
+    if psfind(name):
+        raise j.exceptions.Base(&#34;Could not kill:%s, is still, there check if its not autorestarting.&#34; % name)
+
+def getPidsByFilterSortable(filterstr, sortkey=None):
+    &#34;&#34;&#34;
+    Get pids of process by a filter string and optionally sort by sortkey
+
+    @param filterstr string: filter string.
+    @param sortkey   string: sort key for ps command
+    sortkey can be one of the following:
+        %cpu           cpu utilization of the process in
+        %mem           ratio of the process&#39;s resident set size  to the physical memory on the machine, expressed as a percentage.
+        cputime        cumulative CPU time, &#34;[DD-]hh:mm:ss&#34; format.  (alias time).
+        egid           effective group ID number of the process as a decimal integer.  (alias gid).
+        egroup         effective group ID of the process.  This will be the textual group ID, if it can be obtained and the field width permits, or a decimal representation otherwise.  (alias group).
+        euid           effective user ID (alias uid).
+        euser          effective user name.
+        gid            see egid.  (alias egid).
+        pid            a number representing the process ID (alias tgid).
+        ppid           parent process ID.
+        psr            processor that process is currently assigned to.
+        start_time     starting time or date of the process.
+
+
+    &#34;&#34;&#34;
+    if sortkey is not None:
+        cmd = &#34;ps aux --sort={sortkey} | grep &#39;{filterstr}&#39;&#34;.format(filterstr=filterstr, sortkey=sortkey)
+    else:
+        cmd = &#34;ps ax | grep &#39;{filterstr}&#39;&#34;.format(filterstr=filterstr)
+    rcode, out, err = execute(cmd)
+    # print out
+    found = []
+    for line in out.split(&#34;\n&#34;):
+        if line.find(&#34;grep&#34;) != -1 or line.strip() == &#34;&#34;:
+            continue
+        if line.strip() != &#34;&#34;:
+            if line.find(filterstr) != -1:
+                line = line.strip()
+                if sortkey is not None:
+                    found.append(int([x for x in line.split(&#34; &#34;) if x][1]))
+                else:
+                    found.append(int(line.split(&#34; &#34;)[0]))
+    return found
+
+def process_pids_get_by_filter(filterstr, excludes=None):
+    excludes = excludes or []
+    cmd = &#34;ps ax | grep &#39;%s&#39;&#34; % filterstr
+    rcode, out, err = j.core.executors.run_local(cmd)
+    # print out
+    found = []
+
+    def checkexclude(c, excludes):
+        for item in excludes:
+            c = c.lower()
+            if c.find(item.lower()) != -1:
+                return True
+        return False
+
+    for line in out.split(&#34;\n&#34;):
+        if line.find(&#34;grep&#34;) != -1 or line.strip() == &#34;&#34;:
+            continue
+        if line.strip() != &#34;&#34;:
+            if line.find(filterstr) != -1:
+                line = line.strip()
+                if not checkexclude(line, excludes):
+                    # print &#34;found pidline:%s&#34;%line
+                    found.append(int(line.split(&#34; &#34;)[0]))
+    return found
+
+def getPidsByFilter(filterstr=&#34;&#34;, regex_list=None, excludes=None):
+    regex_list = regex_list or []
+    excludes = excludes or []
+    if not regex_list:
+        return process_pids_get_by_filter(filterstr, excludes=excludes)
+    elif filterstr == &#34;&#34;:
+        res = []
+        for process in psutil.process_iter():
+            try:
+                cmdline = process.cmdline()
+            except psutil.NoSuchProcess:
+                cmdline = None
+            except psutil.AccessDenied:
+                cmdline = None
+            if cmdline:
+                name = &#34; &#34;.join(cmdline)
+                for r in regex_list:
+                    if name.strip() != &#34;&#34;:
+                        if j.data.regex.match(r, name):
+                            res.append(process.pid)
+        return res
+    else:
+        raise j.exceptions.Base(&#34;filterstr or regexes&#34;)
+
+def checkstart(cmd, filterstr, nrtimes=1, retry=1):
+    &#34;&#34;&#34;
+    @param cmd is which command to execute to start e.g. a daemon
+    @param filterstr is what to check on if its running
+    @param nrtimes is how many processes need to run
+    &#34;&#34;&#34;
+
+    found = getPidsByFilter(filterstr)
+    for i in range(retry):
+        if len(found) == nrtimes:
+            return
+        # print &#34;START:%s&#34;%cmd
+        execute(cmd)
+        time.sleep(1)
+        found = getPidsByFilter(filterstr)
+    if len(found) != nrtimes:
+        raise j.exceptions.RuntimeError(
+            &#34;could not start %s, found %s nr of instances. Needed %s.&#34; % (cmd, len(found), nrtimes)
+        )
+
+def checkstop(cmd, filterstr, retry=1, nrinstances=0):
+    &#34;&#34;&#34;
+    @param cmd is which command to execute to start e.g. a daemon
+    @param filterstr is what to check on if its running
+    @param nrtimes is how many processes need to run
+    &#34;&#34;&#34;
+
+    found = getPidsByFilter(filterstr)
+    for i in range(retry):
+        if len(found) == nrinstances:
+            return
+        # print &#34;START:%s&#34;%cmd
+        execute(cmd, die=False)
+        time.sleep(1)
+        found = getPidsByFilter(filterstr)
+        for item in found:
+            kill(int(item), 9)
+        found = getPidsByFilter(filterstr)
+
+    if len(found) != 0:
+        raise j.exceptions.RuntimeError(&#34;could not stop %s, found %s nr of instances.&#34; % (cmd, len(found)))
+
+def getProcessPid(process, match_predicate=None):
+    &#34;&#34;&#34;Get process ID(s) for a given process
+    
+    :param process: process to look for
+    :type process: str
+    :param match_predicate: function that does matching between 
+        found processes and the targested process, the function should accept 
+        two arguments and return a boolean, defaults to None
+    :type match_predicate: callable, optional
+    :raises j.exceptions.RuntimeError: If process is None
+    :raises NotImplementedError: If called on a non-unix system
+    :return: list of matching process IDs
+    :rtype: list
+    &#34;&#34;&#34;
+    # default match predicate
+    # why aren&#39;t we using psutil ??
+    def default_predicate(given, target):
+        return given.find(target.strip()) != -1
+
+    if match_predicate is None:
+        match_predicate = default_predicate
+
+    if process is None:
+        raise j.exceptions.RuntimeError(&#34;process cannot be None&#34;)
+    if j.data.platform.is_linux():
+
+        # Need to set $COLUMNS such that we can grep full commandline
+        # Note: apparently this does not work on solaris
+        command = &#34;bash -c &#39;env COLUMNS=300 ps -ef&#39;&#34;
+        (exitcode, output, err) = execute(command, die=False, showout=False)
+        pids = list()
+        co = re.compile(
+            &#34;\s*(?P&lt;uid&gt;[a-z]+)\s+(?P&lt;pid&gt;[0-9]+)\s+(?P&lt;ppid&gt;[0-9]+)\s+(?P&lt;cpu&gt;[0-9]+)\s+(?P&lt;stime&gt;\S+)\s+(?P&lt;tty&gt;\S+)\s+(?P&lt;time&gt;\S+)\s+(?P&lt;cmd&gt;.+)&#34;
+        )
+        for line in output.splitlines():
+            match = co.search(line)
+            if not match:
+                continue
+            gd = match.groupdict()
+            # print &#34;%s&#34;%line
+            # print gd[&#34;cmd&#34;]
+            # print process
+            if isinstance(process, int) and gd[&#34;pid&#34;] == process:
+                pids.append(gd[&#34;pid&#34;])
+            elif match_predicate(gd[&#34;cmd&#34;], process):
+                pids.append(gd[&#34;pid&#34;])
+        pids = [int(item) for item in pids]
+        return pids
+    else:
+        raise j.exceptions.NotImplemented(&#34;getProcessPid is only implemented for unix&#34;)
+
+def getMyProcessObject():
+    return getProcessObject(os.getpid())
+
+def getProcessObject(pid, die=True):
+
+    for process in psutil.process_iter():
+        if process.pid == pid:
+            return process
+    if die:
+        raise j.exceptions.NotFound(&#34;Could not find process with pid:%s&#34; % pid)
+
+def getProcessPidsFromUser(user):
+
+    result = []
+    for process in psutil.process_iter():
+        if process.username == user:
+            result.append(process.pid)
+    return result
+
+def killUserProcesses(user):
+    for pid in getProcessPidsFromUser(user):
+        kill(pid)
+
+def getSimularProcesses():
+
+    myprocess = getMyProcessObject()
+    result = []
+    for item in psutil.process_iter():
+        try:
+            if item.cmdline == myprocess.cmdline:
+                result.append(item)
+        except psutil.NoSuchProcess:
+            pass
+    return result
+
+def checkProcessRunning(process, min=1):
+    &#34;&#34;&#34;
+    Check if a certain process is running on the system.
+    you can specify minimal running processes needed.
+    @param process: String with the name of the process we
+        are trying to check
+    @param min: (int) minimal threads that should run.
+    @return True if ok
+    &#34;&#34;&#34;
+    
+    if j.data.platform.is_linux():
+        pids = getProcessPid(process)
+        if len(pids) &gt;= min:
+            return True
+        return False
+
+def checkProcessForPid(pid, process):
+    &#34;&#34;&#34;
+    Check whether a given pid actually does belong to a given process name.
+    @param pid: (int) the pid to check
+    @param process: (str) the process that should have the pid
+    @return status: (int) 0 when ok, 1 when not ok.
+    &#34;&#34;&#34;
+    
+    if j.data.platform.is_linux():
+        command = &#34;ps -p %i&#34; % pid
+        (exitcode, output, err) = execute(command, die=False, showout=False)
+        i = 0
+        for line in output.splitlines():
+            match = re.match(&#34;.{23}.*(\s|\/)%s(\s|$).*&#34; % process, line)
+            if match:
+                i = i + 1
+        if i &gt;= 1:
+            return 0
+        return 1
+
+
+def setEnvironmentVariable(varnames, varvalues):
+    &#34;&#34;&#34;Set the value of the environment variables C{varnames}. Existing variable are overwritten
+
+    @param varnames: A list of the names of all the environment variables to set
+    @type varnames: list&lt;string&gt;
+    @param varvalues: A list of all values for the environment variables
+    @type varvalues: list&lt;string&gt;
+    &#34;&#34;&#34;
+    try:
+        for i in range(len(varnames)):
+            os.environ[varnames[i]] = str(varvalues[i]).strip()
+    except Exception as e:
+        raise j.exceptions.RuntimeError(e)
+
+def getPidsByPort(port):
+    &#34;&#34;&#34;
+    Returns pid of the process that is listening on the given port
+    &#34;&#34;&#34;
+    name = getProcessByPort(port)
+    if name is None:
+        return []
+    # print &#34;found name:&#39;%s&#39;&#34;%name
+    pids = getProcessPid(name)
+    # print pids
+    return pids
+
+def killProcessByName(name, sig=None, match_predicate=None):
+    &#34;&#34;&#34;Kill all processes for a given command
+    
+    :param name: Name of the command that started the process(s)
+    :type name: str
+    :param sig: os signal to send to the process(s), defaults to None
+    :type sig: int, optional
+    :param match_predicate: function that does matching between 
+        found processes and the targested process, the function should accept 
+        two arguments and return a boolean, defaults to None
+    :type match_predicate: callable, optional
+    &#34;&#34;&#34;
+
+    pids = getProcessPid(name, match_predicate=match_predicate)
+    for pid in pids:
+        kill(pid, sig)
+
+def killProcessByPort(port):
+    for pid in getPidsByPort(port):
+        kill(pid)
+
+def getProcessByPort(port):
+    &#34;&#34;&#34;
+    Returns the full name of the process that is listening on the given port
+
+    @param port: the port for which to find the command
+    @type port: int
+    @return: full process name
+    @rtype: string
+    &#34;&#34;&#34;
+    if port == 0:
+        return None
+
+
+        for process in psutil.process_iter():
+            try:
+                cc = [x for x in process.connections() if x.status == psutil.CONN_LISTEN]
+            except Exception as e:
+                if str(e).find(&#34;psutil.AccessDenied&#34;) == -1:
+                    raise j.exceptions.RuntimeError(str(e))
+                continue
+            if cc != []:
+                for conn in cc:
+                    portfound = conn.laddr[1]
+                    if port == portfound:
+                        return process
+        return None
+
+
+def getDefunctProcesses():
+    rc, out, err = execute(&#34;ps ax&#34;)
+    llist = []
+    for line in out.split(&#34;\n&#34;):
+        if line.strip() == &#34;&#34;:
+            continue
+        if line.find(&#34;&lt;defunct&gt;&#34;) != -1:
+            # print &#34;defunct:%s&#34;%line
+            line = line.strip()
+            pid = line.split(&#34; &#34;, 1)[0]
+            pid = int(pid.strip())
+            llist.append(pid)
+
+    return llist
+
+def getEnviron(pid):
+    environ = j.sal.fs.readFile(&#34;/proc/%s/environ&#34; % pid)
+    env = dict()
+    for line in environ.split(&#34;\0&#34;):
+        if &#34;=&#34; in line:
+            key, value = line.split(&#34;=&#34;, 1)
+            env[key] = value
+    return env</code></pre>
+</details>
+</section>
+<section>
+<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+<dl>
+<dt><code class="name"><a title="jumpscale.sals.process.process" href="process.html">jumpscale.sals.process.process</a></code></dt>
+<dd>
+<section class="desc"></section>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="jumpscale.sals.process.checkInstalled"><code class="name flex">
+<span>def <span class="ident">checkInstalled</span></span>(<span>cmdname)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>@param cmdname is cmd to check e.g. curl</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def checkInstalled(cmdname):
+    &#34;&#34;&#34;
+    @param cmdname is cmd to check e.g. curl
+    &#34;&#34;&#34;
+    return j.core.tools.cmd_installed(cmdname)</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.sals.process.checkProcessForPid"><code class="name flex">
+<span>def <span class="ident">checkProcessForPid</span></span>(<span>pid, process)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Check whether a given pid actually does belong to a given process name.
+@param pid: (int) the pid to check
+@param process: (str) the process that should have the pid
+@return status: (int) 0 when ok, 1 when not ok.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def checkProcessForPid(pid, process):
+    &#34;&#34;&#34;
+    Check whether a given pid actually does belong to a given process name.
+    @param pid: (int) the pid to check
+    @param process: (str) the process that should have the pid
+    @return status: (int) 0 when ok, 1 when not ok.
+    &#34;&#34;&#34;
+    
+    if j.data.platform.is_linux():
+        command = &#34;ps -p %i&#34; % pid
+        (exitcode, output, err) = execute(command, die=False, showout=False)
+        i = 0
+        for line in output.splitlines():
+            match = re.match(&#34;.{23}.*(\s|\/)%s(\s|$).*&#34; % process, line)
+            if match:
+                i = i + 1
+        if i &gt;= 1:
+            return 0
+        return 1</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.sals.process.checkProcessRunning"><code class="name flex">
+<span>def <span class="ident">checkProcessRunning</span></span>(<span>process, min=1)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Check if a certain process is running on the system.
+you can specify minimal running processes needed.
+@param process: String with the name of the process we
+are trying to check
+@param min: (int) minimal threads that should run.
+@return True if ok</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def checkProcessRunning(process, min=1):
+    &#34;&#34;&#34;
+    Check if a certain process is running on the system.
+    you can specify minimal running processes needed.
+    @param process: String with the name of the process we
+        are trying to check
+    @param min: (int) minimal threads that should run.
+    @return True if ok
+    &#34;&#34;&#34;
+    
+    if j.data.platform.is_linux():
+        pids = getProcessPid(process)
+        if len(pids) &gt;= min:
+            return True
+        return False</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.sals.process.checkstart"><code class="name flex">
+<span>def <span class="ident">checkstart</span></span>(<span>cmd, filterstr, nrtimes=1, retry=1)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>@param cmd is which command to execute to start e.g. a daemon
+@param filterstr is what to check on if its running
+@param nrtimes is how many processes need to run</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def checkstart(cmd, filterstr, nrtimes=1, retry=1):
+    &#34;&#34;&#34;
+    @param cmd is which command to execute to start e.g. a daemon
+    @param filterstr is what to check on if its running
+    @param nrtimes is how many processes need to run
+    &#34;&#34;&#34;
+
+    found = getPidsByFilter(filterstr)
+    for i in range(retry):
+        if len(found) == nrtimes:
+            return
+        # print &#34;START:%s&#34;%cmd
+        execute(cmd)
+        time.sleep(1)
+        found = getPidsByFilter(filterstr)
+    if len(found) != nrtimes:
+        raise j.exceptions.RuntimeError(
+            &#34;could not start %s, found %s nr of instances. Needed %s.&#34; % (cmd, len(found), nrtimes)
+        )</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.sals.process.checkstop"><code class="name flex">
+<span>def <span class="ident">checkstop</span></span>(<span>cmd, filterstr, retry=1, nrinstances=0)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>@param cmd is which command to execute to start e.g. a daemon
+@param filterstr is what to check on if its running
+@param nrtimes is how many processes need to run</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def checkstop(cmd, filterstr, retry=1, nrinstances=0):
+    &#34;&#34;&#34;
+    @param cmd is which command to execute to start e.g. a daemon
+    @param filterstr is what to check on if its running
+    @param nrtimes is how many processes need to run
+    &#34;&#34;&#34;
+
+    found = getPidsByFilter(filterstr)
+    for i in range(retry):
+        if len(found) == nrinstances:
+            return
+        # print &#34;START:%s&#34;%cmd
+        execute(cmd, die=False)
+        time.sleep(1)
+        found = getPidsByFilter(filterstr)
+        for item in found:
+            kill(int(item), 9)
+        found = getPidsByFilter(filterstr)
+
+    if len(found) != 0:
+        raise j.exceptions.RuntimeError(&#34;could not stop %s, found %s nr of instances.&#34; % (cmd, len(found)))</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.sals.process.execute"><code class="name flex">
+<span>def <span class="ident">execute</span></span>(<span>cmd, showout=True, useShell=True, cwd=None, timeout=600, die=True, async_=False, env=None, interactive=False, replace=False, args={})</span>
+</code></dt>
+<dd>
+<section class="desc"><p>:param command:
+:param showout: show the output while executing
+:param useShell: use a shell when executing, std True
+:param cwd: directory to go to when executing
+:param timeout: timout in sec, std 10 min
+:param die: die when not ok
+:param async_: return the pipe, don't wait
+:param env: is arguments which will be replaced om the command core.text_replace(&hellip; feature)
+:return: (rc,out,err)</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def execute(
+    cmd,
+    showout=True,
+    useShell=True,
+    cwd=None,
+    timeout=600,
+    die=True,
+    async_=False,
+    env=None,
+    interactive=False,
+    replace=False,
+    args={},
+):
+    &#34;&#34;&#34;
+
+    :param command:
+    :param showout: show the output while executing
+    :param useShell: use a shell when executing, std True
+    :param cwd: directory to go to when executing
+    :param timeout: timout in sec, std 10 min
+    :param die: die when not ok
+    :param async_: return the pipe, don&#39;t wait
+    :param env: is arguments which will be replaced om the command core.text_replace(... feature)
+    :return: (rc,out,err)
+    &#34;&#34;&#34;
+    return j.core.executors.run_local(
+        cmd=cmd,
+        timeout=timeout,
+        env=env,
+    )</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.sals.process.executeInteractive"><code class="name flex">
+<span>def <span class="ident">executeInteractive</span></span>(<span>command, die=True)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def executeInteractive(command, die=True):
+    exitcode = os.system(command)
+    if exitcode != 0 and die:
+        raise j.exceptions.Base(&#34;Could not execute %s&#34; % command)
+    return exitcode</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.sals.process.executeWithoutPipe"><code class="name flex">
+<span>def <span class="ident">executeWithoutPipe</span></span>(<span>command, die=True, printCommandToStdout=False)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Execute command without opening pipes, returns only the exitcode
+This is platform independent
+@param command: command to execute
+@param die: boolean to die if got non zero exitcode
+@param printCommandToStdout: boolean to show/hide output to stdout
+@param showout: Deprecated. Use 'printCommandToStdout' instead.
+@rtype: integer represents the exitcode
+if exitcode is not zero then the executed command returned with errors</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def executeWithoutPipe(command, die=True, printCommandToStdout=False):
+    &#34;&#34;&#34;
+
+    Execute command without opening pipes, returns only the exitcode
+    This is platform independent
+    @param command: command to execute
+    @param die: boolean to die if got non zero exitcode
+    @param printCommandToStdout: boolean to show/hide output to stdout
+    @param showout: Deprecated. Use &#39;printCommandToStdout&#39; instead.
+    @rtype: integer represents the exitcode
+    if exitcode is not zero then the executed command returned with errors
+    &#34;&#34;&#34;
+
+    exitcode = os.system(command)
+
+    if exitcode != 0 and die:
+        
+        raise j.exceptions.RuntimeError(&#34;Error during execution!\nCommand: %s\nExitcode: %s&#34; % (command, exitcode))
+
+    return exitcode</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.sals.process.getDefunctProcesses"><code class="name flex">
+<span>def <span class="ident">getDefunctProcesses</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def getDefunctProcesses():
+    rc, out, err = execute(&#34;ps ax&#34;)
+    llist = []
+    for line in out.split(&#34;\n&#34;):
+        if line.strip() == &#34;&#34;:
+            continue
+        if line.find(&#34;&lt;defunct&gt;&#34;) != -1:
+            # print &#34;defunct:%s&#34;%line
+            line = line.strip()
+            pid = line.split(&#34; &#34;, 1)[0]
+            pid = int(pid.strip())
+            llist.append(pid)
+
+    return llist</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.sals.process.getEnviron"><code class="name flex">
+<span>def <span class="ident">getEnviron</span></span>(<span>pid)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def getEnviron(pid):
+    environ = j.sal.fs.readFile(&#34;/proc/%s/environ&#34; % pid)
+    env = dict()
+    for line in environ.split(&#34;\0&#34;):
+        if &#34;=&#34; in line:
+            key, value = line.split(&#34;=&#34;, 1)
+            env[key] = value
+    return env</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.sals.process.getMyProcessObject"><code class="name flex">
+<span>def <span class="ident">getMyProcessObject</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def getMyProcessObject():
+    return getProcessObject(os.getpid())</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.sals.process.getPidsByFilter"><code class="name flex">
+<span>def <span class="ident">getPidsByFilter</span></span>(<span>filterstr='', regex_list=None, excludes=None)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def getPidsByFilter(filterstr=&#34;&#34;, regex_list=None, excludes=None):
+    regex_list = regex_list or []
+    excludes = excludes or []
+    if not regex_list:
+        return process_pids_get_by_filter(filterstr, excludes=excludes)
+    elif filterstr == &#34;&#34;:
+        res = []
+        for process in psutil.process_iter():
+            try:
+                cmdline = process.cmdline()
+            except psutil.NoSuchProcess:
+                cmdline = None
+            except psutil.AccessDenied:
+                cmdline = None
+            if cmdline:
+                name = &#34; &#34;.join(cmdline)
+                for r in regex_list:
+                    if name.strip() != &#34;&#34;:
+                        if j.data.regex.match(r, name):
+                            res.append(process.pid)
+        return res
+    else:
+        raise j.exceptions.Base(&#34;filterstr or regexes&#34;)</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.sals.process.getPidsByFilterSortable"><code class="name flex">
+<span>def <span class="ident">getPidsByFilterSortable</span></span>(<span>filterstr, sortkey=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Get pids of process by a filter string and optionally sort by sortkey</p>
+<p>@param filterstr string: filter string.
+@param sortkey
+string: sort key for ps command
+sortkey can be one of the following:
+%cpu
+cpu utilization of the process in
+%mem
+ratio of the process's resident set size
+to the physical memory on the machine, expressed as a percentage.
+cputime
+cumulative CPU time, "[DD-]hh:mm:ss" format.
+(alias time).
+egid
+effective group ID number of the process as a decimal integer.
+(alias gid).
+egroup
+effective group ID of the process.
+This will be the textual group ID, if it can be obtained and the field width permits, or a decimal representation otherwise.
+(alias group).
+euid
+effective user ID (alias uid).
+euser
+effective user name.
+gid
+see egid.
+(alias egid).
+pid
+a number representing the process ID (alias tgid).
+ppid
+parent process ID.
+psr
+processor that process is currently assigned to.
+start_time
+starting time or date of the process.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def getPidsByFilterSortable(filterstr, sortkey=None):
+    &#34;&#34;&#34;
+    Get pids of process by a filter string and optionally sort by sortkey
+
+    @param filterstr string: filter string.
+    @param sortkey   string: sort key for ps command
+    sortkey can be one of the following:
+        %cpu           cpu utilization of the process in
+        %mem           ratio of the process&#39;s resident set size  to the physical memory on the machine, expressed as a percentage.
+        cputime        cumulative CPU time, &#34;[DD-]hh:mm:ss&#34; format.  (alias time).
+        egid           effective group ID number of the process as a decimal integer.  (alias gid).
+        egroup         effective group ID of the process.  This will be the textual group ID, if it can be obtained and the field width permits, or a decimal representation otherwise.  (alias group).
+        euid           effective user ID (alias uid).
+        euser          effective user name.
+        gid            see egid.  (alias egid).
+        pid            a number representing the process ID (alias tgid).
+        ppid           parent process ID.
+        psr            processor that process is currently assigned to.
+        start_time     starting time or date of the process.
+
+
+    &#34;&#34;&#34;
+    if sortkey is not None:
+        cmd = &#34;ps aux --sort={sortkey} | grep &#39;{filterstr}&#39;&#34;.format(filterstr=filterstr, sortkey=sortkey)
+    else:
+        cmd = &#34;ps ax | grep &#39;{filterstr}&#39;&#34;.format(filterstr=filterstr)
+    rcode, out, err = execute(cmd)
+    # print out
+    found = []
+    for line in out.split(&#34;\n&#34;):
+        if line.find(&#34;grep&#34;) != -1 or line.strip() == &#34;&#34;:
+            continue
+        if line.strip() != &#34;&#34;:
+            if line.find(filterstr) != -1:
+                line = line.strip()
+                if sortkey is not None:
+                    found.append(int([x for x in line.split(&#34; &#34;) if x][1]))
+                else:
+                    found.append(int(line.split(&#34; &#34;)[0]))
+    return found</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.sals.process.getPidsByPort"><code class="name flex">
+<span>def <span class="ident">getPidsByPort</span></span>(<span>port)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Returns pid of the process that is listening on the given port</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def getPidsByPort(port):
+    &#34;&#34;&#34;
+    Returns pid of the process that is listening on the given port
+    &#34;&#34;&#34;
+    name = getProcessByPort(port)
+    if name is None:
+        return []
+    # print &#34;found name:&#39;%s&#39;&#34;%name
+    pids = getProcessPid(name)
+    # print pids
+    return pids</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.sals.process.getProcessByPort"><code class="name flex">
+<span>def <span class="ident">getProcessByPort</span></span>(<span>port)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Returns the full name of the process that is listening on the given port</p>
+<p>@param port: the port for which to find the command
+@type port: int
+@return: full process name
+@rtype: string</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def getProcessByPort(port):
+    &#34;&#34;&#34;
+    Returns the full name of the process that is listening on the given port
+
+    @param port: the port for which to find the command
+    @type port: int
+    @return: full process name
+    @rtype: string
+    &#34;&#34;&#34;
+    if port == 0:
+        return None
+
+
+        for process in psutil.process_iter():
+            try:
+                cc = [x for x in process.connections() if x.status == psutil.CONN_LISTEN]
+            except Exception as e:
+                if str(e).find(&#34;psutil.AccessDenied&#34;) == -1:
+                    raise j.exceptions.RuntimeError(str(e))
+                continue
+            if cc != []:
+                for conn in cc:
+                    portfound = conn.laddr[1]
+                    if port == portfound:
+                        return process
+        return None</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.sals.process.getProcessObject"><code class="name flex">
+<span>def <span class="ident">getProcessObject</span></span>(<span>pid, die=True)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def getProcessObject(pid, die=True):
+
+    for process in psutil.process_iter():
+        if process.pid == pid:
+            return process
+    if die:
+        raise j.exceptions.NotFound(&#34;Could not find process with pid:%s&#34; % pid)</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.sals.process.getProcessPid"><code class="name flex">
+<span>def <span class="ident">getProcessPid</span></span>(<span>process, match_predicate=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Get process ID(s) for a given process</p>
+<p>:param process: process to look for
+:type process: str
+:param match_predicate: function that does matching between
+found processes and the targested process, the function should accept
+two arguments and return a boolean, defaults to None
+:type match_predicate: callable, optional
+:raises j.exceptions.RuntimeError: If process is None
+:raises NotImplementedError: If called on a non-unix system
+:return: list of matching process IDs
+:rtype: list</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def getProcessPid(process, match_predicate=None):
+    &#34;&#34;&#34;Get process ID(s) for a given process
+    
+    :param process: process to look for
+    :type process: str
+    :param match_predicate: function that does matching between 
+        found processes and the targested process, the function should accept 
+        two arguments and return a boolean, defaults to None
+    :type match_predicate: callable, optional
+    :raises j.exceptions.RuntimeError: If process is None
+    :raises NotImplementedError: If called on a non-unix system
+    :return: list of matching process IDs
+    :rtype: list
+    &#34;&#34;&#34;
+    # default match predicate
+    # why aren&#39;t we using psutil ??
+    def default_predicate(given, target):
+        return given.find(target.strip()) != -1
+
+    if match_predicate is None:
+        match_predicate = default_predicate
+
+    if process is None:
+        raise j.exceptions.RuntimeError(&#34;process cannot be None&#34;)
+    if j.data.platform.is_linux():
+
+        # Need to set $COLUMNS such that we can grep full commandline
+        # Note: apparently this does not work on solaris
+        command = &#34;bash -c &#39;env COLUMNS=300 ps -ef&#39;&#34;
+        (exitcode, output, err) = execute(command, die=False, showout=False)
+        pids = list()
+        co = re.compile(
+            &#34;\s*(?P&lt;uid&gt;[a-z]+)\s+(?P&lt;pid&gt;[0-9]+)\s+(?P&lt;ppid&gt;[0-9]+)\s+(?P&lt;cpu&gt;[0-9]+)\s+(?P&lt;stime&gt;\S+)\s+(?P&lt;tty&gt;\S+)\s+(?P&lt;time&gt;\S+)\s+(?P&lt;cmd&gt;.+)&#34;
+        )
+        for line in output.splitlines():
+            match = co.search(line)
+            if not match:
+                continue
+            gd = match.groupdict()
+            # print &#34;%s&#34;%line
+            # print gd[&#34;cmd&#34;]
+            # print process
+            if isinstance(process, int) and gd[&#34;pid&#34;] == process:
+                pids.append(gd[&#34;pid&#34;])
+            elif match_predicate(gd[&#34;cmd&#34;], process):
+                pids.append(gd[&#34;pid&#34;])
+        pids = [int(item) for item in pids]
+        return pids
+    else:
+        raise j.exceptions.NotImplemented(&#34;getProcessPid is only implemented for unix&#34;)</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.sals.process.getProcessPidsFromUser"><code class="name flex">
+<span>def <span class="ident">getProcessPidsFromUser</span></span>(<span>user)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def getProcessPidsFromUser(user):
+
+    result = []
+    for process in psutil.process_iter():
+        if process.username == user:
+            result.append(process.pid)
+    return result</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.sals.process.getSimularProcesses"><code class="name flex">
+<span>def <span class="ident">getSimularProcesses</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def getSimularProcesses():
+
+    myprocess = getMyProcessObject()
+    result = []
+    for item in psutil.process_iter():
+        try:
+            if item.cmdline == myprocess.cmdline:
+                result.append(item)
+        except psutil.NoSuchProcess:
+            pass
+    return result</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.sals.process.isPidAlive"><code class="name flex">
+<span>def <span class="ident">isPidAlive</span></span>(<span>pid)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Checks whether this pid is alive.
+For unix, a signal is sent to check that the process is alive.
+For windows, the process information is retrieved and it is double checked that the process is python.exe
+or pythonw.exe</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def isPidAlive(pid):
+    &#34;&#34;&#34;Checks whether this pid is alive.
+        For unix, a signal is sent to check that the process is alive.
+        For windows, the process information is retrieved and it is double checked that the process is python.exe
+        or pythonw.exe
+    &#34;&#34;&#34;
+    
+    if j.data.platform.is_linux():
+        # Unix strategy: send signal SIGCONT to process pid
+        # Achilles heal: another process which happens to have the same pid could be running
+        # and incorrectly considered as this process
+        import signal
+
+        try:
+            os.kill(pid, 0)
+        except OSError:
+            return False
+
+        return True</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.sals.process.kill"><code class="name flex">
+<span>def <span class="ident">kill</span></span>(<span>pid, sig=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Kill a process with a signal
+@param pid: pid of the process to kill
+@param sig: signal. If no signal is specified signal.SIGKILL is used</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def kill(pid, sig=None):
+    &#34;&#34;&#34;
+    Kill a process with a signal
+    @param pid: pid of the process to kill
+    @param sig: signal. If no signal is specified signal.SIGKILL is used
+    &#34;&#34;&#34;
+    pid = int(pid)
+    
+    if j.data.platform.is_linux():
+        try:
+            if sig is None:
+                sig = signal.SIGKILL
+
+            os.kill(pid, sig)
+
+        except OSError as e:
+            raise j.exceptions.RuntimeError(&#34;Could not kill process with id %s.\n%s&#34; % (pid, e))</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.sals.process.killProcessByName"><code class="name flex">
+<span>def <span class="ident">killProcessByName</span></span>(<span>name, sig=None, match_predicate=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Kill all processes for a given command</p>
+<p>:param name: Name of the command that started the process(s)
+:type name: str
+:param sig: os signal to send to the process(s), defaults to None
+:type sig: int, optional
+:param match_predicate: function that does matching between
+found processes and the targested process, the function should accept
+two arguments and return a boolean, defaults to None
+:type match_predicate: callable, optional</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def killProcessByName(name, sig=None, match_predicate=None):
+    &#34;&#34;&#34;Kill all processes for a given command
+    
+    :param name: Name of the command that started the process(s)
+    :type name: str
+    :param sig: os signal to send to the process(s), defaults to None
+    :type sig: int, optional
+    :param match_predicate: function that does matching between 
+        found processes and the targested process, the function should accept 
+        two arguments and return a boolean, defaults to None
+    :type match_predicate: callable, optional
+    &#34;&#34;&#34;
+
+    pids = getProcessPid(name, match_predicate=match_predicate)
+    for pid in pids:
+        kill(pid, sig)</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.sals.process.killProcessByPort"><code class="name flex">
+<span>def <span class="ident">killProcessByPort</span></span>(<span>port)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def killProcessByPort(port):
+    for pid in getPidsByPort(port):
+        kill(pid)</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.sals.process.killUserProcesses"><code class="name flex">
+<span>def <span class="ident">killUserProcesses</span></span>(<span>user)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def killUserProcesses(user):
+    for pid in getProcessPidsFromUser(user):
+        kill(pid)</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.sals.process.killall"><code class="name flex">
+<span>def <span class="ident">killall</span></span>(<span>name)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def killall(name):
+    rc, out, err = execute(&#34;ps ax | grep %s&#34; % name, showout=False)
+    for line in out.split(&#34;\n&#34;):
+        # print(&#34;L:%s&#34; % line)
+        if line.strip() == &#34;&#34;:
+            continue
+        if &#34;grep&#34; in line:
+            continue
+        line = line.strip()
+        pid = line.split(&#34; &#34;)[0]
+        
+        kill(pid)
+    if psfind(name):
+        raise j.exceptions.Base(&#34;Could not kill:%s, is still, there check if its not autorestarting.&#34; % name)</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.sals.process.process_pids_get_by_filter"><code class="name flex">
+<span>def <span class="ident">process_pids_get_by_filter</span></span>(<span>filterstr, excludes=None)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def process_pids_get_by_filter(filterstr, excludes=None):
+    excludes = excludes or []
+    cmd = &#34;ps ax | grep &#39;%s&#39;&#34; % filterstr
+    rcode, out, err = j.core.executors.run_local(cmd)
+    # print out
+    found = []
+
+    def checkexclude(c, excludes):
+        for item in excludes:
+            c = c.lower()
+            if c.find(item.lower()) != -1:
+                return True
+        return False
+
+    for line in out.split(&#34;\n&#34;):
+        if line.find(&#34;grep&#34;) != -1 or line.strip() == &#34;&#34;:
+            continue
+        if line.strip() != &#34;&#34;:
+            if line.find(filterstr) != -1:
+                line = line.strip()
+                if not checkexclude(line, excludes):
+                    # print &#34;found pidline:%s&#34;%line
+                    found.append(int(line.split(&#34; &#34;)[0]))
+    return found</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.sals.process.psfind"><code class="name flex">
+<span>def <span class="ident">psfind</span></span>(<span>name)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def psfind(name):
+    rc, out, err = execute(&#34;ps ax | grep %s&#34; % name, showout=False)
+    for line in out.split(&#34;\n&#34;):
+        if line.strip() == &#34;&#34;:
+            continue
+        if &#34;grep&#34; in line:
+            continue
+        return True
+    return False</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.sals.process.setEnvironmentVariable"><code class="name flex">
+<span>def <span class="ident">setEnvironmentVariable</span></span>(<span>varnames, varvalues)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Set the value of the environment variables C{varnames}. Existing variable are overwritten</p>
+<p>@param varnames: A list of the names of all the environment variables to set
+@type varnames: list<string>
+@param varvalues: A list of all values for the environment variables
+@type varvalues: list<string></p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def setEnvironmentVariable(varnames, varvalues):
+    &#34;&#34;&#34;Set the value of the environment variables C{varnames}. Existing variable are overwritten
+
+    @param varnames: A list of the names of all the environment variables to set
+    @type varnames: list&lt;string&gt;
+    @param varvalues: A list of all values for the environment variables
+    @type varvalues: list&lt;string&gt;
+    &#34;&#34;&#34;
+    try:
+        for i in range(len(varnames)):
+            os.environ[varnames[i]] = str(varvalues[i]).strip()
+    except Exception as e:
+        raise j.exceptions.RuntimeError(e)</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="jumpscale.sals" href="../index.html">jumpscale.sals</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-submodules">Sub-modules</a></h3>
+<ul>
+<li><code><a title="jumpscale.sals.process.process" href="process.html">jumpscale.sals.process.process</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="jumpscale.sals.process.checkInstalled" href="#jumpscale.sals.process.checkInstalled">checkInstalled</a></code></li>
+<li><code><a title="jumpscale.sals.process.checkProcessForPid" href="#jumpscale.sals.process.checkProcessForPid">checkProcessForPid</a></code></li>
+<li><code><a title="jumpscale.sals.process.checkProcessRunning" href="#jumpscale.sals.process.checkProcessRunning">checkProcessRunning</a></code></li>
+<li><code><a title="jumpscale.sals.process.checkstart" href="#jumpscale.sals.process.checkstart">checkstart</a></code></li>
+<li><code><a title="jumpscale.sals.process.checkstop" href="#jumpscale.sals.process.checkstop">checkstop</a></code></li>
+<li><code><a title="jumpscale.sals.process.execute" href="#jumpscale.sals.process.execute">execute</a></code></li>
+<li><code><a title="jumpscale.sals.process.executeInteractive" href="#jumpscale.sals.process.executeInteractive">executeInteractive</a></code></li>
+<li><code><a title="jumpscale.sals.process.executeWithoutPipe" href="#jumpscale.sals.process.executeWithoutPipe">executeWithoutPipe</a></code></li>
+<li><code><a title="jumpscale.sals.process.getDefunctProcesses" href="#jumpscale.sals.process.getDefunctProcesses">getDefunctProcesses</a></code></li>
+<li><code><a title="jumpscale.sals.process.getEnviron" href="#jumpscale.sals.process.getEnviron">getEnviron</a></code></li>
+<li><code><a title="jumpscale.sals.process.getMyProcessObject" href="#jumpscale.sals.process.getMyProcessObject">getMyProcessObject</a></code></li>
+<li><code><a title="jumpscale.sals.process.getPidsByFilter" href="#jumpscale.sals.process.getPidsByFilter">getPidsByFilter</a></code></li>
+<li><code><a title="jumpscale.sals.process.getPidsByFilterSortable" href="#jumpscale.sals.process.getPidsByFilterSortable">getPidsByFilterSortable</a></code></li>
+<li><code><a title="jumpscale.sals.process.getPidsByPort" href="#jumpscale.sals.process.getPidsByPort">getPidsByPort</a></code></li>
+<li><code><a title="jumpscale.sals.process.getProcessByPort" href="#jumpscale.sals.process.getProcessByPort">getProcessByPort</a></code></li>
+<li><code><a title="jumpscale.sals.process.getProcessObject" href="#jumpscale.sals.process.getProcessObject">getProcessObject</a></code></li>
+<li><code><a title="jumpscale.sals.process.getProcessPid" href="#jumpscale.sals.process.getProcessPid">getProcessPid</a></code></li>
+<li><code><a title="jumpscale.sals.process.getProcessPidsFromUser" href="#jumpscale.sals.process.getProcessPidsFromUser">getProcessPidsFromUser</a></code></li>
+<li><code><a title="jumpscale.sals.process.getSimularProcesses" href="#jumpscale.sals.process.getSimularProcesses">getSimularProcesses</a></code></li>
+<li><code><a title="jumpscale.sals.process.isPidAlive" href="#jumpscale.sals.process.isPidAlive">isPidAlive</a></code></li>
+<li><code><a title="jumpscale.sals.process.kill" href="#jumpscale.sals.process.kill">kill</a></code></li>
+<li><code><a title="jumpscale.sals.process.killProcessByName" href="#jumpscale.sals.process.killProcessByName">killProcessByName</a></code></li>
+<li><code><a title="jumpscale.sals.process.killProcessByPort" href="#jumpscale.sals.process.killProcessByPort">killProcessByPort</a></code></li>
+<li><code><a title="jumpscale.sals.process.killUserProcesses" href="#jumpscale.sals.process.killUserProcesses">killUserProcesses</a></code></li>
+<li><code><a title="jumpscale.sals.process.killall" href="#jumpscale.sals.process.killall">killall</a></code></li>
+<li><code><a title="jumpscale.sals.process.process_pids_get_by_filter" href="#jumpscale.sals.process.process_pids_get_by_filter">process_pids_get_by_filter</a></code></li>
+<li><code><a title="jumpscale.sals.process.psfind" href="#jumpscale.sals.process.psfind">psfind</a></code></li>
+<li><code><a title="jumpscale.sals.process.setEnvironmentVariable" href="#jumpscale.sals.process.setEnvironmentVariable">setEnvironmentVariable</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.6.3</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>
