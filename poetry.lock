@@ -697,6 +697,14 @@ version = "1.12.0"
 
 [[package]]
 category = "main"
+description = "python client for sonic search backend"
+name = "sonic-client"
+optional = false
+python-versions = "*"
+version = "0.0.5"
+
+[[package]]
+category = "main"
 description = "Generate simple tables in terminals from a nested list of strings."
 name = "terminaltables"
 optional = false
@@ -795,7 +803,7 @@ version = "0.6.0"
 more-itertools = "*"
 
 [metadata]
-content-hash = "fb916b6a0349c09c2c9db2d964b9c07b704e3d8c5b8ecb93838a769caabc3d8d"
+content-hash = "3310a690776852e8fd7f720a5bf40fd48f32b3d97df1b0c62f38faef39edded9"
 python-versions = "^3.6"
 
 [metadata.hashes]
@@ -868,6 +876,7 @@ redis = ["98a22fb750c9b9bb46e75e945dc3f61d0ab30d06117cbb21ff9cd1d315fedd3b", "c5
 requests = ["11e007a8a2aa0323f5a921e9e6a2d7e4e67d9877e85773fba9ba6419025cbeb4", "9cf5292fcd0f598c671cfc1e0d7d1a7f13bb8085e9a590f48c010551dc6c4b31"]
 secretconf = ["89aa68c7bcd995aad277a0dadaaf9f92c2e22d56a17bc4f923a01077e097eb47", "e1b556b3de83852b9ae97a85b0041987968689efd6673f2cfbb5d5808c968e02"]
 six = ["3350809f0555b11f552448330d0b52d5f24c91a322ea4a15ef22629740f3761c", "d16a0141ec1a18405cd4ce8b4613101da75da0e9a7aec5bdd4fa804d0e0eba73"]
+sonic-client = ["e47071ccea5ea02cfccd8e77e382fb9180b56c50524c21c90840147f42bc96e9"]
 terminaltables = ["f3eb0eb92e3833972ac36796293ca0906e998dc3be91fbe1f8615b331b853b81"]
 text-unidecode = ["5a1375bb2ba7968740508ae38d92e1f889a0832913cb1c447d5e2046061a396d", "801e38bd550b943563660a91de8d4b6fa5df60a542be9093f7abf819f86050cc"]
 toml = ["229f81c57791a41d65e399fc06bf0848bab550a9dfd5ed66df18ce5f05e73d5c", "235682dd292d5899d361a811df37e04a8828a5b1da3115886b73cf81ebc9100e", "f1db651f9657708513243e61e6cc67d101a39bad662eaa9b5546f789338e07a3"]
