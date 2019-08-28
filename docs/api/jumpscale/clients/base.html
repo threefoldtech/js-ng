@@ -22,71 +22,11 @@
 <section id="section-intro">
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">import os
-from secretconf import read_config, save_config
-from jumpscale.core.config import JumpscaleConfigEnvironment
+<pre><code class="python">from jumpscale.core.base import Base
 
 
-class InvalidPrivateKey(Exception):
-    pass
-
-class SecureConfigSource:
-
-    def __init__(self, obj):
-        self.owner = obj
-        self._instance_name = obj.instance_name
-        self._client_name = obj.__class__.__name__.lower()
-
-    @property
-    def client_name(self):
-        return self._client_name
-
-    @property
-    def instance_name(self):
-        return self._instance_name
-
-    def set_appconfig(self, appconfigenv):
-        self._appconfigenv = appconfigenv
-
-    @property
-    def instance_config_path(self):
-        return self._get_instance_config_path()
-        
-    def _get_instance_config_path(self):
-        instance_filename = &#34;{}__{}&#34;.format(self.client_name, self.instance_name)
-        return os.path.join(self._appconfigenv.get_secure_config_path(), instance_filename)
-
-    def _get_instance_config(self):
-        if not os.path.exists(self.instance_config_path):
-            os.makedirs(os.path.dirname(self.instance_config_path), exist_ok=True)
-            os.mknod(self.instance_config_path)
-        if not self._appconfigenv:
-            raise InvalidPrivateKey()
-
-        return read_config(self.instance_name, self.instance_config_path, self._appconfigenv.get_private_key())
-    
-    def _save_config(self, data):
-        if not self._appconfigenv:
-            raise InvalidPrivateKey()
-
-        return save_config(self.instance_name, data, self.instance_config_path, self._appconfigenv.get_private_key())
-    
-    @property
-    def data(self):
-        try:
-            return self._get_instance_config()[self.instance_name]
-        except Exception:
-            return {}
-    
-    @data.setter
-    def data(self, data):
-        return self._save_config(data)
-
-
-class SecureClient:
-    def __init__(self, client):
-        self.config = SecureConfigSource(client)
-        self.config.set_appconfig(JumpscaleConfigEnvironment())</code></pre>
+class Client(Base):
+    pass</code></pre>
 </details>
 </section>
 <section>
@@ -98,159 +38,54 @@ class SecureClient:
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="jumpscale.clients.base.InvalidPrivateKey"><code class="flex name class">
-<span>class <span class="ident">InvalidPrivateKey</span></span>
-<span>(</span><span>*args, **kwargs)</span>
+<dt id="jumpscale.clients.base.Client"><code class="flex name class">
+<span>class <span class="ident">Client</span></span>
 </code></dt>
 <dd>
-<section class="desc"><p>Common base class for all non-exit exceptions.</p></section>
+<section class="desc"><p>A simple attribute-based namespace.</p>
+<p>SimpleNamespace(**kwargs)</p></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class InvalidPrivateKey(Exception):
+<pre><code class="python">class Client(Base):
     pass</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>builtins.Exception</li>
-<li>builtins.BaseException</li>
+<li><a title="jumpscale.core.base.meta.Base" href="../core/base/meta.html#jumpscale.core.base.meta.Base">Base</a></li>
+<li>types.SimpleNamespace</li>
 </ul>
-</dd>
-<dt id="jumpscale.clients.base.SecureClient"><code class="flex name class">
-<span>class <span class="ident">SecureClient</span></span>
-<span>(</span><span>client)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">class SecureClient:
-    def __init__(self, client):
-        self.config = SecureConfigSource(client)
-        self.config.set_appconfig(JumpscaleConfigEnvironment())</code></pre>
-</details>
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="jumpscale.clients.github.github.Github" href="github/github.html#jumpscale.clients.github.github.Github">Github</a></li>
 <li><a title="jumpscale.clients.gogs.gogs.Gogs" href="gogs/gogs.html#jumpscale.clients.gogs.gogs.Gogs">Gogs</a></li>
+<li><a title="jumpscale.clients.redis.redis.RedisClient" href="redis/redis.html#jumpscale.clients.redis.redis.RedisClient">RedisClient</a></li>
+<li><a title="jumpscale.clients.currencylayer.currencylayer.CurrencyLayerClient" href="currencylayer/currencylayer.html#jumpscale.clients.currencylayer.currencylayer.CurrencyLayerClient">CurrencyLayerClient</a></li>
+<li><a title="jumpscale.clients.sonic.client.SonicClient" href="sonic/client.html#jumpscale.clients.sonic.client.SonicClient">SonicClient</a></li>
+<li><a title="jumpscale.clients.sshclient.sshclient.SSHClient" href="sshclient/sshclient.html#jumpscale.clients.sshclient.sshclient.SSHClient">SSHClient</a></li>
+<li><a title="jumpscale.clients.sshkey.sshkey.SSHKeyClient" href="sshkey/sshkey.html#jumpscale.clients.sshkey.sshkey.SSHKeyClient">SSHKeyClient</a></li>
 </ul>
-</dd>
-<dt id="jumpscale.clients.base.SecureConfigSource"><code class="flex name class">
-<span>class <span class="ident">SecureConfigSource</span></span>
-<span>(</span><span>obj)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">class SecureConfigSource:
-
-    def __init__(self, obj):
-        self.owner = obj
-        self._instance_name = obj.instance_name
-        self._client_name = obj.__class__.__name__.lower()
-
-    @property
-    def client_name(self):
-        return self._client_name
-
-    @property
-    def instance_name(self):
-        return self._instance_name
-
-    def set_appconfig(self, appconfigenv):
-        self._appconfigenv = appconfigenv
-
-    @property
-    def instance_config_path(self):
-        return self._get_instance_config_path()
-        
-    def _get_instance_config_path(self):
-        instance_filename = &#34;{}__{}&#34;.format(self.client_name, self.instance_name)
-        return os.path.join(self._appconfigenv.get_secure_config_path(), instance_filename)
-
-    def _get_instance_config(self):
-        if not os.path.exists(self.instance_config_path):
-            os.makedirs(os.path.dirname(self.instance_config_path), exist_ok=True)
-            os.mknod(self.instance_config_path)
-        if not self._appconfigenv:
-            raise InvalidPrivateKey()
-
-        return read_config(self.instance_name, self.instance_config_path, self._appconfigenv.get_private_key())
-    
-    def _save_config(self, data):
-        if not self._appconfigenv:
-            raise InvalidPrivateKey()
-
-        return save_config(self.instance_name, data, self.instance_config_path, self._appconfigenv.get_private_key())
-    
-    @property
-    def data(self):
-        try:
-            return self._get_instance_config()[self.instance_name]
-        except Exception:
-            return {}
-    
-    @data.setter
-    def data(self, data):
-        return self._save_config(data)</code></pre>
-</details>
-<h3>Instance variables</h3>
-<dl>
-<dt id="jumpscale.clients.base.SecureConfigSource.client_name"><code class="name">var <span class="ident">client_name</span></code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">@property
-def client_name(self):
-    return self._client_name</code></pre>
-</details>
-</dd>
-<dt id="jumpscale.clients.base.SecureConfigSource.data"><code class="name">var <span class="ident">data</span></code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">@property
-def data(self):
-    try:
-        return self._get_instance_config()[self.instance_name]
-    except Exception:
-        return {}</code></pre>
-</details>
-</dd>
-<dt id="jumpscale.clients.base.SecureConfigSource.instance_config_path"><code class="name">var <span class="ident">instance_config_path</span></code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">@property
-def instance_config_path(self):
-    return self._get_instance_config_path()</code></pre>
-</details>
-</dd>
-<dt id="jumpscale.clients.base.SecureConfigSource.instance_name"><code class="name">var <span class="ident">instance_name</span></code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">@property
-def instance_name(self):
-    return self._instance_name</code></pre>
-</details>
-</dd>
-</dl>
 <h3>Methods</h3>
 <dl>
-<dt id="jumpscale.clients.base.SecureConfigSource.set_appconfig"><code class="name flex">
-<span>def <span class="ident">set_appconfig</span></span>(<span>self, appconfigenv)</span>
+<dt id="jumpscale.clients.base.Client.get_factory_info"><code class="name flex">
+<span>def <span class="ident">get_factory_info</span></span>(<span>self)</span>
 </code></dt>
 <dd>
 <section class="desc"></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def set_appconfig(self, appconfigenv):
-    self._appconfigenv = appconfigenv</code></pre>
+<pre><code class="python">def get_factory_info(self):
+    return factory_info</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.clients.base.Client.get_fields"><code class="name flex">
+<span>def <span class="ident">get_fields</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_fields(self):
+    return fields</code></pre>
 </details>
 </dd>
 </dl>
@@ -272,19 +107,10 @@ def instance_name(self):
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="jumpscale.clients.base.InvalidPrivateKey" href="#jumpscale.clients.base.InvalidPrivateKey">InvalidPrivateKey</a></code></h4>
-</li>
-<li>
-<h4><code><a title="jumpscale.clients.base.SecureClient" href="#jumpscale.clients.base.SecureClient">SecureClient</a></code></h4>
-</li>
-<li>
-<h4><code><a title="jumpscale.clients.base.SecureConfigSource" href="#jumpscale.clients.base.SecureConfigSource">SecureConfigSource</a></code></h4>
+<h4><code><a title="jumpscale.clients.base.Client" href="#jumpscale.clients.base.Client">Client</a></code></h4>
 <ul class="">
-<li><code><a title="jumpscale.clients.base.SecureConfigSource.client_name" href="#jumpscale.clients.base.SecureConfigSource.client_name">client_name</a></code></li>
-<li><code><a title="jumpscale.clients.base.SecureConfigSource.data" href="#jumpscale.clients.base.SecureConfigSource.data">data</a></code></li>
-<li><code><a title="jumpscale.clients.base.SecureConfigSource.instance_config_path" href="#jumpscale.clients.base.SecureConfigSource.instance_config_path">instance_config_path</a></code></li>
-<li><code><a title="jumpscale.clients.base.SecureConfigSource.instance_name" href="#jumpscale.clients.base.SecureConfigSource.instance_name">instance_name</a></code></li>
-<li><code><a title="jumpscale.clients.base.SecureConfigSource.set_appconfig" href="#jumpscale.clients.base.SecureConfigSource.set_appconfig">set_appconfig</a></code></li>
+<li><code><a title="jumpscale.clients.base.Client.get_factory_info" href="#jumpscale.clients.base.Client.get_factory_info">get_factory_info</a></code></li>
+<li><code><a title="jumpscale.clients.base.Client.get_fields" href="#jumpscale.clients.base.Client.get_fields">get_fields</a></code></li>
 </ul>
 </li>
 </ul>

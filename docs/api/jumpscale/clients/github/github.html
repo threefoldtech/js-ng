@@ -22,30 +22,29 @@
 <section id="section-intro">
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">from jumpscale.clients.base import SecureClient
+<pre><code class="python">from jumpscale.clients.base import Client
+from jumpscale.core.base import Base, fields
 from jumpscale.god import j
 
-class Github(SecureClient):
-    def __init__(self, instance_name=&#39;myinstance&#39;):
-        self.instance_name = instance_name
-        super().__init__(self)
-    
+
+class Email(Base):
+    address = fields.String()
+    main = fields.Boolean()
+
+
+class User(Base):
+    username = fields.String()
+    password = fields.String()
+
+    emails = fields.Factory(Email)
+
+
+class Github(Client):
+    users = fields.Factory(User)
+
     def hi(self):
         print(&#34;hii&#34;)
-        j.sals.fs.basename(&#39;aa&#39;)
-
-
-if __name__ == &#34;__main__&#34;:
-    g = Github(&#39;xmon&#39;)
-    print(g.config.data)
-    g.config.data = {&#34;a&#34;: &#34;1&#34;, &#34;__pass&#34;: &#34;abce&#34;}
-
-    print(g.config.data)
-
-    gogs = Gogs(&#39;main&#39;)
-    print(gogs.config.data)
-    gogs.config.data = {&#34;user&#34;:&#34;ahmed&#34;, &#34;__tok&#34;:&#34;ghijk&#34;}
-    print(gogs.config.data)</code></pre>
+        j.sals.fs.basename(&#34;aa&#34;)</code></pre>
 </details>
 </section>
 <section>
@@ -57,29 +56,115 @@ if __name__ == &#34;__main__&#34;:
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="jumpscale.clients.github.github.Github"><code class="flex name class">
-<span>class <span class="ident">Github</span></span>
-<span>(</span><span>instance_name='myinstance')</span>
+<dt id="jumpscale.clients.github.github.Email"><code class="flex name class">
+<span>class <span class="ident">Email</span></span>
+</code></dt>
+<dd>
+<section class="desc"><p>A simple attribute-based namespace.</p>
+<p>SimpleNamespace(**kwargs)</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class Email(Base):
+    address = fields.String()
+    main = fields.Boolean()</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="jumpscale.core.base.meta.Base" href="../../core/base/meta.html#jumpscale.core.base.meta.Base">Base</a></li>
+<li>types.SimpleNamespace</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="jumpscale.clients.github.github.Email.address"><code class="name">var <span class="ident">address</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def getter(self):
+    return getattr(self, inner_name)</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.clients.github.github.Email.main"><code class="name">var <span class="ident">main</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def getter(self):
+    return getattr(self, inner_name)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="jumpscale.clients.github.github.Email.get_factory_info"><code class="name flex">
+<span>def <span class="ident">get_factory_info</span></span>(<span>self)</span>
 </code></dt>
 <dd>
 <section class="desc"></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class Github(SecureClient):
-    def __init__(self, instance_name=&#39;myinstance&#39;):
-        self.instance_name = instance_name
-        super().__init__(self)
-    
+<pre><code class="python">def get_factory_info(self):
+    return factory_info</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.clients.github.github.Email.get_fields"><code class="name flex">
+<span>def <span class="ident">get_fields</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_fields(self):
+    return fields</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="jumpscale.clients.github.github.Github"><code class="flex name class">
+<span>class <span class="ident">Github</span></span>
+</code></dt>
+<dd>
+<section class="desc"><p>A simple attribute-based namespace.</p>
+<p>SimpleNamespace(**kwargs)</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class Github(Client):
+    users = fields.Factory(User)
+
     def hi(self):
         print(&#34;hii&#34;)
-        j.sals.fs.basename(&#39;aa&#39;)</code></pre>
+        j.sals.fs.basename(&#34;aa&#34;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="jumpscale.clients.base.SecureClient" href="../base.html#jumpscale.clients.base.SecureClient">SecureClient</a></li>
+<li><a title="jumpscale.clients.base.Client" href="../base.html#jumpscale.clients.base.Client">Client</a></li>
+<li><a title="jumpscale.core.base.meta.Base" href="../../core/base/meta.html#jumpscale.core.base.meta.Base">Base</a></li>
+<li>types.SimpleNamespace</li>
 </ul>
 <h3>Methods</h3>
 <dl>
+<dt id="jumpscale.clients.github.github.Github.get_factory_info"><code class="name flex">
+<span>def <span class="ident">get_factory_info</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_factory_info(self):
+    return factory_info</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.clients.github.github.Github.get_fields"><code class="name flex">
+<span>def <span class="ident">get_fields</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_fields(self):
+    return fields</code></pre>
+</details>
+</dd>
 <dt id="jumpscale.clients.github.github.Github.hi"><code class="name flex">
 <span>def <span class="ident">hi</span></span>(<span>self)</span>
 </code></dt>
@@ -89,7 +174,73 @@ if __name__ == &#34;__main__&#34;:
 <summary>Source code</summary>
 <pre><code class="python">def hi(self):
     print(&#34;hii&#34;)
-    j.sals.fs.basename(&#39;aa&#39;)</code></pre>
+    j.sals.fs.basename(&#34;aa&#34;)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="jumpscale.clients.github.github.User"><code class="flex name class">
+<span>class <span class="ident">User</span></span>
+</code></dt>
+<dd>
+<section class="desc"><p>A simple attribute-based namespace.</p>
+<p>SimpleNamespace(**kwargs)</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class User(Base):
+    username = fields.String()
+    password = fields.String()
+
+    emails = fields.Factory(Email)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="jumpscale.core.base.meta.Base" href="../../core/base/meta.html#jumpscale.core.base.meta.Base">Base</a></li>
+<li>types.SimpleNamespace</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="jumpscale.clients.github.github.User.password"><code class="name">var <span class="ident">password</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def getter(self):
+    return getattr(self, inner_name)</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.clients.github.github.User.username"><code class="name">var <span class="ident">username</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def getter(self):
+    return getattr(self, inner_name)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="jumpscale.clients.github.github.User.get_factory_info"><code class="name flex">
+<span>def <span class="ident">get_factory_info</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_factory_info(self):
+    return factory_info</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.clients.github.github.User.get_fields"><code class="name flex">
+<span>def <span class="ident">get_fields</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_fields(self):
+    return fields</code></pre>
 </details>
 </dd>
 </dl>
@@ -111,9 +262,29 @@ if __name__ == &#34;__main__&#34;:
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
+<h4><code><a title="jumpscale.clients.github.github.Email" href="#jumpscale.clients.github.github.Email">Email</a></code></h4>
+<ul class="">
+<li><code><a title="jumpscale.clients.github.github.Email.address" href="#jumpscale.clients.github.github.Email.address">address</a></code></li>
+<li><code><a title="jumpscale.clients.github.github.Email.get_factory_info" href="#jumpscale.clients.github.github.Email.get_factory_info">get_factory_info</a></code></li>
+<li><code><a title="jumpscale.clients.github.github.Email.get_fields" href="#jumpscale.clients.github.github.Email.get_fields">get_fields</a></code></li>
+<li><code><a title="jumpscale.clients.github.github.Email.main" href="#jumpscale.clients.github.github.Email.main">main</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="jumpscale.clients.github.github.Github" href="#jumpscale.clients.github.github.Github">Github</a></code></h4>
 <ul class="">
+<li><code><a title="jumpscale.clients.github.github.Github.get_factory_info" href="#jumpscale.clients.github.github.Github.get_factory_info">get_factory_info</a></code></li>
+<li><code><a title="jumpscale.clients.github.github.Github.get_fields" href="#jumpscale.clients.github.github.Github.get_fields">get_fields</a></code></li>
 <li><code><a title="jumpscale.clients.github.github.Github.hi" href="#jumpscale.clients.github.github.Github.hi">hi</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="jumpscale.clients.github.github.User" href="#jumpscale.clients.github.github.User">User</a></code></h4>
+<ul class="">
+<li><code><a title="jumpscale.clients.github.github.User.get_factory_info" href="#jumpscale.clients.github.github.User.get_factory_info">get_factory_info</a></code></li>
+<li><code><a title="jumpscale.clients.github.github.User.get_fields" href="#jumpscale.clients.github.github.User.get_fields">get_fields</a></code></li>
+<li><code><a title="jumpscale.clients.github.github.User.password" href="#jumpscale.clients.github.github.User.password">password</a></code></li>
+<li><code><a title="jumpscale.clients.github.github.User.username" href="#jumpscale.clients.github.github.User.username">username</a></code></li>
 </ul>
 </li>
 </ul>
