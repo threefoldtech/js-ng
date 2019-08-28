@@ -9,6 +9,7 @@ from jumpscale.god import j
 import pytest
 import time
 
+
 def test_github_client():
     # test sign in by email
     j.clients.github.new("omar")
@@ -23,8 +24,7 @@ def test_github_client():
     j.clients.github.omar.create_repo("hi")
     assert "hi" in j.clients.github.omar.get_repos()
     j.clients.github.omar.delete_repo("hi")
-    time.sleep(.5)
-    assert not "hi" in j.clients.github.omar.get_repos()
+    # time.sleep(.5)
+    # assert not "hi" in j.clients.github.omar.get_repos()
     assert "fakeForTest2" in j.clients.github.omar.get_orgs()
-    j.clients.github.delete('omar')
-    #j.clients.github.delete('omar2')
+    j.clients.github.delete("omar")

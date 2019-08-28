@@ -1,6 +1,7 @@
 from jumpscale.clients.base import Client
 from jumpscale.core.base import Base, fields
 from jumpscale.god import j
+from .repo import GithubRepo
 from github import Github, GithubObject
 
 NotSet = GithubObject.NotSet
@@ -25,13 +26,13 @@ class GithubClient(Client):
             self.__client = g
         return self.__client
 
-    def get_repo(self, repo_name):
-        return self.github_client.get_user().get_repo(repo_name)
+    def get_repo(self, repo_full_name):
+        return GithubRepo(self.__client,repo_full_name)
 
     def get_repos(self):
         l = []
         for r in self.github_client.get_user().get_repos():
-            l.append(r.name)
+            l.append(GithubRepo(self.__client,r.full_name))
         return l
 
     def get_orgs(self):
@@ -45,7 +46,7 @@ class GithubClient(Client):
         el = []
         for e in u.get_emails():
             el.append(e)
-        return {"name": u.name, "emails": el, "avatar_url": u.avatar_url}
+        return {"name": u.name, "emails": el, "id": u.id, "avatar_url": u.avatar_url}
 
     def create_repo(
         self,
@@ -73,4 +74,4 @@ class GithubClient(Client):
         )
 
     def delete_repo(self, repo_name):
-        return self.get_repo(repo_name).delete()
+        return self.__client.get_user().get_repo(repo_name).delete()
