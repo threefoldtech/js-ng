@@ -5,7 +5,7 @@ from gevent.pool import Pool
 from gevent.server import StreamServer
 from redis.connection import DefaultParser, Encoder
 
-class DummyConnection:
+class RedisConnectionAdapter:
     def __init__(self, sock):
         self.socket = sock
         self._sock = sock
@@ -57,7 +57,7 @@ class ResponseEncoder:
 def GedisRequestHandler(services, socket, address):
     print('New connection from {}'.format(address))
     parser = DefaultParser(65536)
-    conn = DummyConnection(socket)
+    conn = RedisConnectionAdapter(socket)
     encoder = ResponseEncoder(socket)
     parser.on_connect(conn)
     try:
@@ -101,5 +101,5 @@ def new_server(endpoint=("127.0.0.1", 16000), handler=partial(GedisRequestHandle
     s.reuse_addr = True
     s.serve_forever()
     # FIXME: add sig handler for INT
-    
+
 
