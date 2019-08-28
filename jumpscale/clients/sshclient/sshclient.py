@@ -2,10 +2,28 @@ from jumpscale.clients.base import Client
 from jumpscale.core.base import fields
 from jumpscale.god import j
 
+"""
+JS-NG> xmonader = j.clients.sshkey.new("xmonader")
+JS-NG> xmonader.private_key_path = "/home/xmonader/.ssh/id_rsa"
+JS-NG>
+JS-NG> localconnection = j.clients.sshclient.new("localconnection")
+JS-NG> localconnection.sshkey = "xmonader"
+JS-NG> localconnection.run("hostname")
+(0, 'asgard\n', '')
+
+
+JS-NG> sshkey = j.clients.sshkey.get("xmonader")
+JS-NG> localclient = j.clients.sshclient.get("xmonader")
+JS-NG> localclient.sshclient.run("hostname")
+asgard
+(0, 'asgard\n', '')
+
+"""
+
 class SSHClient(Client):
     name = fields.String()
     sshkey = fields.String()
-    
+
     host = fields.String(default="127.0.0.1")
     user = fields.String(default="root")
     port = fields.Integer()
@@ -15,7 +33,7 @@ class SSHClient(Client):
     # gateway = ?  FIXME: should help with proxyjumps. http://docs.fabfile.org/en/2.4/concepts/networking.html#ssh-gateways
     # connect_kwargs = ? FIXME: how to pass dict?
     inline_ssh_env = fields.Boolean(default=True) # whether to send environment variables “inline” as prefixes in front of command strings (export VARNAME=value && mycommand here), instead of trying to submit them through the SSH protocol itself (which is the default behavior). This is necessary if the remote server has a restricted AcceptEnv setting (which is the common default).
-    
+
     def __init__(self):
         super().__init__()
         self.__client = None
