@@ -19,6 +19,7 @@ class SSHKeyClient(Client):
         self.public_key = j.sals.fs.readFile(pub_key_path)
         self.private_key = j.sals.fs.readFile(private_key_path)
 
+
     def generate_keys(self):
         if self.passphrase and len(self.passphrase) < 5:
             raise ValueError("invalid passphrase length: should be at least 5 chars.") 

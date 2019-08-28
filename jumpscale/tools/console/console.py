@@ -2,11 +2,21 @@ import colorama
 import getpass
 import os
 
+"""
+JS-NG> j.tools.console.printcolors("{RED}Hello{BGRED}What{WHITE}OK")                                                                     
+JS-NG> j.tools.console.printcolors("{RED}Hello{BGRED}What{RESET}{WHITE}OK")                                                              
+"""
 
 NAMES_TO_COLORS = {}
 for attrname in dir(colorama.Fore):
     if attrname.isupper():
         NAMES_TO_COLORS[attrname] = getattr(colorama.Fore, attrname)
+
+for attrname in dir(colorama.Back):
+    if attrname.isupper():
+        NAMES_TO_COLORS["BG"+attrname] = getattr(colorama.Back, attrname)
+
+NAMES_TO_COLORS['RESET'] = colorama.Style.RESET_ALL
 
 
 def format(s):
