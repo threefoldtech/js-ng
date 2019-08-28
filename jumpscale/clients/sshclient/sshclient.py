@@ -44,12 +44,18 @@ class SSHClient(Client):
     @property
     def sshclient(self):
         if not self.__client:
-            self.__client = j.core.executors.RemoteExecutor(host=self.host, user=self.user, port=self.port,
-                                                            forward_agent=self.forward_agent,
-                                                            connect_timeout=self.connect_timeout,
-                                                            connect_kwargs={
-                                                                 "key_filename": self._sshkey().private_key_path,
-                                                            })
+            connection_kwargs = dict(
+                                    host=self.host, user=self.user, port=self.port,
+                                    forward_agent=self.forward_agent,
+                                    connect_timeout=self.connect_timeout,
+                                    connect_kwargs={
+                                            "key_filename": self._sshkey().private_key_path,
+            })
+            # FIXME: coredump here.
+            # if self._sshkey.passphrase:
+            #     connection_kwargs["connect_kwargs"]["passphrase"] = self._sshkey().passphrase
+
+            self.__client = j.core.executors.RemoteExecutor(**connection_kwargs)
 
         return self.__client
 
