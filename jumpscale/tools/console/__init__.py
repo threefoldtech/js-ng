@@ -1,1 +1,1 @@
-from .console import format, printcolors
+from .console import *

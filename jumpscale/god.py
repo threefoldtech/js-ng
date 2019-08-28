@@ -108,7 +108,7 @@ def load():
                 try:
                     m = importlib.import_module(importedpkgstr)
                 except Exception as e:
-                    print("[-] ", e)
+                    print("[-] {} at {} ".format(e, importedpkgstr))
                     continue
                 else:
                     if rootbase == "clients":
