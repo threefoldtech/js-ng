@@ -35,7 +35,11 @@ class SendGridClient(Client):
         attachment.disposition = "attachment"
         return attachment
 
-    def send(self, sender, subject, html_content="<strong>Email</strong>", recipients=[], attachments=[]):
+    def send(self, sender, subject, html_content="<strong>Email</strong>", recipients=None, attachments=None):
+        if not recipients:
+            recipients = []
+        if not attachments:
+            attachments = []
         recipients = list(set(recipients))
         mail = Mail(from_email=sender, to_emails=recipients, subject=subject, html_content=html_content)
         for at in attachments:
