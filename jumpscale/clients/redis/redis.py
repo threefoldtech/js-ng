@@ -1,9 +1,9 @@
 from jumpscale.clients.base import Client
 from jumpscale.core.base import fields
-from redis import Redis as R
+from redis import Redis
 
 
-class Redis(Client):
+class RedisClient(Client):
     hostname = fields.String(default="localhost")
     port = fields.Integer(default=6379)
 
@@ -11,14 +11,15 @@ class Redis(Client):
         self.__client = None
         super().__init__()
 
+    def __dir__(self):
+        return list(self.__dict__.keys()) + dir(self.redis_client)
+    
     @property
     def redis_client(self):
         if not self.__client:
-            self.__client = R(self.hostname, self.port)
+            self.__client = Redis(self.hostname, self.port)
         return self.__client
 
-    def set(self, k, v):
-        return self.redis_client.set(k, v)
-
-    def get(self, k):
-        return self.redis_client.get(k)
+    def __getattr__(self, k):
+        # forward non found attrs to self.redis_client
+        return getattr(self.redis_client, k)
