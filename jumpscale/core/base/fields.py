@@ -8,29 +8,32 @@ class ValidationError(Exception):
 
 
 class Field:
-    def __init__(self, default=None, required=False, **kwargs):
+    def __init__(self, default=None, required=False, indexed=False, **kwargs):
         self.default = default
         self.required = required
-        self.kwargs = kwargs
-
-    def validate(self, value):
-        pass
-
-
-class Typed(Field):
-    def __init__(self, type_, default=None, indexed=False, required=False, **kwargs):
-        self.type = type_
-        self.default = default
         self.indexed = indexed
+        self.kwargs = kwargs
 
         # self.validate = Schema({
 
         # })
-        super().__init__(default=default, indexed=indexed, **kwargs)
 
     def validate(self, value):
-        if not isinstance(value, self.type):
-            raise TypeError
+        if value is None:
+            if self.required:
+                raise ValidationError("field is required")
+
+
+class Typed(Field):
+    def __init__(self, type_, **kwargs):
+        self.type = type_
+        super().__init__(**kwargs)
+
+    def validate(self, value):
+        super().validate(value)
+        if value is not None:
+            if not isinstance(value, self.type):
+                raise ValidationError(f"value is not of type {self.type}")
 
 
 class Boolean(Typed):
@@ -52,6 +55,10 @@ class Float(Typed):
 class String(Typed):
     def __init__(self, **kwargs):
         super().__init__(type_=str, **kwargs)
+
+
+class Secret(String):
+    pass
 
 
 class Factory(StoredFactory):

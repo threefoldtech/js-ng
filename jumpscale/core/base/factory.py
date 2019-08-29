@@ -1,8 +1,10 @@
 from functools import partial
 
-from jumpscale.data.serializers import json
+from jumpscale.core import config
 
-from .store import FileSystemStore
+from .store import FileSystemStore, RedisStore
+
+STORES = {"filesystem": FileSystemStore, "redis": RedisStore}
 
 
 class DuplicateError(Exception):
@@ -46,58 +48,68 @@ class Factory:
         self.count -= 1
         delattr(self, name)
 
-    def updated(self, new_count):
+    def _updated(self, new_count):
         pass
 
-    def get_count(self):
+    def __get_count(self):
         return self.__count
 
-    def set_count(self, new_count):
+    def __set_count(self, new_count):
         self.__count = new_count
-        self.updated(new_count)
+        self._updated(new_count)
 
-    count = property(get_count, set_count)
+    count = property(__get_count, __set_count)
 
 
 class StoredFactory(Factory):
+    STORE = STORES[config.get_config()["store"]]
+
     def __init__(self, type_, parent_name=None):
         super(StoredFactory, self).__init__(type_)
-        self.parent_name = parent_name
+        self._set_parent_name(parent_name)
         if not parent_name:
-            self.load()
+            self._load()
 
-    def set_parent_name(self, name):
-        self.parent_name = name
+    def _set_parent_name(self, name):
+        self.__parent_name = name
 
     @property
     def store(self):
-        return FileSystemStore(self.type, self.parent_name)
+        return self.STORE(self.type, self.__parent_name)
 
-    def save_instance(self, name):
-        data = self.get(name).get_data()
-        self.store.save(name, json.dumps(data))
+    def _validate_and_save_instance(self, name):
+        instance = self.get(name)
+        instance._validate()
+        self.store.save(name, instance._get_data())
 
-    def instance_updated(self, name, prop_name, new_value):
-        self.save_instance(name)
+    def _instance_updated(self, name):
+        # try to save instance if it's validated
+        try:
+            self._validate_and_save_instance(name)
+        except:
+            raise
 
-    def instance_sub_factory_updated(self, name, new_count):
-        self.save_instance(name)
+    def _instance_sub_factory_updated(self, name, new_count):
+        self._instance_updated(name)
+
+    def _get_sub_factory_location_name(self, parent_name, factory_name):
+        return ".".join([self.store.location.name, parent_name, factory_name])
 
     def new(self, name, *args, **kwargs):
         instance = super().new(name, *args, **kwargs)
-        instance.data_updated = partial(self.instance_updated, name)
+        instance.save = partial(self._validate_and_save_instance, name)
 
-        for prop_name, factory in instance.get_factories().items():
-            factory.set_parent_name(f"{self.type.__name__}_{name}_{prop_name}")
-            factory.updated = partial(self.instance_sub_factory_updated, name)
-            factory.load()
+        for prop_name, factory in instance._get_factories().items():
+            factory._set_parent_name(self._get_sub_factory_location_name(name, prop_name))
+            factory._updated = partial(self._instance_sub_factory_updated, name)
+            factory._load()
 
         return instance
 
-    def load(self):
+    def _load(self):
         for name in self.store.list_all():
             instance = self.new(name)
-            instance.set_data(json.loads(self.store.get(name)))
+            instance._set_data(self.store.get(name))
 
     def delete(self, name):
         self.store.delete(name)

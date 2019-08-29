@@ -3,4 +3,4 @@ from jumpscale.core.base import fields
 
 
 class Gogs(Client):
-    access_token = fields.String()
+    access_token = fields.Secret(required=True)

@@ -1,8 +1,10 @@
 import os
-import pytoml as toml
+
 import nacl.utils
-from nacl.public import PrivateKey, Box
 import nacl.encoding
+import pytoml as toml
+
+from nacl.public import PrivateKey, Box
 
 
 __all__ = ["config_path", "get_default_config", "get_config", "update_config", "Environment"]
@@ -21,14 +23,12 @@ def get_default_config():
         "log_to_files": True,
         "log_level": 15,
         "private_key_path": "",
-        "secure_config_path": os.path.join(config_root, "secureconfig"),
+        "stores": {
+            "redis": {"hostname": "localhost", "port": 6379},
+            "filesystem": {"path": os.path.expanduser(os.path.join(config_root, "secureconfig"))},
+        },
+        "store": "filesystem",
     }
-
-
-if not os.path.exists(config_path):
-    os.makedirs(os.path.dirname(config_path), exist_ok=True)
-    with open(config_path, "w") as f:
-        toml.dump(get_default_config(), f)
 
 
 def get_config():
@@ -41,6 +41,24 @@ def update_config(data):
         toml.dump(data, f)
 
 
+def migrate_config():
+    """add missing top level keys to current config from default"""
+
+    default_config = get_default_config()
+    current_config = get_config()
+
+    for key, value in default_config.items():
+        if key not in current_config:
+            current_config[key] = value
+
+    update_config(current_config)
+
+
+if not os.path.exists(config_path):
+    os.makedirs(os.path.dirname(config_path), exist_ok=True)
+    os.mknod(config_path)
+
+
 def generate_key(basepath):
     hsk = PrivateKey.generate()
     hpk = hsk.public_key
@@ -51,6 +69,10 @@ def generate_key(basepath):
     with open(pkpath, "wb") as f:
         f.write(hpk.encode(nacl.encoding.Base64Encoder()))
     return skpath
+
+
+class StoreTypeNotFound(Exception):
+    pass
 
 
 class Environment:
@@ -69,8 +91,12 @@ class Environment:
             update_config(config)
         return open(private_key_path, "rb").read()
 
-    def get_secure_config_path(self):
+    def get_store_config(self, name):
         config = get_config()
-        secure_config_path = config["secure_config_path"]
-        return os.path.expanduser(secure_config_path)
+        stores = config["stores"]
+        if name not in stores:
+            raise StoreTypeNotFound(f"'{name}' store is not found")
+        return stores[name]
 
+
+migrate_config()
