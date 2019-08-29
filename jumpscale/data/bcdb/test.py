@@ -88,7 +88,7 @@ quote_model.save_obj(quote12)
 quote_model.save_obj(quote13)
 
 pprint("Quotes that contains the word 'Life'")
-pprint([x.get_dict() for x in quote_model.get_pattern("quote", "Life")])
+pprint([x.get_dict() for x in quote_model.get_pattern("quote", "decision")])
 
 pprint("--------------------------------dbs---------------------------------------------")
 
