@@ -58,7 +58,7 @@ class Factory:
 
 
 class StoredFactory(Factory):
-    STORE = RedisStore
+    STORE = FileSystemStore
 
     def __init__(self, type_, parent_name=None):
         super(StoredFactory, self).__init__(type_)
@@ -76,8 +76,17 @@ class StoredFactory(Factory):
     def _save_instance(self, name):
         self.store.save(name, self.get(name)._get_data())
 
-    def _instance_updated(self, name, prop_name, new_value):
-        self._save_instance(name)
+    def _validate_and_save_instance(self, name):
+        instance = self.get(name)
+        instance._validate()
+        self.store.save(name, instance._get_data())
+
+    def _instance_updated(self, name):
+        # try to save instance if it's validated
+        try:
+            self._validate_and_save_instance(name)
+        except:
+            pass
 
     def _instance_sub_factory_updated(self, name, new_count):
         self._save_instance(name)
@@ -87,7 +96,8 @@ class StoredFactory(Factory):
 
     def new(self, name, *args, **kwargs):
         instance = super().new(name, *args, **kwargs)
-        instance._data_updated = partial(self._instance_updated, name)
+        instance._date_updated = partial(self._instance_updated, name)
+        instance.save = partial(self._validate_and_save_instance, name)
 
         for prop_name, factory in instance._get_factories().items():
             factory._set_parent_name(self._get_sub_factory_location_name(name, prop_name))

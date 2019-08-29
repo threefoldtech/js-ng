@@ -154,7 +154,7 @@ class EncryptedConfigStore(ConfigStore, EncryptionMixin):
 class FileSystemStore(EncryptedConfigStore):
     def __init__(self, type_, parent_name=None):
         super(FileSystemStore, self).__init__(type_, parent_name)
-        self.root = self.config_env.get_secure_config_path()
+        self.root = self.config_env.get_store_config("filesystem")["path"]
 
     @property
     def config_root(self):
@@ -195,7 +195,8 @@ class FileSystemStore(EncryptedConfigStore):
 class RedisStore(EncryptedConfigStore):
     def __init__(self, type_, parent_name=None):
         super().__init__(type_, parent_name)
-        self.redis_client = redis.Redis()
+        redis_config = self.config_env.get_store_config("redis")
+        self.redis_client = redis.Redis(redis_config["hostname"], redis_config["port"])
 
     def get_key(self, instance_name):
         return ".".join([self.location.name, instance_name])

@@ -12,12 +12,6 @@ def get_field_property(name, field):
         return getattr(self, inner_name)
 
     def setter(self, value):
-        if value is None:
-            if field.required:
-                raise ValidationError(f"{name} is required")
-        else:
-            field.validate(value)
-
         setattr(self, inner_name, value)
         self._data_updated(name, value)
 
@@ -83,6 +77,10 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
 
     def _get_factories(self):
         return {info.name: getattr(self, info.name) for info in self._get_factory_info()}
+
+    def _validate(self):
+        for name, field in self._get_fields().items():
+            field.validate(getattr(self, name))
 
     def _get_data(self):
         data = {}
