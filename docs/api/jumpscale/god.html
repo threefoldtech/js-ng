@@ -49,11 +49,11 @@ project2/
                 ... pkg2
 
 - we get all the paths of the `rootnamespace`
-- we get all the subnamespaces 
+- we get all the subnamespaces
 - we get all the inner packages and import all of them (lazily) or load them eagerly but just once.
 
 
-real example: 
+real example:
 js-ng
 ├── jumpscale   &lt;- root namespace
 │   ├── clients  &lt;- subnamespace where people can register on
@@ -105,12 +105,11 @@ js-ext
 
 &#34;&#34;&#34;
 
-__all__ = [&#39;j&#39;]
-
+__all__ = [&#34;j&#34;]
 
 def load():
     import jumpscale
-
+    loadeddict = {&#39;jumpscale&#39;:{}}
     for jsnamespace in jumpscale.__path__:
         for root, dirs, files in os.walk(jsnamespace):
             for d in dirs:
@@ -118,57 +117,140 @@ def load():
                     continue
                 if os.path.basename(root) == &#34;jumpscale&#34;:
                     continue
+
+                
+                if os.path.dirname(root) != jsnamespace:
+                    continue
                 # print(&#34;root: {} d: {}&#34;.format(root, d))
                 rootbase = os.path.basename(root)
+                loadeddict[&#39;jumpscale&#39;].setdefault(rootbase, {})
                 pkgname = d
                 importedpkgstr = &#34;jumpscale.{}.{}&#34;.format(rootbase, pkgname)
                 __all__.append(importedpkgstr)
                 # print(&#34;import: &#34;, importedpkgstr)
                 # globals()[importedpkgstr] = lazy_import.lazy_module(importedpkgstr)
-                globals()[importedpkgstr] = importlib.import_module(importedpkgstr)
+                try:
+                    m = importlib.import_module(importedpkgstr)
+                except Exception as e:
+                    print(&#34;[-] {} at {} &#34;.format(e, importedpkgstr))
+                    continue
+                else:
+                    if hasattr(m, &#34;factory&#34;):
+                    # if rootbase == &#34;clients&#34;:
+                        # print(&#34;rootbase: &#34;, rootbase, importedpkgstr)
+                        # print(m.factory)
+                        loadeddict[&#39;jumpscale&#39;][rootbase][pkgname] = m.factory
+                        # loadeddict[importedpkgstr] = m.factory
+                    elif hasattr(m, &#34;singleton&#34;):
+                        loadeddict[&#34;jumpscale&#34;][rootbase][pkgname] = m.singleton
+                    else:
+                        loadeddict[&#39;jumpscale&#39;][rootbase][pkgname] = m
 
+    return loadeddict
+
+
+class Group:
+    def __init__(self, d):
+        self.d = d
+        for k,v in d.items():
+            setattr(self, k, v)
+    def __getattr__(self, a):
+        return self.d[a]
+    
+    def __dir__(self):
+        return list(self.d.keys())
 
 class J:
     &#34;&#34;&#34;
-        Here we simulate god object `j` by delegating the calls to suitable subnamespace    
-    
+        Here we simulate god object `j` by delegating the calls to suitable subnamespace
     &#34;&#34;&#34;
     def __init__(self):
-        self._loadednames = set()
-        self._loadedallsubpackages = False
+        self.__loaded = False
+        self.__loaded_dict = {}
+
+    def __dir__(self):
+        self._load()
+        return list(self.__loaded_dict[&#39;jumpscale&#39;].keys()) + [&#39;config&#39;, &#39;exceptions&#39;, &#39;logger&#39;]
+
+    @property
+    def logger(self):
+        return self.__loaded_dict[&#39;jumpscale&#39;][&#39;core&#39;][&#39;logging&#39;].logger
+    
+    @property
+    def config(self):
+        return self.__loaded_dict[&#39;jumpscale&#39;][&#39;core&#39;][&#39;config&#39;]
+
+    @property
+    def exceptions(self):
+        return self.__loaded_dict[&#39;jumpscale&#39;][&#39;core&#39;][&#39;exceptions&#39;]
+    
+    def reload(self):
+        self.__loaded = False
+        self.__loaded_dict = {}
+
+    def _load(self):
+        if not self.__loaded:
+            self.__loaded_dict = load()
 
     def __getattr__(self, name):
-        import jumpscale
+        self._load()
+        
+        d = self.__loaded_dict[&#39;jumpscale&#39;][name]
+        return Group(d)
+       
+j = J()
 
-        if not self._loadedallsubpackages:
-            load()
-            self._loadedallsubpackages = True
+# jcode = &#34;&#34;&#34;
+# class J_codegen:
 
-        if name not in self._loadednames:
-            # print(&#34;name : &#34;, name)
-            self._loadednames.add(name)
-            # load()
-            importlib.import_module(&#34;jumpscale.{}&#34;.format(name))
-            for m in [x for x in globals() if &#34;jumpscale.&#34; in x]:
-                parts = m.split(&#34;.&#34;)[1:]
-                obj = jumpscale
-                while parts:
-                    p = parts.pop(0)
-                    obj = getattr(obj, p)
-                    # print(obj)
-                try:
-                    for attr in dir(obj):
-                        try:
-                            # print(&#34;getting attr {} from obj {}&#34;.format(attr, obj))
-                            getattr(obj, attr)
-                        except Exception:
-                            pass
-                except:
-                    print(&#34;can&#39;t dir object: &#34;, obj)
+#     def __init__(self):
+#         self.__loaded = False
+#         self.__loaded_dict = {}
 
-        return getattr(jumpscale, name)
+#     # def __dir__(self):
+#     #     self._load()
+#     #     return list(self.__loaded_dict[&#39;jumpscale&#39;].keys()) + [&#39;config&#39;, &#39;exceptions&#39;, &#39;logger&#39;]
 
-j = J()</code></pre>
+#     @property
+#     def logger(self):
+#         return self.__loaded_dict[&#39;jumpscale&#39;][&#39;core&#39;][&#39;logging&#39;].logger
+    
+#     @property
+#     def config(self):
+#         return self.__loaded_dict[&#39;jumpscale&#39;][&#39;core&#39;][&#39;config&#39;]
+
+#     @property
+#     def exceptions(self):
+#         return self.__loaded_dict[&#39;jumpscale&#39;][&#39;core&#39;][&#39;exceptions&#39;]
+    
+#     def reload(self):
+#         self.__loaded = False
+#         self.__loaded_dict = {}
+
+#     def _load(self):
+#         if not self.__loaded:
+#             self.__loaded_dict = load()
+
+#     {% for group, _ in groups.items() %}
+#     @property
+#     def {{group}}(self):
+#         self._load()
+
+#         return Group(self.__loaded_dict[&#39;jumpscale&#39;][&#39;{{group}}&#39;])
+
+#     {% endfor %}
+
+# &#34;&#34;&#34;
+
+# def get_j_class():
+#    import jinja2
+#     jtemplate = jinja2.Template(jcode)
+#     return jtemplate.render(groups=load()[&#39;jumpscale&#39;])
+
+# jclass = get_j_class()
+# print(jclass)
+# exec(jclass)
+# j = J_codegen()</code></pre>
 </details>
 </section>
 <section>

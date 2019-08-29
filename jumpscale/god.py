@@ -108,14 +108,17 @@ def load():
                 try:
                     m = importlib.import_module(importedpkgstr)
                 except Exception as e:
-                    print("[-] ", e)
+                    print("[-] {} at {} ".format(e, importedpkgstr))
                     continue
                 else:
-                    if rootbase == "clients":
+                    if hasattr(m, "factory"):
+                    # if rootbase == "clients":
                         # print("rootbase: ", rootbase, importedpkgstr)
                         # print(m.factory)
                         loadeddict['jumpscale'][rootbase][pkgname] = m.factory
                         # loadeddict[importedpkgstr] = m.factory
+                    elif hasattr(m, "singleton"):
+                        loadeddict["jumpscale"][rootbase][pkgname] = m.singleton
                     else:
                         loadeddict['jumpscale'][rootbase][pkgname] = m
 

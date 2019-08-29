@@ -1,6 +1,6 @@
 from jumpscale.core.base import StoredFactory
 
-from .redis import Redis
+from .redis import RedisClient
 
 
-factory = StoredFactory(Redis)
+factory = StoredFactory(RedisClient)

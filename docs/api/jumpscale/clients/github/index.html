@@ -22,7 +22,11 @@
 <section id="section-intro">
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">from .github import Github</code></pre>
+<pre><code class="python">from jumpscale.core.base import StoredFactory
+from .github import Github
+
+
+factory = StoredFactory(Github)</code></pre>
 </details>
 </section>
 <section>

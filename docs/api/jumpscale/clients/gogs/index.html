@@ -22,7 +22,11 @@
 <section id="section-intro">
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">from .gogs import Gogs</code></pre>
+<pre><code class="python">from jumpscale.core.base import StoredFactory
+from .gogs import Gogs
+
+
+factory = StoredFactory(Gogs)</code></pre>
 </details>
 </section>
 <section>
