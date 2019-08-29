@@ -112,7 +112,7 @@ class JSObject:
         self.default = self.from_str(default)
 
     def check(self, value):
-        return isinstance(value, str)
+        return True
 
     def from_str(self, value):
         return value
