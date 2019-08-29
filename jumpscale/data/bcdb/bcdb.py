@@ -9,7 +9,7 @@ class BCDB:
         self.storage = RedisStorageClient(ns)
         self.indexer = RedisIndexClient(ns)
         self.indexer_set = SQLiteIndexSetClient(ns)
-        self.indexer_text = RedisStorageClient(ns)
+        self.indexer_text = SonicIndexTextClient(ns)
         self.models = {
             
         }
@@ -27,6 +27,7 @@ class BCDB:
     
     def save_obj(self, model, obj):
         self.indexer_set.set(model, obj)
+        self.indexer_text.set(model, obj)
         for prop in model.schema.props.values():
             old_obj = model.get_by('id', obj.id)
             prop_name = prop.name
@@ -87,16 +88,7 @@ class BCDB:
         
 
     def get_item_from_index_text(self, model, key, pattern):
-        pass
-    #     keys = self.storage.keys()
-    #     found = []
-    #     for db_key in keys:
-    #         if db_key.startswith(f"{self.ns}.{model.name}://".encode()):
-    #             loaded_obj = model.load_obj_from_dict(json.loads(self.storage.get(db_key)))
-    #             targeted_value = getattr(loaded_obj, key)
-    #             if pattern in targeted_value:
-    #                 found.append(loaded_obj)
-    #     return found
+        return [self.get_item_by_id(model, int(x)) for x in self.indexer_text.get(model, key, pattern)]
 
     def get_model_by_name(self, model_name):
         if model_name not in self.loaded_models:

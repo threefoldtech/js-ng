@@ -52,8 +52,8 @@ class RedisIndexClient(IndexInterface):
         return self.redis_client.set(f"{self.bcdb_namespace}.indexer.{model.name}.{index_prop}://{index_value}", obj_id)
 
 class SQLiteIndexSetClient(IndexSetInterface):
-    def __init__(self, bcdb_namespce):
-        self.bcdb_namespace = bcdb_namespce
+    def __init__(self, bcdb_namespace):
+        self.bcdb_namespace = bcdb_namespace
     
     def _create_if_not_exists(self, model):
         conn = sqlite3.connect(f"{self.bcdb_namespace}_index.db")
@@ -103,3 +103,20 @@ class SQLiteIndexSetClient(IndexSetInterface):
         conn.close()
         
 
+class SonicIndexTextClient(IndexTextInterface):
+    def __init__(self, bcdb_namespace):
+        self.bcdb_namespace = bcdb_namespace
+        try:
+            self.sonic_client = j.clients.sonic.new(self.bcdb_namespace)
+        except:
+            self.sonic_client = j.clients.sonic.get(self.bcdb_namespace)
+
+    def set(self, model, obj):
+       for prop in model.schema.props.values():
+           if prop.index_text:
+               self.sonic_client.push(self.bcdb_namespace, f"{model.name}_{prop.name}", str(obj.id), str(getattr(obj, prop.name)))
+
+    def get(self, model, index_prop, pattern):
+        return self.sonic_client.query(self.bcdb_namespace, f"{model.name}_{index_prop}", pattern)
+        
+               

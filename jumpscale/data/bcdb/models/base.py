@@ -1,6 +1,6 @@
 from jumpscale.god import j
 from jumpscale.data.schema import Property
-from jumpscale.data.types import Integer
+from jumpscale.data.types import Integer, JSObject
 import json
 
 class JSObjBase:
@@ -67,17 +67,24 @@ class ModelBase:
         for prop in self.schema.props.values():
             prop_name = prop.name
             d[prop_name] = getattr(obj, prop_name)
+            if isinstance(prop.type, JSObject):
+                d[prop_name] = d[prop_name].get_dict()
         return d
 
     def set_from_dict(self, o, d):
+        # import ipdb; ipdb.set_trace()
         for prop in self.schema.props.values():
             prop_name = prop.name
             if prop_name in d:
                 if not prop.type.check(d[prop_name]):
                     raise ValueError("Wrong form")
-                setattr(o, prop_name, prop.type.from_str(d[prop_name]))
+                if isinstance(prop.type, JSObject):
+                    obj_model = self.bcdb.get_model_by_name(prop.defaultvalue)
+                    setattr(o, prop_name, obj_model.load_obj_from_dict(d[prop_name]))
+                else:
+                    setattr(o, prop_name, prop.type.from_str(d[prop_name]))
             else:
-                setattr(o, prop_name, prop.defaultvalue)
+                setattr(o, prop_name, prop.type.default)
         return o
 
     def load_obj_from_dict(self, d):
