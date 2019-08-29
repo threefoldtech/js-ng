@@ -1,13 +1,15 @@
 import time
+from jumpscale.god import j
 
-
-def timing(callback):
+def time(func):
     def wrapper(*args, **kwargs):
-        start_point = time.time()
-        result = callback(*args, **kwargs)
-        end_point = time.time()
-        interval = end_point - start_point
-        return {"result": result, "starting": start_point, "ending": end_point, "interval": interval}
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        end_time = time.time()
+        diff = end_time - start_time
+        j.logger.info("func {} with args: {}, kwargs: {} took {}".format(func.__name__, args, kwargs, diff))
+        
+        return result
 
     return wrapper
 
