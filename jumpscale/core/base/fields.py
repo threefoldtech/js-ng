@@ -21,7 +21,7 @@ class Field:
     def validate(self, value):
         if value is None:
             if self.required:
-                raise ValidationError(f"field is required")
+                raise ValidationError("field is required")
 
 
 class Typed(Field):
@@ -31,8 +31,9 @@ class Typed(Field):
 
     def validate(self, value):
         super().validate(value)
-        if not isinstance(value, self.type):
-            raise TypeError
+        if value is not None:
+            if not isinstance(value, self.type):
+                raise ValidationError(f"value is not of type {self.type}")
 
 
 class Boolean(Typed):

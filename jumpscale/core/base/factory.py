@@ -1,6 +1,10 @@
 from functools import partial
 
+from jumpscale.core import config
+
 from .store import FileSystemStore, RedisStore
+
+STORES = {"filesystem": FileSystemStore, "redis": RedisStore}
 
 
 class DuplicateError(Exception):
@@ -58,7 +62,7 @@ class Factory:
 
 
 class StoredFactory(Factory):
-    STORE = FileSystemStore
+    STORE = STORES[config.get_config()["store"]]
 
     def __init__(self, type_, parent_name=None):
         super(StoredFactory, self).__init__(type_)
@@ -73,9 +77,6 @@ class StoredFactory(Factory):
     def store(self):
         return self.STORE(self.type, self.__parent_name)
 
-    def _save_instance(self, name):
-        self.store.save(name, self.get(name)._get_data())
-
     def _validate_and_save_instance(self, name):
         instance = self.get(name)
         instance._validate()
@@ -86,17 +87,16 @@ class StoredFactory(Factory):
         try:
             self._validate_and_save_instance(name)
         except:
-            pass
+            raise
 
     def _instance_sub_factory_updated(self, name, new_count):
-        self._save_instance(name)
+        self._instance_updated(name)
 
     def _get_sub_factory_location_name(self, parent_name, factory_name):
         return ".".join([self.store.location.name, parent_name, factory_name])
 
     def new(self, name, *args, **kwargs):
         instance = super().new(name, *args, **kwargs)
-        instance._date_updated = partial(self._instance_updated, name)
         instance.save = partial(self._validate_and_save_instance, name)
 
         for prop_name, factory in instance._get_factories().items():
