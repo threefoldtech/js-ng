@@ -79,31 +79,55 @@ class StoredFactory(Factory):
 
     def _validate_and_save_instance(self, name):
         instance = self.get(name)
-        instance._validate()
+        instance.validate()
         self.store.save(name, instance._get_data())
 
-    def _instance_updated(self, name):
+    def _try_save_instance(self, name):
         # try to save instance if it's validated
         try:
             self._validate_and_save_instance(name)
         except:
-            raise
+            pass
+
+    def _instance_updated(self, name, prop, value):
+        self._try_save_instance(name)
 
     def _instance_sub_factory_updated(self, name, new_count):
-        self._instance_updated(name)
+        self._try_save_instance(name)
 
     def _get_sub_factory_location_name(self, parent_name, factory_name):
         return ".".join([self.store.location.name, parent_name, factory_name])
 
-    def new(self, name, *args, **kwargs):
-        instance = super().new(name, *args, **kwargs)
+    def _setup_data_handlers(self, instance, name):
+        """setup data update and save handlers for a given instance
+
+        Args:
+            instance (Base): instance object
+            name (str)
+        """
+        # save method
         instance.save = partial(self._validate_and_save_instance, name)
 
+        # FIXME: hooking on Base._data_updated, Factory._updated
+        # they should be event based (this way the user would override the default behavior)
+        # using subscribe/notify (observer like), anyone can register data change event
+        instance_updated = partial(self._instance_updated, name)
+        instance._data_updated = instance_updated
+        # for embedded objects too
+        for obj in instance._get_embedded_objects():
+            obj._data_updated = instance_updated
+
+        # factories
         for prop_name, factory in instance._get_factories().items():
             factory._set_parent_name(self._get_sub_factory_location_name(name, prop_name))
             factory._updated = partial(self._instance_sub_factory_updated, name)
             factory._load()
 
+        return instance
+
+    def new(self, name, *args, **kwargs):
+        instance = super().new(name, *args, **kwargs)
+        instance = self._setup_data_handlers(instance, name)
         return instance
 
     def _load(self):

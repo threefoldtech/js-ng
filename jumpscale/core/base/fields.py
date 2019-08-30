@@ -61,5 +61,22 @@ class Secret(String):
     pass
 
 
+class Object(Field):
+    def __init__(self, type_, **kwargs):
+        super().__init__(**kwargs)
+        self.type = type_
+        if not self.default:
+            self.default = self.type()
+
+    def validate(self, value):
+        """validate objet of Base
+
+        Args:
+            value (Base): object
+        """
+        super().validate(value)
+        value.validate()
+
+
 class Factory(StoredFactory):
     pass

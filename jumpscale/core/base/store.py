@@ -4,6 +4,7 @@ import shutil
 import redis
 
 from abc import ABC, abstractmethod
+from enum import Enum
 
 from jumpscale.data.nacl import NACL
 from jumpscale.data.serializers import base64, json
@@ -38,6 +39,11 @@ class Location:
     @property
     def path(self):
         return os.path.join(*self.name.split("."))
+
+
+class EncryptionMode(Enum):
+    Encrypt = 0
+    Decrypt = 1
 
 
 class EncryptionMixin:
@@ -110,6 +116,40 @@ class EncryptedConfigStore(ConfigStore, EncryptionMixin):
     def location(self):
         return self.get_type_location(self.type, self.parent_name)
 
+    def _encrypt_value(self, value):
+        return base64.encode(self.encrypt(value)).decode("ascii")
+
+    def _decrypt_value(self, value):
+        return self.decrypt(base64.decode(value))
+
+    def _process_config(self, config, mode):
+        """return the config encrypted or decrypted
+
+        Args:
+            config (dict): config dict (can be nested)
+            mode (EncryptionMode)
+        """
+        if mode == EncryptionMode.Encrypt:
+            func = self._encrypt_value
+            # preserve __ to know it's an encrypted value
+            remove_prefix = False
+        else:
+            func = self._decrypt_value
+            remove_prefix = True
+
+        new_config = {}
+        for name, value in config.items():
+            if name.startswith("__"):
+                if remove_prefix:
+                    new_config[name.lstrip("__")] = func(value)
+                else:
+                    new_config[name] = func(value)
+            elif isinstance(value, dict):
+                new_config[name] = self._process_config(value, mode)
+            else:
+                new_config[name] = value
+        return new_config
+
     def get(self, instance_name):
         """get instance config
 
@@ -119,15 +159,8 @@ class EncryptedConfigStore(ConfigStore, EncryptionMixin):
         Returns:
             dict: instance config as dict (key, values)
         """
-        new_config = {}
         config = json.loads(self.read(instance_name))
-
-        for name, value in config.items():
-            if name.startswith("__"):
-                new_config[name.lstrip("__")] = self.decrypt(base64.decode(value))
-            else:
-                new_config[name] = value
-        return new_config
+        return self._process_config(config, EncryptionMode.Decrypt)
 
     def get_all(self):
         return {name: self.get(name) for name in self.list_all()}
@@ -142,12 +175,7 @@ class EncryptedConfigStore(ConfigStore, EncryptionMixin):
         Returns:
             bool: written or not
         """
-        new_config = {}
-        for name, value in config.items():
-            if name.startswith("__"):
-                new_config[name] = base64.encode(self.encrypt(value)).decode("ascii")
-            else:
-                new_config[name] = value
+        new_config = self._process_config(config, EncryptionMode.Encrypt)
         return self.write(instance_name, json.dumps(new_config))
 
 

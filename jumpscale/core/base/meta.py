@@ -2,7 +2,7 @@ from collections import namedtuple
 from types import SimpleNamespace
 
 from .factory import Factory, DuplicateError
-from .fields import Field, Secret, ValidationError
+from .fields import Field, Secret, Object, ValidationError
 
 
 def get_field_property(name, field):
@@ -12,6 +12,10 @@ def get_field_property(name, field):
         return getattr(self, inner_name)
 
     def setter(self, value):
+        if hasattr(value, "validate"):
+            value.validate()
+        else:
+            field.validate(value)
         setattr(self, inner_name, value)
         self._data_updated(name, value)
 
@@ -65,6 +69,9 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
     def _get_fields(self):
         return {}
 
+    def _get_embedded_objects(self):
+        return [getattr(self, name) for name, field in self._get_fields().items() if isinstance(field, Object)]
+
     def _get_factory_info(self):
         return []
 
@@ -78,7 +85,7 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
     def _get_factories(self):
         return {info.name: getattr(self, info.name) for info in self._get_factory_info()}
 
-    def _validate(self):
+    def validate(self):
         for name, field in self._get_fields().items():
             field.validate(getattr(self, name))
 
@@ -89,17 +96,25 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
             value = getattr(self, name)
             if isinstance(field, Secret):
                 data[f"__{name}"] = value
+            elif isinstance(field, Object):
+                data[name] = value._get_data()
             else:
                 data[name] = value
 
         return data
 
     def _set_data(self, new_data):
-        for name in self._get_fields().keys():
+        for name, field in self._get_fields().items():
             if name in new_data:
+                value = new_data[name]
                 try:
-                    setattr(self, name, new_data[name])
-                except Exception:  # should be ValidationError
+                    if isinstance(value, dict):
+                        # fields.Object
+                        obj = field.type()
+                        obj._set_data(value)
+                        value = obj
+                    setattr(self, f"__{name}", value)
+                except ValidationError:
                     pass
 
     def _data_updated(self, name, value):
