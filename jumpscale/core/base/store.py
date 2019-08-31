@@ -129,21 +129,14 @@ class EncryptedConfigStore(ConfigStore, EncryptionMixin):
             config (dict): config dict (can be nested)
             mode (EncryptionMode)
         """
-        if mode == EncryptionMode.Encrypt:
-            func = self._encrypt_value
-            # preserve __ to know it's an encrypted value
-            remove_prefix = False
-        else:
-            func = self._decrypt_value
-            remove_prefix = True
-
         new_config = {}
         for name, value in config.items():
             if name.startswith("__"):
-                if remove_prefix:
-                    new_config[name.lstrip("__")] = func(value)
+                if mode == EncryptionMode.Decrypt:
+                    new_config[name.lstrip("__")] = self._decrypt_value(value)
                 else:
-                    new_config[name] = func(value)
+                    # preserve __ to know it's an encrypted value
+                    new_config[name] = self._encrypt_value(value)
             elif isinstance(value, dict):
                 new_config[name] = self._process_config(value, mode)
             else:
