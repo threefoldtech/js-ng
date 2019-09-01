@@ -45,6 +45,8 @@ sonic-client = "^0.0.5"
 google-api-python-client = "^1.7"
 sendgrid = "^6.0"
 twilio = "^6.29"
+certifi = "^2019.6"
+minio = "^4.0"
 
 [tool.poetry.dev-dependencies]
 ipdb = "^0.12.1"
