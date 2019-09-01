@@ -26,5 +26,5 @@ class TrelloClient(Client):
             self.access_token_ = access_token["oauth_token"]
             self.access_token_secret = access_token["oauth_token_secret"]
 
-        self.client = trellopkg.TrelloAPIClient(api_key=self.api_key_, api_secret=self.secret, token=self.token, token_secret=self.token_secret)
+        self.client = TrelloAPIClient(api_key=self.api_key_, api_secret=self.secret, token=self.token, token_secret=self.token_secret)
 
