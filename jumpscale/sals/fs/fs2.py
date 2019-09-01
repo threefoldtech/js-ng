@@ -274,3 +274,20 @@ def replace_words_in_files(from_, to, where):
     pass
 
 move = shutil.move
+
+
+# TODO: implement filters
+def walk_files(path, fun, pat="*", filters=None):
+    p = pathlib.Path(path)
+    for entry in p.rglob(pat):
+        # use rglob instead of glob("**/*")
+        fun(entry)
+
+
+# TODO: implement filters
+def walk_non_recursive(path, fun, filters=None):
+    p = pathlib.Path(path)
+    for entry in p.iterdir():
+        fun(entry)
+
+
