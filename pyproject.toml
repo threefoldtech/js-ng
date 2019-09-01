@@ -42,6 +42,7 @@ dnspython = "^1.16"
 cryptocompare = "^0.6.4"
 sonic-client = "^0.0.5"
 google-api-python-client = "^1.7"
+sendgrid = "^6.0"
 
 [tool.poetry.dev-dependencies]
 ipdb = "^0.12.1"
