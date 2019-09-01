@@ -202,14 +202,6 @@ def copy_file(src, dst, times=False, perms=False):
     if times or perms:
         copy_stat(src, dst, times, perms)
 
-def copy_stat(src, dst, times=True, perms=True):
-    st = os.stat(src)
-    if hasattr(os, 'utime'):
-        os.utime(dst, (st.st_atime, st.st_mtime))
-    if hasattr(os, 'chmod'):
-        m = stat.S_IMODE(st.st_mode)
-        os.chmod(dst, m)
-
 copy_tree = dir_util.copy_tree
 chdir = os.chdir
 
