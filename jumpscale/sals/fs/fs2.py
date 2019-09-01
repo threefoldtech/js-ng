@@ -96,7 +96,7 @@ def parents(path):
     PosixPath('/tmp'),
     PosixPath('/')]
     """
-    return list(pathlib.Path(path).parnets)
+    return list(pathlib.Path(path).parents)
 
 
 def path_parts(path):
