@@ -26,7 +26,7 @@
 from types import SimpleNamespace
 
 from .factory import Factory, DuplicateError
-from .fields import Field, ValidationError
+from .fields import Field, Secret, ValidationError
 
 
 def get_field_property(name, field):
@@ -36,30 +36,24 @@ def get_field_property(name, field):
         return getattr(self, inner_name)
 
     def setter(self, value):
-        if value is None:
-            if field.required:
-                raise ValidationError(f&#34;{name} is required&#34;)
-        else:
-            field.validate(value)
-
         setattr(self, inner_name, value)
-        self.data_updated(name, value)
+        self._data_updated(name, value)
 
     return property(fget=getter, fset=setter)
 
 
 def new_get_factory_info_method(factory_info):
-    def get_factory_info(self):
+    def _get_factory_info(self):
         return factory_info
 
-    return get_factory_info
+    return _get_factory_info
 
 
 def new_get_fields_method(fields):
-    def get_fields(self):
+    def _get_fields(self):
         return fields
 
-    return get_fields
+    return _get_fields
 
 
 FactoryInfo = namedtuple(&#34;FactoryInfo&#34;, [&#34;name&#34;, &#34;type&#34;, &#34;factory&#34;])
@@ -86,40 +80,53 @@ class BaseMeta(type):
                 new_attrs[key] = obj
 
         new_class = super(BaseMeta, cls).__new__(cls, name, based, new_attrs)
-        new_class.get_fields = new_get_fields_method(fields)
-        new_class.get_factory_info = new_get_factory_info_method(factories)
+        new_class._get_fields = new_get_fields_method(fields)
+        new_class._get_factory_info = new_get_factory_info_method(factories)
         return new_class
 
 
 class Base(SimpleNamespace, metaclass=BaseMeta):
-    def get_fields(self):
+    def _get_fields(self):
         return {}
 
-    def get_factory_info(self):
+    def _get_factory_info(self):
         return []
 
     def __init__(self):
-        for name, field in self.get_fields().items():
+        for name, field in self._get_fields().items():
             setattr(self, f&#34;__{name}&#34;, field.default)
 
-        for info in self.get_factory_info():
+        for info in self._get_factory_info():
             setattr(self, info.name, info.factory(info.type))
 
-    def get_factories(self):
-        return {info.name: getattr(self, info.name) for info in self.get_factory_info()}
+    def _get_factories(self):
+        return {info.name: getattr(self, info.name) for info in self._get_factory_info()}
 
-    def get_data(self):
-        return {name: getattr(self, name) for name in self.get_fields().keys()}
+    def _validate(self):
+        for name, field in self._get_fields().items():
+            field.validate(getattr(self, name))
 
-    def set_data(self, new_data):
-        for name in self.get_fields().keys():
+    def _get_data(self):
+        data = {}
+
+        for name, field in self._get_fields().items():
+            value = getattr(self, name)
+            if isinstance(field, Secret):
+                data[f&#34;__{name}&#34;] = value
+            else:
+                data[name] = value
+
+        return data
+
+    def _set_data(self, new_data):
+        for name in self._get_fields().keys():
             if name in new_data:
                 try:
                     setattr(self, name, new_data[name])
                 except Exception:  # should be ValidationError
                     pass
 
-    def data_updated(self, name, value):
+    def _data_updated(self, name, value):
         pass</code></pre>
 </details>
 </section>
@@ -144,14 +151,8 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
         return getattr(self, inner_name)
 
     def setter(self, value):
-        if value is None:
-            if field.required:
-                raise ValidationError(f&#34;{name} is required&#34;)
-        else:
-            field.validate(value)
-
         setattr(self, inner_name, value)
-        self.data_updated(name, value)
+        self._data_updated(name, value)
 
     return property(fget=getter, fset=setter)</code></pre>
 </details>
@@ -164,10 +165,10 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def new_get_factory_info_method(factory_info):
-    def get_factory_info(self):
+    def _get_factory_info(self):
         return factory_info
 
-    return get_factory_info</code></pre>
+    return _get_factory_info</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.core.base.meta.new_get_fields_method"><code class="name flex">
@@ -178,10 +179,10 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def new_get_fields_method(fields):
-    def get_fields(self):
+    def _get_fields(self):
         return fields
 
-    return get_fields</code></pre>
+    return _get_fields</code></pre>
 </details>
 </dd>
 </dl>
@@ -198,34 +199,47 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class Base(SimpleNamespace, metaclass=BaseMeta):
-    def get_fields(self):
+    def _get_fields(self):
         return {}
 
-    def get_factory_info(self):
+    def _get_factory_info(self):
         return []
 
     def __init__(self):
-        for name, field in self.get_fields().items():
+        for name, field in self._get_fields().items():
             setattr(self, f&#34;__{name}&#34;, field.default)
 
-        for info in self.get_factory_info():
+        for info in self._get_factory_info():
             setattr(self, info.name, info.factory(info.type))
 
-    def get_factories(self):
-        return {info.name: getattr(self, info.name) for info in self.get_factory_info()}
+    def _get_factories(self):
+        return {info.name: getattr(self, info.name) for info in self._get_factory_info()}
 
-    def get_data(self):
-        return {name: getattr(self, name) for name in self.get_fields().keys()}
+    def _validate(self):
+        for name, field in self._get_fields().items():
+            field.validate(getattr(self, name))
 
-    def set_data(self, new_data):
-        for name in self.get_fields().keys():
+    def _get_data(self):
+        data = {}
+
+        for name, field in self._get_fields().items():
+            value = getattr(self, name)
+            if isinstance(field, Secret):
+                data[f&#34;__{name}&#34;] = value
+            else:
+                data[name] = value
+
+        return data
+
+    def _set_data(self, new_data):
+        for name in self._get_fields().keys():
             if name in new_data:
                 try:
                     setattr(self, name, new_data[name])
                 except Exception:  # should be ValidationError
                     pass
 
-    def data_updated(self, name, value):
+    def _data_updated(self, name, value):
         pass</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -238,80 +252,6 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
 <li><a title="jumpscale.clients.github.github.Email" href="../../clients/github/github.html#jumpscale.clients.github.github.Email">Email</a></li>
 <li><a title="jumpscale.clients.github.github.User" href="../../clients/github/github.html#jumpscale.clients.github.github.User">User</a></li>
 </ul>
-<h3>Methods</h3>
-<dl>
-<dt id="jumpscale.core.base.meta.Base.data_updated"><code class="name flex">
-<span>def <span class="ident">data_updated</span></span>(<span>self, name, value)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def data_updated(self, name, value):
-    pass</code></pre>
-</details>
-</dd>
-<dt id="jumpscale.core.base.meta.Base.get_data"><code class="name flex">
-<span>def <span class="ident">get_data</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def get_data(self):
-    return {name: getattr(self, name) for name in self.get_fields().keys()}</code></pre>
-</details>
-</dd>
-<dt id="jumpscale.core.base.meta.Base.get_factories"><code class="name flex">
-<span>def <span class="ident">get_factories</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def get_factories(self):
-    return {info.name: getattr(self, info.name) for info in self.get_factory_info()}</code></pre>
-</details>
-</dd>
-<dt id="jumpscale.core.base.meta.Base.get_factory_info"><code class="name flex">
-<span>def <span class="ident">get_factory_info</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def get_factory_info(self):
-    return factory_info</code></pre>
-</details>
-</dd>
-<dt id="jumpscale.core.base.meta.Base.get_fields"><code class="name flex">
-<span>def <span class="ident">get_fields</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def get_fields(self):
-    return fields</code></pre>
-</details>
-</dd>
-<dt id="jumpscale.core.base.meta.Base.set_data"><code class="name flex">
-<span>def <span class="ident">set_data</span></span>(<span>self, new_data)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def set_data(self, new_data):
-    for name in self.get_fields().keys():
-        if name in new_data:
-            try:
-                setattr(self, name, new_data[name])
-            except Exception:  # should be ValidationError
-                pass</code></pre>
-</details>
-</dd>
-</dl>
 </dd>
 <dt id="jumpscale.core.base.meta.BaseMeta"><code class="flex name class">
 <span>class <span class="ident">BaseMeta</span></span>
@@ -341,8 +281,8 @@ type(name, bases, dict) -&gt; a new type</p></section>
                 new_attrs[key] = obj
 
         new_class = super(BaseMeta, cls).__new__(cls, name, based, new_attrs)
-        new_class.get_fields = new_get_fields_method(fields)
-        new_class.get_factory_info = new_get_factory_info_method(factories)
+        new_class._get_fields = new_get_fields_method(fields)
+        new_class._get_factory_info = new_get_factory_info_method(factories)
         return new_class</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -401,14 +341,6 @@ type(name, bases, dict) -&gt; a new type</p></section>
 <ul>
 <li>
 <h4><code><a title="jumpscale.core.base.meta.Base" href="#jumpscale.core.base.meta.Base">Base</a></code></h4>
-<ul class="two-column">
-<li><code><a title="jumpscale.core.base.meta.Base.data_updated" href="#jumpscale.core.base.meta.Base.data_updated">data_updated</a></code></li>
-<li><code><a title="jumpscale.core.base.meta.Base.get_data" href="#jumpscale.core.base.meta.Base.get_data">get_data</a></code></li>
-<li><code><a title="jumpscale.core.base.meta.Base.get_factories" href="#jumpscale.core.base.meta.Base.get_factories">get_factories</a></code></li>
-<li><code><a title="jumpscale.core.base.meta.Base.get_factory_info" href="#jumpscale.core.base.meta.Base.get_factory_info">get_factory_info</a></code></li>
-<li><code><a title="jumpscale.core.base.meta.Base.get_fields" href="#jumpscale.core.base.meta.Base.get_fields">get_fields</a></code></li>
-<li><code><a title="jumpscale.core.base.meta.Base.set_data" href="#jumpscale.core.base.meta.Base.set_data">set_data</a></code></li>
-</ul>
 </li>
 <li>
 <h4><code><a title="jumpscale.core.base.meta.BaseMeta" href="#jumpscale.core.base.meta.BaseMeta">BaseMeta</a></code></h4>

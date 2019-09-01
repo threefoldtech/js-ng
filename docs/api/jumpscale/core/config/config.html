@@ -23,10 +23,12 @@
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">import os
-import pytoml as toml
+
 import nacl.utils
-from nacl.public import PrivateKey, Box
 import nacl.encoding
+import pytoml as toml
+
+from nacl.public import PrivateKey, Box
 
 
 __all__ = [&#34;config_path&#34;, &#34;get_default_config&#34;, &#34;get_config&#34;, &#34;update_config&#34;, &#34;Environment&#34;]
@@ -45,14 +47,12 @@ def get_default_config():
         &#34;log_to_files&#34;: True,
         &#34;log_level&#34;: 15,
         &#34;private_key_path&#34;: &#34;&#34;,
-        &#34;secure_config_path&#34;: os.path.join(config_root, &#34;secureconfig&#34;),
+        &#34;stores&#34;: {
+            &#34;redis&#34;: {&#34;hostname&#34;: &#34;localhost&#34;, &#34;port&#34;: 6379},
+            &#34;filesystem&#34;: {&#34;path&#34;: os.path.expanduser(os.path.join(config_root, &#34;secureconfig&#34;))},
+        },
+        &#34;store&#34;: &#34;filesystem&#34;,
     }
-
-
-if not os.path.exists(config_path):
-    os.makedirs(os.path.dirname(config_path), exist_ok=True)
-    with open(config_path, &#34;w&#34;) as f:
-        toml.dump(get_default_config(), f)
 
 
 def get_config():
@@ -65,6 +65,24 @@ def update_config(data):
         toml.dump(data, f)
 
 
+def migrate_config():
+    &#34;&#34;&#34;add missing top level keys to current config from default&#34;&#34;&#34;
+
+    default_config = get_default_config()
+    current_config = get_config()
+
+    for key, value in default_config.items():
+        if key not in current_config:
+            current_config[key] = value
+
+    update_config(current_config)
+
+
+if not os.path.exists(config_path):
+    os.makedirs(os.path.dirname(config_path), exist_ok=True)
+    os.mknod(config_path)
+
+
 def generate_key(basepath):
     hsk = PrivateKey.generate()
     hpk = hsk.public_key
@@ -75,6 +93,10 @@ def generate_key(basepath):
     with open(pkpath, &#34;wb&#34;) as f:
         f.write(hpk.encode(nacl.encoding.Base64Encoder()))
     return skpath
+
+
+class StoreTypeNotFound(Exception):
+    pass
 
 
 class Environment:
@@ -93,10 +115,15 @@ class Environment:
             update_config(config)
         return open(private_key_path, &#34;rb&#34;).read()
 
-    def get_secure_config_path(self):
+    def get_store_config(self, name):
         config = get_config()
-        secure_config_path = config[&#34;secure_config_path&#34;]
-        return os.path.expanduser(secure_config_path)</code></pre>
+        stores = config[&#34;stores&#34;]
+        if name not in stores:
+            raise StoreTypeNotFound(f&#34;&#39;{name}&#39; store is not found&#34;)
+        return stores[name]
+
+
+migrate_config()</code></pre>
 </details>
 </section>
 <section>
@@ -134,7 +161,11 @@ class Environment:
         &#34;log_to_files&#34;: True,
         &#34;log_level&#34;: 15,
         &#34;private_key_path&#34;: &#34;&#34;,
-        &#34;secure_config_path&#34;: os.path.join(config_root, &#34;secureconfig&#34;),
+        &#34;stores&#34;: {
+            &#34;redis&#34;: {&#34;hostname&#34;: &#34;localhost&#34;, &#34;port&#34;: 6379},
+            &#34;filesystem&#34;: {&#34;path&#34;: os.path.expanduser(os.path.join(config_root, &#34;secureconfig&#34;))},
+        },
+        &#34;store&#34;: &#34;filesystem&#34;,
     }</code></pre>
 </details>
 </dd>
@@ -179,10 +210,12 @@ class Environment:
             update_config(config)
         return open(private_key_path, &#34;rb&#34;).read()
 
-    def get_secure_config_path(self):
+    def get_store_config(self, name):
         config = get_config()
-        secure_config_path = config[&#34;secure_config_path&#34;]
-        return os.path.expanduser(secure_config_path)</code></pre>
+        stores = config[&#34;stores&#34;]
+        if name not in stores:
+            raise StoreTypeNotFound(f&#34;&#39;{name}&#39; store is not found&#34;)
+        return stores[name]</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
@@ -217,17 +250,19 @@ class Environment:
     return private_key_path</code></pre>
 </details>
 </dd>
-<dt id="jumpscale.core.config.config.Environment.get_secure_config_path"><code class="name flex">
-<span>def <span class="ident">get_secure_config_path</span></span>(<span>self)</span>
+<dt id="jumpscale.core.config.config.Environment.get_store_config"><code class="name flex">
+<span>def <span class="ident">get_store_config</span></span>(<span>self, name)</span>
 </code></dt>
 <dd>
 <section class="desc"></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def get_secure_config_path(self):
+<pre><code class="python">def get_store_config(self, name):
     config = get_config()
-    secure_config_path = config[&#34;secure_config_path&#34;]
-    return os.path.expanduser(secure_config_path)</code></pre>
+    stores = config[&#34;stores&#34;]
+    if name not in stores:
+        raise StoreTypeNotFound(f&#34;&#39;{name}&#39; store is not found&#34;)
+    return stores[name]</code></pre>
 </details>
 </dd>
 </dl>
@@ -260,7 +295,7 @@ class Environment:
 <ul class="">
 <li><code><a title="jumpscale.core.config.config.Environment.get_private_key" href="#jumpscale.core.config.config.Environment.get_private_key">get_private_key</a></code></li>
 <li><code><a title="jumpscale.core.config.config.Environment.get_private_key_path" href="#jumpscale.core.config.config.Environment.get_private_key_path">get_private_key_path</a></code></li>
-<li><code><a title="jumpscale.core.config.config.Environment.get_secure_config_path" href="#jumpscale.core.config.config.Environment.get_secure_config_path">get_secure_config_path</a></code></li>
+<li><code><a title="jumpscale.core.config.config.Environment.get_store_config" href="#jumpscale.core.config.config.Environment.get_store_config">get_store_config</a></code></li>
 </ul>
 </li>
 </ul>

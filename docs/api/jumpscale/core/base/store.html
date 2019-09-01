@@ -23,9 +23,14 @@
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">import os
+import shutil
+
+import redis
+
+from abc import ABC, abstractmethod
 
 from jumpscale.data.nacl import NACL
-from jumpscale.data.serializers import base64
+from jumpscale.data.serializers import base64, json
 from jumpscale.core.config import Environment
 from jumpscale.sals.fs import readFile, writeFile
 
@@ -34,12 +39,83 @@ class InvalidPrivateKey(Exception):
     pass
 
 
-class ConfigStore:
+class Location:
+    &#34;&#34;&#34;dot-separated auto-location for any type
+
+    for example, if we have a class in jumpscale/clients/redis/&lt;type&gt;
+    location name will be jumpscale.clients.redis.&lt;type&gt;
+
+    it can have a parent of any name
+    &#34;&#34;&#34;
+
+    def __init__(self, type_, parent_name):
+        self.type = type_
+
+        self.path_list = [self.type.__module__, self.type.__name__]
+        if parent_name:
+            self.path_list = [parent_name] + self.path_list
+
+    @property
+    def name(self):
+        return &#34;.&#34;.join(self.path_list)
+
+    @property
+    def path(self):
+        return os.path.join(*self.name.split(&#34;.&#34;))
+
+
+class EncryptionMixin:
+    def encrypt(self, data):
+        &#34;&#34;&#34;encrypt data
+
+        Args:
+            data (str): input string
+
+        Returns:
+            bytes: encrypted data as byte string
+        &#34;&#34;&#34;
+        if not isinstance(data, bytes):
+            data = data.encode()
+        return self.nacl.encrypt(data, self.public_key)
+
+    def decrypt(self, data):
+        &#34;&#34;&#34;decrypt data
+
+        Args:
+            data (bytes): encrypted byte string
+
+        Returns:
+            str: decrypted data
+        &#34;&#34;&#34;
+        return self.nacl.decrypt(data, self.public_key).decode()
+
+
+class ConfigStore(ABC):
+    &#34;&#34;&#34;the interface every config store should implement&#34;&#34;&#34;
+
+    @abstractmethod
+    def read(self, instance_name):
+        pass
+
+    @abstractmethod
+    def write(self, instance_name, data):
+        pass
+
+    @abstractmethod
+    def list_all(self):
+        pass
+
+    @abstractmethod
+    def delete(self):
+        pass
+
+
+class EncryptedConfigStore(ConfigStore, EncryptionMixin):
     &#34;&#34;&#34;secure config storage base&#34;&#34;&#34;
 
     # TODO: encrypt/decrypt by section (config key)
 
-    def __init__(self, type_):
+    def __init__(self, type_, parent_name=None):
         self.type = type_
         self.config_env = Environment()
         self.priv_key = base64.decode(self.config_env.get_private_key())
@@ -49,56 +125,70 @@ class ConfigStore:
         if not self.priv_key:
             raise InvalidPrivateKey
 
-    def read(self, instance_name):
-        raise NotImplementedError
+        self.parent_name = parent_name
 
-    def write(self, instance_name, data):
-        raise NotImplementedError
+    def get_type_location(self, type_, parent_name):
+        return Location(type_, parent_name)
 
-    def list_all(self):
-        raise NotImplementedError
-
-    def delete(self):
-        raise NotImplementedError
-
-    def encrypt(self, data):
-        if isinstance(data, str):
-            data = data.encode()
-        return self.nacl.encrypt(data, self.public_key)
-
-    def decrypt(self, data):
-        return self.nacl.decrypt(data, self.public_key)
+    @property
+    def location(self):
+        return self.get_type_location(self.type, self.parent_name)
 
     def get(self, instance_name):
-        return self.decrypt(self.read(instance_name))
+        &#34;&#34;&#34;get instance config
+
+        Args:
+            instance_name (str): instance name
+
+        Returns:
+            dict: instance config as dict (key, values)
+        &#34;&#34;&#34;
+        new_config = {}
+        config = json.loads(self.read(instance_name))
+
+        for name, value in config.items():
+            if name.startswith(&#34;__&#34;):
+                new_config[name.lstrip(&#34;__&#34;)] = self.decrypt(base64.decode(value))
+            else:
+                new_config[name] = value
+        return new_config
 
     def get_all(self):
         return {name: self.get(name) for name in self.list_all()}
 
-    def save(self, instance_name, data):
-        return self.write(instance_name, self.encrypt(data))
+    def save(self, instance_name, config):
+        &#34;&#34;&#34;save instance config
+
+        Args:
+            instance_name (str): name of instnace
+            config (dict): config data, any key that starts with `__` will be encrypted
+
+        Returns:
+            bool: written or not
+        &#34;&#34;&#34;
+        new_config = {}
+        for name, value in config.items():
+            if name.startswith(&#34;__&#34;):
+                new_config[name] = base64.encode(self.encrypt(value)).decode(&#34;ascii&#34;)
+            else:
+                new_config[name] = value
+        return self.write(instance_name, json.dumps(new_config))
 
 
-class FileSystemStore(ConfigStore):
+class FileSystemStore(EncryptedConfigStore):
     def __init__(self, type_, parent_name=None):
-        super(FileSystemStore, self).__init__(type_)
-
-        self.parent_name = parent_name
-        self.root = self.config_env.get_secure_config_path()
+        super(FileSystemStore, self).__init__(type_, parent_name)
+        self.root = self.config_env.get_store_config(&#34;filesystem&#34;)[&#34;path&#34;]
 
     @property
     def config_root(self):
-        return os.path.join(self.root, self.location)
+        return os.path.join(self.root, self.location.path)
 
-    @property
-    def location(self):
-        location = os.path.join(*self.type.__module__.split(&#34;.&#34;), self.type.__name__)
-        if self.parent_name:
-            return os.path.join(location, self.parent_name)
-        return location
+    def get_instance_root(self, instance_name):
+        return os.path.join(self.config_root, instance_name)
 
     def get_path(self, instance_name):
-        return os.path.join(self.config_root, instance_name)
+        return os.path.join(self.get_instance_root(instance_name), &#34;data&#34;)
 
     def make_path(self, path):
         if not os.path.exists(path):
@@ -107,25 +197,58 @@ class FileSystemStore(ConfigStore):
 
     def read(self, instance_name):
         path = self.get_path(instance_name)
-        return readFile(path, binary=True)
-
-    def list_files(self, dir_path):
-        return [f for f in os.listdir(dir_path) if os.path.isfile(os.path.join(dir_path, f))]
+        return readFile(path)
 
     def list_all(self):
         if not os.path.exists(self.config_root):
             return []
-        return self.list_files(self.config_root)
+        return os.listdir(self.config_root)
 
     def write(self, instance_name, data):
         path = self.get_path(instance_name)
         self.make_path(path)
-        return writeFile(path, data)
+        return writeFile(path, data.encode())
 
     def delete(self, instance_name):
-        path = self.get_path(instance_name)
-        if os.path.exists:
-            os.remove(path)</code></pre>
+        path = self.get_instance_root(instance_name)
+        if os.path.exists(path):
+            # TODO: replace with sal fs
+            shutil.rmtree(path)
+
+
+class RedisStore(EncryptedConfigStore):
+    def __init__(self, type_, parent_name=None):
+        super().__init__(type_, parent_name)
+        redis_config = self.config_env.get_store_config(&#34;redis&#34;)
+        self.redis_client = redis.Redis(redis_config[&#34;hostname&#34;], redis_config[&#34;port&#34;])
+
+    def get_key(self, instance_name):
+        return &#34;.&#34;.join([self.location.name, instance_name])
+
+    def read(self, instance_name):
+        return self.redis_client.get(self.get_key(instance_name))
+
+    def get_type_keys(self):
+        return self.redis_client.keys(f&#34;{self.location.name}.*&#34;)
+
+    def get_instance_keys(self, instance_name):
+        return self.redis_client.keys(f&#34;{self.location.name}.{instance_name}*&#34;)
+
+    def list_all(self):
+        names = []
+
+        keys = self.get_type_keys()
+        for key in keys:
+            name = key.decode().replace(self.location.name, &#34;&#34;).lstrip(&#34;.&#34;)
+            if &#34;.&#34; not in name:
+                names.append(name)
+        return names
+
+    def write(self, instance_name, data):
+        return self.redis_client.set(self.get_key(instance_name), data)
+
+    def delete(self, instance_name):
+        return self.redis_client.delete(*self.get_instance_keys(instance_name))</code></pre>
 </details>
 </section>
 <section>
@@ -139,18 +262,105 @@ class FileSystemStore(ConfigStore):
 <dl>
 <dt id="jumpscale.core.base.store.ConfigStore"><code class="flex name class">
 <span>class <span class="ident">ConfigStore</span></span>
-<span>(</span><span>type_)</span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>the interface every config store should implement</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class ConfigStore(ABC):
+    &#34;&#34;&#34;the interface every config store should implement&#34;&#34;&#34;
+
+    @abstractmethod
+    def read(self, instance_name):
+        pass
+
+    @abstractmethod
+    def write(self, instance_name, data):
+        pass
+
+    @abstractmethod
+    def list_all(self):
+        pass
+
+    @abstractmethod
+    def delete(self):
+        pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>abc.ABC</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="jumpscale.core.base.store.EncryptedConfigStore" href="#jumpscale.core.base.store.EncryptedConfigStore">EncryptedConfigStore</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="jumpscale.core.base.store.ConfigStore.delete"><code class="name flex">
+<span>def <span class="ident">delete</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@abstractmethod
+def delete(self):
+    pass</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.core.base.store.ConfigStore.list_all"><code class="name flex">
+<span>def <span class="ident">list_all</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@abstractmethod
+def list_all(self):
+    pass</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.core.base.store.ConfigStore.read"><code class="name flex">
+<span>def <span class="ident">read</span></span>(<span>self, instance_name)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@abstractmethod
+def read(self, instance_name):
+    pass</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.core.base.store.ConfigStore.write"><code class="name flex">
+<span>def <span class="ident">write</span></span>(<span>self, instance_name, data)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@abstractmethod
+def write(self, instance_name, data):
+    pass</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="jumpscale.core.base.store.EncryptedConfigStore"><code class="flex name class">
+<span>class <span class="ident">EncryptedConfigStore</span></span>
+<span>(</span><span>type_, parent_name=None)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>secure config storage base</p></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class ConfigStore:
+<pre><code class="python">class EncryptedConfigStore(ConfigStore, EncryptionMixin):
     &#34;&#34;&#34;secure config storage base&#34;&#34;&#34;
 
     # TODO: encrypt/decrypt by section (config key)
 
-    def __init__(self, type_):
+    def __init__(self, type_, parent_name=None):
         self.type = type_
         self.config_env = Environment()
         self.priv_key = base64.decode(self.config_env.get_private_key())
@@ -160,88 +370,119 @@ class FileSystemStore(ConfigStore):
         if not self.priv_key:
             raise InvalidPrivateKey
 
-    def read(self, instance_name):
-        raise NotImplementedError
+        self.parent_name = parent_name
 
-    def write(self, instance_name, data):
-        raise NotImplementedError
+    def get_type_location(self, type_, parent_name):
+        return Location(type_, parent_name)
 
-    def list_all(self):
-        raise NotImplementedError
-
-    def delete(self):
-        raise NotImplementedError
-
-    def encrypt(self, data):
-        if isinstance(data, str):
-            data = data.encode()
-        return self.nacl.encrypt(data, self.public_key)
-
-    def decrypt(self, data):
-        return self.nacl.decrypt(data, self.public_key)
+    @property
+    def location(self):
+        return self.get_type_location(self.type, self.parent_name)
 
     def get(self, instance_name):
-        return self.decrypt(self.read(instance_name))
+        &#34;&#34;&#34;get instance config
+
+        Args:
+            instance_name (str): instance name
+
+        Returns:
+            dict: instance config as dict (key, values)
+        &#34;&#34;&#34;
+        new_config = {}
+        config = json.loads(self.read(instance_name))
+
+        for name, value in config.items():
+            if name.startswith(&#34;__&#34;):
+                new_config[name.lstrip(&#34;__&#34;)] = self.decrypt(base64.decode(value))
+            else:
+                new_config[name] = value
+        return new_config
 
     def get_all(self):
         return {name: self.get(name) for name in self.list_all()}
 
-    def save(self, instance_name, data):
-        return self.write(instance_name, self.encrypt(data))</code></pre>
+    def save(self, instance_name, config):
+        &#34;&#34;&#34;save instance config
+
+        Args:
+            instance_name (str): name of instnace
+            config (dict): config data, any key that starts with `__` will be encrypted
+
+        Returns:
+            bool: written or not
+        &#34;&#34;&#34;
+        new_config = {}
+        for name, value in config.items():
+            if name.startswith(&#34;__&#34;):
+                new_config[name] = base64.encode(self.encrypt(value)).decode(&#34;ascii&#34;)
+            else:
+                new_config[name] = value
+        return self.write(instance_name, json.dumps(new_config))</code></pre>
 </details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="jumpscale.core.base.store.ConfigStore" href="#jumpscale.core.base.store.ConfigStore">ConfigStore</a></li>
+<li>abc.ABC</li>
+<li><a title="jumpscale.core.base.store.EncryptionMixin" href="#jumpscale.core.base.store.EncryptionMixin">EncryptionMixin</a></li>
+</ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="jumpscale.core.base.store.FileSystemStore" href="#jumpscale.core.base.store.FileSystemStore">FileSystemStore</a></li>
+<li><a title="jumpscale.core.base.store.RedisStore" href="#jumpscale.core.base.store.RedisStore">RedisStore</a></li>
 </ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="jumpscale.core.base.store.EncryptedConfigStore.location"><code class="name">var <span class="ident">location</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def location(self):
+    return self.get_type_location(self.type, self.parent_name)</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
-<dt id="jumpscale.core.base.store.ConfigStore.decrypt"><code class="name flex">
-<span>def <span class="ident">decrypt</span></span>(<span>self, data)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def decrypt(self, data):
-    return self.nacl.decrypt(data, self.public_key)</code></pre>
-</details>
-</dd>
-<dt id="jumpscale.core.base.store.ConfigStore.delete"><code class="name flex">
-<span>def <span class="ident">delete</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def delete(self):
-    raise NotImplementedError</code></pre>
-</details>
-</dd>
-<dt id="jumpscale.core.base.store.ConfigStore.encrypt"><code class="name flex">
-<span>def <span class="ident">encrypt</span></span>(<span>self, data)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def encrypt(self, data):
-    if isinstance(data, str):
-        data = data.encode()
-    return self.nacl.encrypt(data, self.public_key)</code></pre>
-</details>
-</dd>
-<dt id="jumpscale.core.base.store.ConfigStore.get"><code class="name flex">
+<dt id="jumpscale.core.base.store.EncryptedConfigStore.get"><code class="name flex">
 <span>def <span class="ident">get</span></span>(<span>self, instance_name)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>get instance config</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>instance_name</code></strong> :&ensp;<code>str</code></dt>
+<dd>instance name</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>dict</code></strong></dt>
+<dd>instance config as dict (key, values)</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def get(self, instance_name):
-    return self.decrypt(self.read(instance_name))</code></pre>
+    &#34;&#34;&#34;get instance config
+
+    Args:
+        instance_name (str): instance name
+
+    Returns:
+        dict: instance config as dict (key, values)
+    &#34;&#34;&#34;
+    new_config = {}
+    config = json.loads(self.read(instance_name))
+
+    for name, value in config.items():
+        if name.startswith(&#34;__&#34;):
+            new_config[name.lstrip(&#34;__&#34;)] = self.decrypt(base64.decode(value))
+        else:
+            new_config[name] = value
+    return new_config</code></pre>
 </details>
 </dd>
-<dt id="jumpscale.core.base.store.ConfigStore.get_all"><code class="name flex">
+<dt id="jumpscale.core.base.store.EncryptedConfigStore.get_all"><code class="name flex">
 <span>def <span class="ident">get_all</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -252,48 +493,163 @@ class FileSystemStore(ConfigStore):
     return {name: self.get(name) for name in self.list_all()}</code></pre>
 </details>
 </dd>
-<dt id="jumpscale.core.base.store.ConfigStore.list_all"><code class="name flex">
-<span>def <span class="ident">list_all</span></span>(<span>self)</span>
+<dt id="jumpscale.core.base.store.EncryptedConfigStore.get_type_location"><code class="name flex">
+<span>def <span class="ident">get_type_location</span></span>(<span>self, type_, parent_name)</span>
 </code></dt>
 <dd>
 <section class="desc"></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def list_all(self):
-    raise NotImplementedError</code></pre>
+<pre><code class="python">def get_type_location(self, type_, parent_name):
+    return Location(type_, parent_name)</code></pre>
 </details>
 </dd>
-<dt id="jumpscale.core.base.store.ConfigStore.read"><code class="name flex">
-<span>def <span class="ident">read</span></span>(<span>self, instance_name)</span>
+<dt id="jumpscale.core.base.store.EncryptedConfigStore.save"><code class="name flex">
+<span>def <span class="ident">save</span></span>(<span>self, instance_name, config)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>save instance config</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>instance_name</code></strong> :&ensp;<code>str</code></dt>
+<dd>name of instnace</dd>
+<dt><strong><code>config</code></strong> :&ensp;<code>dict</code></dt>
+<dd>config data, any key that starts with <code>__</code> will be encrypted</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>bool</code></strong></dt>
+<dd>written or not</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def read(self, instance_name):
-    raise NotImplementedError</code></pre>
+<pre><code class="python">def save(self, instance_name, config):
+    &#34;&#34;&#34;save instance config
+
+    Args:
+        instance_name (str): name of instnace
+        config (dict): config data, any key that starts with `__` will be encrypted
+
+    Returns:
+        bool: written or not
+    &#34;&#34;&#34;
+    new_config = {}
+    for name, value in config.items():
+        if name.startswith(&#34;__&#34;):
+            new_config[name] = base64.encode(self.encrypt(value)).decode(&#34;ascii&#34;)
+        else:
+            new_config[name] = value
+    return self.write(instance_name, json.dumps(new_config))</code></pre>
 </details>
 </dd>
-<dt id="jumpscale.core.base.store.ConfigStore.save"><code class="name flex">
-<span>def <span class="ident">save</span></span>(<span>self, instance_name, data)</span>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="jumpscale.core.base.store.EncryptionMixin" href="#jumpscale.core.base.store.EncryptionMixin">EncryptionMixin</a></b></code>:
+<ul class="hlist">
+<li><code><a title="jumpscale.core.base.store.EncryptionMixin.decrypt" href="#jumpscale.core.base.store.EncryptionMixin.decrypt">decrypt</a></code></li>
+<li><code><a title="jumpscale.core.base.store.EncryptionMixin.encrypt" href="#jumpscale.core.base.store.EncryptionMixin.encrypt">encrypt</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="jumpscale.core.base.store.EncryptionMixin"><code class="flex name class">
+<span>class <span class="ident">EncryptionMixin</span></span>
+<span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def save(self, instance_name, data):
-    return self.write(instance_name, self.encrypt(data))</code></pre>
+<pre><code class="python">class EncryptionMixin:
+    def encrypt(self, data):
+        &#34;&#34;&#34;encrypt data
+
+        Args:
+            data (str): input string
+
+        Returns:
+            bytes: encrypted data as byte string
+        &#34;&#34;&#34;
+        if not isinstance(data, bytes):
+            data = data.encode()
+        return self.nacl.encrypt(data, self.public_key)
+
+    def decrypt(self, data):
+        &#34;&#34;&#34;decrypt data
+
+        Args:
+            data (bytes): encrypted byte string
+
+        Returns:
+            str: decrypted data
+        &#34;&#34;&#34;
+        return self.nacl.decrypt(data, self.public_key).decode()</code></pre>
+</details>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="jumpscale.core.base.store.EncryptedConfigStore" href="#jumpscale.core.base.store.EncryptedConfigStore">EncryptedConfigStore</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="jumpscale.core.base.store.EncryptionMixin.decrypt"><code class="name flex">
+<span>def <span class="ident">decrypt</span></span>(<span>self, data)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>decrypt data</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>data</code></strong> :&ensp;<code>bytes</code></dt>
+<dd>encrypted byte string</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>str</code></strong></dt>
+<dd>decrypted data</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def decrypt(self, data):
+    &#34;&#34;&#34;decrypt data
+
+    Args:
+        data (bytes): encrypted byte string
+
+    Returns:
+        str: decrypted data
+    &#34;&#34;&#34;
+    return self.nacl.decrypt(data, self.public_key).decode()</code></pre>
 </details>
 </dd>
-<dt id="jumpscale.core.base.store.ConfigStore.write"><code class="name flex">
-<span>def <span class="ident">write</span></span>(<span>self, instance_name, data)</span>
+<dt id="jumpscale.core.base.store.EncryptionMixin.encrypt"><code class="name flex">
+<span>def <span class="ident">encrypt</span></span>(<span>self, data)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>encrypt data</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>data</code></strong> :&ensp;<code>str</code></dt>
+<dd>input string</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>bytes</code></strong></dt>
+<dd>encrypted data as byte string</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def write(self, instance_name, data):
-    raise NotImplementedError</code></pre>
+<pre><code class="python">def encrypt(self, data):
+    &#34;&#34;&#34;encrypt data
+
+    Args:
+        data (str): input string
+
+    Returns:
+        bytes: encrypted data as byte string
+    &#34;&#34;&#34;
+    if not isinstance(data, bytes):
+        data = data.encode()
+    return self.nacl.encrypt(data, self.public_key)</code></pre>
 </details>
 </dd>
 </dl>
@@ -306,26 +662,20 @@ class FileSystemStore(ConfigStore):
 <section class="desc"><p>secure config storage base</p></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class FileSystemStore(ConfigStore):
+<pre><code class="python">class FileSystemStore(EncryptedConfigStore):
     def __init__(self, type_, parent_name=None):
-        super(FileSystemStore, self).__init__(type_)
-
-        self.parent_name = parent_name
-        self.root = self.config_env.get_secure_config_path()
+        super(FileSystemStore, self).__init__(type_, parent_name)
+        self.root = self.config_env.get_store_config(&#34;filesystem&#34;)[&#34;path&#34;]
 
     @property
     def config_root(self):
-        return os.path.join(self.root, self.location)
+        return os.path.join(self.root, self.location.path)
 
-    @property
-    def location(self):
-        location = os.path.join(*self.type.__module__.split(&#34;.&#34;), self.type.__name__)
-        if self.parent_name:
-            return os.path.join(location, self.parent_name)
-        return location
+    def get_instance_root(self, instance_name):
+        return os.path.join(self.config_root, instance_name)
 
     def get_path(self, instance_name):
-        return os.path.join(self.config_root, instance_name)
+        return os.path.join(self.get_instance_root(instance_name), &#34;data&#34;)
 
     def make_path(self, path):
         if not os.path.exists(path):
@@ -334,29 +684,30 @@ class FileSystemStore(ConfigStore):
 
     def read(self, instance_name):
         path = self.get_path(instance_name)
-        return readFile(path, binary=True)
-
-    def list_files(self, dir_path):
-        return [f for f in os.listdir(dir_path) if os.path.isfile(os.path.join(dir_path, f))]
+        return readFile(path)
 
     def list_all(self):
         if not os.path.exists(self.config_root):
             return []
-        return self.list_files(self.config_root)
+        return os.listdir(self.config_root)
 
     def write(self, instance_name, data):
         path = self.get_path(instance_name)
         self.make_path(path)
-        return writeFile(path, data)
+        return writeFile(path, data.encode())
 
     def delete(self, instance_name):
-        path = self.get_path(instance_name)
-        if os.path.exists:
-            os.remove(path)</code></pre>
+        path = self.get_instance_root(instance_name)
+        if os.path.exists(path):
+            # TODO: replace with sal fs
+            shutil.rmtree(path)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="jumpscale.core.base.store.EncryptedConfigStore" href="#jumpscale.core.base.store.EncryptedConfigStore">EncryptedConfigStore</a></li>
 <li><a title="jumpscale.core.base.store.ConfigStore" href="#jumpscale.core.base.store.ConfigStore">ConfigStore</a></li>
+<li>abc.ABC</li>
+<li><a title="jumpscale.core.base.store.EncryptionMixin" href="#jumpscale.core.base.store.EncryptionMixin">EncryptionMixin</a></li>
 </ul>
 <h3>Instance variables</h3>
 <dl>
@@ -367,20 +718,7 @@ class FileSystemStore(ConfigStore):
 <summary>Source code</summary>
 <pre><code class="python">@property
 def config_root(self):
-    return os.path.join(self.root, self.location)</code></pre>
-</details>
-</dd>
-<dt id="jumpscale.core.base.store.FileSystemStore.location"><code class="name">var <span class="ident">location</span></code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">@property
-def location(self):
-    location = os.path.join(*self.type.__module__.split(&#34;.&#34;), self.type.__name__)
-    if self.parent_name:
-        return os.path.join(location, self.parent_name)
-    return location</code></pre>
+    return os.path.join(self.root, self.location.path)</code></pre>
 </details>
 </dd>
 </dl>
@@ -394,9 +732,21 @@ def location(self):
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def delete(self, instance_name):
-    path = self.get_path(instance_name)
-    if os.path.exists:
-        os.remove(path)</code></pre>
+    path = self.get_instance_root(instance_name)
+    if os.path.exists(path):
+        # TODO: replace with sal fs
+        shutil.rmtree(path)</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.core.base.store.FileSystemStore.get_instance_root"><code class="name flex">
+<span>def <span class="ident">get_instance_root</span></span>(<span>self, instance_name)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_instance_root(self, instance_name):
+    return os.path.join(self.config_root, instance_name)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.core.base.store.FileSystemStore.get_path"><code class="name flex">
@@ -407,7 +757,7 @@ def location(self):
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def get_path(self, instance_name):
-    return os.path.join(self.config_root, instance_name)</code></pre>
+    return os.path.join(self.get_instance_root(instance_name), &#34;data&#34;)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.core.base.store.FileSystemStore.list_all"><code class="name flex">
@@ -420,18 +770,7 @@ def location(self):
 <pre><code class="python">def list_all(self):
     if not os.path.exists(self.config_root):
         return []
-    return self.list_files(self.config_root)</code></pre>
-</details>
-</dd>
-<dt id="jumpscale.core.base.store.FileSystemStore.list_files"><code class="name flex">
-<span>def <span class="ident">list_files</span></span>(<span>self, dir_path)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def list_files(self, dir_path):
-    return [f for f in os.listdir(dir_path) if os.path.isfile(os.path.join(dir_path, f))]</code></pre>
+    return os.listdir(self.config_root)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.core.base.store.FileSystemStore.make_path"><code class="name flex">
@@ -456,7 +795,7 @@ def location(self):
 <summary>Source code</summary>
 <pre><code class="python">def read(self, instance_name):
     path = self.get_path(instance_name)
-    return readFile(path, binary=True)</code></pre>
+    return readFile(path)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.core.base.store.FileSystemStore.write"><code class="name flex">
@@ -469,10 +808,21 @@ def location(self):
 <pre><code class="python">def write(self, instance_name, data):
     path = self.get_path(instance_name)
     self.make_path(path)
-    return writeFile(path, data)</code></pre>
+    return writeFile(path, data.encode())</code></pre>
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="jumpscale.core.base.store.EncryptedConfigStore" href="#jumpscale.core.base.store.EncryptedConfigStore">EncryptedConfigStore</a></b></code>:
+<ul class="hlist">
+<li><code><a title="jumpscale.core.base.store.EncryptedConfigStore.decrypt" href="#jumpscale.core.base.store.EncryptionMixin.decrypt">decrypt</a></code></li>
+<li><code><a title="jumpscale.core.base.store.EncryptedConfigStore.encrypt" href="#jumpscale.core.base.store.EncryptionMixin.encrypt">encrypt</a></code></li>
+<li><code><a title="jumpscale.core.base.store.EncryptedConfigStore.get" href="#jumpscale.core.base.store.EncryptedConfigStore.get">get</a></code></li>
+<li><code><a title="jumpscale.core.base.store.EncryptedConfigStore.save" href="#jumpscale.core.base.store.EncryptedConfigStore.save">save</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="jumpscale.core.base.store.InvalidPrivateKey"><code class="flex name class">
 <span>class <span class="ident">InvalidPrivateKey</span></span>
@@ -489,6 +839,213 @@ def location(self):
 <ul class="hlist">
 <li>builtins.Exception</li>
 <li>builtins.BaseException</li>
+</ul>
+</dd>
+<dt id="jumpscale.core.base.store.Location"><code class="flex name class">
+<span>class <span class="ident">Location</span></span>
+<span>(</span><span>type_, parent_name)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>dot-separated auto-location for any type</p>
+<p>for example, if we have a class in jumpscale/clients/redis/<type>
+location name will be jumpscale.clients.redis.<type></p>
+<p>it can have a parent of any name</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class Location:
+    &#34;&#34;&#34;dot-separated auto-location for any type
+
+    for example, if we have a class in jumpscale/clients/redis/&lt;type&gt;
+    location name will be jumpscale.clients.redis.&lt;type&gt;
+
+    it can have a parent of any name
+    &#34;&#34;&#34;
+
+    def __init__(self, type_, parent_name):
+        self.type = type_
+
+        self.path_list = [self.type.__module__, self.type.__name__]
+        if parent_name:
+            self.path_list = [parent_name] + self.path_list
+
+    @property
+    def name(self):
+        return &#34;.&#34;.join(self.path_list)
+
+    @property
+    def path(self):
+        return os.path.join(*self.name.split(&#34;.&#34;))</code></pre>
+</details>
+<h3>Instance variables</h3>
+<dl>
+<dt id="jumpscale.core.base.store.Location.name"><code class="name">var <span class="ident">name</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def name(self):
+    return &#34;.&#34;.join(self.path_list)</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.core.base.store.Location.path"><code class="name">var <span class="ident">path</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def path(self):
+    return os.path.join(*self.name.split(&#34;.&#34;))</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="jumpscale.core.base.store.RedisStore"><code class="flex name class">
+<span>class <span class="ident">RedisStore</span></span>
+<span>(</span><span>type_, parent_name=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>secure config storage base</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class RedisStore(EncryptedConfigStore):
+    def __init__(self, type_, parent_name=None):
+        super().__init__(type_, parent_name)
+        redis_config = self.config_env.get_store_config(&#34;redis&#34;)
+        self.redis_client = redis.Redis(redis_config[&#34;hostname&#34;], redis_config[&#34;port&#34;])
+
+    def get_key(self, instance_name):
+        return &#34;.&#34;.join([self.location.name, instance_name])
+
+    def read(self, instance_name):
+        return self.redis_client.get(self.get_key(instance_name))
+
+    def get_type_keys(self):
+        return self.redis_client.keys(f&#34;{self.location.name}.*&#34;)
+
+    def get_instance_keys(self, instance_name):
+        return self.redis_client.keys(f&#34;{self.location.name}.{instance_name}*&#34;)
+
+    def list_all(self):
+        names = []
+
+        keys = self.get_type_keys()
+        for key in keys:
+            name = key.decode().replace(self.location.name, &#34;&#34;).lstrip(&#34;.&#34;)
+            if &#34;.&#34; not in name:
+                names.append(name)
+        return names
+
+    def write(self, instance_name, data):
+        return self.redis_client.set(self.get_key(instance_name), data)
+
+    def delete(self, instance_name):
+        return self.redis_client.delete(*self.get_instance_keys(instance_name))</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="jumpscale.core.base.store.EncryptedConfigStore" href="#jumpscale.core.base.store.EncryptedConfigStore">EncryptedConfigStore</a></li>
+<li><a title="jumpscale.core.base.store.ConfigStore" href="#jumpscale.core.base.store.ConfigStore">ConfigStore</a></li>
+<li>abc.ABC</li>
+<li><a title="jumpscale.core.base.store.EncryptionMixin" href="#jumpscale.core.base.store.EncryptionMixin">EncryptionMixin</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="jumpscale.core.base.store.RedisStore.delete"><code class="name flex">
+<span>def <span class="ident">delete</span></span>(<span>self, instance_name)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def delete(self, instance_name):
+    return self.redis_client.delete(*self.get_instance_keys(instance_name))</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.core.base.store.RedisStore.get_instance_keys"><code class="name flex">
+<span>def <span class="ident">get_instance_keys</span></span>(<span>self, instance_name)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_instance_keys(self, instance_name):
+    return self.redis_client.keys(f&#34;{self.location.name}.{instance_name}*&#34;)</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.core.base.store.RedisStore.get_key"><code class="name flex">
+<span>def <span class="ident">get_key</span></span>(<span>self, instance_name)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_key(self, instance_name):
+    return &#34;.&#34;.join([self.location.name, instance_name])</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.core.base.store.RedisStore.get_type_keys"><code class="name flex">
+<span>def <span class="ident">get_type_keys</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_type_keys(self):
+    return self.redis_client.keys(f&#34;{self.location.name}.*&#34;)</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.core.base.store.RedisStore.list_all"><code class="name flex">
+<span>def <span class="ident">list_all</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def list_all(self):
+    names = []
+
+    keys = self.get_type_keys()
+    for key in keys:
+        name = key.decode().replace(self.location.name, &#34;&#34;).lstrip(&#34;.&#34;)
+        if &#34;.&#34; not in name:
+            names.append(name)
+    return names</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.core.base.store.RedisStore.read"><code class="name flex">
+<span>def <span class="ident">read</span></span>(<span>self, instance_name)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def read(self, instance_name):
+    return self.redis_client.get(self.get_key(instance_name))</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.core.base.store.RedisStore.write"><code class="name flex">
+<span>def <span class="ident">write</span></span>(<span>self, instance_name, data)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def write(self, instance_name, data):
+    return self.redis_client.set(self.get_key(instance_name), data)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="jumpscale.core.base.store.EncryptedConfigStore" href="#jumpscale.core.base.store.EncryptedConfigStore">EncryptedConfigStore</a></b></code>:
+<ul class="hlist">
+<li><code><a title="jumpscale.core.base.store.EncryptedConfigStore.decrypt" href="#jumpscale.core.base.store.EncryptionMixin.decrypt">decrypt</a></code></li>
+<li><code><a title="jumpscale.core.base.store.EncryptedConfigStore.encrypt" href="#jumpscale.core.base.store.EncryptionMixin.encrypt">encrypt</a></code></li>
+<li><code><a title="jumpscale.core.base.store.EncryptedConfigStore.get" href="#jumpscale.core.base.store.EncryptedConfigStore.get">get</a></code></li>
+<li><code><a title="jumpscale.core.base.store.EncryptedConfigStore.save" href="#jumpscale.core.base.store.EncryptedConfigStore.save">save</a></code></li>
+</ul>
+</li>
 </ul>
 </dd>
 </dl>
@@ -509,16 +1066,28 @@ def location(self):
 <ul>
 <li>
 <h4><code><a title="jumpscale.core.base.store.ConfigStore" href="#jumpscale.core.base.store.ConfigStore">ConfigStore</a></code></h4>
-<ul class="two-column">
-<li><code><a title="jumpscale.core.base.store.ConfigStore.decrypt" href="#jumpscale.core.base.store.ConfigStore.decrypt">decrypt</a></code></li>
+<ul class="">
 <li><code><a title="jumpscale.core.base.store.ConfigStore.delete" href="#jumpscale.core.base.store.ConfigStore.delete">delete</a></code></li>
-<li><code><a title="jumpscale.core.base.store.ConfigStore.encrypt" href="#jumpscale.core.base.store.ConfigStore.encrypt">encrypt</a></code></li>
-<li><code><a title="jumpscale.core.base.store.ConfigStore.get" href="#jumpscale.core.base.store.ConfigStore.get">get</a></code></li>
-<li><code><a title="jumpscale.core.base.store.ConfigStore.get_all" href="#jumpscale.core.base.store.ConfigStore.get_all">get_all</a></code></li>
 <li><code><a title="jumpscale.core.base.store.ConfigStore.list_all" href="#jumpscale.core.base.store.ConfigStore.list_all">list_all</a></code></li>
 <li><code><a title="jumpscale.core.base.store.ConfigStore.read" href="#jumpscale.core.base.store.ConfigStore.read">read</a></code></li>
-<li><code><a title="jumpscale.core.base.store.ConfigStore.save" href="#jumpscale.core.base.store.ConfigStore.save">save</a></code></li>
 <li><code><a title="jumpscale.core.base.store.ConfigStore.write" href="#jumpscale.core.base.store.ConfigStore.write">write</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="jumpscale.core.base.store.EncryptedConfigStore" href="#jumpscale.core.base.store.EncryptedConfigStore">EncryptedConfigStore</a></code></h4>
+<ul class="">
+<li><code><a title="jumpscale.core.base.store.EncryptedConfigStore.get" href="#jumpscale.core.base.store.EncryptedConfigStore.get">get</a></code></li>
+<li><code><a title="jumpscale.core.base.store.EncryptedConfigStore.get_all" href="#jumpscale.core.base.store.EncryptedConfigStore.get_all">get_all</a></code></li>
+<li><code><a title="jumpscale.core.base.store.EncryptedConfigStore.get_type_location" href="#jumpscale.core.base.store.EncryptedConfigStore.get_type_location">get_type_location</a></code></li>
+<li><code><a title="jumpscale.core.base.store.EncryptedConfigStore.location" href="#jumpscale.core.base.store.EncryptedConfigStore.location">location</a></code></li>
+<li><code><a title="jumpscale.core.base.store.EncryptedConfigStore.save" href="#jumpscale.core.base.store.EncryptedConfigStore.save">save</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="jumpscale.core.base.store.EncryptionMixin" href="#jumpscale.core.base.store.EncryptionMixin">EncryptionMixin</a></code></h4>
+<ul class="">
+<li><code><a title="jumpscale.core.base.store.EncryptionMixin.decrypt" href="#jumpscale.core.base.store.EncryptionMixin.decrypt">decrypt</a></code></li>
+<li><code><a title="jumpscale.core.base.store.EncryptionMixin.encrypt" href="#jumpscale.core.base.store.EncryptionMixin.encrypt">encrypt</a></code></li>
 </ul>
 </li>
 <li>
@@ -526,10 +1095,9 @@ def location(self):
 <ul class="two-column">
 <li><code><a title="jumpscale.core.base.store.FileSystemStore.config_root" href="#jumpscale.core.base.store.FileSystemStore.config_root">config_root</a></code></li>
 <li><code><a title="jumpscale.core.base.store.FileSystemStore.delete" href="#jumpscale.core.base.store.FileSystemStore.delete">delete</a></code></li>
+<li><code><a title="jumpscale.core.base.store.FileSystemStore.get_instance_root" href="#jumpscale.core.base.store.FileSystemStore.get_instance_root">get_instance_root</a></code></li>
 <li><code><a title="jumpscale.core.base.store.FileSystemStore.get_path" href="#jumpscale.core.base.store.FileSystemStore.get_path">get_path</a></code></li>
 <li><code><a title="jumpscale.core.base.store.FileSystemStore.list_all" href="#jumpscale.core.base.store.FileSystemStore.list_all">list_all</a></code></li>
-<li><code><a title="jumpscale.core.base.store.FileSystemStore.list_files" href="#jumpscale.core.base.store.FileSystemStore.list_files">list_files</a></code></li>
-<li><code><a title="jumpscale.core.base.store.FileSystemStore.location" href="#jumpscale.core.base.store.FileSystemStore.location">location</a></code></li>
 <li><code><a title="jumpscale.core.base.store.FileSystemStore.make_path" href="#jumpscale.core.base.store.FileSystemStore.make_path">make_path</a></code></li>
 <li><code><a title="jumpscale.core.base.store.FileSystemStore.read" href="#jumpscale.core.base.store.FileSystemStore.read">read</a></code></li>
 <li><code><a title="jumpscale.core.base.store.FileSystemStore.write" href="#jumpscale.core.base.store.FileSystemStore.write">write</a></code></li>
@@ -537,6 +1105,25 @@ def location(self):
 </li>
 <li>
 <h4><code><a title="jumpscale.core.base.store.InvalidPrivateKey" href="#jumpscale.core.base.store.InvalidPrivateKey">InvalidPrivateKey</a></code></h4>
+</li>
+<li>
+<h4><code><a title="jumpscale.core.base.store.Location" href="#jumpscale.core.base.store.Location">Location</a></code></h4>
+<ul class="">
+<li><code><a title="jumpscale.core.base.store.Location.name" href="#jumpscale.core.base.store.Location.name">name</a></code></li>
+<li><code><a title="jumpscale.core.base.store.Location.path" href="#jumpscale.core.base.store.Location.path">path</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="jumpscale.core.base.store.RedisStore" href="#jumpscale.core.base.store.RedisStore">RedisStore</a></code></h4>
+<ul class="two-column">
+<li><code><a title="jumpscale.core.base.store.RedisStore.delete" href="#jumpscale.core.base.store.RedisStore.delete">delete</a></code></li>
+<li><code><a title="jumpscale.core.base.store.RedisStore.get_instance_keys" href="#jumpscale.core.base.store.RedisStore.get_instance_keys">get_instance_keys</a></code></li>
+<li><code><a title="jumpscale.core.base.store.RedisStore.get_key" href="#jumpscale.core.base.store.RedisStore.get_key">get_key</a></code></li>
+<li><code><a title="jumpscale.core.base.store.RedisStore.get_type_keys" href="#jumpscale.core.base.store.RedisStore.get_type_keys">get_type_keys</a></code></li>
+<li><code><a title="jumpscale.core.base.store.RedisStore.list_all" href="#jumpscale.core.base.store.RedisStore.list_all">list_all</a></code></li>
+<li><code><a title="jumpscale.core.base.store.RedisStore.read" href="#jumpscale.core.base.store.RedisStore.read">read</a></code></li>
+<li><code><a title="jumpscale.core.base.store.RedisStore.write" href="#jumpscale.core.base.store.RedisStore.write">write</a></code></li>
+</ul>
 </li>
 </ul>
 </li>

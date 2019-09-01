@@ -1,4 +1,4 @@
 from faker import Faker
 import sys
 
-singleton = Faker()
+module_export_as = Faker()

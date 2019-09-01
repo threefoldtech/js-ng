@@ -39,8 +39,10 @@ HISTORY_FILENAME = os.path.join(BASE_CONFIG_DIR, &#34;history.txt&#34;)
 def run():
     os.makedirs(BASE_CONFIG_DIR, exist_ok=True)
     pathlib.Path(HISTORY_FILENAME).touch()
-
-    sys.exit(embed(globals(), locals(), configure=ptconfig, history_filename=HISTORY_FILENAME))</code></pre>
+    if len(sys.argv) == 1:
+        sys.exit(embed(globals(), locals(), configure=ptconfig, history_filename=HISTORY_FILENAME))
+    else:
+        sys.exit(print(eval(sys.argv[1])))</code></pre>
 </details>
 </section>
 <section>
@@ -60,8 +62,10 @@ def run():
 <pre><code class="python">def run():
     os.makedirs(BASE_CONFIG_DIR, exist_ok=True)
     pathlib.Path(HISTORY_FILENAME).touch()
-
-    sys.exit(embed(globals(), locals(), configure=ptconfig, history_filename=HISTORY_FILENAME))</code></pre>
+    if len(sys.argv) == 1:
+        sys.exit(embed(globals(), locals(), configure=ptconfig, history_filename=HISTORY_FILENAME))
+    else:
+        sys.exit(print(eval(sys.argv[1])))</code></pre>
 </details>
 </dd>
 </dl>

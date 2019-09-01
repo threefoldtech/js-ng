@@ -32,29 +32,32 @@ class ValidationError(Exception):
 
 
 class Field:
-    def __init__(self, default=None, required=False, **kwargs):
+    def __init__(self, default=None, required=False, indexed=False, **kwargs):
         self.default = default
         self.required = required
-        self.kwargs = kwargs
-
-    def validate(self, value):
-        pass
-
-
-class Typed(Field):
-    def __init__(self, type_, default=None, indexed=False, required=False, **kwargs):
-        self.type = type_
-        self.default = default
         self.indexed = indexed
+        self.kwargs = kwargs
 
         # self.validate = Schema({
 
         # })
-        super().__init__(default=default, indexed=indexed, **kwargs)
 
     def validate(self, value):
-        if not isinstance(value, self.type):
-            raise TypeError
+        if value is None:
+            if self.required:
+                raise ValidationError(&#34;field is required&#34;)
+
+
+class Typed(Field):
+    def __init__(self, type_, **kwargs):
+        self.type = type_
+        super().__init__(**kwargs)
+
+    def validate(self, value):
+        super().validate(value)
+        if value is not None:
+            if not isinstance(value, self.type):
+                raise ValidationError(f&#34;value is not of type {self.type}&#34;)
 
 
 class Boolean(Typed):
@@ -76,6 +79,10 @@ class Float(Typed):
 class String(Typed):
     def __init__(self, **kwargs):
         super().__init__(type_=str, **kwargs)
+
+
+class Secret(String):
+    pass
 
 
 class Factory(StoredFactory):
@@ -125,23 +132,38 @@ class Factory(StoredFactory):
 <li><a title="jumpscale.core.base.factory.StoredFactory" href="factory.html#jumpscale.core.base.factory.StoredFactory">StoredFactory</a></li>
 <li><a title="jumpscale.core.base.factory.Factory" href="factory.html#jumpscale.core.base.factory.Factory">Factory</a></li>
 </ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="jumpscale.core.base.factory.StoredFactory" href="factory.html#jumpscale.core.base.factory.StoredFactory">StoredFactory</a></b></code>:
+<ul class="hlist">
+<li><code><a title="jumpscale.core.base.factory.StoredFactory.STORE" href="factory.html#jumpscale.core.base.factory.StoredFactory.STORE">STORE</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="jumpscale.core.base.fields.Field"><code class="flex name class">
 <span>class <span class="ident">Field</span></span>
-<span>(</span><span>default=None, required=False, **kwargs)</span>
+<span>(</span><span>default=None, required=False, indexed=False, **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class Field:
-    def __init__(self, default=None, required=False, **kwargs):
+    def __init__(self, default=None, required=False, indexed=False, **kwargs):
         self.default = default
         self.required = required
+        self.indexed = indexed
         self.kwargs = kwargs
 
+        # self.validate = Schema({
+
+        # })
+
     def validate(self, value):
-        pass</code></pre>
+        if value is None:
+            if self.required:
+                raise ValidationError(&#34;field is required&#34;)</code></pre>
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -157,7 +179,9 @@ class Factory(StoredFactory):
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def validate(self, value):
-    pass</code></pre>
+    if value is None:
+        if self.required:
+            raise ValidationError(&#34;field is required&#34;)</code></pre>
 </details>
 </dd>
 </dl>
@@ -199,6 +223,24 @@ class Factory(StoredFactory):
 <li><a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field">Field</a></li>
 </ul>
 </dd>
+<dt id="jumpscale.core.base.fields.Secret"><code class="flex name class">
+<span>class <span class="ident">Secret</span></span>
+<span>(</span><span>**kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class Secret(String):
+    pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="jumpscale.core.base.fields.String" href="#jumpscale.core.base.fields.String">String</a></li>
+<li><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></li>
+<li><a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field">Field</a></li>
+</ul>
+</dd>
 <dt id="jumpscale.core.base.fields.String"><code class="flex name class">
 <span>class <span class="ident">String</span></span>
 <span>(</span><span>**kwargs)</span>
@@ -216,29 +258,29 @@ class Factory(StoredFactory):
 <li><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></li>
 <li><a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field">Field</a></li>
 </ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="jumpscale.core.base.fields.Secret" href="#jumpscale.core.base.fields.Secret">Secret</a></li>
+</ul>
 </dd>
 <dt id="jumpscale.core.base.fields.Typed"><code class="flex name class">
 <span>class <span class="ident">Typed</span></span>
-<span>(</span><span>type_, default=None, indexed=False, required=False, **kwargs)</span>
+<span>(</span><span>type_, **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class Typed(Field):
-    def __init__(self, type_, default=None, indexed=False, required=False, **kwargs):
+    def __init__(self, type_, **kwargs):
         self.type = type_
-        self.default = default
-        self.indexed = indexed
-
-        # self.validate = Schema({
-
-        # })
-        super().__init__(default=default, indexed=indexed, **kwargs)
+        super().__init__(**kwargs)
 
     def validate(self, value):
-        if not isinstance(value, self.type):
-            raise TypeError</code></pre>
+        super().validate(value)
+        if value is not None:
+            if not isinstance(value, self.type):
+                raise ValidationError(f&#34;value is not of type {self.type}&#34;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -261,8 +303,10 @@ class Factory(StoredFactory):
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def validate(self, value):
-    if not isinstance(value, self.type):
-        raise TypeError</code></pre>
+    super().validate(value)
+    if value is not None:
+        if not isinstance(value, self.type):
+            raise ValidationError(f&#34;value is not of type {self.type}&#34;)</code></pre>
 </details>
 </dd>
 </dl>
@@ -317,6 +361,9 @@ class Factory(StoredFactory):
 </li>
 <li>
 <h4><code><a title="jumpscale.core.base.fields.Integer" href="#jumpscale.core.base.fields.Integer">Integer</a></code></h4>
+</li>
+<li>
+<h4><code><a title="jumpscale.core.base.fields.Secret" href="#jumpscale.core.base.fields.Secret">Secret</a></code></h4>
 </li>
 <li>
 <h4><code><a title="jumpscale.core.base.fields.String" href="#jumpscale.core.base.fields.String">String</a></code></h4>

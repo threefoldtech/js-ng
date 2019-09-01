@@ -3,4 +3,4 @@ from jumpscale.core.base import StoredFactory
 from .redis import RedisClient
 
 
-factory = StoredFactory(RedisClient)
+module_export_as = StoredFactory(RedisClient)

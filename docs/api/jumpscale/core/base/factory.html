@@ -24,9 +24,11 @@
 <summary>Source code</summary>
 <pre><code class="python">from functools import partial
 
-from jumpscale.data.serializers import json
+from jumpscale.core import config
 
-from .store import FileSystemStore
+from .store import FileSystemStore, RedisStore
+
+STORES = {&#34;filesystem&#34;: FileSystemStore, &#34;redis&#34;: RedisStore}
 
 
 class DuplicateError(Exception):
@@ -70,58 +72,68 @@ class Factory:
         self.count -= 1
         delattr(self, name)
 
-    def updated(self, new_count):
+    def _updated(self, new_count):
         pass
 
-    def get_count(self):
+    def __get_count(self):
         return self.__count
 
-    def set_count(self, new_count):
+    def __set_count(self, new_count):
         self.__count = new_count
-        self.updated(new_count)
+        self._updated(new_count)
 
-    count = property(get_count, set_count)
+    count = property(__get_count, __set_count)
 
 
 class StoredFactory(Factory):
+    STORE = STORES[config.get_config()[&#34;store&#34;]]
+
     def __init__(self, type_, parent_name=None):
         super(StoredFactory, self).__init__(type_)
-        self.parent_name = parent_name
+        self._set_parent_name(parent_name)
         if not parent_name:
-            self.load()
+            self._load()
 
-    def set_parent_name(self, name):
-        self.parent_name = name
+    def _set_parent_name(self, name):
+        self.__parent_name = name
 
     @property
     def store(self):
-        return FileSystemStore(self.type, self.parent_name)
+        return self.STORE(self.type, self.__parent_name)
 
-    def save_instance(self, name):
-        data = self.get(name).get_data()
-        self.store.save(name, json.dumps(data))
+    def _validate_and_save_instance(self, name):
+        instance = self.get(name)
+        instance._validate()
+        self.store.save(name, instance._get_data())
 
-    def instance_updated(self, name, prop_name, new_value):
-        self.save_instance(name)
+    def _instance_updated(self, name):
+        # try to save instance if it&#39;s validated
+        try:
+            self._validate_and_save_instance(name)
+        except:
+            raise
 
-    def instance_sub_factory_updated(self, name, new_count):
-        self.save_instance(name)
+    def _instance_sub_factory_updated(self, name, new_count):
+        self._instance_updated(name)
+
+    def _get_sub_factory_location_name(self, parent_name, factory_name):
+        return &#34;.&#34;.join([self.store.location.name, parent_name, factory_name])
 
     def new(self, name, *args, **kwargs):
         instance = super().new(name, *args, **kwargs)
-        instance.data_updated = partial(self.instance_updated, name)
+        instance.save = partial(self._validate_and_save_instance, name)
 
-        for prop_name, factory in instance.get_factories().items():
-            factory.set_parent_name(f&#34;{self.type.__name__}_{name}_{prop_name}&#34;)
-            factory.updated = partial(self.instance_sub_factory_updated, name)
-            factory.load()
+        for prop_name, factory in instance._get_factories().items():
+            factory._set_parent_name(self._get_sub_factory_location_name(name, prop_name))
+            factory._updated = partial(self._instance_sub_factory_updated, name)
+            factory._load()
 
         return instance
 
-    def load(self):
+    def _load(self):
         for name in self.store.list_all():
             instance = self.new(name)
-            instance.set_data(json.loads(self.store.get(name)))
+            instance._set_data(self.store.get(name))
 
     def delete(self, name):
         self.store.delete(name)
@@ -204,17 +216,17 @@ class StoredFactory(Factory):
         self.count -= 1
         delattr(self, name)
 
-    def updated(self, new_count):
+    def _updated(self, new_count):
         pass
 
-    def get_count(self):
+    def __get_count(self):
         return self.__count
 
-    def set_count(self, new_count):
+    def __set_count(self, new_count):
         self.__count = new_count
-        self.updated(new_count)
+        self._updated(new_count)
 
-    count = property(get_count, set_count)</code></pre>
+    count = property(__get_count, __set_count)</code></pre>
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -227,7 +239,7 @@ class StoredFactory(Factory):
 <section class="desc"></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def get_count(self):
+<pre><code class="python">def __get_count(self):
     return self.__count</code></pre>
 </details>
 </dd>
@@ -274,17 +286,6 @@ class StoredFactory(Factory):
         return self.new(name, *args, **kwargs)</code></pre>
 </details>
 </dd>
-<dt id="jumpscale.core.base.factory.Factory.get_count"><code class="name flex">
-<span>def <span class="ident">get_count</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def get_count(self):
-    return self.__count</code></pre>
-</details>
-</dd>
 <dt id="jumpscale.core.base.factory.Factory.new"><code class="name flex">
 <span>def <span class="ident">new</span></span>(<span>self, name, *args, **kwargs)</span>
 </code></dt>
@@ -308,29 +309,6 @@ class StoredFactory(Factory):
     raise DuplicateError</code></pre>
 </details>
 </dd>
-<dt id="jumpscale.core.base.factory.Factory.set_count"><code class="name flex">
-<span>def <span class="ident">set_count</span></span>(<span>self, new_count)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def set_count(self, new_count):
-    self.__count = new_count
-    self.updated(new_count)</code></pre>
-</details>
-</dd>
-<dt id="jumpscale.core.base.factory.Factory.updated"><code class="name flex">
-<span>def <span class="ident">updated</span></span>(<span>self, new_count)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def updated(self, new_count):
-    pass</code></pre>
-</details>
-</dd>
 </dl>
 </dd>
 <dt id="jumpscale.core.base.factory.StoredFactory"><code class="flex name class">
@@ -342,44 +320,54 @@ class StoredFactory(Factory):
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class StoredFactory(Factory):
+    STORE = STORES[config.get_config()[&#34;store&#34;]]
+
     def __init__(self, type_, parent_name=None):
         super(StoredFactory, self).__init__(type_)
-        self.parent_name = parent_name
+        self._set_parent_name(parent_name)
         if not parent_name:
-            self.load()
+            self._load()
 
-    def set_parent_name(self, name):
-        self.parent_name = name
+    def _set_parent_name(self, name):
+        self.__parent_name = name
 
     @property
     def store(self):
-        return FileSystemStore(self.type, self.parent_name)
+        return self.STORE(self.type, self.__parent_name)
 
-    def save_instance(self, name):
-        data = self.get(name).get_data()
-        self.store.save(name, json.dumps(data))
+    def _validate_and_save_instance(self, name):
+        instance = self.get(name)
+        instance._validate()
+        self.store.save(name, instance._get_data())
 
-    def instance_updated(self, name, prop_name, new_value):
-        self.save_instance(name)
+    def _instance_updated(self, name):
+        # try to save instance if it&#39;s validated
+        try:
+            self._validate_and_save_instance(name)
+        except:
+            raise
 
-    def instance_sub_factory_updated(self, name, new_count):
-        self.save_instance(name)
+    def _instance_sub_factory_updated(self, name, new_count):
+        self._instance_updated(name)
+
+    def _get_sub_factory_location_name(self, parent_name, factory_name):
+        return &#34;.&#34;.join([self.store.location.name, parent_name, factory_name])
 
     def new(self, name, *args, **kwargs):
         instance = super().new(name, *args, **kwargs)
-        instance.data_updated = partial(self.instance_updated, name)
+        instance.save = partial(self._validate_and_save_instance, name)
 
-        for prop_name, factory in instance.get_factories().items():
-            factory.set_parent_name(f&#34;{self.type.__name__}_{name}_{prop_name}&#34;)
-            factory.updated = partial(self.instance_sub_factory_updated, name)
-            factory.load()
+        for prop_name, factory in instance._get_factories().items():
+            factory._set_parent_name(self._get_sub_factory_location_name(name, prop_name))
+            factory._updated = partial(self._instance_sub_factory_updated, name)
+            factory._load()
 
         return instance
 
-    def load(self):
+    def _load(self):
         for name in self.store.list_all():
             instance = self.new(name)
-            instance.set_data(json.loads(self.store.get(name)))
+            instance._set_data(self.store.get(name))
 
     def delete(self, name):
         self.store.delete(name)
@@ -398,6 +386,13 @@ class StoredFactory(Factory):
 <ul class="hlist">
 <li><a title="jumpscale.core.base.fields.Factory" href="fields.html#jumpscale.core.base.fields.Factory">Factory</a></li>
 </ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="jumpscale.core.base.factory.StoredFactory.STORE"><code class="name">var <span class="ident">STORE</span></code></dt>
+<dd>
+<section class="desc"><p>secure config storage base</p></section>
+</dd>
+</dl>
 <h3>Instance variables</h3>
 <dl>
 <dt id="jumpscale.core.base.factory.StoredFactory.store"><code class="name">var <span class="ident">store</span></code></dt>
@@ -407,7 +402,7 @@ class StoredFactory(Factory):
 <summary>Source code</summary>
 <pre><code class="python">@property
 def store(self):
-    return FileSystemStore(self.type, self.parent_name)</code></pre>
+    return self.STORE(self.type, self.__parent_name)</code></pre>
 </details>
 </dd>
 </dl>
@@ -425,41 +420,6 @@ def store(self):
     super(StoredFactory, self).delete(name)</code></pre>
 </details>
 </dd>
-<dt id="jumpscale.core.base.factory.StoredFactory.instance_sub_factory_updated"><code class="name flex">
-<span>def <span class="ident">instance_sub_factory_updated</span></span>(<span>self, name, new_count)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def instance_sub_factory_updated(self, name, new_count):
-    self.save_instance(name)</code></pre>
-</details>
-</dd>
-<dt id="jumpscale.core.base.factory.StoredFactory.instance_updated"><code class="name flex">
-<span>def <span class="ident">instance_updated</span></span>(<span>self, name, prop_name, new_value)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def instance_updated(self, name, prop_name, new_value):
-    self.save_instance(name)</code></pre>
-</details>
-</dd>
-<dt id="jumpscale.core.base.factory.StoredFactory.load"><code class="name flex">
-<span>def <span class="ident">load</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def load(self):
-    for name in self.store.list_all():
-        instance = self.new(name)
-        instance.set_data(json.loads(self.store.get(name)))</code></pre>
-</details>
-</dd>
 <dt id="jumpscale.core.base.factory.StoredFactory.new"><code class="name flex">
 <span>def <span class="ident">new</span></span>(<span>self, name, *args, **kwargs)</span>
 </code></dt>
@@ -469,37 +429,14 @@ def store(self):
 <summary>Source code</summary>
 <pre><code class="python">def new(self, name, *args, **kwargs):
     instance = super().new(name, *args, **kwargs)
-    instance.data_updated = partial(self.instance_updated, name)
+    instance.save = partial(self._validate_and_save_instance, name)
 
-    for prop_name, factory in instance.get_factories().items():
-        factory.set_parent_name(f&#34;{self.type.__name__}_{name}_{prop_name}&#34;)
-        factory.updated = partial(self.instance_sub_factory_updated, name)
-        factory.load()
+    for prop_name, factory in instance._get_factories().items():
+        factory._set_parent_name(self._get_sub_factory_location_name(name, prop_name))
+        factory._updated = partial(self._instance_sub_factory_updated, name)
+        factory._load()
 
     return instance</code></pre>
-</details>
-</dd>
-<dt id="jumpscale.core.base.factory.StoredFactory.save_instance"><code class="name flex">
-<span>def <span class="ident">save_instance</span></span>(<span>self, name)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def save_instance(self, name):
-    data = self.get(name).get_data()
-    self.store.save(name, json.dumps(data))</code></pre>
-</details>
-</dd>
-<dt id="jumpscale.core.base.factory.StoredFactory.set_parent_name"><code class="name flex">
-<span>def <span class="ident">set_parent_name</span></span>(<span>self, name)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def set_parent_name(self, name):
-    self.parent_name = name</code></pre>
 </details>
 </dd>
 </dl>
@@ -525,27 +462,20 @@ def store(self):
 </li>
 <li>
 <h4><code><a title="jumpscale.core.base.factory.Factory" href="#jumpscale.core.base.factory.Factory">Factory</a></code></h4>
-<ul class="two-column">
+<ul class="">
 <li><code><a title="jumpscale.core.base.factory.Factory.count" href="#jumpscale.core.base.factory.Factory.count">count</a></code></li>
 <li><code><a title="jumpscale.core.base.factory.Factory.delete" href="#jumpscale.core.base.factory.Factory.delete">delete</a></code></li>
 <li><code><a title="jumpscale.core.base.factory.Factory.find" href="#jumpscale.core.base.factory.Factory.find">find</a></code></li>
 <li><code><a title="jumpscale.core.base.factory.Factory.get" href="#jumpscale.core.base.factory.Factory.get">get</a></code></li>
-<li><code><a title="jumpscale.core.base.factory.Factory.get_count" href="#jumpscale.core.base.factory.Factory.get_count">get_count</a></code></li>
 <li><code><a title="jumpscale.core.base.factory.Factory.new" href="#jumpscale.core.base.factory.Factory.new">new</a></code></li>
-<li><code><a title="jumpscale.core.base.factory.Factory.set_count" href="#jumpscale.core.base.factory.Factory.set_count">set_count</a></code></li>
-<li><code><a title="jumpscale.core.base.factory.Factory.updated" href="#jumpscale.core.base.factory.Factory.updated">updated</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="jumpscale.core.base.factory.StoredFactory" href="#jumpscale.core.base.factory.StoredFactory">StoredFactory</a></code></h4>
 <ul class="">
+<li><code><a title="jumpscale.core.base.factory.StoredFactory.STORE" href="#jumpscale.core.base.factory.StoredFactory.STORE">STORE</a></code></li>
 <li><code><a title="jumpscale.core.base.factory.StoredFactory.delete" href="#jumpscale.core.base.factory.StoredFactory.delete">delete</a></code></li>
-<li><code><a title="jumpscale.core.base.factory.StoredFactory.instance_sub_factory_updated" href="#jumpscale.core.base.factory.StoredFactory.instance_sub_factory_updated">instance_sub_factory_updated</a></code></li>
-<li><code><a title="jumpscale.core.base.factory.StoredFactory.instance_updated" href="#jumpscale.core.base.factory.StoredFactory.instance_updated">instance_updated</a></code></li>
-<li><code><a title="jumpscale.core.base.factory.StoredFactory.load" href="#jumpscale.core.base.factory.StoredFactory.load">load</a></code></li>
 <li><code><a title="jumpscale.core.base.factory.StoredFactory.new" href="#jumpscale.core.base.factory.StoredFactory.new">new</a></code></li>
-<li><code><a title="jumpscale.core.base.factory.StoredFactory.save_instance" href="#jumpscale.core.base.factory.StoredFactory.save_instance">save_instance</a></code></li>
-<li><code><a title="jumpscale.core.base.factory.StoredFactory.set_parent_name" href="#jumpscale.core.base.factory.StoredFactory.set_parent_name">set_parent_name</a></code></li>
 <li><code><a title="jumpscale.core.base.factory.StoredFactory.store" href="#jumpscale.core.base.factory.StoredFactory.store">store</a></code></li>
 </ul>
 </li>

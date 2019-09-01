@@ -3,7 +3,7 @@ from jumpscale.core.base import StoredFactory
 from .currencylayer import CurrencyLayerClient
 
 
-factory = StoredFactory(CurrencyLayerClient)
+module_export_as = StoredFactory(CurrencyLayerClient)
 
 """
 JS-NG> fake = j.clients.currencylayer.new('fake')                                                                      

@@ -27,7 +27,7 @@ from jumpscale.core.base import fields
 
 
 class Gogs(Client):
-    access_token = fields.String()</code></pre>
+    access_token = fields.Secret(required=True)</code></pre>
 </details>
 </section>
 <section>
@@ -48,7 +48,7 @@ class Gogs(Client):
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class Gogs(Client):
-    access_token = fields.String()</code></pre>
+    access_token = fields.Secret(required=True)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -65,31 +65,6 @@ class Gogs(Client):
 <summary>Source code</summary>
 <pre><code class="python">def getter(self):
     return getattr(self, inner_name)</code></pre>
-</details>
-</dd>
-</dl>
-<h3>Methods</h3>
-<dl>
-<dt id="jumpscale.clients.gogs.gogs.Gogs.get_factory_info"><code class="name flex">
-<span>def <span class="ident">get_factory_info</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def get_factory_info(self):
-    return factory_info</code></pre>
-</details>
-</dd>
-<dt id="jumpscale.clients.gogs.gogs.Gogs.get_fields"><code class="name flex">
-<span>def <span class="ident">get_fields</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def get_fields(self):
-    return fields</code></pre>
 </details>
 </dd>
 </dl>
@@ -114,8 +89,6 @@ class Gogs(Client):
 <h4><code><a title="jumpscale.clients.gogs.gogs.Gogs" href="#jumpscale.clients.gogs.gogs.Gogs">Gogs</a></code></h4>
 <ul class="">
 <li><code><a title="jumpscale.clients.gogs.gogs.Gogs.access_token" href="#jumpscale.clients.gogs.gogs.Gogs.access_token">access_token</a></code></li>
-<li><code><a title="jumpscale.clients.gogs.gogs.Gogs.get_factory_info" href="#jumpscale.clients.gogs.gogs.Gogs.get_factory_info">get_factory_info</a></code></li>
-<li><code><a title="jumpscale.clients.gogs.gogs.Gogs.get_fields" href="#jumpscale.clients.gogs.gogs.Gogs.get_fields">get_fields</a></code></li>
 </ul>
 </li>
 </ul>

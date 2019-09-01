@@ -27,9 +27,6 @@ from pygments.formatters import get_formatter_by_name
 from pygments.lexers import guess_lexer, find_lexer_class_by_name
 
 
-
-## TODO: revise code here probably we can get by guess_lexer only :)
-
 def print_highlighted(txt, lexer=None, formatter=&#34;terminal&#34;):
     lexer = find_lexer_class_by_name(lexer) if lexer else guess_lexer(txt)
     print(pygments.highlight(txt, lexer, get_formatter_by_name(formatter)))
