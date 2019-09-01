@@ -262,32 +262,34 @@ move = shutil.move
 def default_filter_fun(entry):
     return True
 
-def walk(path, fun, pat="*", filter_fun=default_filter_fun):
+def walk(path, fun=lambda e: True, pat="*", filter_fun=default_filter_fun):
     p = pathlib.Path(path)
     for entry in p.rglob(pat):
         # use rglob instead of glob("**/*")
         if filter_fun(entry):
+            yield entry
             fun(entry)
 
 
-# walk_files('/tmp', lambda x: print(x.upper()), filter=j.sals.fs.is_file)
-# walk_files('/tmp', lambda x: print(x.upper()), filter=j.sals.fs.is_dir)
-# walk_files('/tmp', lambda x: print(x.upper()), filter= lambda x: len(x)>4 and (j.sals.fs.is_file(x) or j.sals.fs.is_dir(x)) )
+# for el in walk_files('/tmp', lambda x: print(x.upper()), filter=j.sals.fs.is_file) : ..
+# for el in walk_files('/tmp', lambda x: print(x.upper()), filter=j.sals.fs.is_dir) : .. 
+# for el in walk_files('/tmp', lambda x: print(x.upper()), filter= lambda x: len(x)>4 and (j.sals.fs.is_file(x) or j.sals.fs.is_dir(x)) ) : ..
 
 
-def walk_non_recursive(path, fun, filter_fun=default_filter_fun):
+def walk_non_recursive(path, fun=lambda e: True, filter_fun=default_filter_fun):
     p = pathlib.Path(path)
     for entry in p.iterdir():
         if filter_fun(entry):
+            yield entry
             fun(entry)
 
-def walk_files(path, fun, recursive=True):
+def walk_files(path, fun=lambda e: True, recursive=True):
     if recursive:
         return walk(path, fun, filter_fun=is_file)
     else:
         return walk_non_recursive(path, fun, filter_fun=is_file)
 
-def walk_dirs(path, fun, recursive=True):
+def walk_dirs(path, fun=lambda e: True, recursive=True):
     if recursive:
         return walk(path, fun, filter_fun=is_dir)
     else:
