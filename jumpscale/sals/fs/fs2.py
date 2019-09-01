@@ -276,12 +276,15 @@ def replace_words_in_files(from_, to, where):
 move = shutil.move
 
 
-# TODO: implement filters
-def walk_files(path, fun, pat="*", filters=None):
+def default_filter_fun(entry):
+    return True
+
+def walk(path, fun, pat="*", filter_fun=default_filter_fun):
     p = pathlib.Path(path)
     for entry in p.rglob(pat):
         # use rglob instead of glob("**/*")
-        fun(entry)
+        if filter_fun(entry):
+            fun(entry)
 
 
 # walk_files('/tmp', lambda x: print(x.upper()), filter=j.sals.fs.is_file)
@@ -289,10 +292,21 @@ def walk_files(path, fun, pat="*", filters=None):
 # walk_files('/tmp', lambda x: print(x.upper()), filter= lambda x: len(x)>4 and (j.sals.fs.is_file(x) or j.sals.fs.is_dir(x)) )
 
 
-# TODO: implement filters
-def walk_non_recursive(path, fun, filters=None):
+def walk_non_recursive(path, fun, filter_fun=default_filter_fun):
     p = pathlib.Path(path)
     for entry in p.iterdir():
-        fun(entry)
+        if filter_fun(entry):
+            fun(entry)
 
+def walk_files(path, fun, recursive=True):
+    if recursive:
+        return walk(path, fun, filter_fun=is_file)
+    else:
+        return walk_non_recursive(path, fun, filter_fun=is_file)
+
+def walk_dirs(path, fun, recursive=True):
+    if recursive:
+        return walk(path, fun, filter_fun=is_dir)
+    else:
+        return walk_non_recursive(path, fun, filter_fun=is_dir)
 
