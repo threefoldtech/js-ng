@@ -178,15 +178,6 @@ def rmtree(path):
         os.remove(path)
     elif path.is_dir():
         shutil.rmtree(path)
-    if not parents:
-        return
-    p = path.parent
-    while p:
-        try:
-            os.rmdir(p)
-        except os.error:
-            break
-        p = p.parent
 
 
 def copy_stat(src, dst, times=True, perms=True):
