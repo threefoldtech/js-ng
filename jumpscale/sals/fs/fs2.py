@@ -284,6 +284,11 @@ def walk_files(path, fun, pat="*", filters=None):
         fun(entry)
 
 
+# walk_files('/tmp', lambda x: print(x.upper()), filter=j.sals.fs.is_file)
+# walk_files('/tmp', lambda x: print(x.upper()), filter=j.sals.fs.is_dir)
+# walk_files('/tmp', lambda x: print(x.upper()), filter= lambda x: len(x)>4 and (j.sals.fs.is_file(x) or j.sals.fs.is_dir(x)) )
+
+
 # TODO: implement filters
 def walk_non_recursive(path, fun, filters=None):
     p = pathlib.Path(path)
