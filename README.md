@@ -20,7 +20,7 @@ config management/automation framework
 - Tests
 
 ## Development environment
-- intall [poetry](https://poetry.eustace.io)
+- install [poetry](https://poetry.eustace.io)
 - clone this repository, then
     - `poetry install`
 

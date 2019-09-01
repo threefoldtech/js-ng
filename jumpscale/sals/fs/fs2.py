@@ -164,6 +164,8 @@ def parts_to_path(parts):
     path = pathlib.Path(parts[0])
     for p in parts[1:]:
         path.joinpath(p)
+    return path
+
 
 def rm_emptry_dir(path):
     path = pathlib.Path(path)
