@@ -5,6 +5,7 @@ import shutil
 import stat
 from distutils import dir_util
 
+
 def home():
     return str(pathlib.Path.home())
 
@@ -27,8 +28,10 @@ is_samefile = os.path.samefile
 expandvars = os.path.expandvars
 expanduser = os.path.expanduser
 
+
 def is_dir(path):
     return pathlib.Path(path).is_dir()
+
 
 def is_file(path):
     return pathlib.Path(path).is_file()
@@ -140,7 +143,9 @@ write_ascii = write_file = write_text
 def write_bytes(path, data):
     return pathlib.Path(path).write_bytes(data)
 
+
 write_binary = write_file_binary = write_bytes
+
 
 def touch(path):
     return pathlib.Path(path).touch()
@@ -159,6 +164,7 @@ TempraryDirectory = tempfile.TemporaryDirectory
 mkdtemp = tempfile.mkdtemp
 mkstemp = tempfile.mkstemp
 get_temp_dir = tempfile.gettempdir
+
 
 def parts_to_path(parts):
     path = pathlib.Path(parts[0])
@@ -182,11 +188,12 @@ def rmtree(path):
 
 def copy_stat(src, dst, times=True, perms=True):
     st = os.stat(src)
-    if hasattr(os, 'utime'):
+    if hasattr(os, "utime"):
         os.utime(dst, (st.st_atime, st.st_mtime))
-    if hasattr(os, 'chmod'):
+    if hasattr(os, "chmod"):
         m = stat.S_IMODE(st.st_mode)
         os.chmod(dst, m)
+
 
 def copy_file(src, dst, times=False, perms=False):
     """Copy the file, optionally copying the permission bits (mode) and
@@ -202,8 +209,10 @@ def copy_file(src, dst, times=False, perms=False):
     if times or perms:
         copy_stat(src, dst, times, perms)
 
+
 copy_tree = dir_util.copy_tree
 chdir = os.chdir
+
 
 def change_dir(to):
     os.chdir(path)
@@ -212,6 +221,7 @@ def change_dir(to):
 
 def chmod(path, mode):
     return pathlib.Path(path).chmod(mode)
+
 
 def lchmod(path, mode):
     return pathlib.Path(path).lchmod(mode)
@@ -240,11 +250,14 @@ def extension(path, include_dot=True):
     else:
         return splitted[1].strip(".")
 
+
 def chown():
     raise NotImplementedError()
 
+
 def read_link(path):
     raise NotImplementedError()
+
 
 def remove_links(path):
     raise NotImplementedError()
@@ -253,14 +266,17 @@ def remove_links(path):
 def change_filenames(from_, to, where):
     pass
 
+
 def replace_words_in_files(from_, to, where):
     pass
+
 
 move = shutil.move
 
 
 def default_filter_fun(entry):
     return True
+
 
 def walk(path, fun=lambda e: True, pat="*", filter_fun=default_filter_fun):
     p = pathlib.Path(path)
@@ -272,7 +288,7 @@ def walk(path, fun=lambda e: True, pat="*", filter_fun=default_filter_fun):
 
 
 # for el in walk_files('/tmp', lambda x: print(x.upper()), filter=j.sals.fs.is_file) : ..
-# for el in walk_files('/tmp', lambda x: print(x.upper()), filter=j.sals.fs.is_dir) : .. 
+# for el in walk_files('/tmp', lambda x: print(x.upper()), filter=j.sals.fs.is_dir) : ..
 # for el in walk_files('/tmp', lambda x: print(x.upper()), filter= lambda x: len(x)>4 and (j.sals.fs.is_file(x) or j.sals.fs.is_dir(x)) ) : ..
 
 
@@ -283,11 +299,13 @@ def walk_non_recursive(path, fun=lambda e: True, filter_fun=default_filter_fun):
             yield entry
             fun(entry)
 
+
 def walk_files(path, fun=lambda e: True, recursive=True):
     if recursive:
         return walk(path, fun, filter_fun=is_file)
     else:
         return walk_non_recursive(path, fun, filter_fun=is_file)
+
 
 def walk_dirs(path, fun=lambda e: True, recursive=True):
     if recursive:
