@@ -43,6 +43,7 @@ cryptocompare = "^0.6.4"
 sonic-client = "^0.0.5"
 google-api-python-client = "^1.7"
 sendgrid = "^6.0"
+twilio = "^6.29"
 
 [tool.poetry.dev-dependencies]
 ipdb = "^0.12.1"
