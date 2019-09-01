@@ -32,7 +32,7 @@ from abc import ABC, abstractmethod
 from jumpscale.data.nacl import NACL
 from jumpscale.data.serializers import base64, json
 from jumpscale.core.config import Environment
-from jumpscale.sals.fs import readFile, writeFile
+from jumpscale.sals.fs import read_file, write_file
 
 
 class InvalidPrivateKey(Exception):
@@ -197,7 +197,7 @@ class FileSystemStore(EncryptedConfigStore):
 
     def read(self, instance_name):
         path = self.get_path(instance_name)
-        return readFile(path)
+        return read_file(path)
 
     def list_all(self):
         if not os.path.exists(self.config_root):
@@ -684,7 +684,7 @@ def location(self):
 
     def read(self, instance_name):
         path = self.get_path(instance_name)
-        return readFile(path)
+        return read_file(path)
 
     def list_all(self):
         if not os.path.exists(self.config_root):
@@ -795,7 +795,7 @@ def config_root(self):
 <summary>Source code</summary>
 <pre><code class="python">def read(self, instance_name):
     path = self.get_path(instance_name)
-    return readFile(path)</code></pre>
+    return read_file(path)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.core.base.store.FileSystemStore.write"><code class="name flex">

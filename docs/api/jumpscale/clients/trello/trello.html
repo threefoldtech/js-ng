@@ -50,7 +50,7 @@ class TrelloClient(Client):
             self.access_token_ = access_token[&#34;oauth_token&#34;]
             self.access_token_secret = access_token[&#34;oauth_token_secret&#34;]
 
-        self.client = trellopkg.TrelloAPIClient(api_key=self.api_key_, api_secret=self.secret, token=self.token, token_secret=self.token_secret)</code></pre>
+        self.client = TrelloAPIClient(api_key=self.api_key_, api_secret=self.secret, token=self.token, token_secret=self.token_secret)</code></pre>
 </details>
 </section>
 <section>
@@ -91,7 +91,7 @@ class TrelloClient(Client):
             self.access_token_ = access_token[&#34;oauth_token&#34;]
             self.access_token_secret = access_token[&#34;oauth_token_secret&#34;]
 
-        self.client = trellopkg.TrelloAPIClient(api_key=self.api_key_, api_secret=self.secret, token=self.token, token_secret=self.token_secret)</code></pre>
+        self.client = TrelloAPIClient(api_key=self.api_key_, api_secret=self.secret, token=self.token, token_secret=self.token_secret)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -160,7 +160,7 @@ def trello_client(self):
         self.access_token_ = access_token[&#34;oauth_token&#34;]
         self.access_token_secret = access_token[&#34;oauth_token_secret&#34;]
 
-    self.client = trellopkg.TrelloAPIClient(api_key=self.api_key_, api_secret=self.secret, token=self.token, token_secret=self.token_secret)</code></pre>
+    self.client = TrelloAPIClient(api_key=self.api_key_, api_secret=self.secret, token=self.token, token_secret=self.token_secret)</code></pre>
 </details>
 </dd>
 </dl>

@@ -501,7 +501,7 @@ def getDefunctProcesses():
     return llist
 
 def getEnviron(pid):
-    environ = j.sal.fs.readFile("/proc/%s/environ" % pid)
+    environ = j.sal.fs.read_file("/proc/%s/environ" % pid)
     env = dict()
     for line in environ.split("\0"):
         if "=" in line:

@@ -39,8 +39,8 @@ class SSHKeyClient(Client):
         super().__init__()
 
     def load_from_file_system(self):
-        self.public_key = j.sals.fs.readFile(self.public_key_path)
-        self.private_key = j.sals.fs.readFile(self.private_key_path)
+        self.public_key = j.sals.fs.read_file(self.public_key_path)
+        self.private_key = j.sals.fs.read_file(self.private_key_path)
         
 
     def generate_keys(self):
@@ -49,8 +49,8 @@ class SSHKeyClient(Client):
         cmd = &#39;ssh-keygen -f {} -N &#34;{}&#34;&#39;.format(self.private_key_path, self.passphrase)
         rc, out, err = j.core.executors.run_local(cmd)
         if rc == 0:
-            self.public_key = j.sals.fs.readFile(self.public_key_path)
-            self.private_key = j.sals.fs.readFile(self.private_key_path)
+            self.public_key = j.sals.fs.read_file(self.public_key_path)
+            self.private_key = j.sals.fs.read_file(self.private_key_path)
         else:
             raise RuntimeError(&#34;couldn&#39;t create sshkey&#34;)
 
@@ -65,8 +65,8 @@ class SSHKeyClient(Client):
         if not self.public_key:
             raise RuntimeError(&#34;no public key to write&#34;)
         
-        j.sals.fs.writeFile(self.private_key_path, self.private_key)
-        j.sals.fs.writeFile(self.public_key_path, self.public_key)
+        j.sals.fs.write_file(self.private_key_path, self.private_key)
+        j.sals.fs.write_file(self.public_key_path, self.public_key)
 
     def delete_from_filesystem(self):
         pass</code></pre>
@@ -102,8 +102,8 @@ class SSHKeyClient(Client):
         super().__init__()
 
     def load_from_file_system(self):
-        self.public_key = j.sals.fs.readFile(self.public_key_path)
-        self.private_key = j.sals.fs.readFile(self.private_key_path)
+        self.public_key = j.sals.fs.read_file(self.public_key_path)
+        self.private_key = j.sals.fs.read_file(self.private_key_path)
         
 
     def generate_keys(self):
@@ -112,8 +112,8 @@ class SSHKeyClient(Client):
         cmd = &#39;ssh-keygen -f {} -N &#34;{}&#34;&#39;.format(self.private_key_path, self.passphrase)
         rc, out, err = j.core.executors.run_local(cmd)
         if rc == 0:
-            self.public_key = j.sals.fs.readFile(self.public_key_path)
-            self.private_key = j.sals.fs.readFile(self.private_key_path)
+            self.public_key = j.sals.fs.read_file(self.public_key_path)
+            self.private_key = j.sals.fs.read_file(self.private_key_path)
         else:
             raise RuntimeError(&#34;couldn&#39;t create sshkey&#34;)
 
@@ -128,8 +128,8 @@ class SSHKeyClient(Client):
         if not self.public_key:
             raise RuntimeError(&#34;no public key to write&#34;)
         
-        j.sals.fs.writeFile(self.private_key_path, self.private_key)
-        j.sals.fs.writeFile(self.public_key_path, self.public_key)
+        j.sals.fs.write_file(self.private_key_path, self.private_key)
+        j.sals.fs.write_file(self.public_key_path, self.public_key)
 
     def delete_from_filesystem(self):
         pass</code></pre>
@@ -242,8 +242,8 @@ def public_key_path(self):
     cmd = &#39;ssh-keygen -f {} -N &#34;{}&#34;&#39;.format(self.private_key_path, self.passphrase)
     rc, out, err = j.core.executors.run_local(cmd)
     if rc == 0:
-        self.public_key = j.sals.fs.readFile(self.public_key_path)
-        self.private_key = j.sals.fs.readFile(self.private_key_path)
+        self.public_key = j.sals.fs.read_file(self.public_key_path)
+        self.private_key = j.sals.fs.read_file(self.private_key_path)
     else:
         raise RuntimeError(&#34;couldn&#39;t create sshkey&#34;)</code></pre>
 </details>
@@ -256,8 +256,8 @@ def public_key_path(self):
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def load_from_file_system(self):
-    self.public_key = j.sals.fs.readFile(self.public_key_path)
-    self.private_key = j.sals.fs.readFile(self.private_key_path)</code></pre>
+    self.public_key = j.sals.fs.read_file(self.public_key_path)
+    self.private_key = j.sals.fs.read_file(self.private_key_path)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.clients.sshkey.sshkey.SSHKeyClient.write_to_filesystem"><code class="name flex">
@@ -274,8 +274,8 @@ def public_key_path(self):
     if not self.public_key:
         raise RuntimeError(&#34;no public key to write&#34;)
     
-    j.sals.fs.writeFile(self.private_key_path, self.private_key)
-    j.sals.fs.writeFile(self.public_key_path, self.public_key)</code></pre>
+    j.sals.fs.write_file(self.private_key_path, self.private_key)
+    j.sals.fs.write_file(self.public_key_path, self.public_key)</code></pre>
 </details>
 </dd>
 </dl>

@@ -75,9 +75,9 @@ class MailClient(Client):
                 # Guess the content type based on the file's extension.  Encoding
                 # will be ignored, although we should check for simple things like
                 # gzip'd or compressed files.
-                filename = j.sals.fs.getBaseName(fl)
+                filename = j.sals.fs.basename(fl)
                 ctype, encoding = mimetypes.guess_type(fl)
-                content = j.sals.fs.readFile(fl)
+                content = j.sals.fs.read_file(fl)
                 if ctype is None or encoding is not None:
                     # No guess could be made, or the file is encoded (compressed), so
                     # use a generic bag-of-bits type.

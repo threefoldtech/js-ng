@@ -15,8 +15,8 @@ class SSHKeyClient(Client):
         super().__init__()
 
     def load_from_file_system(self):
-        self.public_key = j.sals.fs.readFile(self.public_key_path)
-        self.private_key = j.sals.fs.readFile(self.private_key_path)
+        self.public_key = j.sals.fs.read_file(self.public_key_path)
+        self.private_key = j.sals.fs.read_file(self.private_key_path)
         
 
     def generate_keys(self):
@@ -25,8 +25,8 @@ class SSHKeyClient(Client):
         cmd = 'ssh-keygen -f {} -N "{}"'.format(self.private_key_path, self.passphrase)
         rc, out, err = j.core.executors.run_local(cmd)
         if rc == 0:
-            self.public_key = j.sals.fs.readFile(self.public_key_path)
-            self.private_key = j.sals.fs.readFile(self.private_key_path)
+            self.public_key = j.sals.fs.read_file(self.public_key_path)
+            self.private_key = j.sals.fs.read_file(self.private_key_path)
         else:
             raise RuntimeError("couldn't create sshkey")
 
@@ -41,8 +41,8 @@ class SSHKeyClient(Client):
         if not self.public_key:
             raise RuntimeError("no public key to write")
         
-        j.sals.fs.writeFile(self.private_key_path, self.private_key)
-        j.sals.fs.writeFile(self.public_key_path, self.public_key)
+        j.sals.fs.write_file(self.private_key_path, self.private_key)
+        j.sals.fs.write_file(self.public_key_path, self.public_key)
 
     def delete_from_filesystem(self):
         pass
