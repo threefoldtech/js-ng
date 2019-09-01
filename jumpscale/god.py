@@ -111,11 +111,11 @@ def load():
                     print("[-] {} at {} ".format(e, importedpkgstr))
                     continue
                 else:
-                    if hasattr(m, "module_export_as"):
+                    if hasattr(m, "export_module_as"):
                         # print("rootbase: ", rootbase, importedpkgstr)
-                        # print(m.module_export_as)
-                        loadeddict['jumpscale'][rootbase][pkgname] = m.module_export_as
-                        # loadeddict[importedpkgstr] = m.module_export_as
+                        # print(m.export_module_as)
+                        loadeddict['jumpscale'][rootbase][pkgname] = m.export_module_as
+                        # loadeddict[importedpkgstr] = m.export_module_as
                     else:
                         loadeddict['jumpscale'][rootbase][pkgname] = m
 
