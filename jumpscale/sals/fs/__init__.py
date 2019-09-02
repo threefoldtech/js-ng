@@ -1,1 +1,1 @@
-from .fs2 import *
+from .fs import *
