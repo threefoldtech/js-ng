@@ -88,7 +88,7 @@ class ConfigStore(ABC):
         pass
 
     @abstractmethod
-    def delete(self):
+    def delete(self, instance_name):
         pass
 
 

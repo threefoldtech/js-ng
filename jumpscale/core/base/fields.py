@@ -8,11 +8,15 @@ class ValidationError(Exception):
 
 
 class Field:
-    def __init__(self, default=None, required=False, indexed=False, **kwargs):
+    def __init__(self, default=None, required=False, indexed=False, validators=None, **kwargs):
         self.default = default
         self.required = required
         self.indexed = indexed
         self.kwargs = kwargs
+
+        self.validators = validators
+        if self.validators is None:
+            self.validators = []
 
         # self.validate = Schema({
 
@@ -22,6 +26,9 @@ class Field:
         if value is None:
             if self.required:
                 raise ValidationError("field is required")
+
+        for validator in self.validators:
+            validator(value)
 
 
 class Typed(Field):
@@ -76,6 +83,24 @@ class Object(Field):
         """
         super().validate(value)
         value.validate()
+
+
+class List(Field):
+    def __init__(self, field, default=None, **kwargs):
+        self.field = field
+        if default is None:
+            default = []
+
+        super().__init__(default=default, **kwargs)
+
+    def validate(self, value):
+        super().validate(value)
+
+        if value is None:
+            value = []
+
+        for item in value:
+            self.field.validate(item)
 
 
 class Factory(StoredFactory):

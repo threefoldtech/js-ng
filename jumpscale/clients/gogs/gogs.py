@@ -10,3 +10,4 @@ class User(Base):
 class Gogs(Client):
     access_token = fields.Secret(required=True)
     user = fields.Object(User)
+    admins = fields.List(fields.String(required=True), required=True)
