@@ -9,7 +9,7 @@ from enum import Enum
 from jumpscale.data.nacl import NACL
 from jumpscale.data.serializers import base64, json
 from jumpscale.core.config import Environment
-from jumpscale.sals.fs import read_file_binary, write_file_binary
+from jumpscale.sals.fs import read_file_binary, write_file_binary, rmtree
 
 
 class InvalidPrivateKey(Exception):
@@ -209,8 +209,7 @@ class FileSystemStore(EncryptedConfigStore):
     def delete(self, instance_name):
         path = self.get_instance_root(instance_name)
         if os.path.exists(path):
-            # TODO: replace with sal fs
-            shutil.rmtree(path)
+            rmtree(path)
 
 
 class RedisStore(EncryptedConfigStore):
