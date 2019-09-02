@@ -1,1702 +1,671 @@
-import sys
-import re
-from jumpscale.god import j
-import os
-import os.path
-import hashlib
-import fnmatch
-import inspect  # needed for getPathOfRunningFunction
-import shutil
+import pathlib
 import tempfile
-import codecs
-import pickle as pickle
+import os
+import shutil
 import stat
-from stat import ST_MTIME
-import stat
-from functools import wraps
-import copy
+from distutils import dir_util
+from typing import List
 
 
+def home():
+    return str(pathlib.Path.home())
 
 
-def copyFile(fileFrom, to, createDirIfNeeded=False, overwriteFile=True):
-    """Copy file
+def cwd():
+    return str(pathlib.Path.cwd())
 
-    Copies the file from C{fileFrom} to the file or directory C{to}.
-    If C{to} is a directory, a file with the same basename as C{fileFrom} is
-    created (or overwritten) in the directory specified.
-    Permission bits are copied.
 
-    @param fileFrom: Source file path name
-    @type fileFrom: string
-    @param to: Destination file or folder path name
-    @type to: string
+basename = os.path.basename
+dirname = os.path.dirname
+common_path = os.path.commonpath
+common_prefix = os.path.commonprefix
+norm_path = os.path.normpath
+norm_case = os.path.normcase
+get_access_time = os.path.getatime
+get_modified_time = os.path.getmtime
+get_creation_time = os.path.getctime
+sep = os.path.sep
+is_samefile = os.path.samefile
+expandvars = os.path.expandvars
+expanduser = os.path.expanduser
 
-    @autocomplete
 
+def is_dir(path: str) -> bool :
+    """Checks if path is a dir
+    
+    :param path: path to check
+    :type path: str
+    :return: True if is dir else False
+    :rtype: bool
     """
-    # Create target folder first, otherwise copy fails
-    target_folder = os.path.dirname(to)
-    if createDirIfNeeded:
-        createDir(target_folder)
-    if exists(to):
-        if os.path.samefile(fileFrom, to):
-            raise j.exceptions.Input("{src} and {dest} are the same file".format(src=fileFrom, dest=to))
-        if overwriteFile is False:
-            if os.path.samefile(to, target_folder):
-                destfilename = os.path.join(to, os.path.basename(fileFrom))
-                if exists(destfilename):
-                    return
-            else:
-                return
-        elif isFile(to):
-            # overwriting some open  files is frustrating and may not work
-            # due to locking [delete/copy is a better strategy]
-            remove(to)
-    shutil.copy(fileFrom, to)
+    return pathlib.Path(path).is_dir()
 
 
-
-def moveFile(source, destin):
-    """Move a  File from source path to destination path
-    @param source: string (Source file path)
-    @param destination: string (Destination path the file should be moved to )
+def is_file(path:str) -> bool:
+    """Checks if path is a file
+    
+    :param path: path to check
+    :type path: str
+    :return: True if is file else False
+    :rtype: bool
     """
-
-    _move(source, destin)
-
-def renameFile(filePath, new_name):
-    """
-    OBSOLETE
-    """
-
-    return _move(filePath, new_name)
-
-
-def removeIrrelevantFiles(path, followSymlinks=True):
-    """Will remove files having extensions: pyc, bak
-    @param path: string (path to search in)
-    """
-    ext = ["pyc", "bak"]
-    for path in listFilesInDir(path, recursive=True, followSymlinks=followSymlinks):
-        if getFileExtension(path) in ext:
-            remove(path)
-
-
-def remove(path):
-    """Remove a File
-    @param path: string (File path required to be removed)
-    """
-    return j.core.tools.delete(path)
-
-
-def createEmptyFile(filename):
-    """Create an empty file
-    @param filename: string (file path name to be created)
-    """
-
-    open(filename, "w").close()
-
-
-
-def createDir(newdir, unlink=False):
-    """Create new Directory
-    @param newdir: string (Directory path/name)
-    if newdir was only given as a directory name, the new directory will be created on the default path,
-    if newdir was given as a complete path with the directory name, the new directory will be created in the specified path
-    """
-    if newdir.find("file://") != -1:
-        raise j.exceptions.RuntimeError("Cannot use file notation here")
-
-    if exists(newdir):
-        if isLink(newdir) and unlink:
-            unlink(newdir)
-
-
-    else:
-        head, tail = os.path.split(newdir)
-        if head and (not exists(head) or not isDir(head)):
-            createDir(head, unlink=False)
-        if tail:
-            os.mkdir(newdir)
-            # try:
-            #     os.mkdir(newdir)
-            #     # print "mkdir:%s"%newdir
-            # except OSError as e:
-            #     if e.errno != os.errno.EEXIST:  # File exists
-            #         raise
-
-
-
-def copyDirTree(
-
-    src,
-    dst,
-    keepsymlinks=False,
-    deletefirst=False,
-    overwriteFiles=True,
-    ignoredir=None,
-    ignorefiles=None,
-    rsync=True,
-    ssh=False,
-    sshport=22,
-    recursive=True,
-    rsyncdelete=True,
-    createdir=False,
-    showout=False,
-):
-    """Recursively copy an entire directory tree rooted at src.
-    The dst directory may already exist; if not,
-    it will be created as well as missing parent directories
-    @param src: string (source of directory tree to be copied)
-    @param rsyncdelete will remove files on dest which are not on source (default)
-    @param recursive:  recursively look in all subdirs
-    :param ignoredir: the following are always in, no need to specify ['.egg-info', '.dist-info', '__pycache__']
-    :param ignorefiles: the following are always in, no need to specify: ["*.egg-info","*.pyc","*.bak"]
-    @param ssh:  bool (copy to remote)
-    @param sshport int (ssh port)
-    @param createdir:   bool (when ssh creates parent directory)
-    @param dst: string (path directory to be copied to...should not already exist)
-    @param keepsymlinks: bool (True keeps symlinks instead of copying the content of the file)
-    @param deletefirst: bool (Set to True if you want to erase destination first, be carefull, this can erase directories)
-    @param overwriteFiles: if True will overwrite files, otherwise will not overwrite when destination exists
-    """
-
-    default_ignore_dir = [".egg-info", ".dist-info", "__pycache__"]
-    if ignoredir is None:
-        ignoredir = []
-    if ignorefiles is None:
-        ignorefiles = []
-    for item in default_ignore_dir:
-        if item not in ignoredir:
-            ignoredir.append(item)
-    default_ignorefiles = ["*.egg-info", "*.pyc", "*.bak"]
-    for item in default_ignorefiles:
-        if item not in ignorefiles:
-            ignorefiles.append(item)
-
-    if not rsync:
-        if src.find("file://") != -1 or dst.find("file://") != -1:
-            raise j.exceptions.RuntimeError("Cannot use file notation here")
-
-        if (src is None) or (dst is None):
-            raise j.exceptions.Value(
-                "Not enough parameters passed in system.fs.copyDirTree to copy directory from %s to %s "
-                % (src, dst)
-            )
-        if isDir(src):
-            names = os.listdir(src)
-
-            if not exists(dst):
-                createDir(dst)
-
-            errors = []
-            for name in names:
-                # is only for the name
-                name2 = name
-
-                srcname = joinPaths(src, name)
-                dstname = joinPaths(dst, name2)
-
-                if isDir(srcname) and name in ignoredir:
-                    continue
-                if isFile(srcname) and name in ignorefiles:
-                    continue
-
-                if deletefirst and exists(dstname):
-                    if isDir(dstname, False):
-                        remove(dstname)
-                    elif isLink(dstname):
-                        unlink(dstname)
-
-                if isLink(srcname):
-                    linkto = readLink(srcname)
-                    if keepsymlinks:
-                        symlink(linkto, dstname, overwriteFiles)
-                        continue
-                    else:
-                        srcname = linkto
-                if isDir(srcname):
-                    # print "1:%s %s"%(srcname,dstname)
-                    copyDirTree(
-                        srcname,
-                        dstname,
-                        keepsymlinks,
-                        deletefirst,
-                        overwriteFiles=overwriteFiles,
-                        ignoredir=ignoredir,
-                        ignorefiles=ignorefiles,
-                    )
-                if isFile(srcname):
-                    # print "2:%s %s"%(srcname,dstname)
-                    copyFile(srcname, dstname, createDirIfNeeded=False, overwriteFile=overwriteFiles)
-        else:
-            raise j.exceptions.RuntimeError("Source path %s in system.fs.copyDirTree is not a directory" % src)
-    else:
-        excl = " "
-        for item in ignoredir:
-            excl += "--exclude '*%s/' " % item
-
-        dstpath2 = dst.split(":")[1] if ":" in dst else dst  # OTHERWISE CANNOT WORK FOR SSH
-
-        dstpath = dst
-        dstpath = dstpath.replace("//", "/")
-
-        src = src.replace("//", "/")
-
-        # ":" is there to make sure we support ssh
-        if ":" not in src and j.sals.fs.isDir(src):
-            if src[-1] != "/":
-                src += "/"
-            if dstpath[-1] != "/":
-                dstpath += "/"
-
-        cmd = "rsync --no-owner --no-group"
-        if keepsymlinks:
-            # -l is keep symlinks, -L follow
-            cmd += " -rlt --partial %s" % excl
-        else:
-            cmd += " -rLt --partial %s" % excl
-        if not recursive:
-            cmd += ' --exclude "*/"'
-        if rsyncdelete:
-            cmd += " --delete --delete-excluded "
-        if ssh:
-            cmd += " -e 'ssh -o StrictHostKeyChecking=no -p %s' " % sshport
-            if createdir:
-                cmd += "--rsync-path='mkdir -p %s && rsync' " % getParent(dstpath2)
-        else:
-            createDir(getParent(dstpath))
-        cmd += " '%s' '%s'" % (src, dst)
-        cmd += " --verbose"
-        # print(cmd)
-        rc, out, err = j.sal.process.execute(cmd, showout=showout)
-
-
-def changeDir(path):
-    """Changes Current Directory
-    @param path: string (Directory path to be changed to)
-    """
-
-    os.chdir(path)
-    newcurrentPath = os.getcwd()
-
-    return newcurrentPath
-
-
-def moveDir(source, destin):
-    """Move Directory from source to destination
-    @param source: string (Source path where the directory should be removed from)
-    @param destin: string (Destination path where the directory should be moved into)
-    """
-
-    _move(source, destin)
-
-
-def joinPaths(*args):
-    """Join one or more path components.
-    If any component is an absolute path, all previous components are thrown away, and joining continues.
-    @param path1: string
-    @param path2: string
-    @param path3: string
-    @param .... : string
-    @rtype: Concatenation of path1, and optionally path2, etc...,
-    with exactly one directory separator (os.sep) inserted between components, unless path2 is empty.
-    """
-    args = [j.core.text.toStr(x) for x in args]
-
-    if args is None:
-        raise j.exceptions.Value("Not enough parameters %s" % (str(args)))
-    if os.sys.platform.startswith("win"):
-        args2 = []
-        for item in args:
-            item = item.replace("/", "\\")
-            while len(item) > 0 and item[0] == "\\":
-                item = item[1:]
-            args2.append(item)
-        args = args2
-    return os.path.join(*args)
-
-
-def getDirName(path, lastOnly=False, levelsUp=None):
-    """
-    Return a directory name from pathname path.
-    @param path the path to find a directory within
-    @param lastOnly means only the last part of the path which is a dir (overrides levelsUp to 0)
-    @param levelsUp means, return the parent dir levelsUp levels up
-        e.g. ...getDirName("/opt/qbase/bin/something/test.py", levelsUp=0) would return something
-        e.g. ...getDirName("/opt/qbase/bin/something/test.py", levelsUp=1) would return bin
-        e.g. ...getDirName("/opt/qbase/bin/something/test.py", levelsUp=10) would raise an error
-    """
-
-    dname = os.path.dirname(path)
-    dname = dname.replace("/", os.sep)
-    dname = dname.replace("//", os.sep)
-    dname = dname.replace("\\", os.sep)
-    if lastOnly:
-        dname = dname.split(os.sep)[-1]
-        return dname
-    if levelsUp is not None:
-        parts = dname.split(os.sep)
-        if len(parts) - levelsUp > 0:
-            return parts[len(parts) - levelsUp - 1]
-        else:
-            raise j.exceptions.RuntimeError(
-                "Cannot find part of dir %s levels up, path %s is not long enough" % (levelsUp, path)
-            )
-    return dname + os.sep if dname else dname
-
-
-def getBaseName(path, removeExtension=False):
-    """Return the base name of pathname path."""
-
-    name = os.path.basename(path.rstrip(os.path.sep))
-    if removeExtension:
-        if "." in name:
-            name = ".".join(name.split(".")[:-1])
-    return name
-basename = getBaseName
-
-# NO DECORATORS HERE
-def pathShorten(path):
-    """
-    Clean path (change /var/www/../lib to /var/lib). On Windows, if the
-    path exists, the short path name is returned.
-
-    @param path: Path to clean
-    @type path: string
-    @return: Cleaned (short) path
-    @rtype: string
-    """
-    return pathShorten(path)
-
-# NO DECORATORS HERE
-def pathClean(path):
-    """
-    goal is to get a equal representation in / & \ in relation to os.sep
-    """
-    return pathClean(path)
-
-# NO DECORATORS HERE
-def pathDirClean(path):
-    return pathDirClean(path)
-
-# NO DECORATORS HERE
-def dirEqual(path1, path2):
-    return dirEqual(path)
-
-# NO DECORATORS HERE
-def pathNormalize(path):
-    """
-    paths are made absolute & made sure they are in line with os.sep
-    @param path: path to normalize
-    """
-    return pathNormalize(path)
-
-def pathRemoveDirPart(path, toremove, removeTrailingSlash=False):
-    """
-    goal remove dirparts of a dirpath e,g, a basepath which is not needed
-    will look for part to remove in full path but only full dirs
-    """
-    path = pathNormalize(path)
-    toremove = pathNormalize(toremove)
-
-    if pathClean(toremove) == pathClean(path):
-        return ""
-    path = pathClean(path)
-    path = path.replace(pathDirClean(toremove), "")
-    if removeTrailingSlash:
-        if len(path) > 0 and path[0] == os.sep:
-            path = path[1:]
-    path = pathClean(path)
-    return path
-
-def processPathForDoubleDots(path):
-    """
-    /root/somepath/.. would become /root
-    /root/../somepath/ would become /somepath
-
-    result will always be with / slashes
-    """
-    # print "processPathForDoubleDots:%s"%path
-    path = pathClean(path)
-    path = path.replace("\\", "/")
-    result = []
-    for item in path.split("/"):
-        if item == "..":
-            if result == []:
-                raise j.exceptions.RuntimeError("Cannot processPathForDoubleDots for paths with only ..")
-            else:
-                result.pop()
-        else:
-            result.append(item)
-    return "/".join(result)
-
-
-def getParent(path):
-    """
-    Returns the parent of the path:
-    /dir1/dir2/file_or_dir -> /dir1/dir2/
-    /dir1/dir2/            -> /dir1/
-    """
-    parts = path.split(os.sep)
-    if parts[-1] == "":
-        parts = parts[:-1]
-    parts = parts[:-1]
-    if parts == [""]:
-        return os.sep
-    return os.sep.join(parts)
-
-def getParentWithDirname(path="", dirname=".git", die=False):
-    """
-    looks for parent which has $dirname in the parent dir, if found return
-    if not found will return None or die
-
-    Raises:
-        RuntimeError -- if die
-
+    return pathlib.Path(path).is_file()
+
+
+def is_symlink(path: str) -> bool:
+    """Checks if path symlink
+    
+    Args:
+        path (str): path to check if symlink
+    
     Returns:
-        string -- the path which has the dirname or None
-
+        bool: True if symlink False otherwise
     """
-    if path == "":
-        path = j.sals.fs.getcwd()
-
-    # first check if there is no .jsconfig in parent dirs
-    curdir = copy.copy(path)
-    while curdir.strip() != "":
-        if j.sals.fs.exists("%s/%s" % (curdir, dirname)):
-            return curdir
-        # look for parent
-        curdir = j.sals.fs.getParent(curdir)
-    if die:
-        raise j.exceptions.Base("Could not find %s dir as parent of:'%s'" % (dirname, path))
-    else:
-        return None
+    return pathlib.Path(path).is_symlink()
 
 
-def getFileExtension(path):
-    ext = os.path.splitext(path)[1]
-    return ext.strip(".")
-
-
-def chown(path, user, group=None):
-    from pwd import getpwnam
-    from grp import getgrnam
-
-    getpwnam(user)[2]
-    uid = getpwnam(user).pw_uid
-    if group is not None:
-        gid = getgrnam(group).gr_gid
-    else:
-        gid = getpwnam(user).pw_gid
-    os.chown(path, uid, gid)
-    for root, dirs, files in os.walk(path):
-        for ddir in dirs:
-            path = os.path.join(root, ddir)
-            try:
-                os.chown(path, uid, gid)
-            except Exception as e:
-                if str(e).find("No such file or directory") == -1:
-                    raise j.exceptions.RuntimeError("%s" % e)
-        for file in files:
-            path = os.path.join(root, file)
-            try:
-                os.chown(path, uid, gid)
-            except Exception as e:
-                if str(e).find("No such file or directory") == -1:
-                    raise j.exceptions.RuntimeError("%s" % e)
-
-
-def chmod(path, permissions):
+def is_absolute(path: str) -> bool:
+    """Checks if path is absolute
+    
+    Returns:
+        bool: True if absolute
     """
-    @param permissions e.g. 0o660 (USE OCTAL !!!)
+    return pathlib.Path(path).is_absolute()
+
+
+def is_mount(path: str) -> bool:
+    """Checks if path is mount
+    
+    Returns:
+        bool: True if mount
     """
-    if permissions > 511 or permissions < 0:
-        raise j.exceptions.Value("can't perform chmod, %s is not a valid mode" % oct(permissions))
-
-    os.chmod(path, permissions)
-    for root, dirs, files in os.walk(path):
-        for ddir in dirs:
-            path = os.path.join(root, ddir)
-            try:
-                os.chmod(path, permissions)
-            except Exception as e:
-                if str(e).find("No such file or directory") == -1:
-                    raise j.exceptions.RuntimeError("%s" % e)
-
-        for file in files:
-            path = os.path.join(root, file)
-            try:
-                os.chmod(path, permissions)
-            except Exception as e:
-                if str(e).find("No such file or directory") == -1:
-                    raise j.exceptions.RuntimeError("%s" % e)
+    return pathlib.Path(path).is_mount()
 
 
-def pathParse(path, baseDir="", existCheck=True, checkIsFile=False):
+def is_ascii_file(path:str, checksize=4096) -> bool:
+    """Checks if file `path` is ascii
+    
+    Args:
+        path (str): file path
+        checksize (int, optional): checksize. Defaults to 4096.
+    
+    Returns:
+        bool: True if ascii file
     """
-    parse paths of form /root/tmp/33_adoc.doc into the path, priority which is numbers before _ at beginning of path
-    also returns filename
-    checks if path can be found, if not will fail
-    when filename="" then is directory which has been parsed
-    if basedir specified that part of path will be removed
-
-    example:
-    j.sals.fs.pathParse("/opt/qbase3/apps/specs/myspecs/definitions/cloud/datacenter.txt","/opt/qbase3/apps/specs/myspecs/",existCheck=False)
-    @param path is existing path to a file
-    @param baseDir, is the absolute part of the path not required
-    @return list of dirpath,filename,extension,priority
-            priority = 0 if not specified
-    """
-    # make sure only clean path is left and the filename is out
-    if existCheck and not exists(path):
-        raise j.exceptions.RuntimeError("Cannot find file %s when importing" % path)
-    if checkIsFile and not isFile(path):
-        raise j.exceptions.RuntimeError("Path %s should be a file (not e.g. a dir), error when importing" % path)
-    extension = ""
-    if isDir(path):
-        name = ""
-        path = pathClean(path)
-    else:
-        name = getBaseName(path)
-        path = pathClean(path)
-        # make sure only clean path is left and the filename is out
-        path = getDirName(path)
-        # find extension
-        regexToFindExt = "\.\w*$"
-        if j.data.regex.match(regexToFindExt, name):
-            extension = j.data.regex.findOne(regexToFindExt, name).replace(".", "")
-            # remove extension from name
-            name = j.data.regex.replace(
-                regexToFindExt, regexFindsubsetToReplace=regexToFindExt, replaceWith="", text=name
-            )
-
-    if baseDir != "":
-        path = pathRemoveDirPart(path, baseDir)
-
-    if name == "":
-        dirOrFilename = getDirName(path, lastOnly=True)
-    else:
-        dirOrFilename = name
-    # check for priority
-    regexToFindPriority = "^\d*_"
-    if j.data.regex.match(regexToFindPriority, dirOrFilename):
-        # found priority in path
-        priority = j.data.regex.findOne(regexToFindPriority, dirOrFilename).replace("_", "")
-        # remove priority from path
-        name = j.data.regex.replace(
-            regexToFindPriority, regexFindsubsetToReplace=regexToFindPriority, replaceWith="", text=name
-        )
-    else:
-        priority = 0
-
-    return path, name, extension, priority  # if name =="" then is dir
-
-def getcwd():
-    """get current working directory
-    @rtype: string (current working directory path)
-    """
-
-    return os.getcwd()
-
-
-def readLink(path):
-    """Works only for unix
-    Return a string representing the path to which the symbolic link points.
-    returns the source location (non relative)
-    """
-    while path[-1] == "/" or path[-1] == "\\":
-        path = path[:-1]
-
-    if j.core.platformtype.myplatform.platform_is_unix or j.core.platformtype.myplatform.platform_is_osx:
-        res = os.readlink(path)
-    elif j.core.platformtype.myplatform.platform_is_windows:
-        raise j.exceptions.RuntimeError("Cannot readLink on windows")
-    else:
-        raise j.exceptions.Base("cant read link, dont understand platform")
-
-    if res.startswith(".."):
-        srcDir = getDirName(path)
-        res = pathNormalize("%s%s" % (srcDir, res))
-    elif getBaseName(res) == res:
-        res = joinPaths(getParent(path), res)
-    return res
-
-
-def removeLinks(path):
-    """
-    find all links & remove
-    """
-    items = _listAllInDir(path=path, recursive=True, followSymlinks=False, listSymlinks=True)
-    items = [item for item in items[0] if isLink(item)]
-    for item in items:
-        unlink(item)
-
-def _listInDir(path, followSymlinks=True):
-    """returns array with dirs & files in directory
-    @param path: string (Directory path to list contents under)
-    """
-    names = os.listdir(path)
-    return names
-
-
-def listFilesInDir(
-
-    path,
-    recursive=False,
-    filter=None,
-    minmtime=None,
-    maxmtime=None,
-    depth=None,
-    case_sensitivity="os",
-    exclude=[],
-    followSymlinks=False,
-    listSymlinks=False,
-):
-    """Retrieves list of files found in the specified directory
-    @param path:       directory path to search in
-    @type  path:       string
-    @param recursive:  recursively look in all subdirs
-    @type  recursive:  boolean
-    @param filter:     unix-style wildcard (e.g. *.py) - this is not a regular expression
-    @type  filter:     string
-    @param minmtime:   if not None, only return files whose last modification time > minmtime (epoch in seconds)
-    @type  minmtime:   integer
-    @param maxmtime:   if not None, only return files whose last modification time < maxmtime (epoch in seconds)
-    @Param depth: is levels deep wich we need to go
-    @type  maxmtime:   integer
-    @Param exclude: list of std filters if matches then exclude
-    @rtype: list
-    """
-    if depth is not None:
-        depth = int(depth)
-
-    if depth == 0:
-        depth = None
-    # if depth is not None:
-    #     depth+=1
-    filesreturn, depth = _listAllInDir(
-        path,
-        recursive,
-        filter,
-        minmtime,
-        maxmtime,
-        depth,
-        type="f",
-        case_sensitivity=case_sensitivity,
-        exclude=exclude,
-        followSymlinks=followSymlinks,
-        listSymlinks=listSymlinks,
-    )
-    return filesreturn
-
-
-def listFilesAndDirsInDir(
-
-    path,
-    recursive=True,
-    filter=None,
-    minmtime=None,
-    maxmtime=None,
-    depth=None,
-    type="fd",
-    followSymlinks=False,
-    listSymlinks=False,
-):
-    """Retrieves list of files found in the specified directory
-    @param path:       directory path to search in
-    @type  path:       string
-    @param recursive:  recursively look in all subdirs
-    @type  recursive:  boolean
-    @param filter:     unix-style wildcard (e.g. *.py) - this is not a regular expression
-    @type  filter:     string
-    @param minmtime:   if not None, only return files whose last modification time > minmtime (epoch in seconds)
-    @type  minmtime:   integer
-    @param maxmtime:   if not None, only return files whose last modification time < maxmtime (epoch in seconds)
-    @Param depth: is levels deep wich we need to go
-    @type  maxmtime:   integer
-    @param type is string with f & d inside (f for when to find files, d for when to find dirs)
-    @rtype: list
-    """
-    if depth is not None:
-        depth = int(depth)
-
-    if depth == 0:
-        depth = None
-    # if depth is not None:
-    #     depth+=1
-    filesreturn, _ = _listAllInDir(
-        path,
-        recursive,
-        filter,
-        minmtime,
-        maxmtime,
-        depth,
-        type=type,
-        followSymlinks=followSymlinks,
-        listSymlinks=listSymlinks,
-    )
-    return filesreturn
-
-def _listAllInDir(
-
-    path,
-    recursive,
-    filter=None,
-    minmtime=None,
-    maxmtime=None,
-    depth=None,
-    type="df",
-    case_sensitivity="os",
-    exclude=[],
-    followSymlinks=True,
-    listSymlinks=True,
-):
-    """
-    # There are 3 possible options for case-sensitivity for file names
-    # 1. `os`: the same behavior as the OS
-    # 2. `sensitive`: case-sensitive comparison
-    # 3. `insensitive`: case-insensitive comparison
-    """
-    dircontent = _listInDir(path)
-    filesreturn = []
-
-    if case_sensitivity.lower() == "sensitive":
-        matcher = fnmatch.fnmatchcase
-    elif case_sensitivity.lower() == "insensitive":
-
-        def matcher(fname, pattern):
-            return fnmatch.fnmatchcase(fname.lower(), pattern.lower())
-
-    else:
-        matcher = fnmatch.fnmatch
-
-    for direntry in dircontent:
-        fullpath = joinPaths(path, direntry)
-
-        if isLinkAndBroken(fullpath):
-            continue
-
-        if followSymlinks:
-            if isLink(fullpath):
-                fullpath = readLink(fullpath)
-
-        if isFile(fullpath) and "f" in type:
-            includeFile = False
-            if (filter is None) or matcher(direntry, filter):
-                if (minmtime is not None) or (maxmtime is not None):
-                    mymtime = os.stat(fullpath)[ST_MTIME]
-                    if (minmtime is None) or (mymtime > minmtime):
-                        if (maxmtime is None) or (mymtime < maxmtime):
-                            includeFile = True
-                else:
-                    includeFile = True
-            if includeFile:
-                if exclude != []:
-                    for excludeItem in exclude:
-                        if matcher(direntry, excludeItem):
-                            includeFile = False
-                if includeFile:
-                    filesreturn.append(fullpath)
-        elif isDir(fullpath):
-            if "d" in type:
-                # if not(listSymlinks==False and isLink(fullpath)):
-                filesreturn.append(fullpath)
-            if recursive:
-                newdepth = depth
-                if newdepth is not None and newdepth != 0:
-                    newdepth = newdepth - 1
-                if newdepth is None or newdepth != 0:
-                    exclmatch = False
-                    if exclude != []:
-                        for excludeItem in exclude:
-                            if matcher(fullpath, excludeItem):
-                                exclmatch = True
-                    if exclmatch is False:
-                        if not (followSymlinks is False and isLink(fullpath, check_valid=True)):
-                            r, _ = _listAllInDir(
-                                fullpath,
-                                recursive,
-                                filter,
-                                minmtime,
-                                maxmtime,
-                                depth=newdepth,
-                                type=type,
-                                exclude=exclude,
-                                followSymlinks=followSymlinks,
-                                listSymlinks=listSymlinks,
-                            )
-                            if len(r) > 0:
-                                filesreturn.extend(r)
-        # and followSymlinks==False and listSymlinks:
-        elif isLink(fullpath) and followSymlinks == False and listSymlinks:
-            filesreturn.append(fullpath)
-
-    return filesreturn, depth
-
-def getPathOfRunningFunction(function):
-    return inspect.getfile(function)
-
-def changeFileNames(
-    toReplace, replaceWith, pathToSearchIn, recursive=True, filter=None, minmtime=None, maxmtime=None
-):
-    """
-    @param toReplace e.g. {name}
-    @param replace with e.g. "jumpscale"
-    """
-    if not toReplace:
-        raise j.exceptions.Value("Can't change file names, toReplace can't be empty")
-    if not replaceWith:
-        raise j.exceptions.Value("Can't change file names, replaceWith can't be empty")
-    paths = listFilesInDir(pathToSearchIn, recursive, filter, minmtime, maxmtime)
-    for path in paths:
-        dir_name = getDirName(path)
-        file_name = getBaseName(path)
-        new_file_name = file_name.replace(toReplace, replaceWith)
-        if new_file_name != file_name:
-            new_path = joinPaths(dir_name, new_file_name)
-            renameFile(path, new_path)
-
-def replaceWordsInFiles(
-    pathToSearchIn, templateengine, recursive=True, filter=None, minmtime=None, maxmtime=None
-):
-    """
-    apply templateengine to list of found files
-    @param templateengine =te  #example below
-        te=j.tools.code.template_engine_get()
-        te.add("name",a.name)
-        te.add("description",ayses.description)
-        te.add("version",ayses.version)
-    """
-    paths = listFilesInDir(pathToSearchIn, recursive, filter, minmtime, maxmtime)
-    for path in paths:
-        templateengine.replaceInsideFile(path)
-
-
-def listDirsInDir(path, recursive=False, dirNameOnly=False, findDirectorySymlinks=True, followSymlinks=True):
-    """ Retrieves list of directories found in the specified directory
-    @param path: string represents directory path to search in
-    @rtype: list
-    """
-
-
-    items = _listInDir(path)
-    filesreturn = []
-    for item in items:
-        fullpath = os.path.join(path, item)
-        if item.startswith("Icon"):
-            continue
-        if isDir(fullpath, findDirectorySymlinks):
-            if dirNameOnly:
-                filesreturn.append(item)
-            else:
-                filesreturn.append(fullpath)
-        if recursive and isDir(fullpath, followSymlinks):
-            if isLink(fullpath):
-                fullpath = readLink(fullpath)
-            filesreturn.extend(
-                listDirsInDir(
-                    fullpath,
-                    recursive=recursive,
-                    dirNameOnly=dirNameOnly,
-                    findDirectorySymlinks=findDirectorySymlinks,
-                    followSymlinks=followSymlinks,
-                )
-            )
-    return filesreturn
-
-
-def listPyScriptsInDir(path, recursive=True, filter="*.py"):
-    """ Retrieves list of python scripts (with extension .py) in the specified directory
-    @param path: string represents the directory path to search in
-    @rtype: list
-    """
-    result = []
-    for file in listFilesInDir(path, recursive=recursive, filter=filter):
-        if file.endswith(".py"):
-            # filename = file.split(os.sep)[-1]
-            # scriptname = filename.rsplit(".", 1)[0]
-            result.append(file)
-    return result
-
-
-def _move(source, destin):
-    """Main Move function
-    @param source: string (If the specified source is a File....Calls moveFile function)
-    (If the specified source is a Directory....Calls moveDir function)
-    """
-    if not exists(source):
-        raise j.exceptions.IO("%s does not exist" % source)
-    shutil.move(source, destin)
-
-
-def exists(path, followlinks=True):
-    """Check if the specified path exists
-    @param path: string
-    @rtype: boolean (True if path refers to an existing path)
-    """
-    if path is None:
-        raise j.exceptions.Value("Path is not passed in system.fs.exists")
-
-    found = False
-    try:
-        st = os.lstat(path)
-        found = True
-    except (OSError, AttributeError):
-        pass
-    if found and followlinks and stat.S_ISLNK(st.st_mode):
-
-        relativelink = readLink(path)
-        newpath = joinPaths(getParent(path), relativelink)
-        return exists(newpath)
-    if found:
-        return True
-
-    return False
-
-
-def symlink(path, target, overwriteTarget=False):
-    """Create a symbolic link
-    @param path: source path desired to create a symbolic link for
-    @param target: destination path required to create the symbolic link at
-    @param overwriteTarget: boolean indicating whether target can be overwritten
-    """
-
-
-    if target[-1] == "/":
-        target = target[:-1]
-
-    if overwriteTarget and exists(target):
-        if isLink(target):
-            remove(target)
-        elif isDir(target):
-            remove(target)
-        else:
-            remove(target)
-
-    if os.path.islink(target):
-        remove(target)
-
-    dir = getDirName(target)
-    if not exists(dir):
-        createDir(dir)
-
-    if j.core.platformtype.myplatform.platform_is_unix or j.core.platformtype.myplatform.platform_is_osx:
-
-        os.symlink(path, target)
-    elif j.core.platformtype.myplatform.platform_is_windows:
-        path = path.replace("+", ":")
-        cmd = 'junction "%s" "%s"' % (
-            pathNormalize(target).replace("\\", "/"),
-            pathNormalize(path).replace("\\", "/"),
-        )
-        print(cmd)
-        j.sal.process.execute(cmd)
-
-
-def symlinkFilesInDir(src, dest, delete=True, includeDirs=False, makeExecutable=False):
-    if includeDirs:
-        items = listFilesAndDirsInDir(src, recursive=False, followSymlinks=False, listSymlinks=False)
-    else:
-        items = listFilesInDir(src, recursive=False, followSymlinks=True, listSymlinks=True)
-    for item in items:
-        dest2 = "%s/%s" % (dest, getBaseName(item))
-        dest2 = dest2.replace("//", "/")
-
-        symlink(item, dest2, overwriteTarget=delete)
-        if makeExecutable:
-            # print("executable:%s" % dest2)
-            chmod(dest2, 0o770)
-            chmod(item, 0o770)
-
-
-def hardlinkFile(source, destin):
-    """Create a hard link pointing to source named destin. Availability: Unix.
-    @param source: string
-    @param destin: string
-    @rtype: concatenation of dirname, and optionally linkname, etc.
-    with exactly one directory separator (os.sep) inserted between components, unless path2 is empty
-    """
-
-    if j.core.platformtype.myplatform.platform_is_unix or j.core.platformtype.myplatform.platform_is_osx:
-        return os.link(source, destin)
-    else:
-        raise j.exceptions.RuntimeError("Cannot create a hard link on windows")
-
-
-def checkDirParam(path):
-    if path.strip() == "":
-        raise j.exceptions.Value("path parameter cannot be empty.")
-    path = pathNormalize(path)
-    if path[-1] != "/":
-        path = path + "/"
-    return path
-
-
-def isDir(path, followSoftlink=False):
-    """Check if the specified Directory path exists
-    @param path: string
-    @param followSoftlink: boolean
-    @rtype: boolean (True if directory exists)
-    """
-    if isLink(path):
-        if not followSoftlink:
-            return False
-        path = readLink(path)
-    return os.path.isdir(path)
-
-
-def isEmptyDir(path):
-    """Check if the specified directory path is empty
-    @param path: string
-    @rtype: boolean (True if directory is empty)
-    """
-    if _listInDir(path) == []:
-
-        return True
-
-    return False
-
-
-def isFile(path, followSoftlink=True):
-    """Check if the specified file exists for the given path
-    @param path: string
-    @param followSoftlink: boolean
-    @rtype: boolean (True if file exists for the given path)
-    """
-
-    if not followSoftlink and isLink(path):
-
-        return True
-
-    if os.path.isfile(path):
-
-        return True
-
-
-    return False
-
-
-def isExecutable(path):
-    statobj = statPath(path, follow_symlinks=False)
-    return not (stat.S_IXUSR & statobj.st_mode == 0)
-
-def isLinkAndBroken(path, remove_if_broken=True):
-    if os.path.islink(path):
-        rpath = readLink(path)
-        if not exists(rpath):
-            if remove_if_broken:
-                j.sals.fs.remove(path)
-            return True
-    return False
-
-
-def isLink(path, checkJunction=False, check_valid=False):
-    """Check if the specified path is a link
-    @param path: string
-    @rtype: boolean (True if the specified path is a link)
-
-    @PARAM check_valid if True, will remove link if the dest is not there and return False
-    """
-    if path[-1] == os.sep:
-        path = path[:-1]
-
-    if checkJunction and j.core.platformtype.myplatform.platform_is_windows:
-        cmd = "junction %s" % path
-        try:
-            result = j.sal.process.execute(cmd)
-        except Exception as e:
-            raise j.exceptions.RuntimeError(
-                "Could not execute junction cmd, is junction installed? Cmd was %s." % cmd
-            )
-        if result[0] != 0:
-            raise j.exceptions.RuntimeError(
-                "Could not execute junction cmd, is junction installed? Cmd was %s." % cmd
-            )
-        if result[1].lower().find("substitute name") != -1:
-            return True
-        else:
-            return False
-
-    if os.path.islink(path):
-        if check_valid:
-            j.shell()
-            w
-
-        return True
-
-    return False
-
-
-def isMount(path):
-    """Return true if pathname path is a mount point:
-    A point in a file system where a different file system has been mounted.
-    """
-
-    if path is None:
-        raise j.exceptions.Value("Path is passed null in system.fs.isMount")
-    return os.path.ismount(path)
-
-
-def statPath(path, follow_symlinks=True):
-    """Perform a stat() system call on the given path
-    @rtype: object whose attributes correspond to the members of the stat structure
-    """
-    return os.stat(path, follow_symlinks=follow_symlinks)
-
-
-def renameDir(dirname, newname, overwrite=False):
-    """Rename Directory from dirname to newname
-    @param dirname: string (Directory original name)
-    @param newname: string (Directory new name to be changed to)
-    """
-
-    if dirname == newname:
-        return
-    if overwrite and exists(newname):
-        if isDir(newname):
-            remove(newname)
-        else:
-            remove(newname)
-    os.rename(dirname, newname)
-
-
-def unlinkFile(filename):
-    """Remove the file path (only for files, not for symlinks)
-    @param filename: File path to be removed
-    """
-
-    os.unlink(filename)
-
-
-def unlink(filename):
-    """Remove the given file if it's a file or a symlink
-
-    @param filename: File path to be removed
-    @type filename: string
-    """
-
-
-    if j.core.platformtype.myplatform.platform_is_windows:
-        cmd = "junction -d %s 2>&1 > null" % (filename)
-        _log_info(cmd)
-        os.system(cmd)
-    os.unlink(filename)
-
-
-def readFile(filename, binary=False, encoding="utf-8"):
-    """Read a file and get contents of that file
-    @param filename: string (filename to open for reading )
-    @rtype: string representing the file contents
-    @param encoding utf-8 or ascii
-    """
-
-    if binary:
-        with open(filename, mode="rb") as fp:
-            data = fp.read()
-    else:
-        with open(filename, encoding=encoding) as fp:
-            data = fp.read()
-    return data
-
-#
-#
-# def fileGetUncommentedContents(filename):
-#     """Read a file and get uncommented contents of that file
-#     @param filename: string (filename to open for reading )
-#     @rtype: list of lines of uncommented file contents
-#     """
-#
-#     #
-#     with open(filename) as fp:
-#         data = fp.readlines()
-#         uncommented = list()
-#         for line in data:
-#             if not line.strip().startswith('#') and not line.startswith('\n'):
-#                 line = line.replace('\n', '')
-#                 uncommented.append(line)
-#
-#         return uncommented
-#
-#
-# def fileGetTextContents(filename):
-#     """Read a UTF-8 file and get contents of that file. Takes care of the [BOM](http://en.wikipedia.org/wiki/Byte_order_mark)
-#     @param filename: string (filename to open for reading)
-#     @rtype: string representing the file contents
-#     """
-#     with open(filename, encoding='utf8') as f:  # enforce utf8 encoding
-#         s = f.read()
-#
-#         boms = [codecs.BOM_UTF8]
-#         for bom in boms:  # we can add more BOMs later:
-#             if s.startswith(bom.decode()):
-#                 s = s.replace(bom.decode(), '', 1)
-#                 break
-#         return s
-
-
-def touch(paths):
-    """
-    can be single path or multiple (then list)
-    """
-    if j.data.types.list.check(paths):
-        for item in paths:
-            touch(item, overwrite=overwrite)
-    path = paths
-    createDir(getDirName(path))
-    if not exists(path=path):
-        writeFile(path, "")
-
-
-def writeFile(filename, contents, append=False):
-    """
-    Open a file and write file contents, close file afterwards
-    @param contents: string (file contents to be written)
-    """
-    if append is False:
-        fp = open(filename, "wb")
-    else:
-        fp = open(filename, "ab")
-    fp.write(contents)
-    # fp.write(contents)
-    fp.close()
-
-
-def fileSize(filename):
-    """Get Filesize of file in bytes
-    @param filename: the file u want to know the filesize of
-    @return: int representing file size
-    """
-    return os.path.getsize(filename)
-
-
-def writeObjectToFile(filelocation, obj):
-    """
-    Write a object to a file(pickle format)
-    @param filelocation: location of the file to which we write
-    @param obj: object to pickle and write to a file
-    """
-    if not obj:
-        raise j.exceptions.Value("You should provide a filelocation or a object as parameters")
-
-    try:
-        pcl = pickle.dumps(obj)
-    except Exception as e:
-        raise Exception("Could not create pickle from the object \nError: %s" % (str(e)))
-    writeFile(filelocation, pcl)
-    if not exists(filelocation):
-        raise Exception("File isn't written to the filesystem")
-
-
-def readObjectFromFile(filelocation):
-    """
-    Read a object from a file(file contents in pickle format)
-    @param filelocation: location of the file
-    @return: object
-    """
-
-    contents = fileGetContents(filelocation)
-
-    return pickle.loads(contents)
-
-
-def md5sum(filename):
-    """Return the hex digest of a file without loading it all into memory
-    @param filename: string (filename to get the hex digest of it) or list of files
-    @rtype: md5 of the file
-    """
-
-    if not isinstance(filename, list):
-        filename = [filename]
-    digest = hashlib.md5()
-    for filepath in filename:
-        with open(filepath, "rb") as fh:
-            while True:
-                buf = fh.read(4096)
-                if buf == b"":
-                    break
-                digest.update(buf)
-    return digest.hexdigest()
-
-
-def getFolderMD5sum(folder):
-    files = sorted(walk(folder, recurse=1))
-    return md5sum(files)
-
-def getTmpDirPath(name="", create=True):
-    """
-    create a tmp dir name and makes sure the dir exists
-    """
-    if name:
-        tmpdir = joinPaths(j.dirs.TMPDIR, name)
-    else:
-        tmpdir = joinPaths(j.dirs.TMPDIR, j.data.idgenerator.generateXCharID(10))
-    if create is True:
-        createDir(tmpdir)
-    return tmpdir
-
-def getTmpFilePath(cygwin=False):
-    """Generate a temp file path
-    Located in temp dir of qbase
-    @rtype: string representing the path of the temp file generated
-    """
-    tmpdir = j.dirs.TMPDIR + "/jumpscale/"
-    j.sals.fs.createDir(tmpdir)
-    fd, path = tempfile.mkstemp(dir=tmpdir)
-    try:
-        real_fd = os.fdopen(fd)
-        real_fd.close()
-    except (IOError, OSError):
-        pass
-    if cygwin:
-        path = path.replace("\\", "/")
-        path = path.replace("//", "/")
-    return path
-
-def _file_path_tmp_get(ext="sh"):
-    return j.core.tools._file_path_tmp_get(ext)
-
-
-def isAsciiFile(filename, checksize=4096):
     # TODO: let's talk about checksize feature.
     try:
-        with open(filename, encoding="ascii") as f:
+        with open(path, encoding="ascii") as f:
             f.read()
             return True
     except UnicodeDecodeError:
         return False
 
 
-def isBinaryFile(filename, checksize=4096):
-    return not isAsciiFile(filename, checksize)
-
-
-def isAbsolute(path):
-    return os.path.isabs(path)
-
-# THERE IS A tools.lock implementation we need to use that one
-# lock = staticmethod(lock)
-# lock_ = staticmethod(lock_)
-# islocked = staticmethod(islocked)
-# unlock = staticmethod(unlock)
-# unlock_ = staticmethod(unlock_)
-
-
-def validateFilename(filename, platform=None):
-    """Validate a filename for a given (or current) platform
-
-    Check whether a given filename is valid on a given platform, or the
-    current platform if no platform is specified.
-
-    Rules
-    =====
-    Generic
-    -------
-    Zero-length filenames are not allowed
-
-    Unix
-    ----
-    Filenames can contain any character except 0x00. We also disallow a
-    forward slash ('/') in filenames.
-
-    Filenames can be up to 255 characters long.
-
-    Windows
-    -------
-    Filenames should not contain any character in the 0x00-0x1F range, '<',
-    '>', ':', '"', '/', '\', '|', '?' or '*'. Names should not end with a
-    dot ('.') or a space (' ').
-
-    Several basenames are not allowed, including CON, PRN, AUX, CLOCK$,
-    NUL, COM[1-9] and LPT[1-9].
-
-    Filenames can be up to 255 characters long.
-
-    Information sources
-    ===================
-    Restrictions are based on information found at these URLs:
-
-        * http://en.wikipedia.org/wiki/Filename
-        * http://msdn.microsoft.com/en-us/library/aa365247.aspx
-        * http://www.boost.org/doc/libs/1_35_0/libs/filesystem/doc/portability_guide.htm
-        * http://blogs.msdn.com/brian_dewey/archive/2004/01/19/60263.aspx
-
-    @param filename: Filename to check
-    @type filename: string
-    @param platform: Platform to validate against
-    @type platform: L{PlatformType}
-
-    @returns: Whether the filename is valid on the given platform
-    @rtype: bool
+def is_empty_dir(path:str) -> bool:
+    """Checks if path is emptry directory
+    
+    Args:
+        path (str): path to check if empty directory
+    
+    Returns:
+        bool: True if path is emptry directory
     """
-    platform = platform or j.core.platformtype.myplatform
 
-    if not filename:
+    try:
+        g = pathlib.Path(path).iterdir()
+        next(g)
+    except StopIteration:
+        # means we can't get next entry -> dir is empty.
+        return True
+    else:
         return False
 
-    # When adding more restrictions to check_unix or check_windows, please
-    # update the validateFilename documentation accordingly
 
-    def check_unix(filename):
-        if len(filename) > 255:
-            return False
-
-        if "\0" in filename or "/" in filename:
-            return False
-
-        return True
-
-    def check_windows(filename):
-        if len(filename) > 255:
-            return False
-
-        if os.path.splitext(filename)[0] in ("CON", "PRN", "AUX", "CLOCK$", "NUL"):
-            return False
-
-        if os.path.splitext(filename)[0] in ("COM%d" % i for i in range(1, 9)):
-            return False
-
-        if os.path.splitext(filename)[0] in ("LPT%d" % i for i in range(1, 9)):
-            return False
-
-        # ASCII characters 0x00 - 0x1F are invalid in a Windows filename
-        # We loop from 0x00 to 0x20 (xrange is [a, b[), and check whether
-        # the corresponding ASCII character (which we get through the chr(i)
-        # function) is in the filename
-        for c in range(0x00, 0x20):
-            if chr(c) in filename:
-                return False
-
-        for c in ("<", ">", ":", '"', "/", "\\", "|", "?", "*"):
-            if c in filename:
-                return False
-
-        if filename.endswith((" ", ".")):
-            return False
-
-        return True
-
-    if platform.platform_is_windows:
-        return check_windows(filename)
-
-    if platform.platform_is_unix:
-        return check_unix(filename)
-
-    raise j.exceptions.NotImplemented("Filename validation on given platform not supported")
+is_binary_file = lambda path: not is_ascii_file(path)
 
 
-def find(startDir, fileregex):
-    """Search for files or folders matching a given pattern
-    example: find("*.pyc")
-    @param fileregex: The regex pattern to match
-    @type fileregex: string
+def is_broken_link(path:str, clean=False) -> bool:
+    """Checks if path is a broken symlink
+    
+    Args:
+        path (str): path to check
+        clean (bool, optional): remove symlink if broken. Defaults to False.
+    
+    Raises:
+        NotImplementedError: [description]
+    
+    Returns:
+        bool: True if path is a broken symlink
     """
-    result = []
-    for root, dirs, files in os.walk(startDir, followlinks=True):
-        for name in files:
-            if fnmatch.fnmatch(name, fileregex):
-                result.append(os.path.join(root, name))
-    return result
+    raise NotImplementedError()
 
-def grep(fileregex, lineregex):
-    """Search for lines matching a given regex in all files matching a regex
 
-    @param fileregex: Files to search in
-    @type fileregex: string
-    @param lineregex: Regex pattern to search for in each file
-    @type lineregex: string
+def stem(path:str) -> str:
+    """returns the stem of a path (path without parent directory and without extension)
+    e.g 
+        In [2]: t = j.sals.fs.stem("/tmp/tmp-5383p1GOmMOOwvfi.tpl")
+
+        In [3]: t
+        Out[3]: 'tmp-5383p1GOmMOOwvfi'
+    
+    Args:
+        path (str): path we want to get its stem
+    
+    Returns:
+        [type]: [description]
     """
-    import glob
-    import re
-    import os
-
-    for filename in glob.glob(fileregex):
-        if os.path.isfile(filename):
-            f = open(filename, "r")
-            for line in f:
-                if re.match(lineregex, line):
-                    print(("%s: %s" % (filename, line)))
+    return pathlib.Path(path).stem
 
 
-def constructDirPathFromArray(array):
+def mkdir(path:str, exist_ok=True):
+    """Makes directory at path
+
+    Args:
+        path (str): path to create dir at
+        exist_ok (bool, optional): won't fail if directory exists. Defaults to True.
+    
+    Returns:
+        [type]: [description]
     """
-    Create a path using os specific seperators from a list being passed with directoy.
+    return pathlib.Path(path).mkdir(exist_ok=exist_ok)
 
-    @param array str: list of dirs in the path.
+
+def mkdirs(path: str, exist_ok=True):
+    """Creates dir as well as all non exisitng parents in the path
+
+    Args:
+        path (str): path to create dir at
+        exist_ok (bool, optional): won't fail if directory exists. Defaults to True.
     """
-    path = ""
-    for item in array:
-        path = path + os.sep + item
-    path = path + os.sep
-    if j.core.platformtype.myplatform.platform_is_unix or j.core.platformtype.myplatform.platform_is_osx:
-        path = path.replace("//", "/")
-        path = path.replace("//", "/")
+    return os.makedirs(path, exist_ok=exist_ok)
+
+
+def parent(path:str) -> str:
+    """Get path's parent
+    
+    Args:
+        path (str): path to get its parent
+    
+    Returns:
+        str: parent path.
+    """
+    return pathlib.Path(path).parent
+
+
+def parents(path:str) -> List[str]:
+    """Get parents list
+
+    e.g
+    >>> j.sals.fs.parents("/tmp/home/ahmed/myfile.py")     
+    [PosixPath('/tmp/home/ahmed'),
+    PosixPath('/tmp/home'),
+    PosixPath('/tmp'),
+    PosixPath('/')]
+        
+    Args:
+        path (str): path to get its parents
+    
+    Returns:
+        List[str]: list of parents
+    """
+
+    return list(pathlib.Path(path).parents)
+
+
+def path_parts(path:str) -> List[str]:
+    """Convert path to a list of parts 
+    e.g
+     '/tmp/tmp-5383p1GOmMOOwvfi.tpl' ->  ('/', 'tmp', 'tmp-5383p1GOmMOOwvfi.tpl')
+    Args:
+        path (str): path to convert to parts
+    
+    Returns:
+        List[str]: path parts.
+    """
+    return pathlib.Path(path).parts
+
+
+def exists(path:str) -> bool:
+    """Checks if path exists
+    
+    Args:
+        path (str): path to check for existence
+    
+    Returns:
+        bool: True if exists
+    """
+    return pathlib.Path(path).exists()
+
+
+def rename(path1:str, path2:str):
+    """Rename path1 to path2
+    
+    Args:
+        path1 (str): source path
+        path2 (str): dest path
+
+    """
+    return pathlib.Path(path1).rename(path2)
+
+
+def expanduser(path:str) -> str:
+    """Expands the tilde `~` to username
+    e.g
+        j.sals.fs.expanduser("~/work") -> '/home/xmonader/work'
+    Args:
+        path (str): path with optionally `~` 
+    
+    Returns:
+        str: path with tilde `~` resolved.
+    """
+    return pathlib.Path(path).expanduser()
+
+
+def unlink(path:str):
+    """unlink path
+    
+    Args:
+        path (str): path to unlink
+    
+
+    """
+    return pathlib.Path(path).unlink()
+
+
+def read_text(path: str) -> str:
+    """read ascii content at `path`
+    
+    Args:
+        path (str): ascii file path 
+    
+    Returns:
+        str: ascii content in path 
+    """
+    return pathlib.Path(path).read_text()
+
+
+read_ascii = read_file = read_text
+
+
+def read_bytes(path:str) -> bytes:
+    """read binary content at `path`
+    
+    Args:
+        path (str): binary file path
+    
+    Returns:
+        bytes: binary content in path
+    """
+    return pathlib.Path(path).read_bytes()
+
+
+read_binary = read_file_binary = read_bytes
+
+
+def write_text(path:str, data:str, encoding=None):
+    """write text `data` to path `path` with encoding
+    
+    Args:
+        path (str): path to write to
+        data (str): ascii content
+        encoding ([type], optional): encoding. Defaults to None.
+    
+
+    """
+    return pathlib.Path(path).write_text(data, encoding)
+
+
+write_ascii = write_file = write_text
+
+
+def write_bytes(path:str, data:bytes):
+    """write binary `data` to path `path`
+    
+    Args:
+        path (str): path to write to
+        data (bytes): binary content
+    
+    """
+    return pathlib.Path(path).write_bytes(data)
+
+
+write_binary = write_file_binary = write_bytes
+
+
+def touch(path:str):
+    """create file
+    
+    Args:
+        path (str): path to create file
+    
+    """
+    return pathlib.Path(path).touch()
+
+
+def get_temp_filename(mode="w+b", buffering=-1, encoding=None, newline=None, suffix=None, prefix=None, dir=None) -> str:
+    """Get temp filename
+    
+    Args:
+        mode (str, optional): [description]. Defaults to "w+b".
+        buffering (int, optional): buffering. Defaults to -1.
+        encoding ([type], optional): encoding . Defaults to None.
+        newline ([type], optional):  Defaults to None.
+        suffix ([type], optional): ending suffix. Defaults to None.
+        prefix ([type], optional): prefix . Defaults to None.
+        dir ([type], optional): where to create the file. Defaults to None.
+    
+    Returns:
+        [str]: temp filename
+    """
+    return tempfile.NamedTemporaryFile(mode, buffering, encoding, newline, suffix, prefix, dir).name
+
+
+def get_temp_dirname(suffix=None, prefix=None, dir=None)-> str:
+    """Get temp directory name
+    
+    Args:
+        suffix ([type], optional): ending suffix. Defaults to None.
+        prefix ([type], optional): prefix . Defaults to None.
+        dir ([type], optional): where to create the directory. Defaults to None.
+    
+    
+    Returns:
+        str: temp directory name.
+    """
+    return tempfile.TemporaryDirectory(suffix, prefix, dir).name
+
+
+NamedTemporaryFile = tempfile.NamedTemporaryFile
+TempraryDirectory = tempfile.TemporaryDirectory
+mkdtemp = tempfile.mkdtemp
+mkstemp = tempfile.mkstemp
+get_temp_dir = tempfile.gettempdir
+
+def parts_to_path(parts: List[str]) -> str:
+    """Convert list of path parts into a path string
+    
+    Args:
+        parts (List[str]): path parts
+    
+    Returns:
+        str: joined path parts
+    """
+    path = pathlib.Path(parts[0])
+    for p in parts[1:]:
+        path = path.joinpath(p)
+    return str(path)
+
+def join_paths(*paths):
+    return parts_to_path(paths)
+
+
+def rm_emptry_dir(path:str):
+    """Remove empty directory
+    
+    Args:
+        path (str): path to remove.
+    """
+    path = pathlib.Path(path)
+    path.rmdir()
+
+
+def rmtree(path:str):
+    """Remove directory tree
+    Args:
+        path (str): path to remove
+    """
+    path = pathlib.Path(path)
+    if path.is_file() or path.is_link():
+        os.remove(path)
+    elif path.is_dir():
+        shutil.rmtree(path)
+
+
+def copy_stat(src:str, dst:str, times=True, perms=True):
+    """Copy stat of src to dst
+    
+    Args:
+        src (str): source path
+        dst (str): destination
+        times (bool, optional):  Defaults to True.
+        perms (bool, optional): permissions Defaults to True.
+    """
+    st = os.stat(src)
+    if hasattr(os, "utime"):
+        os.utime(dst, (st.st_atime, st.st_mtime))
+    if hasattr(os, "chmod"):
+        m = stat.S_IMODE(st.st_mode)
+        os.chmod(dst, m)
+
+
+def copy_file(src:str, dst:str, times=False, perms=False):
+    """Copy the file, optionally copying the permission bits (mode) and
+        last access/modify time. If the destination file exists, it will be
+        replaced. Raises OSError if the destination is a directory. If the
+        platform does not have the ability to set the permission or times,
+        ignore it.
+        This is shutil.copyfile plus bits of shutil.copymode and
+        shutil.copystat's implementation.
+        shutil.copy and shutil.copy2 are not supported but are easy to do.
+    
+    Args:
+        src (str): source path
+        dst (str): destination
+
+    """
+    shutil.copyfile(src, dst)
+    if times or perms:
+        copy_stat(src, dst, times, perms)
+
+
+copy_tree = dir_util.copy_tree
+chdir = os.chdir
+
+
+def change_dir(path:str)->str:
+    """Change current working directory to `path`
+    
+    Args:
+        path (str): path to switch current working directory to
+    
+    Returns:
+        str: new current working dir
+    """
+    os.chdir(path)
     return path
 
-def constructFilePathFromArray(array):
+
+def chmod(path:str, mode):
+    """change file mode for path to mode
+    
+    Args:
+        path (str): path
+        mode (int): file mode
+    
     """
-    Add file name  to dir path.
+    return pathlib.Path(path).chmod(mode)
 
-    @param array str: list including dir path then file name
+
+def lchmod(path:str, mode):
+    """change file mode for path to mode (handles links too)
+    
+    Args:
+        path (str): path
+        mode (int): file mode
+    
     """
-    path = constructDirPathFromArray(array)
-    if path[-1] == "/":
-        path = path[0:-1]
-    return path
+    return pathlib.Path(path).lchmod(mode)
 
-def pathToUnicode(path):
+
+def stat(path:str):
+    """Gets stat of path `path`
+    
+    Args:
+        path (str): path to get its stat
+    
+    Returns:
+        stat_result: returns stat struct.
     """
-    Convert path to unicode. Use the local filesystem encoding. Will return
-    path unmodified if path already is unicode.
 
-    Use this to convert paths you received from the os module to unicode.
+    return pathlib.Path(path).stat()
 
-    @param path: path to convert to unicode
-    @type path: basestring
-    @return: unicode path
-    @rtype: unicode
+
+def lstat(path:str):
+    """Gets stat of path `path` (handles links)
+    
+    Args:
+        path (str): path to get its stat
+    
+    Returns:
+        stat_result: returns stat struct.
     """
-    from Jumpscale.core.Dirs import Dirs
+    
+    return pathlib.Path(path).lstat()
 
-    return Dirs.pathToUnicode(path)
 
-
-def targzCompress(
-
-    sourcepath,
-    destinationpath,
-    followlinks=False,
-    destInTar="",
-    pathRegexIncludes=[".[a-zA-Z0-9]*"],
-    pathRegexExcludes=[],
-    contentRegexIncludes=[],
-    contentRegexExcludes=[],
-    depths=[],
-    extrafiles=[],
-):
+def resolve(path:str) -> str:
+    """resolve `.` and `..` in path
+    
+    Args:
+        path (str): path with optionally `.` and `..`
+    
+    Returns:
+        str: resolved path
     """
-    @param sourcepath: Source directory .
-    @param destination: Destination filename.
-    @param followlinks: do not tar the links, follow the link and add that file or content of directory to the tar
-    @param pathRegexIncludes: / Excludes  match paths to array of regex expressions (array(strings))
-    @param contentRegexIncludes: / Excludes match content of files to array of regex expressions (array(strings))
-    @param depths: array of depth values e.g. only return depth 0 & 1 (would mean first dir depth and then 1 more deep) (array(int))
-    @param destInTar when not specified the dirs, files under sourcedirpath will be added to root of
-                tar.gz with this param can put something in front e.g. /qbase3/ prefix to dest in tgz
-    @param extrafiles is array of array [[source,destpath],[source,destpath],...]  adds extra files to tar
-    (TAR-GZ-Archive *.tar.gz)
+    return pathlib.Path(path).resolve()
+
+
+def extension(path:str, include_dot=True):
+    """Gets the extension of path
+    '/home/ahmed/myfile.py' -> `.py` if include_dot else `py`
+    
+    Args:
+        path (str): [description]
+        include_dot (bool, optional): controls whether to include the dot or not. Defaults to True.
+    
+    Returns:
+        str: extension
     """
-    import os.path
-    import tarfile
+    splitted = os.path.splitext(path)
+    ext = ""
+    if len(splitted) == 1:
+        return ext
 
-
-    if not exists(getDirName(destinationpath)):
-        createDir(getDirName(destinationpath))
-    t = tarfile.open(name=destinationpath, mode="w:gz")
-    if not (
-        followlinks
-        or destInTar != ""
-        or pathRegexIncludes != [".*"]
-        or pathRegexExcludes != []
-        or contentRegexIncludes != []
-        or contentRegexExcludes != []
-        or depths != []
-    ):
-        t.add(sourcepath, "/")
+    if include_dot:
+        return splitted[1]
     else:
+        return splitted[1].strip(".")
 
-        def addToTar(params, path):
-            tarfile = params["t"]
-            destInTar = params["destintar"]
-            destpath = joinPaths(destInTar, pathRemoveDirPart(path, sourcepath))
-            if isLink(path) and followlinks:
-                path = readLink(path)
+ext = extension
 
-            # print "fstar: add file %s to tar" % path
-            if not (j.core.platformtype.myplatform.platform_is_windows and j.sal.windows.checkFileToIgnore(path)):
-                if isFile(path) or isLink(path):
-                    tarfile.add(path, destpath)
-                else:
-                    raise j.exceptions.RuntimeError("Cannot add file %s to destpath" % destpath)
-
-        params = {}
-        params["t"] = t
-        params["destintar"] = destInTar
-        j.sals.fswalker.walk(
-            root=sourcepath,
-            callback=addToTar,
-            arg=params,
-            recursive=True,
-            includeFolders=False,
-            pathRegexIncludes=pathRegexIncludes,
-            pathRegexExcludes=pathRegexExcludes,
-            contentRegexIncludes=contentRegexIncludes,
-            contentRegexExcludes=contentRegexExcludes,
-            depths=depths,
-            followlinks=False,
-        )
-
-        if extrafiles != []:
-            for extrafile in extrafiles:
-                source = extrafile[0]
-                destpath = extrafile[1]
-                t.add(source, joinPaths(destInTar, destpath))
-    t.close()
+def chown():
+    raise NotImplementedError()
 
 
-def gzip(sourceFile, destFile):
+def read_link(path):
+    raise NotImplementedError()
+
+
+def remove_links(path):
+    raise NotImplementedError()
+
+
+def change_filenames(from_, to, where):
+    pass
+
+
+def replace_words_in_files(from_, to, where):
+    pass
+
+
+move = shutil.move
+
+
+def default_filter_fun(entry):
+    return True
+
+
+def walk(path:str, fun=lambda e: True, pat="*", filter_fun=default_filter_fun):
+    """walk recursively on path 
+    e.g
+        for el in walk('/tmp', lambda x: print(x.upper()), filter=j.sals.fs.is_file) : ..
+        for el in walk('/tmp', lambda x: print(x.upper()), filter=j.sals.fs.is_dir) : ..
+        for el in walk('/tmp', lambda x: print(x.upper()), filter= lambda x: len(x)>4 and (j.sals.fs.is_file(x) or j.sals.fs.is_dir(x)) ) : ..
+
+
+    Args:
+        path (str): path to walk over
+        fun (Function, optional): function to apply on each entry. Defaults to `lambda e:True`.
+        pat (str, optional): pattern to match against. Defaults to "*".
+        filter_fun (Function, optional): filtering function. Defaults to default_filter_fun which accepts anything.
     """
-    Gzip source file into destination zip
+    p = pathlib.Path(path)
+    for entry in p.rglob(pat):
+        # use rglob instead of glob("**/*")
+        if filter_fun(entry):
+            yield entry
+            fun(entry)
 
-    @param sourceFile str: path to file to be Gzipped.
-    @param destFile str: path to  destination Gzip file.
+
+def walk_non_recursive(path:str, fun=lambda e: True, filter_fun=default_filter_fun):
+    """walks non recursively on path 
+    e.g
+        for el in walk('/tmp', lambda x: print(x.upper()), filter=j.sals.fs.is_file) : ..
+        for el in walk('/tmp', lambda x: print(x.upper()), filter=j.sals.fs.is_dir) : ..
+        for el in walk('/tmp', lambda x: print(x.upper()), filter= lambda x: len(x)>4 and (j.sals.fs.is_file(x) or j.sals.fs.is_dir(x)) ) : ..
+
+
+    Args:
+        path (str): path to walk over
+        fun (Function, optional): function to apply on each entry. Defaults to `lambda e:True`.
+        pat (str, optional): pattern to match against. Defaults to "*".
+        filter_fun (Function, optional): filtering function. Defaults to default_filter_fun which accepts anything.
     """
-    import gzip
-
-    f_in = open(sourceFile, "rb")
-    f_out = gzip.open(destFile, "wb")
-    f_out.writelines(f_in)
-    f_out.close()
-    f_in.close()
+    p = pathlib.Path(path)
+    for entry in p.iterdir():
+        if filter_fun(entry):
+            yield entry
+            fun(entry)
 
 
-def gunzip(sourceFile, destFile):
+def walk_files(path:str, fun=lambda e: True, recursive=True):
     """
-    Gunzip gzip sourcefile into destination file
+    walk over files in path and applies function `fun`
+    e.g 
 
-    @param sourceFile str: path to gzip file to be unzipped.
-    @param destFile str: path to destination folder to unzip folder.
+        for el in walk_files('/tmp', lambda x: print(x.upper())) : ..
+    
+    Args:
+        path (str): path to walk over
+        fun (Function, optional): function to apply on each entry. Defaults to lambda e:True.
+        recursive (bool, optional): recursive or not. Defaults to True.
+    
+
     """
-    import gzip
 
-    createDir(getDirName(destFile))
-    f_in = gzip.open(sourceFile, "rb")
-    f_out = open(destFile, "wb")
-    f_out.writelines(f_in)
-    f_out.close()
-    f_in.close()
-
-
-def targzUncompress(sourceFile, destinationdir, removeDestinationdir=True):
-    """
-    compress dirname recursive
-    @param sourceFile: file to uncompress
-    @param destinationpath: path of to destiniation dir, sourcefile will end up uncompressed in destination dir
-    """
-    if removeDestinationdir:
-        remove(destinationdir)
-    if not exists(destinationdir):
-        createDir(destinationdir)
-    import tarfile
-
-    # The tar of python does not create empty directories.. this causes
-    # many problem while installing so we choose to use the linux tar here
-    if j.core.platformtype.myplatform.platform_is_windows:
-        tar = tarfile.open(sourceFile)
-        tar.extractall(destinationdir)
-        tar.close()
-        # todo find better alternative for windows
+    if recursive:
+        return walk(path, fun, filter_fun=is_file)
     else:
-        cmd = "tar xzf '%s' -C '%s'" % (sourceFile, destinationdir)
-        j.sal.process.execute(cmd)
+        return walk_non_recursive(path, fun, filter_fun=is_file)
+
+
+def walk_dirs(path, fun=lambda e: True, recursive=True):
+    """
+        walk over directories in path and applies function `fun`
+    e.g 
+
+        for el in walk_dirs('/tmp', lambda x: print(x.upper())) : ..
+
+    
+    Args:
+        path (str): path to walk over
+        fun (Function, optional): function to apply on each entry. Defaults to lambda e:True.
+        recursive (bool, optional): recursive or not. Defaults to True.
+    
+
+    """
+    if recursive:
+        return walk(path, fun, filter_fun=is_dir)
+    else:
+        return walk_non_recursive(path, fun, filter_fun=is_dir)
+

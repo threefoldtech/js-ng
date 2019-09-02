@@ -5,6 +5,7 @@ import gevent
 from gevent import time
 from gevent.pool import Pool
 from gevent.server import StreamServer
+import signal
 from redis.connection import DefaultParser, Encoder
 from jumpscale.god import j
 
@@ -123,8 +124,19 @@ class GedisServer:
 
     def start(self):
         s = StreamServer(self.endpoint, self.on_connection)
+
+        gevent.signal(signal.SIGTERM, s.stop)
+        gevent.signal(signal.SIGINT, s.stop)
         s.reuse_addr = True
         s.serve_forever()
+
+    def stop(self):
+        if self.closed:
+            sys.exit('Multiple exit signals received - aborting.')
+        else:
+            log('Closing listener socket')
+            StreamServer.close(self)
+
 
     def on_connection(self, socket, address):
 
@@ -158,6 +170,8 @@ class GedisServer:
             print(e)
         
         parser.on_disconnect()
+
+
 
 
 class SystemActor:
@@ -195,6 +209,5 @@ def new_server(actors=None):
     default_actors = {"system": SystemActor(s)}
     s.actors = {**s.actors, **default_actors}    
     s.start()
-    # FIXME: add sig handler for INT
-
+    gevent.wait()
 

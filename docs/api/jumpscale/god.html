@@ -135,14 +135,11 @@ def load():
                     print(&#34;[-] {} at {} &#34;.format(e, importedpkgstr))
                     continue
                 else:
-                    if hasattr(m, &#34;factory&#34;):
-                    # if rootbase == &#34;clients&#34;:
+                    if hasattr(m, &#34;export_module_as&#34;):
                         # print(&#34;rootbase: &#34;, rootbase, importedpkgstr)
-                        # print(m.factory)
-                        loadeddict[&#39;jumpscale&#39;][rootbase][pkgname] = m.factory
-                        # loadeddict[importedpkgstr] = m.factory
-                    elif hasattr(m, &#34;singleton&#34;):
-                        loadeddict[&#34;jumpscale&#34;][rootbase][pkgname] = m.singleton
+                        # print(m.export_module_as)
+                        loadeddict[&#39;jumpscale&#39;][rootbase][pkgname] = m.export_module_as
+                        # loadeddict[importedpkgstr] = m.export_module_as
                     else:
                         loadeddict[&#39;jumpscale&#39;][rootbase][pkgname] = m
 

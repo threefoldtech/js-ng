@@ -25,26 +25,79 @@
 <pre><code class="python">from jumpscale.clients.base import Client
 from jumpscale.core.base import Base, fields
 from jumpscale.god import j
+from .repo import GithubRepo
+from github import Github, GithubObject
+
+NotSet = GithubObject.NotSet
 
 
-class Email(Base):
-    address = fields.String()
-    main = fields.Boolean()
-
-
-class User(Base):
+class GithubClient(Client):
     username = fields.String()
     password = fields.String()
+    accesstoken = fields.String()
 
-    emails = fields.Factory(Email)
+    def __init__(self):
+        super().__init__()
+        self.__client = None
 
+    @property
+    def github_client(self):
+        if not self.__client:
+            if self.accesstoken:
+                self.__client = Github(self.accesstoken)
+            else:
+                self.__client = Github(login_or_token=self.username, password=self.password)
+        return self.__client
 
-class Github(Client):
-    users = fields.Factory(User)
+    def get_repo(self, repo_full_name):
+        return GithubRepo(self.__client,repo_full_name)
 
-    def hi(self):
-        print(&#34;hii&#34;)
-        j.sals.fs.basename(&#34;aa&#34;)</code></pre>
+    def get_repos(self):
+        l = []
+        for r in self.github_client.get_user().get_repos():
+            l.append(GithubRepo(self.__client,r.full_name))
+        return l
+
+    def get_orgs(self):
+        l = []
+        for o in self.github_client.get_user().get_orgs():
+            l.append(o.login)
+        return l
+
+    def get_userdata(self):
+        u = self.github_client.get_user()
+        el = []
+        for e in u.get_emails():
+            el.append(e)
+        return {&#34;name&#34;: u.name, &#34;emails&#34;: el, &#34;id&#34;: u.id, &#34;avatar_url&#34;: u.avatar_url}
+
+    def create_repo(
+        self,
+        name,
+        description=NotSet,
+        homepage=NotSet,
+        private=NotSet,
+        has_issues=NotSet,
+        has_wiki=NotSet,
+        has_downloads=NotSet,
+        auto_init=NotSet,
+        gitignore_template=NotSet,
+    ):
+
+        return self.github_client.get_user().create_repo(
+            name,
+            description=description,
+            homepage=homepage,
+            private=private,
+            has_issues=has_issues,
+            has_wiki=has_wiki,
+            has_downloads=has_downloads,
+            auto_init=auto_init,
+            gitignore_template=gitignore_template,
+        )
+
+    def delete_repo(self, repo_name):
+        return self.__client.get_user().get_repo(repo_name).delete()</code></pre>
 </details>
 </section>
 <section>
@@ -56,84 +109,81 @@ class Github(Client):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="jumpscale.clients.github.github.Email"><code class="flex name class">
-<span>class <span class="ident">Email</span></span>
+<dt id="jumpscale.clients.github.github.GithubClient"><code class="flex name class">
+<span>class <span class="ident">GithubClient</span></span>
 </code></dt>
 <dd>
 <section class="desc"><p>A simple attribute-based namespace.</p>
 <p>SimpleNamespace(**kwargs)</p></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class Email(Base):
-    address = fields.String()
-    main = fields.Boolean()</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="jumpscale.core.base.meta.Base" href="../../core/base/meta.html#jumpscale.core.base.meta.Base">Base</a></li>
-<li>types.SimpleNamespace</li>
-</ul>
-<h3>Instance variables</h3>
-<dl>
-<dt id="jumpscale.clients.github.github.Email.address"><code class="name">var <span class="ident">address</span></code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def getter(self):
-    return getattr(self, inner_name)</code></pre>
-</details>
-</dd>
-<dt id="jumpscale.clients.github.github.Email.main"><code class="name">var <span class="ident">main</span></code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def getter(self):
-    return getattr(self, inner_name)</code></pre>
-</details>
-</dd>
-</dl>
-<h3>Methods</h3>
-<dl>
-<dt id="jumpscale.clients.github.github.Email.get_factory_info"><code class="name flex">
-<span>def <span class="ident">get_factory_info</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def get_factory_info(self):
-    return factory_info</code></pre>
-</details>
-</dd>
-<dt id="jumpscale.clients.github.github.Email.get_fields"><code class="name flex">
-<span>def <span class="ident">get_fields</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def get_fields(self):
-    return fields</code></pre>
-</details>
-</dd>
-</dl>
-</dd>
-<dt id="jumpscale.clients.github.github.Github"><code class="flex name class">
-<span>class <span class="ident">Github</span></span>
-</code></dt>
-<dd>
-<section class="desc"><p>A simple attribute-based namespace.</p>
-<p>SimpleNamespace(**kwargs)</p></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">class Github(Client):
-    users = fields.Factory(User)
+<pre><code class="python">class GithubClient(Client):
+    username = fields.String()
+    password = fields.String()
+    accesstoken = fields.String()
 
-    def hi(self):
-        print(&#34;hii&#34;)
-        j.sals.fs.basename(&#34;aa&#34;)</code></pre>
+    def __init__(self):
+        super().__init__()
+        self.__client = None
+
+    @property
+    def github_client(self):
+        if not self.__client:
+            if self.accesstoken:
+                self.__client = Github(self.accesstoken)
+            else:
+                self.__client = Github(login_or_token=self.username, password=self.password)
+        return self.__client
+
+    def get_repo(self, repo_full_name):
+        return GithubRepo(self.__client,repo_full_name)
+
+    def get_repos(self):
+        l = []
+        for r in self.github_client.get_user().get_repos():
+            l.append(GithubRepo(self.__client,r.full_name))
+        return l
+
+    def get_orgs(self):
+        l = []
+        for o in self.github_client.get_user().get_orgs():
+            l.append(o.login)
+        return l
+
+    def get_userdata(self):
+        u = self.github_client.get_user()
+        el = []
+        for e in u.get_emails():
+            el.append(e)
+        return {&#34;name&#34;: u.name, &#34;emails&#34;: el, &#34;id&#34;: u.id, &#34;avatar_url&#34;: u.avatar_url}
+
+    def create_repo(
+        self,
+        name,
+        description=NotSet,
+        homepage=NotSet,
+        private=NotSet,
+        has_issues=NotSet,
+        has_wiki=NotSet,
+        has_downloads=NotSet,
+        auto_init=NotSet,
+        gitignore_template=NotSet,
+    ):
+
+        return self.github_client.get_user().create_repo(
+            name,
+            description=description,
+            homepage=homepage,
+            private=private,
+            has_issues=has_issues,
+            has_wiki=has_wiki,
+            has_downloads=has_downloads,
+            auto_init=auto_init,
+            gitignore_template=gitignore_template,
+        )
+
+    def delete_repo(self, repo_name):
+        return self.__client.get_user().get_repo(repo_name).delete()</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -141,66 +191,9 @@ class Github(Client):
 <li><a title="jumpscale.core.base.meta.Base" href="../../core/base/meta.html#jumpscale.core.base.meta.Base">Base</a></li>
 <li>types.SimpleNamespace</li>
 </ul>
-<h3>Methods</h3>
-<dl>
-<dt id="jumpscale.clients.github.github.Github.get_factory_info"><code class="name flex">
-<span>def <span class="ident">get_factory_info</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def get_factory_info(self):
-    return factory_info</code></pre>
-</details>
-</dd>
-<dt id="jumpscale.clients.github.github.Github.get_fields"><code class="name flex">
-<span>def <span class="ident">get_fields</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def get_fields(self):
-    return fields</code></pre>
-</details>
-</dd>
-<dt id="jumpscale.clients.github.github.Github.hi"><code class="name flex">
-<span>def <span class="ident">hi</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def hi(self):
-    print(&#34;hii&#34;)
-    j.sals.fs.basename(&#34;aa&#34;)</code></pre>
-</details>
-</dd>
-</dl>
-</dd>
-<dt id="jumpscale.clients.github.github.User"><code class="flex name class">
-<span>class <span class="ident">User</span></span>
-</code></dt>
-<dd>
-<section class="desc"><p>A simple attribute-based namespace.</p>
-<p>SimpleNamespace(**kwargs)</p></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">class User(Base):
-    username = fields.String()
-    password = fields.String()
-
-    emails = fields.Factory(Email)</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="jumpscale.core.base.meta.Base" href="../../core/base/meta.html#jumpscale.core.base.meta.Base">Base</a></li>
-<li>types.SimpleNamespace</li>
-</ul>
 <h3>Instance variables</h3>
 <dl>
-<dt id="jumpscale.clients.github.github.User.password"><code class="name">var <span class="ident">password</span></code></dt>
+<dt id="jumpscale.clients.github.github.GithubClient.accesstoken"><code class="name">var <span class="ident">accesstoken</span></code></dt>
 <dd>
 <section class="desc"></section>
 <details class="source">
@@ -209,7 +202,31 @@ class Github(Client):
     return getattr(self, inner_name)</code></pre>
 </details>
 </dd>
-<dt id="jumpscale.clients.github.github.User.username"><code class="name">var <span class="ident">username</span></code></dt>
+<dt id="jumpscale.clients.github.github.GithubClient.github_client"><code class="name">var <span class="ident">github_client</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def github_client(self):
+    if not self.__client:
+        if self.accesstoken:
+            self.__client = Github(self.accesstoken)
+        else:
+            self.__client = Github(login_or_token=self.username, password=self.password)
+    return self.__client</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.clients.github.github.GithubClient.password"><code class="name">var <span class="ident">password</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def getter(self):
+    return getattr(self, inner_name)</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.clients.github.github.GithubClient.username"><code class="name">var <span class="ident">username</span></code></dt>
 <dd>
 <section class="desc"></section>
 <details class="source">
@@ -221,26 +238,102 @@ class Github(Client):
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="jumpscale.clients.github.github.User.get_factory_info"><code class="name flex">
-<span>def <span class="ident">get_factory_info</span></span>(<span>self)</span>
+<dt id="jumpscale.clients.github.github.GithubClient.create_repo"><code class="name flex">
+<span>def <span class="ident">create_repo</span></span>(<span>self, name, description=NotSet, homepage=NotSet, private=NotSet, has_issues=NotSet, has_wiki=NotSet, has_downloads=NotSet, auto_init=NotSet, gitignore_template=NotSet)</span>
 </code></dt>
 <dd>
 <section class="desc"></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def get_factory_info(self):
-    return factory_info</code></pre>
+<pre><code class="python">def create_repo(
+    self,
+    name,
+    description=NotSet,
+    homepage=NotSet,
+    private=NotSet,
+    has_issues=NotSet,
+    has_wiki=NotSet,
+    has_downloads=NotSet,
+    auto_init=NotSet,
+    gitignore_template=NotSet,
+):
+
+    return self.github_client.get_user().create_repo(
+        name,
+        description=description,
+        homepage=homepage,
+        private=private,
+        has_issues=has_issues,
+        has_wiki=has_wiki,
+        has_downloads=has_downloads,
+        auto_init=auto_init,
+        gitignore_template=gitignore_template,
+    )</code></pre>
 </details>
 </dd>
-<dt id="jumpscale.clients.github.github.User.get_fields"><code class="name flex">
-<span>def <span class="ident">get_fields</span></span>(<span>self)</span>
+<dt id="jumpscale.clients.github.github.GithubClient.delete_repo"><code class="name flex">
+<span>def <span class="ident">delete_repo</span></span>(<span>self, repo_name)</span>
 </code></dt>
 <dd>
 <section class="desc"></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def get_fields(self):
-    return fields</code></pre>
+<pre><code class="python">def delete_repo(self, repo_name):
+    return self.__client.get_user().get_repo(repo_name).delete()</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.clients.github.github.GithubClient.get_orgs"><code class="name flex">
+<span>def <span class="ident">get_orgs</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_orgs(self):
+    l = []
+    for o in self.github_client.get_user().get_orgs():
+        l.append(o.login)
+    return l</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.clients.github.github.GithubClient.get_repo"><code class="name flex">
+<span>def <span class="ident">get_repo</span></span>(<span>self, repo_full_name)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_repo(self, repo_full_name):
+    return GithubRepo(self.__client,repo_full_name)</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.clients.github.github.GithubClient.get_repos"><code class="name flex">
+<span>def <span class="ident">get_repos</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_repos(self):
+    l = []
+    for r in self.github_client.get_user().get_repos():
+        l.append(GithubRepo(self.__client,r.full_name))
+    return l</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.clients.github.github.GithubClient.get_userdata"><code class="name flex">
+<span>def <span class="ident">get_userdata</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_userdata(self):
+    u = self.github_client.get_user()
+    el = []
+    for e in u.get_emails():
+        el.append(e)
+    return {&#34;name&#34;: u.name, &#34;emails&#34;: el, &#34;id&#34;: u.id, &#34;avatar_url&#34;: u.avatar_url}</code></pre>
 </details>
 </dd>
 </dl>
@@ -262,29 +355,18 @@ class Github(Client):
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="jumpscale.clients.github.github.Email" href="#jumpscale.clients.github.github.Email">Email</a></code></h4>
-<ul class="">
-<li><code><a title="jumpscale.clients.github.github.Email.address" href="#jumpscale.clients.github.github.Email.address">address</a></code></li>
-<li><code><a title="jumpscale.clients.github.github.Email.get_factory_info" href="#jumpscale.clients.github.github.Email.get_factory_info">get_factory_info</a></code></li>
-<li><code><a title="jumpscale.clients.github.github.Email.get_fields" href="#jumpscale.clients.github.github.Email.get_fields">get_fields</a></code></li>
-<li><code><a title="jumpscale.clients.github.github.Email.main" href="#jumpscale.clients.github.github.Email.main">main</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="jumpscale.clients.github.github.Github" href="#jumpscale.clients.github.github.Github">Github</a></code></h4>
-<ul class="">
-<li><code><a title="jumpscale.clients.github.github.Github.get_factory_info" href="#jumpscale.clients.github.github.Github.get_factory_info">get_factory_info</a></code></li>
-<li><code><a title="jumpscale.clients.github.github.Github.get_fields" href="#jumpscale.clients.github.github.Github.get_fields">get_fields</a></code></li>
-<li><code><a title="jumpscale.clients.github.github.Github.hi" href="#jumpscale.clients.github.github.Github.hi">hi</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="jumpscale.clients.github.github.User" href="#jumpscale.clients.github.github.User">User</a></code></h4>
-<ul class="">
-<li><code><a title="jumpscale.clients.github.github.User.get_factory_info" href="#jumpscale.clients.github.github.User.get_factory_info">get_factory_info</a></code></li>
-<li><code><a title="jumpscale.clients.github.github.User.get_fields" href="#jumpscale.clients.github.github.User.get_fields">get_fields</a></code></li>
-<li><code><a title="jumpscale.clients.github.github.User.password" href="#jumpscale.clients.github.github.User.password">password</a></code></li>
-<li><code><a title="jumpscale.clients.github.github.User.username" href="#jumpscale.clients.github.github.User.username">username</a></code></li>
+<h4><code><a title="jumpscale.clients.github.github.GithubClient" href="#jumpscale.clients.github.github.GithubClient">GithubClient</a></code></h4>
+<ul class="two-column">
+<li><code><a title="jumpscale.clients.github.github.GithubClient.accesstoken" href="#jumpscale.clients.github.github.GithubClient.accesstoken">accesstoken</a></code></li>
+<li><code><a title="jumpscale.clients.github.github.GithubClient.create_repo" href="#jumpscale.clients.github.github.GithubClient.create_repo">create_repo</a></code></li>
+<li><code><a title="jumpscale.clients.github.github.GithubClient.delete_repo" href="#jumpscale.clients.github.github.GithubClient.delete_repo">delete_repo</a></code></li>
+<li><code><a title="jumpscale.clients.github.github.GithubClient.get_orgs" href="#jumpscale.clients.github.github.GithubClient.get_orgs">get_orgs</a></code></li>
+<li><code><a title="jumpscale.clients.github.github.GithubClient.get_repo" href="#jumpscale.clients.github.github.GithubClient.get_repo">get_repo</a></code></li>
+<li><code><a title="jumpscale.clients.github.github.GithubClient.get_repos" href="#jumpscale.clients.github.github.GithubClient.get_repos">get_repos</a></code></li>
+<li><code><a title="jumpscale.clients.github.github.GithubClient.get_userdata" href="#jumpscale.clients.github.github.GithubClient.get_userdata">get_userdata</a></code></li>
+<li><code><a title="jumpscale.clients.github.github.GithubClient.github_client" href="#jumpscale.clients.github.github.GithubClient.github_client">github_client</a></code></li>
+<li><code><a title="jumpscale.clients.github.github.GithubClient.password" href="#jumpscale.clients.github.github.GithubClient.password">password</a></code></li>
+<li><code><a title="jumpscale.clients.github.github.GithubClient.username" href="#jumpscale.clients.github.github.GithubClient.username">username</a></code></li>
 </ul>
 </li>
 </ul>

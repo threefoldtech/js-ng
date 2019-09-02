@@ -525,7 +525,7 @@ def getDefunctProcesses():
     return llist
 
 def getEnviron(pid):
-    environ = j.sal.fs.readFile(&#34;/proc/%s/environ&#34; % pid)
+    environ = j.sal.fs.read_file(&#34;/proc/%s/environ&#34; % pid)
     env = dict()
     for line in environ.split(&#34;\0&#34;):
         if &#34;=&#34; in line:
@@ -812,7 +812,7 @@ if exitcode is not zero then the executed command returned with errors</p></sect
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def getEnviron(pid):
-    environ = j.sal.fs.readFile(&#34;/proc/%s/environ&#34; % pid)
+    environ = j.sal.fs.read_file(&#34;/proc/%s/environ&#34; % pid)
     env = dict()
     for line in environ.split(&#34;\0&#34;):
         if &#34;=&#34; in line:

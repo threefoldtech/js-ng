@@ -1,4 +1,6 @@
+import sys
 import os
+import traceback
 import importlib
 import pkgutil
 import importlib.util
@@ -108,17 +110,15 @@ def load():
                 try:
                     m = importlib.import_module(importedpkgstr)
                 except Exception as e:
+                    traceback.print_exception(*sys.exc_info())
                     print("[-] {} at {} ".format(e, importedpkgstr))
                     continue
                 else:
-                    if hasattr(m, "factory"):
-                    # if rootbase == "clients":
+                    if hasattr(m, "export_module_as"):
                         # print("rootbase: ", rootbase, importedpkgstr)
-                        # print(m.factory)
-                        loadeddict['jumpscale'][rootbase][pkgname] = m.factory
-                        # loadeddict[importedpkgstr] = m.factory
-                    elif hasattr(m, "singleton"):
-                        loadeddict["jumpscale"][rootbase][pkgname] = m.singleton
+                        # print(m.export_module_as)
+                        loadeddict['jumpscale'][rootbase][pkgname] = m.export_module_as
+                        # loadeddict[importedpkgstr] = m.export_module_as
                     else:
                         loadeddict['jumpscale'][rootbase][pkgname] = m
 

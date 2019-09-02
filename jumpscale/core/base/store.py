@@ -9,7 +9,7 @@ from enum import Enum
 from jumpscale.data.nacl import NACL
 from jumpscale.data.serializers import base64, json
 from jumpscale.core.config import Environment
-from jumpscale.sals.fs import readFile, writeFile
+from jumpscale.sals.fs import read_file_binary, write_file_binary
 
 
 class InvalidPrivateKey(Exception):
@@ -194,7 +194,7 @@ class FileSystemStore(EncryptedConfigStore):
 
     def read(self, instance_name):
         path = self.get_path(instance_name)
-        return readFile(path)
+        return read_file_binary(path)
 
     def list_all(self):
         if not os.path.exists(self.config_root):
@@ -204,7 +204,7 @@ class FileSystemStore(EncryptedConfigStore):
     def write(self, instance_name, data):
         path = self.get_path(instance_name)
         self.make_path(path)
-        return writeFile(path, data.encode())
+        return write_file_binary(path, data.encode())
 
     def delete(self, instance_name):
         path = self.get_instance_root(instance_name)

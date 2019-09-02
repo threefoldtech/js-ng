@@ -1,4 +1,4 @@
 from jumpscale.core.base import StoredFactory
 from .client import SonicClient
 
-factory = StoredFactory(SonicClient)
+export_module_as = StoredFactory(SonicClient)

@@ -5,3 +5,4 @@ from . import msgpack
 from . import pickle
 from . import toml
 from . import yaml
+from . import dill
