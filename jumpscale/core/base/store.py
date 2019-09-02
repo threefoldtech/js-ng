@@ -183,7 +183,7 @@ class FileSystemStore(EncryptedConfigStore):
     def write(self, instance_name, data):
         path = self.get_path(instance_name)
         self.make_path(path)
-        return writeFile(path, data.encode())
+        return write_file(path, data.encode())
 
     def delete(self, instance_name):
         path = self.get_instance_root(instance_name)
