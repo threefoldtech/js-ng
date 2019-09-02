@@ -159,15 +159,25 @@ def stem(path:str) -> str:
 
 def mkdir(path:str, exist_ok=True):
     """Makes directory at path
-    
+
     Args:
-        path (str): path to create path at
-        exist_ok (bool, optional): [description]. Defaults to True.
+        path (str): path to create dir at
+        exist_ok (bool, optional): won't fail if directory exists. Defaults to True.
     
     Returns:
         [type]: [description]
     """
     return pathlib.Path(path).mkdir(exist_ok=exist_ok)
+
+
+def mkdirs(path: str, exist_ok=True):
+    """Creates dir as well as all non exisitng parents in the path
+
+    Args:
+        path (str): path to create dir at
+        exist_ok (bool, optional): won't fail if directory exists. Defaults to True.
+    """
+    return os.makedirs(path, exist_ok=exist_ok)
 
 
 def parent(path:str) -> str:
