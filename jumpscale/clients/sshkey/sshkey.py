@@ -20,6 +20,11 @@ class SSHKeyClient(Client):
         
 
     def generate_keys(self):
+        if not self.private_key_path:
+            # TODO: make sure the new sshkey name doesn't exist.
+            sshkeys_dir = j.sals.fs.join_paths(j.core.config.config_root, "sshkeys")
+            j.sals.fs.mkdirs(sshkeys_dir)
+            self.private_key_path = j.sals.fs.join_paths(sshkeys_dir, j.data.idgenerator.chars(8))
         if self.passphrase and len(self.passphrase) < 5:
             raise ValueError("invalid passphrase length: should be at least 5 chars.") 
         cmd = 'ssh-keygen -f {} -N "{}"'.format(self.private_key_path, self.passphrase)

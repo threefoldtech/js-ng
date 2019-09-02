@@ -381,7 +381,6 @@ mkdtemp = tempfile.mkdtemp
 mkstemp = tempfile.mkstemp
 get_temp_dir = tempfile.gettempdir
 
-
 def parts_to_path(parts: List[str]) -> str:
     """Convert list of path parts into a path string
     
@@ -393,8 +392,11 @@ def parts_to_path(parts: List[str]) -> str:
     """
     path = pathlib.Path(parts[0])
     for p in parts[1:]:
-        path.joinpath(p)
+        path = path.joinpath(p)
     return str(path)
+
+def join_paths(*paths):
+    return parts_to_path(paths)
 
 
 def rm_emptry_dir(path:str):

@@ -7,7 +7,7 @@ import pytoml as toml
 from nacl.public import PrivateKey, Box
 
 
-__all__ = ["config_path", "get_default_config", "get_config", "update_config", "Environment"]
+__all__ = ["config_path", "config_root", "get_default_config", "get_config", "update_config", "Environment"]
 
 
 config_root = os.path.expanduser(os.path.join("~/.config", "jumpscale"))
