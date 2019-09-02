@@ -1,39 +1,47 @@
 from jumpscale.god import j
-from watchdog.events import FileSystemEventHandler, PatternMatchingEventHandler
+from watchdog.events import PatternMatchingEventHandler
 from watchdog.observers import Observer
 import gevent
 
-DEFAULT_IGNORED_PATTERNS = [".git", ".pyc", '__pycache__', ".swp", '.swx']
+DEFAULT_IGNORED_PATTERNS = [".git", ".pyc", "__pycache__", ".swp", ".swx"]
+
 
 class Syncer(PatternMatchingEventHandler):
-
-    def __init__(self, sshclients_names, paths=None, patterns=None, ignore_patterns=None, ignore_directories=False, case_sensitive=False):
+    def __init__(
+        self,
+        sshclients_names,
+        paths=None,
+        patterns=None,
+        ignore_patterns=None,
+        ignore_directories=False,
+        case_sensitive=False,
+    ):
         ignore_patterns = ignore_patterns or DEFAULT_IGNORED_PATTERNS
         super().__init__(patterns, ignore_patterns, ignore_directories, case_sensitive)
         self.observer = Observer()
         self.sshclients_names = sshclients_names
-        self.paths = paths or {} # src:dst
+        self.paths = paths or {}  # src:dst
 
     def _get_dest_path(self, src_path):
         print("paths: {} and path: {}".format(self.paths, src_path))
 
         for path in self.paths.keys():
-            if path.startswith(src_path):
-                return self.paths[src_path]
-    
+            if src_path.startswith(path):
+                return self.paths[path]
+
     def _rewrite_path_for_dest(self, src_path):
         print("paths: {} and path: {}".format(self.paths, src_path))
         src_path = str(src_path)
         for path in self.paths.keys():
             if src_path.startswith(path):
                 return src_path.replace(path, self.paths[path])
-    
+
     def _get_sshclients(self):
         clients = []
         for name in self.sshclients_names:
             clients.append(j.clients.sshclient.get(name))
         return clients
-    
+
     def _sync(self):
         def ensure_dirs():
             for path in self.paths:
@@ -41,7 +49,6 @@ class Syncer(PatternMatchingEventHandler):
                     dest_d = str(self._rewrite_path_for_dest(d))
                     for cl in self._get_sshclients():
                         cl.run("mkdir -p {}".format(dest_d))
-
 
         def sync_file(e):
             entry_as_str = str(e)
@@ -61,7 +68,7 @@ class Syncer(PatternMatchingEventHandler):
         for path in self.paths:
             for f in j.sals.fs.walk_files(path, sync_file):
                 pass
-            
+
     def start(self):
         self._sync()
         for path in self.paths.keys():
@@ -79,8 +86,8 @@ class Syncer(PatternMatchingEventHandler):
     def on_moved(self, event):
         super().on_moved(event)
 
-        what = 'directory' if event.is_directory else 'file'
-        j.logger.info("Moved {}: from {} to {}".format(what, event.src_path,event.dest_path))
+        what = "directory" if event.is_directory else "file"
+        j.logger.info("Moved {}: from {} to {}".format(what, event.src_path, event.dest_path))
         dest_path = self._rewrite_path_for_dest(event.dest_path)
         print("will move to {}".format(dest_path))
         print("will delete original in {}".format(self._rewrite_path_for_dest(event.src_path)))
@@ -89,14 +96,13 @@ class Syncer(PatternMatchingEventHandler):
                 cl.sftp.mkdir(j.sals.fs.parent(dest_path), ignore_existing=True)
             else:
                 cl.sftp.mkdir(dest_path, ignore_existing=True)
-                
+
             cl.sftp.put(event.dest_path, dest_path)
             cl.run("rm {}".format(event.src_path))
 
-
     def on_created(self, event):
         super().on_created(event)
-        what = 'directory' if event.is_directory else 'file'
+        what = "directory" if event.is_directory else "file"
         j.logger.info("Created {}: {}".format(what, event.src_path))
 
         dest_path = self._rewrite_path_for_dest(event.src_path)
@@ -106,12 +112,10 @@ class Syncer(PatternMatchingEventHandler):
 
             cl.run("touch {}".format(dest_path))
 
-
-
     def on_deleted(self, event):
         super().on_deleted(event)
 
-        what = 'directory' if event.is_directory else 'file'
+        what = "directory" if event.is_directory else "file"
         j.logger.info("Deleted {}: {}".format(what, event.src_path))
 
         dest_path = self._rewrite_path_for_dest(event.src_path)
@@ -121,7 +125,7 @@ class Syncer(PatternMatchingEventHandler):
 
     def on_modified(self, event):
         super().on_modified(event)
-        what = 'directory' if event.is_directory else 'file'
+        what = "directory" if event.is_directory else "file"
         j.logger.info("Modified {}: {}".format(what, event.src_path))
 
         dest_path = self._rewrite_path_for_dest(event.src_path)

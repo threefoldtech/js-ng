@@ -54,7 +54,8 @@ GitPython = "^3.0"
 
 [tool.poetry.dev-dependencies]
 ipdb = "^0.12.1"
-
+black = {version = "^18.3-alpha.0", allows-prereleases = true}
+flake8 = "^3.7"
 [tool.poetry.scripts]
 jsng = "jumpscale.entry_points.jsng:run"
 jsctl = "jumpscale.entry_points.jsctl:cli"
