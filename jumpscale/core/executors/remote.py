@@ -27,6 +27,14 @@ class RemoteExecutor:
     def __exit__(self, type, value, tb):
         pass
 
+    @property
+    def connection(self):
+        return fabric.Connection(**self._connection_ctx)
+    
+    @property
+    def sftp(self):
+        return self.connection.sftp()
+
     def run(self, cmd, **command_ctx):
         with fabric.Connection(**self._connection_ctx) as c:
             res = c.run(cmd, **command_ctx)
