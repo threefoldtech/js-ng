@@ -6,6 +6,18 @@ from typing import List, Dict, Optional
 
 DEFAULT_IGNORED_PATTERNS = [".git", ".pyc", "__pycache__", ".swp", ".swx"]
 
+"""
+JS-NG> xmonader = j.clients.sshkey.new("xmonader")                                                                               
+JS-NG> xmonader.private_key_path = "/home/xmonader/.ssh/id_rsa"                                                                  
+JS-NG> xmonader.load_from_file_system()                                                                                          
+JS-NG> xmonader.save()                                                                                                           
+JS-NG> xmonader = j.clients.sshclient.new("xmonader")                                                                            
+JS-NG> xmonader.sshkey = "xmonader"                                                                                              
+JS-NG> s = j.tools.syncer.Syncer(["xmonader"], {"/home/xmonader/wspace/tfchain-py":"/tmp/tfchain-py"}) 
+JS-NG> s.start()                                                                                                                 
+2019-09-03T11:38:47.183394+0200 - paths: {'/home/xmonader/wspace/tfchain-py': '/tmp/tfchain-py'}
+"""
+
 
 class Syncer(PatternMatchingEventHandler):
     def __init__(
@@ -96,6 +108,7 @@ class Syncer(PatternMatchingEventHandler):
                 for src_dir in j.sals.fs.walk_dirs(path):
                     dest_dir = str(self._rewrite_path_for_dest(src_dir))
                     for cl in self._get_sshclients():
+                        j.logger.debug("making dir {}".format(dest_dir))
                         cl.run("mkdir -p {}".format(dest_dir))
 
         def sync_file(e):
@@ -118,7 +131,7 @@ class Syncer(PatternMatchingEventHandler):
 
         for path in self.paths:
             for f in j.sals.fs.walk_files(path, sync_file):
-                pass
+                sync_file(f)
 
     def start(self, sync=True):
         """Start syncing/watching paths to remote machines
@@ -144,40 +157,43 @@ class Syncer(PatternMatchingEventHandler):
     def on_moved(self, event):
         super().on_moved(event)
 
-        # what = "directory" if event.is_directory else "file"
-        # j.logger.info("Moved {}: from {} to {}".format(what, event.src_path, event.dest_path))
+        what = "directory" if event.is_directory else "file"
+        j.logger.info("Moved {}: from {} to {}".format(what, event.src_path, event.dest_path))
         dest_path = self._rewrite_path_for_dest(event.dest_path)
-        # j.logger.debug("will move to {}".format(dest_path))
-        # j.logger.debug("will delete original in {}".format(self._rewrite_path_for_dest(event.src_path)))
+        j.logger.debug("will move to {}".format(dest_path))
+        j.logger.debug("will delete original in {}".format(self._rewrite_path_for_dest(event.src_path)))
         for cl in self._get_sshclients():
             if j.sals.fs.is_file(dest_path):
-                cl.sftp.mkdir(j.sals.fs.parent(dest_path), ignore_existing=True)
+                cl.sftp.mkdir(j.sals.fs.parent(dest_path))
+                cl.sftp.put(event.dest_path, dest_path)
             else:
-                cl.sftp.mkdir(dest_path, ignore_existing=True)
+                cl.sftp.mkdir(dest_path)
 
-            cl.sftp.put(event.dest_path, dest_path)
-            cl.run("rm {}".format(event.src_path))
+            cl.run("rm {}".format(self._rewrite_path_for_dest(event.src_path)))
 
     def on_created(self, event):
         super().on_created(event)
-        # what = "directory" if event.is_directory else "file"
-        # j.logger.debug("Created {}: {}".format(what, event.src_path))
+        what = "directory" if event.is_directory else "file"
+        j.logger.debug("Created {}: {}".format(what, event.src_path))
 
         dest_path = self._rewrite_path_for_dest(event.src_path)
-        # j.logger.debug("will create in {}".format(dest_path))
-        for cl in self._get_sshclients():
-            cl.sftp.mkdir(j.sals.fs.parent(dest_path), ignore_existing=True)
+        j.logger.debug("will create in {}".format(dest_path))
 
-            cl.run("touch {}".format(dest_path))
+        for cl in self._get_sshclients():
+            if what == "directory":
+                cl.run("mkdir -p {}".format(dest_path))
+            else:
+                cl.sftp.mkdir(j.sals.fs.parent(dest_path))
+                cl.run("touch {}".format(dest_path))
 
     def on_deleted(self, event):
         super().on_deleted(event)
 
-        # what = "directory" if event.is_directory else "file"
-        # j.logger.debug("Deleted {}: {}".format(what, event.src_path))
+        what = "directory" if event.is_directory else "file"
+        j.logger.debug("Deleted {}: {}".format(what, event.src_path))
 
         dest_path = self._rewrite_path_for_dest(event.src_path)
-        # j.logger.debug("will delete in {}".format(dest_path))
+        j.logger.debug("will delete in {}".format(dest_path))
         for cl in self._get_sshclients():
             cl.run("rm {}".format(dest_path))
 

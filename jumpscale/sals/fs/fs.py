@@ -189,7 +189,7 @@ def parent(path: str) -> str:
     Returns:
         str: parent path.
     """
-    return pathlib.Path(path).parent
+    return str(pathlib.Path(path).parent)
 
 
 def parents(path: str) -> List[str]:
@@ -209,7 +209,7 @@ def parents(path: str) -> List[str]:
         List[str]: list of parents
     """
 
-    return list(pathlib.Path(path).parents)
+    return list([str(p) for p in pathlib.Path(path).parents])
 
 
 def path_parts(path: str) -> List[str]:
@@ -258,7 +258,7 @@ def expanduser(path: str) -> str:
     Returns:
         str: path with tilde `~` resolved.
     """
-    return pathlib.Path(path).expanduser()
+    return str(pathlib.Path(path).expanduser())
 
 
 def unlink(path: str):
