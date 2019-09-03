@@ -66,7 +66,7 @@ def udp_connection_test(ipaddr: str, port: int, timeout=1, message=b"PING"):
     return True
 
 
-def wait_connection_test(ipaddr: str, port: int, timeout_total=5):
+def wait_connection_test(ipaddr: str, port: int, timeout=5):
     """Will wait until port listens on the specified address
 
     Args:
@@ -78,7 +78,7 @@ def wait_connection_test(ipaddr: str, port: int, timeout_total=5):
         bool: True if the test succeeds, False otherwise
     """
     port = int(port)
-    end = j.data.time.now().timestamp + timeout_total
+    end = j.data.time.now().timestamp + timeout
     while True:
         if j.data.time.now().timestamp > end:
             return False
@@ -402,6 +402,7 @@ def download(url, localpath, username=None, passwd=None, overwrite=True):
         if username and passwd and j.tools.http.urllib3.util.parse_url(url).scheme == "ftp":
             url = url.split("://")[0] + "://%s:%s@" % (username, passwd) + url.split("://")[1]
         response = j.tools.http.get(url, stream=True, auth=j.tools.http.auth.HTTPBasicAuth(username, passwd))
+        response.raise_for_status()
         if filename != "-":
             with open(filename, "wb") as fw:
                 for chunk in response.iter_content(chunk_size=2048):
