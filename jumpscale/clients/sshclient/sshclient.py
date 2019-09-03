@@ -41,7 +41,7 @@ class SSHClient(Client):
 
     def _sshkey(self):
         return j.clients.sshkey.get(self.sshkey)
-
+    
     @property
     def sshclient(self):
         if not self.__client:
