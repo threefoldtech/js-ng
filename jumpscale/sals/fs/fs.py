@@ -32,7 +32,7 @@ expanduser = os.path.expanduser
 
 def is_dir(path: str) -> bool:
     """Checks if path is a dir
-    
+
     :param path: path to check
     :type path: str
     :return: True if is dir else False
@@ -43,7 +43,7 @@ def is_dir(path: str) -> bool:
 
 def is_file(path: str) -> bool:
     """Checks if path is a file
-    
+
     :param path: path to check
     :type path: str
     :return: True if is file else False
@@ -54,10 +54,10 @@ def is_file(path: str) -> bool:
 
 def is_symlink(path: str) -> bool:
     """Checks if path symlink
-    
+
     Args:
         path (str): path to check if symlink
-    
+
     Returns:
         bool: True if symlink False otherwise
     """
@@ -66,7 +66,7 @@ def is_symlink(path: str) -> bool:
 
 def is_absolute(path: str) -> bool:
     """Checks if path is absolute
-    
+
     Returns:
         bool: True if absolute
     """
@@ -75,7 +75,7 @@ def is_absolute(path: str) -> bool:
 
 def is_mount(path: str) -> bool:
     """Checks if path is mount
-    
+
     Returns:
         bool: True if mount
     """
@@ -84,11 +84,11 @@ def is_mount(path: str) -> bool:
 
 def is_ascii_file(path: str, checksize=4096) -> bool:
     """Checks if file `path` is ascii
-    
+
     Args:
         path (str): file path
         checksize (int, optional): checksize. Defaults to 4096.
-    
+
     Returns:
         bool: True if ascii file
     """
@@ -103,10 +103,10 @@ def is_ascii_file(path: str, checksize=4096) -> bool:
 
 def is_empty_dir(path: str) -> bool:
     """Checks if path is emptry directory
-    
+
     Args:
         path (str): path to check if empty directory
-    
+
     Returns:
         bool: True if path is emptry directory
     """
@@ -126,14 +126,14 @@ is_binary_file = lambda path: not is_ascii_file(path)
 
 def is_broken_link(path: str, clean=False) -> bool:
     """Checks if path is a broken symlink
-    
+
     Args:
         path (str): path to check
         clean (bool, optional): remove symlink if broken. Defaults to False.
-    
+
     Raises:
         NotImplementedError: [description]
-    
+
     Returns:
         bool: True if path is a broken symlink
     """
@@ -142,15 +142,15 @@ def is_broken_link(path: str, clean=False) -> bool:
 
 def stem(path: str) -> str:
     """returns the stem of a path (path without parent directory and without extension)
-    e.g 
+    e.g
         In [2]: t = j.sals.fs.stem("/tmp/tmp-5383p1GOmMOOwvfi.tpl")
 
         In [3]: t
         Out[3]: 'tmp-5383p1GOmMOOwvfi'
-    
+
     Args:
         path (str): path we want to get its stem
-    
+
     Returns:
         [type]: [description]
     """
@@ -163,7 +163,7 @@ def mkdir(path: str, exist_ok=True):
     Args:
         path (str): path to create dir at
         exist_ok (bool, optional): won't fail if directory exists. Defaults to True.
-    
+
     Returns:
         [type]: [description]
     """
@@ -182,10 +182,10 @@ def mkdirs(path: str, exist_ok=True):
 
 def parent(path: str) -> str:
     """Get path's parent
-    
+
     Args:
         path (str): path to get its parent
-    
+
     Returns:
         str: parent path.
     """
@@ -196,15 +196,15 @@ def parents(path: str) -> List[str]:
     """Get parents list
 
     e.g
-    >>> j.sals.fs.parents("/tmp/home/ahmed/myfile.py")     
+    >>> j.sals.fs.parents("/tmp/home/ahmed/myfile.py")
     [PosixPath('/tmp/home/ahmed'),
     PosixPath('/tmp/home'),
     PosixPath('/tmp'),
     PosixPath('/')]
-        
+
     Args:
         path (str): path to get its parents
-    
+
     Returns:
         List[str]: list of parents
     """
@@ -213,12 +213,12 @@ def parents(path: str) -> List[str]:
 
 
 def path_parts(path: str) -> List[str]:
-    """Convert path to a list of parts 
+    """Convert path to a list of parts
     e.g
      '/tmp/tmp-5383p1GOmMOOwvfi.tpl' ->  ('/', 'tmp', 'tmp-5383p1GOmMOOwvfi.tpl')
     Args:
         path (str): path to convert to parts
-    
+
     Returns:
         List[str]: path parts.
     """
@@ -227,10 +227,10 @@ def path_parts(path: str) -> List[str]:
 
 def exists(path: str) -> bool:
     """Checks if path exists
-    
+
     Args:
         path (str): path to check for existence
-    
+
     Returns:
         bool: True if exists
     """
@@ -239,7 +239,7 @@ def exists(path: str) -> bool:
 
 def rename(path1: str, path2: str):
     """Rename path1 to path2
-    
+
     Args:
         path1 (str): source path
         path2 (str): dest path
@@ -253,8 +253,8 @@ def expanduser(path: str) -> str:
     e.g
         j.sals.fs.expanduser("~/work") -> '/home/xmonader/work'
     Args:
-        path (str): path with optionally `~` 
-    
+        path (str): path with optionally `~`
+
     Returns:
         str: path with tilde `~` resolved.
     """
@@ -263,10 +263,10 @@ def expanduser(path: str) -> str:
 
 def unlink(path: str):
     """unlink path
-    
+
     Args:
         path (str): path to unlink
-    
+
 
     """
     return pathlib.Path(path).unlink()
@@ -274,12 +274,12 @@ def unlink(path: str):
 
 def read_text(path: str) -> str:
     """read ascii content at `path`
-    
+
     Args:
-        path (str): ascii file path 
-    
+        path (str): ascii file path
+
     Returns:
-        str: ascii content in path 
+        str: ascii content in path
     """
     return pathlib.Path(path).read_text()
 
@@ -289,10 +289,10 @@ read_ascii = read_file = read_text
 
 def read_bytes(path: str) -> bytes:
     """read binary content at `path`
-    
+
     Args:
         path (str): binary file path
-    
+
     Returns:
         bytes: binary content in path
     """
@@ -304,12 +304,12 @@ read_binary = read_file_binary = read_bytes
 
 def write_text(path: str, data: str, encoding=None):
     """write text `data` to path `path` with encoding
-    
+
     Args:
         path (str): path to write to
         data (str): ascii content
         encoding ([type], optional): encoding. Defaults to None.
-    
+
 
     """
     return pathlib.Path(path).write_text(data, encoding)
@@ -320,11 +320,11 @@ write_ascii = write_file = write_text
 
 def write_bytes(path: str, data: bytes):
     """write binary `data` to path `path`
-    
+
     Args:
         path (str): path to write to
         data (bytes): binary content
-    
+
     """
     return pathlib.Path(path).write_bytes(data)
 
@@ -334,17 +334,17 @@ write_binary = write_file_binary = write_bytes
 
 def touch(path: str):
     """create file
-    
+
     Args:
         path (str): path to create file
-    
+
     """
     return pathlib.Path(path).touch()
 
 
 def get_temp_filename(mode="w+b", buffering=-1, encoding=None, newline=None, suffix=None, prefix=None, dir=None) -> str:
     """Get temp filename
-    
+
     Args:
         mode (str, optional): [description]. Defaults to "w+b".
         buffering (int, optional): buffering. Defaults to -1.
@@ -353,7 +353,7 @@ def get_temp_filename(mode="w+b", buffering=-1, encoding=None, newline=None, suf
         suffix ([type], optional): ending suffix. Defaults to None.
         prefix ([type], optional): prefix . Defaults to None.
         dir ([type], optional): where to create the file. Defaults to None.
-    
+
     Returns:
         [str]: temp filename
     """
@@ -362,13 +362,13 @@ def get_temp_filename(mode="w+b", buffering=-1, encoding=None, newline=None, suf
 
 def get_temp_dirname(suffix=None, prefix=None, dir=None) -> str:
     """Get temp directory name
-    
+
     Args:
         suffix ([type], optional): ending suffix. Defaults to None.
         prefix ([type], optional): prefix . Defaults to None.
         dir ([type], optional): where to create the directory. Defaults to None.
-    
-    
+
+
     Returns:
         str: temp directory name.
     """
@@ -384,10 +384,10 @@ get_temp_dir = tempfile.gettempdir
 
 def parts_to_path(parts: List[str]) -> str:
     """Convert list of path parts into a path string
-    
+
     Args:
         parts (List[str]): path parts
-    
+
     Returns:
         str: joined path parts
     """
@@ -403,7 +403,7 @@ def join_paths(*paths):
 
 def rm_emptry_dir(path: str):
     """Remove empty directory
-    
+
     Args:
         path (str): path to remove.
     """
@@ -425,7 +425,7 @@ def rmtree(path: str):
 
 def copy_stat(src: str, dst: str, times=True, perms=True):
     """Copy stat of src to dst
-    
+
     Args:
         src (str): source path
         dst (str): destination
@@ -449,7 +449,7 @@ def copy_file(src: str, dst: str, times=False, perms=False):
         This is shutil.copyfile plus bits of shutil.copymode and
         shutil.copystat's implementation.
         shutil.copy and shutil.copy2 are not supported but are easy to do.
-    
+
     Args:
         src (str): source path
         dst (str): destination
@@ -466,10 +466,10 @@ chdir = os.chdir
 
 def change_dir(path: str) -> str:
     """Change current working directory to `path`
-    
+
     Args:
         path (str): path to switch current working directory to
-    
+
     Returns:
         str: new current working dir
     """
@@ -479,32 +479,32 @@ def change_dir(path: str) -> str:
 
 def chmod(path: str, mode):
     """change file mode for path to mode
-    
+
     Args:
         path (str): path
         mode (int): file mode
-    
+
     """
     return pathlib.Path(path).chmod(mode)
 
 
 def lchmod(path: str, mode):
     """change file mode for path to mode (handles links too)
-    
+
     Args:
         path (str): path
         mode (int): file mode
-    
+
     """
     return pathlib.Path(path).lchmod(mode)
 
 
 def stat(path: str):
     """Gets stat of path `path`
-    
+
     Args:
         path (str): path to get its stat
-    
+
     Returns:
         stat_result: returns stat struct.
     """
@@ -514,10 +514,10 @@ def stat(path: str):
 
 def lstat(path: str):
     """Gets stat of path `path` (handles links)
-    
+
     Args:
         path (str): path to get its stat
-    
+
     Returns:
         stat_result: returns stat struct.
     """
@@ -527,10 +527,10 @@ def lstat(path: str):
 
 def resolve(path: str) -> str:
     """resolve `.` and `..` in path
-    
+
     Args:
         path (str): path with optionally `.` and `..`
-    
+
     Returns:
         str: resolved path
     """
@@ -540,11 +540,11 @@ def resolve(path: str) -> str:
 def extension(path: str, include_dot=True):
     """Gets the extension of path
     '/home/ahmed/myfile.py' -> `.py` if include_dot else `py`
-    
+
     Args:
         path (str): [description]
         include_dot (bool, optional): controls whether to include the dot or not. Defaults to True.
-    
+
     Returns:
         str: extension
     """
@@ -590,7 +590,7 @@ def default_filter_fun(entry):
 
 
 def walk(path: str, pat="*", filter_fun=default_filter_fun):
-    """walk recursively on path 
+    """walk recursively on path
     e.g
         for el in walk('/tmp', filter_fun=j.sals.fs.is_file) : ..
         for el in walk('/tmp', filter_fun=j.sals.fs.is_dir) : ..
@@ -610,7 +610,7 @@ def walk(path: str, pat="*", filter_fun=default_filter_fun):
 
 
 def walk_non_recursive(path: str, fun=lambda e: True, filter_fun=default_filter_fun):
-    """walks non recursively on path 
+    """walks non recursively on path
     e.g
         for el in walk('/tmp', filter=j.sals.fs.is_file) : ..
         for el in walk('/tmp', filter=j.sals.fs.is_dir) : ..
@@ -631,14 +631,14 @@ def walk_non_recursive(path: str, fun=lambda e: True, filter_fun=default_filter_
 def walk_files(path: str, recursive=True):
     """
     walk over files in path and applies function `fun`
-    e.g 
+    e.g
 
         for el in walk_files('/tmp') : ..
-    
+
     Args:
         path (str): path to walk over
         recursive (bool, optional): recursive or not. Defaults to True.
-    
+
 
     """
 
@@ -651,15 +651,15 @@ def walk_files(path: str, recursive=True):
 def walk_dirs(path, recursive=True):
     """
         walk over directories in path and applies function `fun`
-    e.g 
+    e.g
 
         for el in walk_dirs('/tmp') : ..
 
-    
+
     Args:
         path (str): path to walk over
         recursive (bool, optional): recursive or not. Defaults to True.
-    
+
 
     """
     if recursive:

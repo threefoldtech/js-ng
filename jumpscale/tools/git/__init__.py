@@ -177,8 +177,7 @@ def find(account="", name=""):
             return False
 
     return [
-        str(j.sals.fs.parent(path))
-        for path in j.sals.fs.walk(CODE_DIR, pat="*.git", filter_fun=_filter_paths)
+        j.sals.fs.parent(path) for path in j.sals.fs.walk(CODE_DIR, pat="*.git", filter_fun=_filter_paths)
     ]
 
 
