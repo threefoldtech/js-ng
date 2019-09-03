@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.3" />
-<title>jumpscale.clients API documentation</title>
+<title>jumpscale.data.bcdb.models.db_model API documentation</title>
 <meta name="description" content="" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
@@ -17,80 +17,67 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Namespace <code>jumpscale.clients</code></h1>
+<h1 class="title">Module <code>jumpscale.data.bcdb.models.db_model</code></h1>
 </header>
 <section id="section-intro">
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">from .base import ModelBase
+
+class DBModel(ModelBase):
+    _schema = &#34;&#34;&#34;
+    @url = db
+    host = &#34;&#34; (S)
+    user = (O)!user
+    &#34;&#34;&#34;
+    _name = &#34;db&#34;</code></pre>
+</details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt><code class="name"><a title="jumpscale.clients.base" href="base.html">jumpscale.clients.base</a></code></dt>
+<dt id="jumpscale.data.bcdb.models.db_model.DBModel"><code class="flex name class">
+<span>class <span class="ident">DBModel</span></span>
+<span>(</span><span>bcdb)</span>
+</code></dt>
 <dd>
 <section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="jumpscale.clients.currencylayer" href="currencylayer/index.html">jumpscale.clients.currencylayer</a></code></dt>
-<dd>
-<section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="jumpscale.clients.gdrive" href="gdrive/index.html">jumpscale.clients.gdrive</a></code></dt>
-<dd>
-<section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="jumpscale.clients.git" href="git/index.html">jumpscale.clients.git</a></code></dt>
-<dd>
-<section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="jumpscale.clients.github" href="github/index.html">jumpscale.clients.github</a></code></dt>
-<dd>
-<section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="jumpscale.clients.gogs" href="gogs/index.html">jumpscale.clients.gogs</a></code></dt>
-<dd>
-<section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="jumpscale.clients.mail" href="mail/index.html">jumpscale.clients.mail</a></code></dt>
-<dd>
-<section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="jumpscale.clients.redis" href="redis/index.html">jumpscale.clients.redis</a></code></dt>
-<dd>
-<section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="jumpscale.clients.s3" href="s3/index.html">jumpscale.clients.s3</a></code></dt>
-<dd>
-<section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="jumpscale.clients.sendgrid" href="sendgrid/index.html">jumpscale.clients.sendgrid</a></code></dt>
-<dd>
-<section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="jumpscale.clients.sonic" href="sonic/index.html">jumpscale.clients.sonic</a></code></dt>
-<dd>
-<section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="jumpscale.clients.sshclient" href="sshclient/index.html">jumpscale.clients.sshclient</a></code></dt>
-<dd>
-<section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="jumpscale.clients.sshkey" href="sshkey/index.html">jumpscale.clients.sshkey</a></code></dt>
-<dd>
-<section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="jumpscale.clients.trello" href="trello/index.html">jumpscale.clients.trello</a></code></dt>
-<dd>
-<section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="jumpscale.clients.twilio" href="twilio/index.html">jumpscale.clients.twilio</a></code></dt>
-<dd>
-<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class DBModel(ModelBase):
+    _schema = &#34;&#34;&#34;
+    @url = db
+    host = &#34;&#34; (S)
+    user = (O)!user
+    &#34;&#34;&#34;
+    _name = &#34;db&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="jumpscale.data.bcdb.models.base.ModelBase" href="base.html#jumpscale.data.bcdb.models.base.ModelBase">ModelBase</a></li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="jumpscale.data.bcdb.models.base.ModelBase" href="base.html#jumpscale.data.bcdb.models.base.ModelBase">ModelBase</a></b></code>:
+<ul class="hlist">
+<li><code><a title="jumpscale.data.bcdb.models.base.ModelBase.create_obj" href="base.html#jumpscale.data.bcdb.models.base.ModelBase.create_obj">create_obj</a></code></li>
+<li><code><a title="jumpscale.data.bcdb.models.base.ModelBase.get_by" href="base.html#jumpscale.data.bcdb.models.base.ModelBase.get_by">get_by</a></code></li>
+<li><code><a title="jumpscale.data.bcdb.models.base.ModelBase.get_dict" href="base.html#jumpscale.data.bcdb.models.base.ModelBase.get_dict">get_dict</a></code></li>
+<li><code><a title="jumpscale.data.bcdb.models.base.ModelBase.get_pattern" href="base.html#jumpscale.data.bcdb.models.base.ModelBase.get_pattern">get_pattern</a></code></li>
+<li><code><a title="jumpscale.data.bcdb.models.base.ModelBase.load_obj_from_dict" href="base.html#jumpscale.data.bcdb.models.base.ModelBase.load_obj_from_dict">load_obj_from_dict</a></code></li>
+<li><code><a title="jumpscale.data.bcdb.models.base.ModelBase.save_obj" href="base.html#jumpscale.data.bcdb.models.base.ModelBase.save_obj">save_obj</a></code></li>
+<li><code><a title="jumpscale.data.bcdb.models.base.ModelBase.set_from_dict" href="base.html#jumpscale.data.bcdb.models.base.ModelBase.set_from_dict">set_from_dict</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 </dl>
-</section>
-<section>
-</section>
-<section>
-</section>
-<section>
 </section>
 </article>
 <nav id="sidebar">
@@ -101,26 +88,14 @@
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="jumpscale" href="../index.html">jumpscale</a></code></li>
+<li><code><a title="jumpscale.data.bcdb.models" href="index.html">jumpscale.data.bcdb.models</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
+<li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
-<li><code><a title="jumpscale.clients.base" href="base.html">jumpscale.clients.base</a></code></li>
-<li><code><a title="jumpscale.clients.currencylayer" href="currencylayer/index.html">jumpscale.clients.currencylayer</a></code></li>
-<li><code><a title="jumpscale.clients.gdrive" href="gdrive/index.html">jumpscale.clients.gdrive</a></code></li>
-<li><code><a title="jumpscale.clients.git" href="git/index.html">jumpscale.clients.git</a></code></li>
-<li><code><a title="jumpscale.clients.github" href="github/index.html">jumpscale.clients.github</a></code></li>
-<li><code><a title="jumpscale.clients.gogs" href="gogs/index.html">jumpscale.clients.gogs</a></code></li>
-<li><code><a title="jumpscale.clients.mail" href="mail/index.html">jumpscale.clients.mail</a></code></li>
-<li><code><a title="jumpscale.clients.redis" href="redis/index.html">jumpscale.clients.redis</a></code></li>
-<li><code><a title="jumpscale.clients.s3" href="s3/index.html">jumpscale.clients.s3</a></code></li>
-<li><code><a title="jumpscale.clients.sendgrid" href="sendgrid/index.html">jumpscale.clients.sendgrid</a></code></li>
-<li><code><a title="jumpscale.clients.sonic" href="sonic/index.html">jumpscale.clients.sonic</a></code></li>
-<li><code><a title="jumpscale.clients.sshclient" href="sshclient/index.html">jumpscale.clients.sshclient</a></code></li>
-<li><code><a title="jumpscale.clients.sshkey" href="sshkey/index.html">jumpscale.clients.sshkey</a></code></li>
-<li><code><a title="jumpscale.clients.trello" href="trello/index.html">jumpscale.clients.trello</a></code></li>
-<li><code><a title="jumpscale.clients.twilio" href="twilio/index.html">jumpscale.clients.twilio</a></code></li>
+<li>
+<h4><code><a title="jumpscale.data.bcdb.models.db_model.DBModel" href="#jumpscale.data.bcdb.models.db_model.DBModel">DBModel</a></code></h4>
+</li>
 </ul>
 </li>
 </ul>

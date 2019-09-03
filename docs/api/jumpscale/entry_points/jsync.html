@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.3" />
-<title>jumpscale.clients API documentation</title>
+<title>jumpscale.entry_points.jsync API documentation</title>
 <meta name="description" content="" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
@@ -17,74 +17,68 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Namespace <code>jumpscale.clients</code></h1>
+<h1 class="title">Module <code>jumpscale.entry_points.jsync</code></h1>
 </header>
 <section id="section-intro">
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">import click
+from jumpscale.god import j
+
+
+@click.command()
+def list_ssh_clients():
+    # TODO: show terminal table with host information
+    return print(j.clients.sshclient.list_all())
+
+
+&#34;&#34;&#34;
+➜  js-ng git:(development_syncer) ✗ poetry run jsync list-ssh-clients           
+[&#39;xmonader&#39;]
+ poetry run jsync sync --clients &#34;xmonader&#34; --paths &#34;~/wspace/tq,/tmp/proj:/tmp/proj2&#34;
+[&#39;xmonader&#39;] {&#39;~/wspace/tq&#39;: &#39;~/wspace/tq&#39;, &#39;/tmp/proj&#39;: &#39;/tmp/proj2&#39;}
+➜  js-ng git:(development_syncer) ✗ 
+nts
+
+
+ poetry run jsync sync --clients &#34;xmonader&#34; --paths &#34;~/wspace/tq:/tmp/tq&#34; --sync
+
+&#34;&#34;&#34;
+# jsync --clients &#34;xmonader,client2&#34; --paths &#34;/home/xmonader/wspace/tq:/tmp/tq,...&#34;
+@click.command()
+@click.option(&#34;--clients&#34;)
+@click.option(&#34;--paths&#34;)
+@click.option(&#34;--nosync&#34;, is_flag=True, default=False, type=bool)
+def sync(clients, paths, nosync=False):
+    clients = [cl_name.strip() for cl_name in clients.split(&#34;,&#34;)]
+    paths_dict = {}
+    for watched_path_info in paths.split(&#34;,&#34;):
+        parts = watched_path_info.split(&#34;:&#34;)
+        if len(parts) == 1:
+            src, dest = parts[0], parts[0]
+        else:
+            src, dest = parts[0], parts[1]
+        src = j.sals.fs.expanduser(src)
+        paths_dict[src] = dest
+
+    j.logger.info(&#34;clients: {}, paths {} &#34;.format(clients, paths_dict))
+    syncer = j.tools.syncer.Syncer(clients, paths_dict)
+    syncer.start(sync=not nosync)
+
+
+@click.group()
+def cli():
+    pass
+
+
+cli.add_command(sync)
+cli.add_command(list_ssh_clients)
+
+if __name__ == &#34;__main__&#34;:
+    cli()</code></pre>
+</details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
-<dl>
-<dt><code class="name"><a title="jumpscale.clients.base" href="base.html">jumpscale.clients.base</a></code></dt>
-<dd>
-<section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="jumpscale.clients.currencylayer" href="currencylayer/index.html">jumpscale.clients.currencylayer</a></code></dt>
-<dd>
-<section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="jumpscale.clients.gdrive" href="gdrive/index.html">jumpscale.clients.gdrive</a></code></dt>
-<dd>
-<section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="jumpscale.clients.git" href="git/index.html">jumpscale.clients.git</a></code></dt>
-<dd>
-<section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="jumpscale.clients.github" href="github/index.html">jumpscale.clients.github</a></code></dt>
-<dd>
-<section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="jumpscale.clients.gogs" href="gogs/index.html">jumpscale.clients.gogs</a></code></dt>
-<dd>
-<section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="jumpscale.clients.mail" href="mail/index.html">jumpscale.clients.mail</a></code></dt>
-<dd>
-<section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="jumpscale.clients.redis" href="redis/index.html">jumpscale.clients.redis</a></code></dt>
-<dd>
-<section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="jumpscale.clients.s3" href="s3/index.html">jumpscale.clients.s3</a></code></dt>
-<dd>
-<section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="jumpscale.clients.sendgrid" href="sendgrid/index.html">jumpscale.clients.sendgrid</a></code></dt>
-<dd>
-<section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="jumpscale.clients.sonic" href="sonic/index.html">jumpscale.clients.sonic</a></code></dt>
-<dd>
-<section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="jumpscale.clients.sshclient" href="sshclient/index.html">jumpscale.clients.sshclient</a></code></dt>
-<dd>
-<section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="jumpscale.clients.sshkey" href="sshkey/index.html">jumpscale.clients.sshkey</a></code></dt>
-<dd>
-<section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="jumpscale.clients.trello" href="trello/index.html">jumpscale.clients.trello</a></code></dt>
-<dd>
-<section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="jumpscale.clients.twilio" href="twilio/index.html">jumpscale.clients.twilio</a></code></dt>
-<dd>
-<section class="desc"></section>
-</dd>
-</dl>
 </section>
 <section>
 </section>
@@ -101,26 +95,7 @@
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="jumpscale" href="../index.html">jumpscale</a></code></li>
-</ul>
-</li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
-<ul>
-<li><code><a title="jumpscale.clients.base" href="base.html">jumpscale.clients.base</a></code></li>
-<li><code><a title="jumpscale.clients.currencylayer" href="currencylayer/index.html">jumpscale.clients.currencylayer</a></code></li>
-<li><code><a title="jumpscale.clients.gdrive" href="gdrive/index.html">jumpscale.clients.gdrive</a></code></li>
-<li><code><a title="jumpscale.clients.git" href="git/index.html">jumpscale.clients.git</a></code></li>
-<li><code><a title="jumpscale.clients.github" href="github/index.html">jumpscale.clients.github</a></code></li>
-<li><code><a title="jumpscale.clients.gogs" href="gogs/index.html">jumpscale.clients.gogs</a></code></li>
-<li><code><a title="jumpscale.clients.mail" href="mail/index.html">jumpscale.clients.mail</a></code></li>
-<li><code><a title="jumpscale.clients.redis" href="redis/index.html">jumpscale.clients.redis</a></code></li>
-<li><code><a title="jumpscale.clients.s3" href="s3/index.html">jumpscale.clients.s3</a></code></li>
-<li><code><a title="jumpscale.clients.sendgrid" href="sendgrid/index.html">jumpscale.clients.sendgrid</a></code></li>
-<li><code><a title="jumpscale.clients.sonic" href="sonic/index.html">jumpscale.clients.sonic</a></code></li>
-<li><code><a title="jumpscale.clients.sshclient" href="sshclient/index.html">jumpscale.clients.sshclient</a></code></li>
-<li><code><a title="jumpscale.clients.sshkey" href="sshkey/index.html">jumpscale.clients.sshkey</a></code></li>
-<li><code><a title="jumpscale.clients.trello" href="trello/index.html">jumpscale.clients.trello</a></code></li>
-<li><code><a title="jumpscale.clients.twilio" href="twilio/index.html">jumpscale.clients.twilio</a></code></li>
+<li><code><a title="jumpscale.entry_points" href="index.html">jumpscale.entry_points</a></code></li>
 </ul>
 </li>
 </ul>

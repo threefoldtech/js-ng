@@ -136,7 +136,7 @@ class JSObject:
         self.default = self.from_str(default)
 
     def check(self, value):
-        return isinstance(value, str)
+        return True
 
     def from_str(self, value):
         return value
@@ -350,25 +350,31 @@ class Tel:
 
 
 class IPAddress:
+
     def __init__(self, default=None):
         if not default:
             default = &#34;&#34;
         self.default = default
-        self.regex = r&#34;[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}&#34;
 
     def check(self, value):
         &#34;&#34;&#34;Check whether provided value is a valid IPaddress representation
         Arguments:
             value (str)
-        Returbs:
+        Returns:
             Boolean expresion&#34;&#34;&#34;
-        return re.search(self.regex, value) is not None
+        import ipaddress
+
+        try:
+            ipaddress.IPv4Address(value)
+            return True
+        except ipaddress.AddressValueError:
+            return False
 
     def from_str(self, value):
         &#34;&#34;&#34;get the value from the string
         Arguments:
             value (str)
-        Returbs:
+        Returns:
             value (str)&#34;&#34;&#34;
         return value
 
@@ -1019,25 +1025,31 @@ value (str)</p>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class IPAddress:
+
     def __init__(self, default=None):
         if not default:
             default = &#34;&#34;
         self.default = default
-        self.regex = r&#34;[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}&#34;
 
     def check(self, value):
         &#34;&#34;&#34;Check whether provided value is a valid IPaddress representation
         Arguments:
             value (str)
-        Returbs:
+        Returns:
             Boolean expresion&#34;&#34;&#34;
-        return re.search(self.regex, value) is not None
+        import ipaddress
+
+        try:
+            ipaddress.IPv4Address(value)
+            return True
+        except ipaddress.AddressValueError:
+            return False
 
     def from_str(self, value):
         &#34;&#34;&#34;get the value from the string
         Arguments:
             value (str)
-        Returbs:
+        Returns:
             value (str)&#34;&#34;&#34;
         return value</code></pre>
 </details>
@@ -1050,17 +1062,26 @@ value (str)</p>
 <section class="desc"><p>Check whether provided value is a valid IPaddress representation</p>
 <h2 id="arguments">Arguments</h2>
 <p>value (str)</p>
-<h2 id="returbs">Returbs</h2>
-<p>Boolean expresion</p></section>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><a title="jumpscale.data.types.types.Boolean" href="#jumpscale.data.types.types.Boolean"><code>Boolean</code></a> <code>expresion</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def check(self, value):
     &#34;&#34;&#34;Check whether provided value is a valid IPaddress representation
     Arguments:
         value (str)
-    Returbs:
+    Returns:
         Boolean expresion&#34;&#34;&#34;
-    return re.search(self.regex, value) is not None</code></pre>
+    import ipaddress
+
+    try:
+        ipaddress.IPv4Address(value)
+        return True
+    except ipaddress.AddressValueError:
+        return False</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.data.types.types.IPAddress.from_str"><code class="name flex">
@@ -1070,15 +1091,18 @@ value (str)</p>
 <section class="desc"><p>get the value from the string</p>
 <h2 id="arguments">Arguments</h2>
 <p>value (str)</p>
-<h2 id="returbs">Returbs</h2>
-<p>value (str)</p></section>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>value</code> (<code>str</code>)</dt>
+<dd>&nbsp;</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def from_str(self, value):
     &#34;&#34;&#34;get the value from the string
     Arguments:
         value (str)
-    Returbs:
+    Returns:
         value (str)&#34;&#34;&#34;
     return value</code></pre>
 </details>
@@ -1183,7 +1207,7 @@ value (str)</p>
         self.default = self.from_str(default)
 
     def check(self, value):
-        return isinstance(value, str)
+        return True
 
     def from_str(self, value):
         return value</code></pre>
@@ -1198,7 +1222,7 @@ value (str)</p>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def check(self, value):
-    return isinstance(value, str)</code></pre>
+    return True</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.data.types.types.JSObject.from_str"><code class="name flex">

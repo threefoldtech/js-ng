@@ -26,25 +26,26 @@
 from jumpscale.core.base import fields
 from jumpscale.god import j
 
-&#34;&#34;&#34;
-JS-NG&gt; xmonader = j.clients.sshkey.new(&#34;xmonader&#34;)
-JS-NG&gt; xmonader.private_key_path = &#34;/home/xmonader/.ssh/id_rsa&#34;
-JS-NG&gt;
-JS-NG&gt; localconnection = j.clients.sshclient.new(&#34;localconnection&#34;)
-JS-NG&gt; localconnection.sshkey = &#34;xmonader&#34;
-JS-NG&gt; localconnection.run(&#34;hostname&#34;)
-(0, &#39;asgard\n&#39;, &#39;&#39;)
+# &#34;&#34;&#34;
+# JS-NG&gt; xmonader = j.clients.sshkey.new(&#34;xmonader&#34;)
+# JS-NG&gt; xmonader.private_key_path = &#34;/home/xmonader/.ssh/id_rsa&#34;
+# JS-NG&gt;
+# JS-NG&gt; localconnection = j.clients.sshclient.new(&#34;localconnection&#34;)
+# JS-NG&gt; localconnection.sshkey = &#34;xmonader&#34;
+# JS-NG&gt; localconnection.run(&#34;hostname&#34;)
+# (0, &#39;asgard\n&#39;, &#39;&#39;)
 
 
-JS-NG&gt; sshkey = j.clients.sshkey.get(&#34;xmonader&#34;)
-JS-NG&gt; localclient = j.clients.sshclient.get(&#34;xmonader&#34;)
-JS-NG&gt; localclient.sshclient.run(&#34;hostname&#34;)
-asgard
-(0, &#39;asgard\n&#39;, &#39;&#39;)
+# JS-NG&gt; sshkey = j.clients.sshkey.get(&#34;xmonader&#34;)
+# JS-NG&gt; localclient = j.clients.sshclient.get(&#34;xmonader&#34;)
+# JS-NG&gt; localclient.sshclient.run(&#34;hostname&#34;)
+# asgard
+# (0, &#39;asgard\n&#39;, &#39;&#39;)
 
-&#34;&#34;&#34;
+# &#34;&#34;&#34;
 
 class SSHClient(Client):
+
     name = fields.String()
     sshkey = fields.String()
 
@@ -64,7 +65,7 @@ class SSHClient(Client):
 
     def _sshkey(self):
         return j.clients.sshkey.get(self.sshkey)
-
+    
     @property
     def sshclient(self):
         if not self.__client:
@@ -111,6 +112,7 @@ class SSHClient(Client):
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class SSHClient(Client):
+
     name = fields.String()
     sshkey = fields.String()
 
@@ -130,7 +132,7 @@ class SSHClient(Client):
 
     def _sshkey(self):
         return j.clients.sshkey.get(self.sshkey)
-
+    
     @property
     def sshclient(self):
         if not self.__client:
