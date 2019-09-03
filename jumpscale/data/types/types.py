@@ -326,25 +326,31 @@ class Tel:
 
 
 class IPAddress:
+
     def __init__(self, default=None):
         if not default:
             default = ""
         self.default = default
-        self.regex = r"[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}"
 
     def check(self, value):
         """Check whether provided value is a valid IPaddress representation
         Arguments:
             value (str)
-        Returbs:
+        Returns:
             Boolean expresion"""
-        return re.search(self.regex, value) is not None
+        import ipaddress
+
+        try:
+            ipaddress.IPv4Address(value)
+            return True
+        except ipaddress.AddressValueError:
+            return False
 
     def from_str(self, value):
         """get the value from the string
         Arguments:
             value (str)
-        Returbs:
+        Returns:
             value (str)"""
         return value
 
