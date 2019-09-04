@@ -3,19 +3,13 @@ import fabric
 """
 
 
-JS-NG> with j.core.executors.RemoteExecutor(host="local
-     1 host",     connect_kwargs={ 
-     2         "key_filename": "/home/xmonader/.ssh/id_
-...    rsa", 
-     3     },) as c: 
-     4     c.run("hostname")                           
+JS-NG> with j.core.executors.RemoteExecutor(host="localhost", connect_kwargs={"key_filename":
+                                                                              "/home/xmonader/.ssh/id_rsa",}) as c: 
+            c.run("hostname")                           
 xmonader-ThinkPad-E580
 JS-NG>  
-
-
-
-
 """
+
 
 class RemoteExecutor:
     def __init__(self, **connection_ctx):
@@ -31,6 +25,7 @@ class RemoteExecutor:
         with fabric.Connection(**self._connection_ctx) as c:
             res = c.run(cmd, **command_ctx)
             return res.return_code, res.stdout, res.stderr
+
 
 def execute(cmd, command_ctx, connection_ctx):
     """

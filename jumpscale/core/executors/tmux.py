@@ -14,7 +14,6 @@ def get_js_session():
     else:
         return s
 
-
 def get_js_window(window_name):
     s = get_js_session()
     w = server.find_where({"window_name": window_name})
