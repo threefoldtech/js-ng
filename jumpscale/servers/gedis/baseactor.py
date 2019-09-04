@@ -1,5 +1,5 @@
 import inspect
-
+import json
 
 class BaseActor:
     def info(self):
@@ -7,8 +7,8 @@ class BaseActor:
         members = inspect.getmembers(self)
         for name, attr in members:
             if inspect.ismethod(attr):
-                result[name] = "method"
-                result["args"] = [arg for arg in attr.__func__.__code__.co_varnames if arg != "self"]
-                result["doc"] = attr.__doc__
+                result[name] = {}
+                result[name]["args"] = [arg for arg in attr.__func__.__code__.co_varnames if arg != "self"]
+                result[name]["doc"] = attr.__doc__ or ""
 
-        return result
+        return json.dumps(result)

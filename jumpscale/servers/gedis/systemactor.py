@@ -1,14 +1,15 @@
 from .baseactor import BaseActor
-
-
 import importlib
 import os
 import sys
-
+import json
 
 class SystemActor(BaseActor):
     def __init__(self, server):
         self.server = server
+
+    def list_actors(self):
+        return json.dumps(list(self.server.actors.keys()))
 
     def register_actor(self, actor_name: str, actor_path: str) -> bool:
         """Register new actor
@@ -25,7 +26,7 @@ class SystemActor(BaseActor):
         actor_path = actor_path.decode()
 
         if actor_name in self.server.actors:
-            return True
+            return 1
         module_python_name = os.path.dirname(actor_path)
         module_name = os.path.splitext(module_python_name)[0]
         spec = importlib.util.spec_from_file_location(module_name, actor_path)
@@ -35,4 +36,4 @@ class SystemActor(BaseActor):
         self.server.actors[actor_name] = module.Actor()
         print(self.server.actors)
 
-        return True
+        return 1
