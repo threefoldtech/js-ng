@@ -1,43 +1,10 @@
 from jumpscale.clients.base import Client
 from jumpscale.core.base import fields
-import json
-import types
 from jumpscale.god import j
 from functools import partial
+import json
 
 """
-name 'gedis' is not defined
-JS-NG> gedis = j.clients.gedis.get("local")                                                                                   
-JS-NG> gedis.list_actors()                                                                                                    
-Traceback (most recent call last):
-  File "<stdin>", line 1, in <module>
-  File "/home/ahmed/wspace/js-next/js-ng/jumpscale/clients/gedis/gedis.py", line 98, in list_actors
-    return json.loads(self.execute('system', 'list_actors'))
-           │          └ GedisClient(__hostname='localhost', __name='local', __port=16000, _redisclient=RedisClient(_RedisClien
-t__client=Redis<Connection...
-           └ <module 'json' from '/usr/lib/python3.6/json/__init__.py'>
-  File "/home/ahmed/wspace/js-next/js-ng/jumpscale/clients/gedis/gedis.py", line 88, in execute
-    return self._redisclient.execute_command(actor_name, *args)
-           │                                 │            └ ('list_actors',)
-           │                                 └ 'system'
-           └ GedisClient(__hostname='localhost', __name='local', __port=16000, _redisclient=RedisClient(_RedisClient__client=Redis<Connection...
-  File "/home/ahmed/.cache/pypoetry/virtualenvs/js-ng-py3.6/lib/python3.6/site-packages/redis/client.py", line 839, in execute_command
-    return self.parse_response(conn, command_name, **options)
-           │                   │     │               └ {}
-           │                   │     └ 'system'
-           │                   └ Connection<host=localhost,port=6379,db=0>
-           └ Redis<ConnectionPool<Connection<host=localhost,port=6379,db=0>>>
-  File "/home/ahmed/.cache/pypoetry/virtualenvs/js-ng-py3.6/lib/python3.6/site-packages/redis/client.py", line 853, in parse_response
-    response = connection.read_response()
-               └ Connection<host=localhost,port=6379,db=0>
-  File "/home/ahmed/.cache/pypoetry/virtualenvs/js-ng-py3.6/lib/python3.6/site-packages/redis/connection.py", line 717, in read_response
-    raise response
-          └ ResponseError("unknown command 'system'",)
-redis.exceptions.ResponseError: unknown command 'system'
-
-unknown command 'system'
-JS-NG>                                                                                                                        
-  …/js-ng     gedis_client    1  poetry run jsng                                         ✔  ahmed@asgard  01:06  
 JS-NG> gedis = j.clients.gedis.get("local")                                                                                   
 JS-NG> gedis.list_actors()                                                                                                    
 ['system']
@@ -94,18 +61,9 @@ b'hello world'
 
 JS-NG> gedis.actors.greeter.add2("a", "b")                                                                 
 b'ab'
-
-
-
-'GedisClient' object has no attribute 'execute_command'
 JS-NG>                                                                                                     
-  …/js-ng     gedis_client   1  poetry run jsng                       
-JS-NG> gedis = j.clients.gedis.get("local")                                                                
-JS-NG> gedis.actors.greeter.add2("a", "b")                                                                 
-b'ab'
-
-
 """
+
 
 class ActorProxy:
     def __init__(self, actor_name, actor_info, gedis_client):
@@ -116,12 +74,12 @@ class ActorProxy:
 
     def __dir__(self):
         return list(self.actor_info.keys())
-    
+
     def __getattr__(self, attr):
         def mkfun(actor_name, fn_name, *args):
             return self._gedis_client.execute(self.actor_name, fn_name, *args)
-        
-        mkfun.__doc__ = self.actor_info[attr]['doc']
+
+        mkfun.__doc__ = self.actor_info[attr]["doc"]
         return partial(mkfun, self.actor_name, attr)
 
 
@@ -129,7 +87,7 @@ class ActorsCollection:
     def __init__(self, gedis_client):
         self._gedis_client = gedis_client
         self._actors = {}
-    
+
     @property
     def actors_names(self):
         # TODO: CHECK IF WE SHOULD USE CACHE HERE?
@@ -148,7 +106,6 @@ class ActorsCollection:
             return self._load_actor(actor_name)
         else:
             return self._actors[actor_name]
-
 
 
 class GedisClient(Client):
@@ -191,5 +148,3 @@ class GedisClient(Client):
     def list_actors(self):
         return json.loads(self.execute("system", "list_actors"))
 
-
-    
