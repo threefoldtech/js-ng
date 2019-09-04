@@ -3,7 +3,7 @@ from jumpscale.core.base import fields
 import json
 import types
 from jumpscale.god import j
-
+from functools import partial
 
 """
 name 'gedis' is not defined
@@ -87,66 +87,68 @@ b'pong no?'
 JS-NG> gedis.execute("greeter", "add2", "first", "second")                                                                          
 b'firstsecond'
 
-JS-NG>  
+
+JS-NG> gedis = j.clients.gedis.get("local")                                                                
+JS-NG> gedis.actors.greeter.hi()                                                                           
+b'hello world'
+
+JS-NG> gedis.actors.greeter.add2("a", "b")                                                                 
+b'ab'
 
 
 
- 
+'GedisClient' object has no attribute 'execute_command'
+JS-NG>                                                                                                     
+  …/js-ng     gedis_client   1  poetry run jsng                       
+JS-NG> gedis = j.clients.gedis.get("local")                                                                
+JS-NG> gedis.actors.greeter.add2("a", "b")                                                                 
+b'ab'
+
 
 """
 
-# class ActorProxy:
-#     def __init__(self, actor_info):
-#         ## {method: 'method_name', args: [], 'doc':...}
-#         self.actor_info = actor_info
+class ActorProxy:
+    def __init__(self, actor_name, actor_info, gedis_client):
+        ## {method: 'method_name', args: [], 'doc':...}
+        self.actor_name = actor_name
+        self.actor_info = actor_info
+        self._gedis_client = gedis_client
 
-#     def __dir__(self):
-#         return list(self.actor_info.keys())
-
-
-#     def _method_blueprint(self, *args, **kwargs):
-#         pass
-
+    def __dir__(self):
+        return list(self.actor_info.keys())
     
-#     def _mkmethod(self, name, args_names, docs):
-#         method_blueprint_code = types.CodeType(len(args_names), 
-#                             self._method_blueprint.func_code.co_nlocals,
-#                             self._method_blueprint.func_code.co_stacksize,
-#                             self._method_blueprint.func_code.co_flags,
-#                             self._method_blueprint.func_code.co_code,
-#                             self._method_blueprint.func_code.co_consts,
-#                             self._method_blueprint.func_code.co_names,
-#                             args_names,
-#                             self._method_blueprint.func_code.co_filename,
-#                             name,
-#                             self._method_blueprint.func_code.co_firstlineno,
-#                             self._method_blueprint.func_code.co_lnotab)
+    def __getattr__(self, attr):
+        def mkfun(actor_name, fn_name, *args):
+            return self._gedis_client.execute(self.actor_name, fn_name, *args)
+        
+        mkfun.__doc__ = self.actor_info[attr]['doc']
+        return partial(mkfun, self.actor_name, attr)
 
 
-#     def __getattribute__(self, name):
-#         return super().__getattribute__(name)
+class ActorsCollection:
+    def __init__(self, gedis_client):
+        self._gedis_client = gedis_client
+        self._actors = {}
+    
+    @property
+    def actors_names(self):
+        # TODO: CHECK IF WE SHOULD USE CACHE HERE?
+        return json.loads(self._gedis_client.execute("system", "list_actors"))
 
-# class ActorsCollection:
-#     def __init__(self, redis_client, actors_info):
-#         self._redis_client = redis_client
-#         self._actors = {}
-#         self._actors_info = actors_info
+    def __dir__(self):
+        return self.actors_names
 
-#     @property
-#     def actors_info(self):
-#         # TODO: CHECK IF WE SHOULD USE CACHE HERE?
-#         return json.loads(self._redis_client.execute_command("system", "list_actors"))
+    def _load_actor(self, actor_name):
+        actor_info = json.loads(self._gedis_client.execute(actor_name, "info"))
+        self._actors[actor_name] = ActorProxy(actor_name, actor_info, self._gedis_client)
+        return self._actors[actor_name]
 
-#     def __dir__(self):
-#         return list(self.actors_info.keys())
+    def __getattr__(self, actor_name):
+        if actor_name not in self._actors:
+            return self._load_actor(actor_name)
+        else:
+            return self._actors[actor_name]
 
-#     def _load_actor(self, actor_name):
-#         actor_info = json.loads(self._redis_client.execute_command(actor_name, "info"))
-#         self._actors[actor_name] = ActorProxy(actor_name, actor_info)
-
-#     def __getattr__(self, actor_name):
-#         if actor_name not in self._actors:
-#             self._load_actor(actor_name)
 
 
 class GedisClient(Client):
@@ -158,6 +160,7 @@ class GedisClient(Client):
         super().__init__()
         self._redisclient = None
         self.redis_client
+        self.actors = ActorsCollection(self)
 
     @property
     def redis_client(self):
