@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.3" />
-<title>jumpscale.servers.gedis API documentation</title>
+<title>jumpscale.clients.syncthing API documentation</title>
 <meta name="description" content="" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
@@ -17,30 +17,23 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>jumpscale.servers.gedis</code></h1>
+<h1 class="title">Module <code>jumpscale.clients.syncthing</code></h1>
 </header>
 <section id="section-intro">
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">from .server import *</code></pre>
+<pre><code class="python">from jumpscale.core.base import StoredFactory
+
+from .syncthing import SyncthingClient
+
+
+export_module_as = StoredFactory(SyncthingClient)</code></pre>
 </details>
 </section>
 <section>
 <h2 class="section-title" id="header-submodules">Sub-modules</h2>
 <dl>
-<dt><code class="name"><a title="jumpscale.servers.gedis.baseactor" href="baseactor.html">jumpscale.servers.gedis.baseactor</a></code></dt>
-<dd>
-<section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="jumpscale.servers.gedis.example_greeter" href="example_greeter.html">jumpscale.servers.gedis.example_greeter</a></code></dt>
-<dd>
-<section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="jumpscale.servers.gedis.server" href="server.html">jumpscale.servers.gedis.server</a></code></dt>
-<dd>
-<section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="jumpscale.servers.gedis.systemactor" href="systemactor.html">jumpscale.servers.gedis.systemactor</a></code></dt>
+<dt><code class="name"><a title="jumpscale.clients.syncthing.syncthing" href="syncthing.html">jumpscale.clients.syncthing.syncthing</a></code></dt>
 <dd>
 <section class="desc"></section>
 </dd>
@@ -61,15 +54,12 @@
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="jumpscale.servers" href="../index.html">jumpscale.servers</a></code></li>
+<li><code><a title="jumpscale.clients" href="../index.html">jumpscale.clients</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
-<li><code><a title="jumpscale.servers.gedis.baseactor" href="baseactor.html">jumpscale.servers.gedis.baseactor</a></code></li>
-<li><code><a title="jumpscale.servers.gedis.example_greeter" href="example_greeter.html">jumpscale.servers.gedis.example_greeter</a></code></li>
-<li><code><a title="jumpscale.servers.gedis.server" href="server.html">jumpscale.servers.gedis.server</a></code></li>
-<li><code><a title="jumpscale.servers.gedis.systemactor" href="systemactor.html">jumpscale.servers.gedis.systemactor</a></code></li>
+<li><code><a title="jumpscale.clients.syncthing.syncthing" href="syncthing.html">jumpscale.clients.syncthing.syncthing</a></code></li>
 </ul>
 </li>
 </ul>

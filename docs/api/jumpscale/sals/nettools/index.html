@@ -90,7 +90,7 @@ def udp_connection_test(ipaddr: str, port: int, timeout=1, message=b&#34;PING&#3
     return True
 
 
-def wait_connection_test(ipaddr: str, port: int, timeout_total=5):
+def wait_connection_test(ipaddr: str, port: int, timeout=5):
     &#34;&#34;&#34;Will wait until port listens on the specified address
 
     Args:
@@ -102,7 +102,7 @@ def wait_connection_test(ipaddr: str, port: int, timeout_total=5):
         bool: True if the test succeeds, False otherwise
     &#34;&#34;&#34;
     port = int(port)
-    end = j.data.time.now().timestamp + timeout_total
+    end = j.data.time.now().timestamp + timeout
     while True:
         if j.data.time.now().timestamp &gt; end:
             return False
@@ -426,6 +426,7 @@ def download(url, localpath, username=None, passwd=None, overwrite=True):
         if username and passwd and j.tools.http.urllib3.util.parse_url(url).scheme == &#34;ftp&#34;:
             url = url.split(&#34;://&#34;)[0] + &#34;://%s:%s@&#34; % (username, passwd) + url.split(&#34;://&#34;)[1]
         response = j.tools.http.get(url, stream=True, auth=j.tools.http.auth.HTTPBasicAuth(username, passwd))
+        response.raise_for_status()
         if filename != &#34;-&#34;:
             with open(filename, &#34;wb&#34;) as fw:
                 for chunk in response.iter_content(chunk_size=2048):
@@ -562,6 +563,7 @@ def netrange_get(device, skip_begin=10, skip_end=10):
         if username and passwd and j.tools.http.urllib3.util.parse_url(url).scheme == &#34;ftp&#34;:
             url = url.split(&#34;://&#34;)[0] + &#34;://%s:%s@&#34; % (username, passwd) + url.split(&#34;://&#34;)[1]
         response = j.tools.http.get(url, stream=True, auth=j.tools.http.auth.HTTPBasicAuth(username, passwd))
+        response.raise_for_status()
         if filename != &#34;-&#34;:
             with open(filename, &#34;wb&#34;) as fw:
                 for chunk in response.iter_content(chunk_size=2048):
@@ -1138,7 +1140,7 @@ def netrange_get(device, skip_begin=10, skip_end=10):
 </details>
 </dd>
 <dt id="jumpscale.sals.nettools.wait_connection_test"><code class="name flex">
-<span>def <span class="ident">wait_connection_test</span></span>(<span>ipaddr, port, timeout_total=5)</span>
+<span>def <span class="ident">wait_connection_test</span></span>(<span>ipaddr, port, timeout=5)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Will wait until port listens on the specified address</p>
@@ -1158,7 +1160,7 @@ def netrange_get(device, skip_begin=10, skip_end=10):
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def wait_connection_test(ipaddr: str, port: int, timeout_total=5):
+<pre><code class="python">def wait_connection_test(ipaddr: str, port: int, timeout=5):
     &#34;&#34;&#34;Will wait until port listens on the specified address
 
     Args:
@@ -1170,7 +1172,7 @@ def netrange_get(device, skip_begin=10, skip_end=10):
         bool: True if the test succeeds, False otherwise
     &#34;&#34;&#34;
     port = int(port)
-    end = j.data.time.now().timestamp + timeout_total
+    end = j.data.time.now().timestamp + timeout
     while True:
         if j.data.time.now().timestamp &gt; end:
             return False
