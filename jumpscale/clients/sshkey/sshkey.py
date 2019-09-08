@@ -13,6 +13,8 @@ class SSHKeyClient(Client):
     
     def __init__(self):
         super().__init__()
+        if self.private_key_path and j.sals.fs.exists(self.private_key_path):
+            self.load_from_file_system()
 
     def load_from_file_system(self):
         self.public_key = j.sals.fs.read_file(self.public_key_path)

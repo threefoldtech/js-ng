@@ -22,17 +22,28 @@
 <section id="section-intro">
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class Greeter:
+<pre><code class="python">from jumpscale.servers.gedis.baseactor import BaseActor
+
+
+class Greeter(BaseActor):
     def hi(self):
+        &#34;&#34;&#34;returns hello world
+        &#34;&#34;&#34;
         return &#34;hello world&#34;
 
     def ping(self):
+        &#34;&#34;&#34;
+        
+        &#34;&#34;&#34;
         return &#34;pong no?&#34;
 
     def add2(self, a, b):
-    
+        &#34;&#34;&#34;Add two args
+        
+        &#34;&#34;&#34;
         print(&#34;A {} B {} &#34;.format(a, b))
-        return a+b
+        return a + b
+
 
 Actor = Greeter</code></pre>
 </details>
@@ -54,41 +65,56 @@ Actor = Greeter</code></pre>
 <section class="desc"></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class Greeter:
+<pre><code class="python">class Greeter(BaseActor):
     def hi(self):
+        &#34;&#34;&#34;returns hello world
+        &#34;&#34;&#34;
         return &#34;hello world&#34;
 
     def ping(self):
+        &#34;&#34;&#34;
+        
+        &#34;&#34;&#34;
         return &#34;pong no?&#34;
 
     def add2(self, a, b):
-    
+        &#34;&#34;&#34;Add two args
+        
+        &#34;&#34;&#34;
         print(&#34;A {} B {} &#34;.format(a, b))
-        return a+b</code></pre>
+        return a + b</code></pre>
 </details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="jumpscale.servers.gedis.baseactor.BaseActor" href="baseactor.html#jumpscale.servers.gedis.baseactor.BaseActor">BaseActor</a></li>
+</ul>
 <h3>Methods</h3>
 <dl>
 <dt id="jumpscale.servers.gedis.example_greeter.Greeter.add2"><code class="name flex">
 <span>def <span class="ident">add2</span></span>(<span>self, a, b)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>Add two args</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def add2(self, a, b):
-
+    &#34;&#34;&#34;Add two args
+    
+    &#34;&#34;&#34;
     print(&#34;A {} B {} &#34;.format(a, b))
-    return a+b</code></pre>
+    return a + b</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.servers.gedis.example_greeter.Greeter.hi"><code class="name flex">
 <span>def <span class="ident">hi</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>returns hello world</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def hi(self):
+    &#34;&#34;&#34;returns hello world
+    &#34;&#34;&#34;
     return &#34;hello world&#34;</code></pre>
 </details>
 </dd>
@@ -100,6 +126,9 @@ Actor = Greeter</code></pre>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def ping(self):
+    &#34;&#34;&#34;
+    
+    &#34;&#34;&#34;
     return &#34;pong no?&#34;</code></pre>
 </details>
 </dd>
@@ -113,41 +142,56 @@ Actor = Greeter</code></pre>
 <section class="desc"></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class Greeter:
+<pre><code class="python">class Greeter(BaseActor):
     def hi(self):
+        &#34;&#34;&#34;returns hello world
+        &#34;&#34;&#34;
         return &#34;hello world&#34;
 
     def ping(self):
+        &#34;&#34;&#34;
+        
+        &#34;&#34;&#34;
         return &#34;pong no?&#34;
 
     def add2(self, a, b):
-    
+        &#34;&#34;&#34;Add two args
+        
+        &#34;&#34;&#34;
         print(&#34;A {} B {} &#34;.format(a, b))
-        return a+b</code></pre>
+        return a + b</code></pre>
 </details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="jumpscale.servers.gedis.baseactor.BaseActor" href="baseactor.html#jumpscale.servers.gedis.baseactor.BaseActor">BaseActor</a></li>
+</ul>
 <h3>Methods</h3>
 <dl>
 <dt id="jumpscale.servers.gedis.example_greeter.Greeter.add2"><code class="name flex">
 <span>def <span class="ident">add2</span></span>(<span>self, a, b)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>Add two args</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def add2(self, a, b):
-
+    &#34;&#34;&#34;Add two args
+    
+    &#34;&#34;&#34;
     print(&#34;A {} B {} &#34;.format(a, b))
-    return a+b</code></pre>
+    return a + b</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.servers.gedis.example_greeter.Greeter.hi"><code class="name flex">
 <span>def <span class="ident">hi</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>returns hello world</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def hi(self):
+    &#34;&#34;&#34;returns hello world
+    &#34;&#34;&#34;
     return &#34;hello world&#34;</code></pre>
 </details>
 </dd>
@@ -159,6 +203,9 @@ Actor = Greeter</code></pre>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def ping(self):
+    &#34;&#34;&#34;
+    
+    &#34;&#34;&#34;
     return &#34;pong no?&#34;</code></pre>
 </details>
 </dd>

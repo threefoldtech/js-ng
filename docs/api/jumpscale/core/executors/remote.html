@@ -51,6 +51,14 @@ class RemoteExecutor:
     def __exit__(self, type, value, tb):
         pass
 
+    @property
+    def connection(self):
+        return fabric.Connection(**self._connection_ctx)
+    
+    @property
+    def sftp(self):
+        return self.connection.sftp()
+
     def run(self, cmd, **command_ctx):
         with fabric.Connection(**self._connection_ctx) as c:
             res = c.run(cmd, **command_ctx)
@@ -111,11 +119,42 @@ def execute(cmd, command_ctx, connection_ctx):
     def __exit__(self, type, value, tb):
         pass
 
+    @property
+    def connection(self):
+        return fabric.Connection(**self._connection_ctx)
+    
+    @property
+    def sftp(self):
+        return self.connection.sftp()
+
     def run(self, cmd, **command_ctx):
         with fabric.Connection(**self._connection_ctx) as c:
             res = c.run(cmd, **command_ctx)
             return res.return_code, res.stdout, res.stderr</code></pre>
 </details>
+<h3>Instance variables</h3>
+<dl>
+<dt id="jumpscale.core.executors.remote.RemoteExecutor.connection"><code class="name">var <span class="ident">connection</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def connection(self):
+    return fabric.Connection(**self._connection_ctx)</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.core.executors.remote.RemoteExecutor.sftp"><code class="name">var <span class="ident">sftp</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def sftp(self):
+    return self.connection.sftp()</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="jumpscale.core.executors.remote.RemoteExecutor.run"><code class="name flex">
@@ -157,7 +196,9 @@ def execute(cmd, command_ctx, connection_ctx):
 <li>
 <h4><code><a title="jumpscale.core.executors.remote.RemoteExecutor" href="#jumpscale.core.executors.remote.RemoteExecutor">RemoteExecutor</a></code></h4>
 <ul class="">
+<li><code><a title="jumpscale.core.executors.remote.RemoteExecutor.connection" href="#jumpscale.core.executors.remote.RemoteExecutor.connection">connection</a></code></li>
 <li><code><a title="jumpscale.core.executors.remote.RemoteExecutor.run" href="#jumpscale.core.executors.remote.RemoteExecutor.run">run</a></code></li>
+<li><code><a title="jumpscale.core.executors.remote.RemoteExecutor.sftp" href="#jumpscale.core.executors.remote.RemoteExecutor.sftp">sftp</a></code></li>
 </ul>
 </li>
 </ul>

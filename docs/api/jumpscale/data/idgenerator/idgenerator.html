@@ -25,37 +25,96 @@
 <pre><code class="python">import random
 import string
 import uuid
+from typing import List
 
-def random_int(from_, to):
+
+def random_int(from_: int, to: int) -&gt; int:
+    &#34;&#34;&#34;Generate random int within range from_, to
+
+    Arguments:
+        from_ {int} -- lower limit
+        to {int} -- upper limit
+
+    Returns:
+        int -- random number
+    &#34;&#34;&#34;
     return random.randint(from_, to)
+
 
 def incrementor_id():
     # user redis.incr.
     raise NotImplementedError()
 
-def guid():
+
+def guid() -&gt; str:
+    &#34;&#34;&#34;Gets a uuid4
+
+    Returns:
+        str -- uuid4
+    &#34;&#34;&#34;
     return str(uuid.uuid4())
 
-def nfromchoices(n, choices):
+
+def nfromchoices(n: int, choices: List[str]) -&gt; str:
+    &#34;&#34;&#34;Gets string from choices list
+
+    Arguments:
+        n {int} -- how many
+        choices {List[str]} -- choices to pick from
+
+    Returns:
+        str -- joined result of n choices.
+    &#34;&#34;&#34;
     return &#34;&#34;.join([random.choice(choices) for _ in range(n)])
 
-def chars(nchars):
+
+def chars(nchars: int) -&gt; str:
+    &#34;&#34;&#34;Gets a random string with length of n
+
+    Arguments:
+        nchars {int} -- [description]
+
+    Returns:
+        str -- [description]
+    &#34;&#34;&#34;
     choices = string.ascii_letters + string.digits
     return nfromchoices(nchars, choices)
 
-def nbytes(nbytes):
+
+def nbytes(nbytes: int) -&gt; bytearray:
+    &#34;&#34;&#34;return bytearray of length n
+
+    Arguments:
+        nbytes {int} -- number of bytes to generate
+
+    Returns:
+        bytearray -- result
+    &#34;&#34;&#34;
     out = bytearray()
     for n in range(nbytes):
         out.append(random_int(0, 255))
     return out
 
-def password(nchars):
+
+def password(nchars: int) -&gt; str:
+    &#34;&#34;&#34;Return a password of length nchars
+
+    Arguments:
+        nchars {int} -- [description]
+
+    Returns:
+        str -- password
+    &#34;&#34;&#34;
     choices = string.printable
     return nfromchoices(nchars, choices)
 
-def capnp_id():
+
+def capnp_id() -&gt; str:
     &#34;&#34;&#34;
     Generates a valid id for a capnp schema.
+
+    Returns:
+        str -- capnp id
     &#34;&#34;&#34;
     # the bitwise is for validating the id check capnp/parser.c++
     return hex(random.randint(0, 2 ** 64) | 1 &lt;&lt; 63)</code></pre>
@@ -72,12 +131,20 @@ def capnp_id():
 <span>def <span class="ident">capnp_id</span></span>(<span>)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Generates a valid id for a capnp schema.</p></section>
+<section class="desc"><p>Generates a valid id for a capnp schema.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code> &ndash; <code>capnp</code> <code>id</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def capnp_id():
+<pre><code class="python">def capnp_id() -&gt; str:
     &#34;&#34;&#34;
     Generates a valid id for a capnp schema.
+
+    Returns:
+        str -- capnp id
     &#34;&#34;&#34;
     # the bitwise is for validating the id check capnp/parser.c++
     return hex(random.randint(0, 2 ** 64) | 1 &lt;&lt; 63)</code></pre>
@@ -87,10 +154,25 @@ def capnp_id():
 <span>def <span class="ident">chars</span></span>(<span>nchars)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>Gets a random string with length of n</p>
+<h2 id="arguments">Arguments</h2>
+<p>nchars {int} &ndash; [description]</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code> &ndash; [<code>description</code>]</dt>
+<dd>&nbsp;</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def chars(nchars):
+<pre><code class="python">def chars(nchars: int) -&gt; str:
+    &#34;&#34;&#34;Gets a random string with length of n
+
+    Arguments:
+        nchars {int} -- [description]
+
+    Returns:
+        str -- [description]
+    &#34;&#34;&#34;
     choices = string.ascii_letters + string.digits
     return nfromchoices(nchars, choices)</code></pre>
 </details>
@@ -99,10 +181,20 @@ def capnp_id():
 <span>def <span class="ident">guid</span></span>(<span>)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>Gets a uuid4</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code> &ndash; <code>uuid4</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def guid():
+<pre><code class="python">def guid() -&gt; str:
+    &#34;&#34;&#34;Gets a uuid4
+
+    Returns:
+        str -- uuid4
+    &#34;&#34;&#34;
     return str(uuid.uuid4())</code></pre>
 </details>
 </dd>
@@ -122,10 +214,25 @@ def capnp_id():
 <span>def <span class="ident">nbytes</span></span>(<span>nbytes)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>return bytearray of length n</p>
+<h2 id="arguments">Arguments</h2>
+<p>nbytes {int} &ndash; number of bytes to generate</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>bytearray</code> &ndash; <code>result</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def nbytes(nbytes):
+<pre><code class="python">def nbytes(nbytes: int) -&gt; bytearray:
+    &#34;&#34;&#34;return bytearray of length n
+
+    Arguments:
+        nbytes {int} -- number of bytes to generate
+
+    Returns:
+        bytearray -- result
+    &#34;&#34;&#34;
     out = bytearray()
     for n in range(nbytes):
         out.append(random_int(0, 255))
@@ -136,10 +243,24 @@ def capnp_id():
 <span>def <span class="ident">nfromchoices</span></span>(<span>n, choices)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>Gets string from choices list</p>
+<h2 id="arguments">Arguments</h2>
+<p>n {int} &ndash; how many
+choices {List[str]} &ndash; choices to pick from</p>
+<h2 id="returns">Returns</h2>
+<p>str &ndash; joined result of n choices.</p></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def nfromchoices(n, choices):
+<pre><code class="python">def nfromchoices(n: int, choices: List[str]) -&gt; str:
+    &#34;&#34;&#34;Gets string from choices list
+
+    Arguments:
+        n {int} -- how many
+        choices {List[str]} -- choices to pick from
+
+    Returns:
+        str -- joined result of n choices.
+    &#34;&#34;&#34;
     return &#34;&#34;.join([random.choice(choices) for _ in range(n)])</code></pre>
 </details>
 </dd>
@@ -147,10 +268,25 @@ def capnp_id():
 <span>def <span class="ident">password</span></span>(<span>nchars)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>Return a password of length nchars</p>
+<h2 id="arguments">Arguments</h2>
+<p>nchars {int} &ndash; [description]</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code> &ndash; <a title="jumpscale.data.idgenerator.idgenerator.password" href="#jumpscale.data.idgenerator.idgenerator.password"><code>password()</code></a></dt>
+<dd>&nbsp;</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def password(nchars):
+<pre><code class="python">def password(nchars: int) -&gt; str:
+    &#34;&#34;&#34;Return a password of length nchars
+
+    Arguments:
+        nchars {int} -- [description]
+
+    Returns:
+        str -- password
+    &#34;&#34;&#34;
     choices = string.printable
     return nfromchoices(nchars, choices)</code></pre>
 </details>
@@ -159,10 +295,27 @@ def capnp_id():
 <span>def <span class="ident">random_int</span></span>(<span>from_, to)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>Generate random int within range from_, to</p>
+<h2 id="arguments">Arguments</h2>
+<p>from_ {int} &ndash; lower limit
+to {int} &ndash; upper limit</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>int</code> &ndash; <code>random</code> <code>number</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def random_int(from_, to):
+<pre><code class="python">def random_int(from_: int, to: int) -&gt; int:
+    &#34;&#34;&#34;Generate random int within range from_, to
+
+    Arguments:
+        from_ {int} -- lower limit
+        to {int} -- upper limit
+
+    Returns:
+        int -- random number
+    &#34;&#34;&#34;
     return random.randint(from_, to)</code></pre>
 </details>
 </dd>

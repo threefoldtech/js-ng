@@ -8,33 +8,34 @@ from gevent.server import StreamServer
 import signal
 from redis.connection import DefaultParser, Encoder
 from jumpscale.god import j
-
+from .systemactor import SystemActor
 
 
 """
-~>  redis-cli -p 16000 greeter hi              
+~>  redis-cli -p 16000 greeter hi
 actor greeter isn't loaded
  ~>  redis-cli -p 16000 system register_actor greeter /home/ahmed/wspace/js-next/js-ng/jumpscale/servers/gedis/example_greeter.py
 (integer) -1
- ~>  redis-cli -p 16000 greeter hi              
+ ~>  redis-cli -p 16000 greeter hi
  hello world
- ~>  redis-cli -p 16000 greeter add2 jo deboeck 
+ ~>  redis-cli -p 16000 greeter add2 jo deboeck
  "jodeboeck"
- ~>  fuser -k 16000/tcp                         
+ ~>  fuser -k 16000/tcp
 
 16000/tcp:           29331
- ~>  redis-cli -p 16000 greeter hi              
+ ~>  redis-cli -p 16000 greeter hi
  actor greeter isn't loaded
  ~>  redis-cli -p 16000 system register_actor greeter /home/ahmed/wspace/js-next/js-ng/jumpscale/servers/gedis/example_greeter.py
 (integer) -1
- ~>  redis-cli -p 16000 greeter hi              
+ ~>  redis-cli -p 16000 greeter hi
  hello world
- ~>  redis-cli -p 16000 greeter ping            
+ ~>  redis-cli -p 16000 greeter ping
 
 pong no?
  ~>  redis-cli -p 16000 greeter add2 reem khamis
 "reemkhamis"
 """
+
 
 class RedisConnectionAdapter:
     def __init__(self, sock):
@@ -46,6 +47,7 @@ class RedisConnectionAdapter:
         self.socket_keepalive_options = {}
         self.retry_on_timeout = True
         self.encoder = Encoder("utf", "strict", False)
+
 
 class ResponseEncoder:
     def __init__(self, socket):
@@ -116,13 +118,20 @@ class ResponseEncoder:
         self.buffer = BytesIO()  # seems faster then truncating
 
 
-
 class GedisServer:
     def __init__(self, endpoint=("127.0.0.1", 16000), actors=None):
+        """Create gedis server
+
+        Keyword Arguments:
+            endpoint {tuple[host, port]} -- host and port to bind server on (default: {("127.0.0.1", 16000)})
+            actors {dict[str, Actor]} -- doct of available actors (default: {None})
+        """
         self.actors = actors or {}
         self.endpoint = endpoint
 
     def start(self):
+        """Start gedis server.
+        """
         s = StreamServer(self.endpoint, self.on_connection)
 
         gevent.signal(signal.SIGTERM, s.stop)
@@ -131,16 +140,23 @@ class GedisServer:
         s.serve_forever()
 
     def stop(self):
+        """Shutting down the server.
+        """
         if self.closed:
-            sys.exit('Multiple exit signals received - aborting.')
+            sys.exit("Multiple exit signals received - aborting.")
         else:
-            log('Closing listener socket')
+            j.logger.debug("Closing listener socket")
             StreamServer.close(self)
 
-
     def on_connection(self, socket, address):
+        """Handling new connection
 
-        print('New connection from {}'.format(address))
+        Arguments:
+            socket {socket} -- TCP socket
+            address {tuple[str, port]} -- connection address
+        """
+
+        print("New connection from {}".format(address))
         parser = DefaultParser(65536)
         conn = RedisConnectionAdapter(socket)
         encoder = ResponseEncoder(socket)
@@ -168,46 +184,25 @@ class GedisServer:
             # exc_info = sys.exc_info()
             # traceback.print_exception(*exc_info)
             print(e)
-        
+
         parser.on_disconnect()
 
 
-
-
-class SystemActor:
-
-    def __init__(self, server):
-        self.server = server
-
-    def register_actor(self, actor_name, actor_path):
-        import importlib
-        import os
-        import sys
-
-        actor_name = actor_name.decode()
-        actor_path = actor_path.decode()
-
-        if actor_name in self.server.actors:
-            return True
-        module_python_name = os.path.dirname(actor_path)
-        module_name = os.path.splitext(module_python_name)[0]
-        spec = importlib.util.spec_from_file_location(module_name, actor_path)
-        module = importlib.util.module_from_spec(spec)
-        sys.modules[spec.name] = module 
-        spec.loader.exec_module(module)
-        self.server.actors[actor_name] = module.Actor()
-        print(self.server.actors)
-
-        return True
-
 def new_server(actors=None):
+    """Launch new gedis server windeth actors `actor`
+
+    server will have `SystemActor` enabled under name `system` to allow registration of other actors.
+
+    Keyword Arguments:
+        actors {dict[str, Actor]} -- dict of actor name -> actor object. (default: {None})
+    """
     actors = actors or {}
     if not actors:
         print("empty actors on the gedis server.")
 
     s = GedisServer()
     default_actors = {"system": SystemActor(s)}
-    s.actors = {**s.actors, **default_actors}    
+    s.actors = {**s.actors, **default_actors}
     s.start()
     gevent.wait()
 

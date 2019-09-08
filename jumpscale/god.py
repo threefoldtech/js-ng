@@ -1,4 +1,6 @@
+import sys
 import os
+import traceback
 import importlib
 import pkgutil
 import importlib.util
@@ -108,6 +110,7 @@ def load():
                 try:
                     m = importlib.import_module(importedpkgstr)
                 except Exception as e:
+                    traceback.print_exception(*sys.exc_info())
                     print("[-] {} at {} ".format(e, importedpkgstr))
                     continue
                 else:

@@ -1,5 +1,7 @@
 import libtmux
+from jumpscale.god import j
 
+__all__ = ['execute_in_window']
 
 server = libtmux.Server()
 JS_SESSION_NAME = "js-ng"
@@ -30,5 +32,10 @@ def get_window(window_name):
     return w
 
 def execute_in_window(window_name, cmd):
+    try:
+        server.list_sessions()
+    except:
+        j.logger.error("tmux isn't running")
+        server.new_session(JS_SESSION_NAME)
     w = get_window(window_name)
     w.attached_pane.send_keys(cmd)

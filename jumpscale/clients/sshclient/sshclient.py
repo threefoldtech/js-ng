@@ -2,25 +2,26 @@ from jumpscale.clients.base import Client
 from jumpscale.core.base import fields
 from jumpscale.god import j
 
-"""
-JS-NG> xmonader = j.clients.sshkey.new("xmonader")
-JS-NG> xmonader.private_key_path = "/home/xmonader/.ssh/id_rsa"
-JS-NG>
-JS-NG> localconnection = j.clients.sshclient.new("localconnection")
-JS-NG> localconnection.sshkey = "xmonader"
-JS-NG> localconnection.run("hostname")
-(0, 'asgard\n', '')
+# """
+# JS-NG> xmonader = j.clients.sshkey.new("xmonader")
+# JS-NG> xmonader.private_key_path = "/home/xmonader/.ssh/id_rsa"
+# JS-NG>
+# JS-NG> localconnection = j.clients.sshclient.new("localconnection")
+# JS-NG> localconnection.sshkey = "xmonader"
+# JS-NG> localconnection.run("hostname")
+# (0, 'asgard\n', '')
 
 
-JS-NG> sshkey = j.clients.sshkey.get("xmonader")
-JS-NG> localclient = j.clients.sshclient.get("xmonader")
-JS-NG> localclient.sshclient.run("hostname")
-asgard
-(0, 'asgard\n', '')
+# JS-NG> sshkey = j.clients.sshkey.get("xmonader")
+# JS-NG> localclient = j.clients.sshclient.get("xmonader")
+# JS-NG> localclient.sshclient.run("hostname")
+# asgard
+# (0, 'asgard\n', '')
 
-"""
+# """
 
 class SSHClient(Client):
+
     name = fields.String()
     sshkey = fields.String()
 
@@ -40,7 +41,7 @@ class SSHClient(Client):
 
     def _sshkey(self):
         return j.clients.sshkey.get(self.sshkey)
-
+    
     @property
     def sshclient(self):
         if not self.__client:
