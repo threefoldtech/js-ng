@@ -6,15 +6,6 @@ import stat
 from distutils import dir_util
 from typing import List
 
-
-def home():
-    return str(pathlib.Path.home())
-
-
-def cwd():
-    return str(pathlib.Path.cwd())
-
-
 basename = os.path.basename
 dirname = os.path.dirname
 common_path = os.path.commonpath
@@ -28,6 +19,19 @@ sep = os.path.sep
 is_samefile = os.path.samefile
 expandvars = os.path.expandvars
 expanduser = os.path.expanduser
+
+
+def home():
+    return str(pathlib.Path.home())
+
+
+def cwd():
+    """Return current working directory.
+
+    Returns:
+        str: current directory.
+    """
+    return str(pathlib.Path.cwd())
 
 
 def is_dir(path: str) -> bool:
@@ -609,7 +613,7 @@ def walk(path: str, pat="*", filter_fun=default_filter_fun):
             yield str(entry)
 
 
-def walk_non_recursive(path: str, fun=lambda e: True, filter_fun=default_filter_fun):
+def walk_non_recursive(path: str, filter_fun=default_filter_fun):
     """walks non recursively on path
     e.g
         for el in walk('/tmp', filter=j.sals.fs.is_file) : ..
@@ -666,4 +670,3 @@ def walk_dirs(path, recursive=True):
         return walk(path, filter_fun=is_dir)
     else:
         return walk_non_recursive(path, filter_fun=is_dir)
-
