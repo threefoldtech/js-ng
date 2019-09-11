@@ -142,7 +142,7 @@ def ptconfig(repl):
     repl.wrap_lines = True
 
     # Mouse support.
-    repl.enable_mouse_support = True
+    repl.enable_mouse_support = False
 
     # Complete while typing. (Don't require tab before the
     # completion menu is shown.)
@@ -203,6 +203,24 @@ def ptconfig(repl):
     def _debug_event(event):
         ' Pressing Control-B will insert "pdb.set_trace()" '
         event.cli.current_buffer.insert_text("\nimport pdb; pdb.set_trace()\n")
+
+    @repl.add_key_binding(Keys.ControlJ)
+    def _debug_event(event):
+        """
+        custom binding for pudb, to allow debugging a statement and also
+        post-mortem debugging in case of any exception
+        """
+        b = event.cli.current_buffer
+        app = get_app()
+        statements = b.document.text
+        if statements:
+            import linecache
+
+            linecache.cache["<string>"] = (len(statements), time.time(), statements.split("\n"), "<string>")
+            app.exit(pudb.runstatement(statements))
+            app.pre_run_callables.append(b.reset)
+        else:
+            pudb.pm()
 
     # Custom key binding for some simple autocorrection while typing.
 
