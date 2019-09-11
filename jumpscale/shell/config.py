@@ -10,6 +10,7 @@ from prompt_toolkit.shortcuts import print_formatted_text
 from prompt_toolkit.completion import Completion
 
 from ptpython.prompt_style import PromptStyle
+import pudb
 
 
 def patched_handle_exception(self, e):

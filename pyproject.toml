@@ -51,6 +51,7 @@ py-trello = "^0.15.0"
 dill = "^0.3.0"
 watchdog = "^0.9.0"
 GitPython = "^3.0"
+pudb = "^2019.1"
 
 [tool.poetry.dev-dependencies]
 ipdb = "^0.12.1"
