@@ -27,7 +27,7 @@ assert js_config["logging"] and js_config["logging"]["handlers"] != [{}]
 logging_config = js_config["logging"]
 
 # QUESTION: how to pass sink sys.stdout in json config?
-logging_config["handlers"].append(
-    {"sink": sys.stdout, "format": "{time} - {message}", "colorize": True, "enqueue": True}
-)
-logger.configure(**logging_config)
+# logging_config["handlers"].append(
+#     {"sink": sys.stdout, "format": "{time} - {message}", "colorize": True, "enqueue": True}
+# )
+# logger.configure(**logging_config)
