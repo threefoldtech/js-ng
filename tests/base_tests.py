@@ -8,7 +8,7 @@ class BaseTests(TestCase):
 
     def setUp(self):
         print('\t')
-        self.info('* Test case : {}'.format(self._testMethodName))
+        self.info('Test case : {}'.format(self._testMethodName))
 
     def tearDown(self):
         pass

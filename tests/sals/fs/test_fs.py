@@ -23,7 +23,20 @@ class TestFS(BaseTests):
             j.sals.fs.is_empty_dir('/etc/passwd')
 
     def test003_rm_tree(self):
-        pass
+        random_dir_1 = self.generate_random_text()
+        random_dir_2 = self.generate_random_text()
+        random_file = self.generate_random_text()
+        self.info('Create /tmp/{}/{} dir'.format(random_dir_1, random_dir_2))
+        j.sals.fs.mkdirs('/tmp/{}/{}'.format(random_dir_1, random_dir_2))
+
+        self.info('Create random file /tmp/{}/{}/{}'.format(random_dir_1, random_dir_2, random_file))
+        j.sals.fs.touch('/tmp/{}/{}/{}'.format(random_dir_1, random_dir_2, random_file))
+
+        self.info('Remove the tree /tmp/{}'.format(random_dir_1))
+        j.sals.fs.rmtree('/tmp/{}'.format(random_dir_1))
+
+        self.info('Assert that the dir and the file have been deleted')
+        self.assertTrue(j.sals.fs.is_empty_dir('/tmp/{}'.format(random_dir_1)))
 
     def test004_copy_stat(self):
         pass
