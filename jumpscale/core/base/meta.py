@@ -119,3 +119,6 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
 
     def _data_updated(self, name, value):
         pass
+
+    def _on_data_update(self, name, value):
+        pass

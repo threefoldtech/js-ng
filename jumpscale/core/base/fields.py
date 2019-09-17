@@ -69,11 +69,16 @@ class Secret(String):
 
 
 class Object(Field):
-    def __init__(self, type_, **kwargs):
+    def __init__(self, type_, type_kwargs=None, **kwargs):
         super().__init__(**kwargs)
         self.type = type_
+        self.type_kwargs = type_kwargs
+
+        if self.type_kwargs is None:
+            self.type_kwargs = {}
+
         if not self.default:
-            self.default = self.type()
+            self.default = self.type(**self.type_kwargs)
 
     def validate(self, value):
         """validate objet of Base
@@ -86,12 +91,9 @@ class Object(Field):
 
 
 class List(Field):
-    def __init__(self, field, default=None, **kwargs):
+    def __init__(self, field, **kwargs):
         self.field = field
-        if default is None:
-            default = []
-
-        super().__init__(default=default, **kwargs)
+        super().__init__(**kwargs)
 
     def validate(self, value):
         super().validate(value)
