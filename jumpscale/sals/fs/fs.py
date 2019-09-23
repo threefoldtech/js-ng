@@ -610,7 +610,7 @@ def walk(path: str, pat="*", filter_fun=default_filter_fun):
     for entry in p.rglob(pat):
         # use rglob instead of glob("**/*")
         if filter_fun(entry):
-            yield str(entry)
+            yield str(entry )
 
 
 def walk_non_recursive(path: str, filter_fun=default_filter_fun):
