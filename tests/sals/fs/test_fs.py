@@ -29,7 +29,7 @@ class TestFS(BaseTests):
         return random_dir_dest, random_dir_dest_2, random_files, random_files_internal
 
     def test001_is_ascii_file(self):
-        random_file = 'tmp/{}'.format(self.generate_random_text())
+        random_file = '/tmp/{}'.format(self.generate_random_text())
         self.info('Create {} file'.format(random_file))
         j.sals.fs.touch(random_file)
 
