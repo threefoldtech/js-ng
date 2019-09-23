@@ -123,7 +123,7 @@ class TestFS(BaseTests):
             self.assertIn(file, files)
 
         for file in random_files_internal:
-            self.assertNotIn(file, random_files_internal)
+            self.assertNotIn(file, files)
 
     @parameterized.expand([(True,), (False,)])
     def test011_walk_files_recursive(self, recursive):
