@@ -118,7 +118,7 @@ class TestFS(BaseTests):
         random_dir_dest, random_dir_dest_2, random_files, random_files_internal = self.create_tree()
 
         self.info('Assert walk with j.sals.fs.is_file as a filter works well')
-        files = [file for file in j.sals.fs.walk(random_dir_dest, filter_fun=j.sals.fs.is_file)]
+        files = [file for file in j.sals.fs.walk_non_recursive(random_dir_dest, filter_fun=j.sals.fs.is_file)]
         for file in random_files:
             self.assertIn(file, files)
 
@@ -129,7 +129,7 @@ class TestFS(BaseTests):
     def test011_walk_files_recursive(self, recursive):
         random_dir_dest, random_dir_dest_2, random_files, random_files_internal = self.create_tree()
 
-        files = [file for file in j.sals.fs.walk_files(random_dir_dest)]
+        files = [file for file in j.sals.fs.walk_files(random_dir_dest, recursive)]
         for file in random_files:
             self.assertIn(file, files)
 
@@ -145,7 +145,7 @@ class TestFS(BaseTests):
         random_dir_dest_3 = '{}/{}'.format(random_dir_dest_2, self.generate_random_text())
         j.sals.fs.mkdirs(random_dir_dest_3)
 
-        dirs = [dir_ for dir_ in j.sals.fs.walk_dirs(random_dir_dest)]
+        dirs = [dir_ for dir_ in j.sals.fs.walk_dirs(random_dir_dest, recursive)]
 
         self.assertIn(random_dir_dest_2, dirs)
         if recursive:
