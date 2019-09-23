@@ -37,7 +37,7 @@ class TestFS(BaseTests):
         self.assertTrue(j.sals.fs.is_ascii_file(random_file))
 
         self.info('Assert /bin/ls file is not ascii file.')
-        self.assertTrue(j.sals.fs.is_ascii_file('/bin/ls'))
+        self.assertFalse(j.sals.fs.is_ascii_file('/bin/ls'))
 
     def test002_is_empty_dir_with_empty_folder(self):
         random_dir = self.generate_random_text()
