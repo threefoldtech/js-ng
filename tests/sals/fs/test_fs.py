@@ -145,6 +145,7 @@ class TestFS(BaseTests):
         self.info('Create dir {}'.format(random_dir_dest_3))
         j.sals.fs.mkdirs(random_dir_dest_3)
 
+        self.info('Assert walk_dirs returns only all dirs with respect of recursive as {}'.format(recursive))
         dirs = [dir_ for dir_ in j.sals.fs.walk_dirs(random_dir_dest, recursive)]
 
         self.assertIn(random_dir_dest_2, dirs)
