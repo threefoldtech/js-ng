@@ -1,9 +1,28 @@
 from tests.base_tests import BaseTests
 from jumpscale.god import j
 from unittest import skip
+from parameterized import parameterized
 
 
 class TestFS(BaseTests):
+    def create_tree(self):
+        random_dir_dest = '/tmp/{}'.format(self.generate_random_text())
+        random_dir_dest_2 = '{}/{}'.format(random_dir_dest, self.generate_random_text())
+        self.info('Create 10 files')
+        random_files = []
+        random_files_internal = []
+        for _ in range(5):
+            random_file = '{}/{}'.format(random_dir_dest, self.generate_random_text())
+            j.sals.fs.touch(random_file)
+            random_files.append(random_file)
+
+        for _ in range(5):
+            random_file = '{}/{}'.format(random_dir_dest_2, self.generate_random_text())
+            j.sals.fs.touch(random_file)
+            random_files_internal.append(random_file)
+
+        return random_dir_dest, random_dir_dest_2, random_files, random_files_internal
+
     def test001_is_ascii_file(self):
         pass
 
@@ -88,31 +107,52 @@ class TestFS(BaseTests):
             self.assertIn(file, files)
 
     def test008_walk_with_recursive(self):
-        random_dir_dest = '/tmp/{}'.format(self.generate_random_text())
-        random_dir_dest_2 = '{}/{}'.format(random_dir_dest, self.generate_random_text())
-        self.info('Create 10 files')
-        random_files = []
-        for _ in range(5):
-            random_file = '{}/{}'.format(random_dir_dest, self.generate_random_text())
-            j.sals.fs.touch(random_file)
-            random_files.append(random_file)
+        random_dir_dest, random_dir_dest_2, random_files, random_files_internal = self.create_tree()
 
-        for _ in range(5):
-            random_file = '{}/{}'.format(random_dir_dest_2, self.generate_random_text())
-            j.sals.fs.touch(random_file)
-            random_files.append(random_file)
+        self.info('Assert walk with j.sals.fs.is_file as a filter works well')
+        files = [file for file in j.sals.fs.walk(random_dir_dest, filter_fun=j.sals.fs.is_file)]
+        random_files.extend(random_files_internal)
+        for file in random_files:
+            self.assertIn(file, files)
+
+        self.assertNotIn(random_dir_dest_2, files)
+
+    def test008_walk_non_recursive(self):
+        random_dir_dest, random_dir_dest_2, random_files, random_files_internal = self.create_tree()
 
         self.info('Assert walk with j.sals.fs.is_file as a filter works well')
         files = [file for file in j.sals.fs.walk(random_dir_dest, filter_fun=j.sals.fs.is_file)]
         for file in random_files:
             self.assertIn(file, files)
 
-    def test008_walk_non_recursive(self):
-        pass
+        for file in random_files_internal:
+            self.assertNotIn(file, random_files_internal)
 
-    def test009_walk_files(self):
-        pass
+    @parameterized.expand([(True,), (False,)])
+    def test009_walk_files_recursive(self, recursive):
+        random_dir_dest, random_dir_dest_2, random_files, random_files_internal = self.create_tree()
 
-    def test010_walk_dirs(self):
-        pass
+        files = [file for file in j.sals.fs.walk_files(random_dir_dest)]
+        for file in random_files:
+            self.assertIn(file, files)
 
+        for file in random_files_internal:
+            if recursive:
+                self.assertIn(file, files)
+            else:
+                self.assertNotIn(file, files)
+
+    @parameterized.expand([(True,), (False,)])
+    def test010_walk_dirs(self, recursive):
+        random_dir_dest, random_dir_dest_2, random_files, random_files_internal = self.create_tree()
+        random_dir_dest_3 = '{}/{}'.format(random_dir_dest_2, self.generate_random_text())
+
+        dirs = [dir_ for dir_ in j.sals.fs.walk_dirs(random_dir_dest)]
+
+        self.assertIn(random_dir_dest_2, dirs)
+        if recursive:
+            self.assertEqual(2, len(dirs))
+            self.assertIn(random_dir_dest_3, dirs)
+        else:
+            self.assertEqual(1, len(dirs))
+            self.assertNotIn(random_dir_dest_3, dirs)
