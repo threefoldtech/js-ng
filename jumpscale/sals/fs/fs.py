@@ -6,15 +6,6 @@ import stat
 from distutils import dir_util
 from typing import List
 
-
-def home():
-    return str(pathlib.Path.home())
-
-
-def cwd():
-    return str(pathlib.Path.cwd())
-
-
 basename = os.path.basename
 dirname = os.path.dirname
 common_path = os.path.commonpath
@@ -28,6 +19,19 @@ sep = os.path.sep
 is_samefile = os.path.samefile
 expandvars = os.path.expandvars
 expanduser = os.path.expanduser
+
+
+def home():
+    return str(pathlib.Path.home())
+
+
+def cwd():
+    """Return current working directory.
+
+    Returns:
+        str: current directory.
+    """
+    return str(pathlib.Path.cwd())
 
 
 def is_dir(path: str) -> bool:
@@ -189,7 +193,7 @@ def parent(path: str) -> str:
     Returns:
         str: parent path.
     """
-    return pathlib.Path(path).parent
+    return str(pathlib.Path(path).parent)
 
 
 def parents(path: str) -> List[str]:
@@ -209,7 +213,7 @@ def parents(path: str) -> List[str]:
         List[str]: list of parents
     """
 
-    return list(pathlib.Path(path).parents)
+    return list([str(p) for p in pathlib.Path(path).parents])
 
 
 def path_parts(path: str) -> List[str]:
@@ -258,7 +262,7 @@ def expanduser(path: str) -> str:
     Returns:
         str: path with tilde `~` resolved.
     """
-    return pathlib.Path(path).expanduser()
+    return str(pathlib.Path(path).expanduser())
 
 
 def unlink(path: str):
@@ -589,17 +593,16 @@ def default_filter_fun(entry):
     return True
 
 
-def walk(path: str, fun=lambda e: True, pat="*", filter_fun=default_filter_fun):
+def walk(path: str, pat="*", filter_fun=default_filter_fun):
     """walk recursively on path
     e.g
-        for el in walk('/tmp', lambda x: print(x.upper()), filter=j.sals.fs.is_file) : ..
-        for el in walk('/tmp', lambda x: print(x.upper()), filter=j.sals.fs.is_dir) : ..
-        for el in walk('/tmp', lambda x: print(x.upper()), filter= lambda x: len(x)>4 and (j.sals.fs.is_file(x) or j.sals.fs.is_dir(x)) ) : ..
+        for el in walk('/tmp', filter_fun=j.sals.fs.is_file) : ..
+        for el in walk('/tmp', filter_fun=j.sals.fs.is_dir) : ..
+        for el in walk('/tmp', filter_fun= lambda x: len(x)>4 and (j.sals.fs.is_file(x) or j.sals.fs.is_dir(x)) ) : ..
 
 
     Args:
         path (str): path to walk over
-        fun (Function, optional): function to apply on each entry. Defaults to `lambda e:True`.
         pat (str, optional): pattern to match against. Defaults to "*".
         filter_fun (Function, optional): filtering function. Defaults to default_filter_fun which accepts anything.
     """
@@ -607,69 +610,63 @@ def walk(path: str, fun=lambda e: True, pat="*", filter_fun=default_filter_fun):
     for entry in p.rglob(pat):
         # use rglob instead of glob("**/*")
         if filter_fun(entry):
-            yield entry
-            fun(entry)
+            yield str(entry)
 
 
-def walk_non_recursive(path: str, fun=lambda e: True, filter_fun=default_filter_fun):
+def walk_non_recursive(path: str, filter_fun=default_filter_fun):
     """walks non recursively on path
     e.g
-        for el in walk('/tmp', lambda x: print(x.upper()), filter=j.sals.fs.is_file) : ..
-        for el in walk('/tmp', lambda x: print(x.upper()), filter=j.sals.fs.is_dir) : ..
-        for el in walk('/tmp', lambda x: print(x.upper()), filter= lambda x: len(x)>4 and (j.sals.fs.is_file(x) or j.sals.fs.is_dir(x)) ) : ..
+        for el in walk('/tmp', filter=j.sals.fs.is_file) : ..
+        for el in walk('/tmp', filter=j.sals.fs.is_dir) : ..
+        for el in walk('/tmp', filter= lambda x: len(x)>4 and (j.sals.fs.is_file(x) or j.sals.fs.is_dir(x)) ) : ..
 
 
     Args:
         path (str): path to walk over
-        fun (Function, optional): function to apply on each entry. Defaults to `lambda e:True`.
         pat (str, optional): pattern to match against. Defaults to "*".
         filter_fun (Function, optional): filtering function. Defaults to default_filter_fun which accepts anything.
     """
     p = pathlib.Path(path)
     for entry in p.iterdir():
         if filter_fun(entry):
-            yield entry
-            fun(entry)
+            yield str(entry)
 
 
-def walk_files(path: str, fun=lambda e: True, recursive=True):
+def walk_files(path: str, recursive=True):
     """
     walk over files in path and applies function `fun`
     e.g
 
-        for el in walk_files('/tmp', lambda x: print(x.upper())) : ..
+        for el in walk_files('/tmp') : ..
 
     Args:
         path (str): path to walk over
-        fun (Function, optional): function to apply on each entry. Defaults to lambda e:True.
         recursive (bool, optional): recursive or not. Defaults to True.
 
 
     """
 
     if recursive:
-        return walk(path, fun, filter_fun=is_file)
+        return walk(path, filter_fun=is_file)
     else:
-        return walk_non_recursive(path, fun, filter_fun=is_file)
+        return walk_non_recursive(path, filter_fun=is_file)
 
 
-def walk_dirs(path, fun=lambda e: True, recursive=True):
+def walk_dirs(path, recursive=True):
     """
         walk over directories in path and applies function `fun`
     e.g
 
-        for el in walk_dirs('/tmp', lambda x: print(x.upper())) : ..
+        for el in walk_dirs('/tmp') : ..
 
 
     Args:
         path (str): path to walk over
-        fun (Function, optional): function to apply on each entry. Defaults to lambda e:True.
         recursive (bool, optional): recursive or not. Defaults to True.
 
 
     """
     if recursive:
-        return walk(path, fun, filter_fun=is_dir)
+        return walk(path, filter_fun=is_dir)
     else:
-        return walk_non_recursive(path, fun, filter_fun=is_dir)
-
+        return walk_non_recursive(path, filter_fun=is_dir)

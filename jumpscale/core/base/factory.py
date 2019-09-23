@@ -15,11 +15,10 @@ class Factory:
     def __init__(self, type_):
         self.type = type_
         self.__count = 0
-        super(Factory, self).__init__()
 
     def new(self, name, *args, **kwargs):
         if not name.isidentifier():
-            raise ValueError("%s is not a valid identifier" % name)
+            raise ValueError("{} is not a valid identifier".format(name))
 
         try:
             self.find(name)
@@ -35,7 +34,7 @@ class Factory:
     def find(self, name):
         instance = getattr(self, name)
         if not isinstance(instance, self.type):
-            raise ValueError("%s is an internal attribute" % name)
+            raise ValueError("{} is an internal attribute".format(name))
         return instance
 
     def get(self, name, *args, **kwargs):
@@ -46,7 +45,8 @@ class Factory:
 
     def delete(self, name):
         self.count -= 1
-        delattr(self, name)
+        if hasattr(self, name):
+            delattr(self, name)
 
     def _updated(self, new_count):
         pass
@@ -159,6 +159,9 @@ class StoredFactory(Factory):
     def delete(self, name):
         self.store.delete(name)
         super(StoredFactory, self).delete(name)
+
+    def list_all(self):
+        return self.store.list_all()
 
     def __iter__(self):
         for value in vars(self).values():
