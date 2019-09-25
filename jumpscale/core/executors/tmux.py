@@ -5,37 +5,52 @@ __all__ = ['execute_in_window']
 
 server = libtmux.Server()
 JS_SESSION_NAME = "js-ng"
+JS_WINDOW_NAME = "js-ng-w"
+
 
 def create_session(session_name, kill_if_exists=False):
     return server.new_session(session_name, kill_session=kill_if_exists)
 
-def get_js_session():
-    s = server.find_where({"session_name": JS_SESSION_NAME})
-    if not s:
-        return create_session(JS_SESSION_NAME)
-    else:
-        return s
 
-def get_js_window(window_name):
-    s = get_js_session()
-    w = server.find_where({"window_name": window_name})
-    if not w:
-        w = s.new_window(window_name)
-        w.rename_window(window_name)
-
-    return w
-
-def get_window(window_name):
-    w = server.find_where({"window_name": window_name})
-    if not w:
-        w = get_js_window(window_name)
-    return w
-
-def execute_in_window(window_name, cmd):
+def get_session(session_name, create_if_not_existing=False):
     try:
-        server.list_sessions()
+        return server.find_where({"session_name": session_name})
     except:
         j.logger.error("tmux isn't running")
-        server.new_session(JS_SESSION_NAME)
-    w = get_window(window_name)
-    w.attached_pane.send_keys(cmd)
+        if create_if_not_existing:
+            return create_session(session_name=session_name)
+
+
+def create_window(session_name, window_name):
+    session = get_session(session_name, create_if_not_existing=True)
+    return session.new_window(window_name)
+
+
+def get_window(session_name, window_name, create_if_not_existing=False):
+    session = get_session(session_name, create_if_not_existing=True)
+    window = session.find_where({"window_name": window_name})
+    if not window and create_if_not_existing:
+        window = create_window(session_name, window_name)
+    return window
+
+
+def execute_in_window(session_name, window_name, cmd):
+    window = get_window(session_name, window_name, create_if_not_existing=True)
+    window.attached_pane.send_keys(cmd)
+
+
+def create_js_session(kill_if_exists=False):
+    return create_session(session_name=JS_SESSION_NAME, kill_if_exists=kill_if_exists)
+
+
+def get_js_session():
+    return get_session(session_name=JS_SESSION_NAME, create_if_not_existing=True)
+
+
+def get_js_window():
+    return get_window(session_name=JS_WINDOW_NAME, create_if_not_existing=True)
+
+
+def execute_in_js_window(cmd):
+    execute_in_window(session_name=JS_SESSION_NAME, window_name=JS_WINDOW_NAME, cmd=cmd)
+   
