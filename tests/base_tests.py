@@ -7,7 +7,7 @@ class BaseTests(TestCase):
     LOGGER = logger
 
     def setUp(self):
-        print('\t')
+        print('\n')
         self.info('Test case : {}'.format(self._testMethodName))
 
     def tearDown(self):
