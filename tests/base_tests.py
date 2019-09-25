@@ -17,5 +17,6 @@ class BaseTests(TestCase):
     def generate_random_text():
         return str(uuid4()).replace("-", "")[:10]
 
-    def info(self, message):
+    @staticmethod
+    def info(message):
         BaseTests.LOGGER.info(message)
