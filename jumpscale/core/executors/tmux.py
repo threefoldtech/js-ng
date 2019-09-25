@@ -18,6 +18,7 @@ def get_session(session_name, create_if_not_existing=False):
     except:
         j.logger.error("tmux isn't running")
         if create_if_not_existing:
+            j.logger.info('Gonna start session with {} name'.format(session_name))
             return create_session(session_name=session_name)
 
 
