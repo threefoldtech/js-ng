@@ -14,7 +14,9 @@ def create_session(session_name, kill_if_exists=False):
 
 def get_session(session_name, create_if_not_existing=False):
     try:
-        return server.find_where({"session_name": session_name})
+        session = server.find_where({"session_name": session_name})
+        if not session and create_if_not_existing:
+            return create_session(session_name=session_name)
     except:
         j.logger.error("tmux isn't running")
         if create_if_not_existing:
@@ -49,7 +51,7 @@ def get_js_session():
 
 
 def get_js_window():
-    return get_window(session_name=JS_WINDOW_NAME, window_name=JS_WINDOW_NAME ,create_if_not_existing=True)
+    return get_window(session_name=JS_WINDOW_NAME, window_name=JS_WINDOW_NAME, create_if_not_existing=True)
 
 def execute_in_js_window(cmd):
     execute_in_window(session_name=JS_SESSION_NAME, window_name=JS_WINDOW_NAME, cmd=cmd)
