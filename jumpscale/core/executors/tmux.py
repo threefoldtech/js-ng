@@ -50,7 +50,5 @@ def get_js_session():
 def get_js_window():
     return get_window(session_name=JS_WINDOW_NAME, create_if_not_existing=True)
 
-
 def execute_in_js_window(cmd):
     execute_in_window(session_name=JS_SESSION_NAME, window_name=JS_WINDOW_NAME, cmd=cmd)
-   
