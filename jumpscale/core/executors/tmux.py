@@ -15,6 +15,8 @@ def create_session(session_name, kill_if_exists=False):
 def get_session(session_name, create_if_not_existing=False):
     try:
         session = server.find_where({"session_name": session_name})
+        if session:
+            return session
         if not session and create_if_not_existing:
             return create_session(session_name=session_name)
     except:
