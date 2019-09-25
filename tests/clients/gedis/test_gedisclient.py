@@ -1,5 +1,6 @@
 from jumpscale.god import j
 from tests.base_tests import BaseTests
+from time import sleep
 
 
 class GedisClientTest(BaseTests):
@@ -12,6 +13,7 @@ class GedisClientTest(BaseTests):
         cls.GEDIS_SESSSION = j.core.executors.tmux.create_session(session_name)
         window = cls.GEDIS_SESSSION.windows[0]
         window.attached_pane.send_keys('echo "j.servers.gedis.new_server()" | poetry run jsng')
+        sleep(5)
 
     @classmethod
     def tearDownClass(cls):
@@ -34,7 +36,7 @@ class GedisClientTest(BaseTests):
         self.assertIn(actor_name, self.gedis.list_actors())
 
         self.info('Assert that all actor functions have been loaded')
-        self.assertEqual(['hi', 'ping', 'info', 'add2'].sort(), self.gedis.doc(actor_name).keys().sort())
+        self.assertEqual(['hi', 'ping', 'info', 'add2'].sort(), list(self.gedis.doc(actor_name).keys()).sort())
 
     def test003_execute_actor(self):
         self.info('Load the generator actor')
