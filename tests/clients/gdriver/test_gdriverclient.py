@@ -1,7 +1,7 @@
 """
 mail: jsng2019@gmail.com
 passwd: jsng123456
-api_key: AIzaSyAKjjo-g1rXGEkbjA_TcP8_EsHRu7SvWls
+api_key:
 
 """
 from jumpscale.god import j
@@ -13,10 +13,9 @@ class GDriverClientTest(BaseTests):
         super().setUp()
         self.client_name = self.generate_random_text()
         self.info('Create random Gdriver name : '.format(self.client_name))
-        self.client = j.cients.gdrive.new(self.client_name)
+        self.client = j.clients.gdrive.new(self.client_name)
         self.info("Set it's credential file ")
-        self.client.credfile = "credential.json"
+        self.client.credfile = "/{}/credential.json".format(j.sals.fs.cwd())
 
-    def test001_github_client_get_access(self):
-        self.assertEqual(j.clients.github.tft.get_userdata()['emails'][0]['email'], self.email)
+
 
