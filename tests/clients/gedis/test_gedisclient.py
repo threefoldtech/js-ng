@@ -17,7 +17,7 @@ class GedisClientTest(BaseTests):
 
     @classmethod
     def tearDownClass(cls):
-        cls.info('Turn of the gedis server')
+        cls.info('Turn off the gedis server')
         cls.GEDIS_SESSSION.kill_session()
 
     def setUp(self):
