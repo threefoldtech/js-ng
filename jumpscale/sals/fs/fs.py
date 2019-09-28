@@ -421,7 +421,7 @@ def rmtree(path: str):
         path (str): path to remove
     """
     path = pathlib.Path(path)
-    if path.is_file() or path.is_link():
+    if path.is_file() or path.is_symlink():
         os.remove(path)
     elif path.is_dir():
         shutil.rmtree(path)

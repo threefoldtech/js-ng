@@ -12,14 +12,20 @@ from tests.base_tests import BaseTests
 class GithubClientTest(BaseTests):
     def setUp(self):
         super().setUp()
+
+        self.instance_name = j.data.randomnames.generate_random_name()
+
         self.username = "tfttesting"
         self.password = "tft_password19"
         self.email = "tft.testing.19@gmail.com"
-        j.clients.github.new("tft")
-        j.clients.github.tft.username = self.username
-        j.clients.github.tft.password = self.password
-        self.client = j.clients.github.tft.github_client
+
+        self.client = j.clients.github.get(self.instance_name)
+
+        self.client.username = self.username
+        self.client.password = self.password
 
     def test001_github_client_get_access(self):
-        self.assertEqual(j.clients.github.tft.get_userdata()['emails'][0]['email'], self.email)
+        self.assertEqual(self.client.get_userdata()["emails"][0]["email"], self.email)
 
+    def tearDown(self):
+        j.clients.github.delete(self.instance_name)

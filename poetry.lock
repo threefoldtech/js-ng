@@ -628,6 +628,14 @@ six = "*"
 
 [[package]]
 category = "main"
+description = "Parameterized testing with any Python test framework"
+name = "parameterized"
+optional = false
+python-versions = "*"
+version = "0.7.0"
+
+[[package]]
+category = "main"
 description = "SSH2 protocol library"
 name = "paramiko"
 optional = false
@@ -1207,7 +1215,7 @@ version = "0.6.0"
 more-itertools = "*"
 
 [metadata]
-content-hash = "5b37044f3902a99bd12dcc433ba90c1b896bdd77a00d03c928c6508f25a88a1d"
+content-hash = "5fd3b33a31e65ca5ce7e874b61662a8826ae5cafeab352d8ff672001291cd93b"
 python-versions = "^3.6"
 
 [metadata.hashes]
@@ -1273,6 +1281,7 @@ msgpack = ["26cb40116111c232bc235ce131cc3b4e76549088cb154e66a2eb8ff6fcc907ec", "
 npyscreen = ["622ee0f9a5dae946e635b7c6e0f6d65e1ed3c9ea0d20b89dab7f58d580e5126e"]
 oauthlib = ["bee41cc35fcca6e988463cacc3bcb8a96224f470ca547e697b604cc697b2f889", "df884cd6cbe20e32633f1db1072e9356f53638e4361bef4e8b03c9127c9328ea"]
 packaging = ["a7ac867b97fdc07ee80a8058fe4435ccd274ecc3b0ed61d852d7d53055528cf9", "c491ca87294da7cc01902edbe30a5bc6c4c28172b5138ab4e4aa1b9d7bfaeafe"]
+parameterized = ["020343a281efcfe9b71b9028a91817f981202c14d72104b5a2fbe401dee25a18", "d8c8837fb677ed2d5a93b9e2308ce0da3aeb58cf513120d501e0b7af14da78d5"]
 paramiko = ["99f0179bdc176281d21961a003ffdb2ec369daac1a1007241f53374e376576cf", "f4b2edfa0d226b70bd4ca31ea7e389325990283da23465d572ed1f70a7583041"]
 parso = ["63854233e1fadb5da97f2744b6b24346d2750b85965e7e399bec1620232797dc", "666b0ee4a7a1220f65d367617f2cd3ffddff3e205f3f16a0284df30e774c2a9c"]
 pathtools = ["7c35c5421a39bb82e58018febd90e3b6e5db34c5443aaaf742b3f33d4655f1c0"]
