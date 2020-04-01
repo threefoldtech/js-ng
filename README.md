@@ -24,8 +24,16 @@ config management/automation framework
 - clone this repository, then
     - `poetry install`
 
-- now you can open the shell
-    - `jsng`
+### Accessing the virtualenv
+To access the virtual env `poetry shell`
+
+### Accessing the shell
+
+#### Outside the virtualenv
+open the shell using `poetry run jsng`
+
+#### In the virtual env
+just type `jsng`
 
 ## Running tests
 - `make tests`
