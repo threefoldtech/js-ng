@@ -1,4 +1,6 @@
 from .factory import StoredFactory
+import re
+
 
 # TODO: validation/serialization using https://marshmallow.readthedocs.io/en/stable/ or http://alecthomas.github.io/voluptuous/docs/_build/html/index.html
 
@@ -26,7 +28,6 @@ class Field:
         if value is None:
             if self.required:
                 raise ValidationError("field is required")
-
         for validator in self.validators:
             validator(value)
 
@@ -103,6 +104,24 @@ class List(Field):
 
         for item in value:
             self.field.validate(item)
+
+
+class Email(String):
+    def __init__(self, field, **kwargs):
+        super().__init__(**kwargs)
+        self.field = field
+        self.regex = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+        if re.search(self.regex, self.field) is None:
+            raise ValidationError(f"Error in email validation ")
+
+    def validate(self, value):
+        """Check whether provided value is a valid email representation
+        Args:
+            value (str)
+        Returbs:
+            Boolean expresion"""
+        super().validate(value)
+        return re.search(self.regex, value) is not None
 
 
 class Factory(StoredFactory):
