@@ -118,9 +118,26 @@ class Email(Field):
         """Check whether provided value is a valid email representation
         Args:
             value (str)
-        Returbs:
+        Returns:
             Boolean expresion"""
         super().validate(value)
+        return re.search(self.regex, value) is not None
+
+
+class Path(Field):
+    def __init__(self, field, **kwargs):
+        super().__init__(**kwargs)
+        self.field = field
+        self.regex = r"^(/[^/ ]*)+/?$"
+        if re.search(self.regex, self.field) is None:
+            raise ValidationError(f"Error in path validation ")
+
+    def validate(self, value):
+        """Check whether provided value is a valid path representation
+        Args:
+            value (str)
+        Returns:
+            Boolean expresion"""
         return re.search(self.regex, value) is not None
 
 
