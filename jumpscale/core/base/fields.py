@@ -107,12 +107,9 @@ class List(Field):
 
 
 class Email(Field):
-    def __init__(self, field, **kwargs):
-        super().__init__(**kwargs)
-        self.field = field
+    def __init__(self, default="", **kwargs):
+        super().__init__(default, **kwargs)
         self.regex = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
-        if re.search(self.regex, self.field) is None:
-            raise ValidationError(f"Error in email validation ")
 
     def validate(self, value):
         """Check whether provided value is a valid email representation
@@ -125,12 +122,9 @@ class Email(Field):
 
 
 class Path(Field):
-    def __init__(self, field, **kwargs):
-        super().__init__(**kwargs)
-        self.field = field
+    def __init__(self, default="", **kwargs):
+        super().__init__(default, **kwargs)
         self.regex = r"^(/[^/ ]*)+/?$"
-        if re.search(self.regex, self.field) is None:
-            raise ValidationError(f"Error in path validation ")
 
     def validate(self, value):
         """Check whether provided value is a valid path representation
@@ -138,6 +132,22 @@ class Path(Field):
             value (str)
         Returns:
             Boolean expresion"""
+        super().validate(value)
+        return re.search(self.regex, value) is not None
+
+
+class URL(Field):
+    def __init__(self, default="", **kwargs):
+        super().__init__(default, **kwargs)
+        self.regex = r"^(https?|ftp)://[^\s/$.?#].[^\s]*$"
+
+    def validate(self, value):
+        """Check whether provided value is a valid URL representation
+        Args:
+            value (str)
+        Returbs:
+            Boolean expresion"""
+        super().validate(value)
         return re.search(self.regex, value) is not None
 
 
