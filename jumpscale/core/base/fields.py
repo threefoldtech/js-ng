@@ -106,7 +106,7 @@ class List(Field):
             self.field.validate(item)
 
 
-class Email(String):
+class Email(Field):
     def __init__(self, field, **kwargs):
         super().__init__(**kwargs)
         self.field = field
