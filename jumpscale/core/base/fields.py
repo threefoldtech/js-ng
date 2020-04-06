@@ -151,5 +151,118 @@ class URL(Field):
         return re.search(self.regex, value) is not None
 
 
+class Tel(Field):
+    def __init__(self, default="", **kwargs):
+        super().__init__(default, **kwargs)
+        self.regex = r"^\+?[0-9]{6,15}(?:x[0-9]+)?$"
+
+    def validate(self, value):
+        """Check whether provided value is a valid Telephone number representation
+        Args:
+            value (str)
+        Returbs:
+            Boolean expresion"""
+        super().validate(value)
+        value = self._clean(value)
+        return re.search(self.regex, value) is not None
+
+    def _clean(self, value):
+        if value is not None:
+            value = value.replace(",", "")
+            value = value.replace("-", "")
+            value = value.replace("(", "")
+            value = value.replace(")", "")
+            value = value.replace(" ", "")
+            return value
+
+
+class IPAddress(Field):
+    def __init__(self, default="", **kwargs):
+        super().__init__(default, **kwargs)
+
+    def validate(self, value):
+        """Check whether provided value is a valid IPaddress representation
+        Args:
+            value (str)
+        Returns:
+            Boolean expresion"""
+        import ipaddress
+
+        super().validate(value)
+        try:
+            ipaddress.IPv4Address(value)
+            return True
+        except ipaddress.AddressValueError:
+            return False
+
+
+class DateTime(Field):
+    """Supported format: yyyy-mm-dd hh:mm"""
+
+    def __init__(self, default="", **kwargs):
+        super().__init__(default, **kwargs)
+        self.regex = r"^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1]) (2[0-3]|[01][0-9]):[0-5][0-9]$"
+
+    def validate(self, value):
+        """Check whether provided value is a valid datetime representation
+        Arguments:
+            value (str)
+        Returbs:
+            Boolean expresion"""
+        super().validate(value)
+        return re.search(self.regex, value) is not None
+
+
+class Date(Field):
+    """Support yyyy-mm-dd format"""
+
+    def __init__(self, default="", **kwargs):
+        super().__init__(default, **kwargs)
+        self.regex = r"[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])"
+
+    def validate(self, value):
+        """Check whether provided value is a valid date representation
+        Args:
+            value (str)
+        Returbs:
+            Boolean expresion"""
+        super().validate(value)
+        return re.search(self.regex, value) is not None
+
+
+class Time(Field):
+    """Supported format : hh:mm"""
+
+    def __init__(self, default="", **kwargs):
+        super().__init__(default, **kwargs)
+        self.regex = r"(2[0-3]|[01][0-9]):[0-5][0-9]"
+
+    def validate(self, value):
+        """Check whether provided value is a valid time representation
+        Arguments:
+            value (str)
+        Returbs:
+            Boolean expresion"""
+        super().validate(value)
+        return re.search(self.regex, value) is not None
+
+
+class Duration(Field):
+    """Supported format : (n)y (n)m (n)d (n)h (n)m (n)s"""
+
+    def __init__(self, default="", **kwargs):
+        super().__init__(default, **kwargs)
+        self.regex = r"((\d{1,2}y\s?)?(\d{1,2}m\s?)?(\d{1,2}d\s?)?(\d{1,2}h\s?)?(\d{1,2}m\s?)?(\d{1,2}s\s?)?)|\d{1,2}"
+
+    def validate(self, value):
+        """Check whether provided value is a valid duration representation
+        Args:
+            value (str)
+        Returbs:
+            Boolean expresion"""
+        super().validate(value)
+        return re.search(self.regex, value) is not None
+
+
 class Factory(StoredFactory):
     pass
