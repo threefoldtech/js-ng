@@ -54,6 +54,7 @@ GitPython = "^3.0"
 pudb = "^2019.1"
 pycountry = "^19.8"
 docker = "^4.2.0"
+jinja2 = "^2.11.1"
 
 [tool.poetry.dev-dependencies]
 ipdb = "^0.12.1"

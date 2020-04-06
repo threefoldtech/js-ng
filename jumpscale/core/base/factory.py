@@ -141,8 +141,12 @@ class StoredFactory(Factory):
         # factories
         # TODO: better use events for factory updates
         for prop_name, factory in instance._get_factories().items():
-            factory._set_parent_name(self._get_sub_factory_location_name(name, prop_name))
-            factory._updated = partial(self._instance_sub_factory_updated, name, factory)
+            factory._set_parent_name(
+                self._get_sub_factory_location_name(name, prop_name)
+            )
+            factory._updated = partial(
+                self._instance_sub_factory_updated, name, factory
+            )
             factory._load()
 
     def new(self, name, *args, **kwargs):

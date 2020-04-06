@@ -7,7 +7,14 @@ import pytoml as toml
 from nacl.public import PrivateKey, Box
 
 
-__all__ = ["config_path", "config_root", "get_default_config", "get_config", "update_config", "Environment"]
+__all__ = [
+    "config_path",
+    "config_root",
+    "get_default_config",
+    "get_config",
+    "update_config",
+    "Environment",
+]
 
 
 config_root = os.path.expanduser(os.path.join("~/.config", "jumpscale"))
@@ -25,7 +32,9 @@ def get_default_config():
         "private_key_path": "",
         "stores": {
             "redis": {"hostname": "localhost", "port": 6379},
-            "filesystem": {"path": os.path.expanduser(os.path.join(config_root, "secureconfig"))},
+            "filesystem": {
+                "path": os.path.expanduser(os.path.join(config_root, "secureconfig"))
+            },
         },
         "store": "filesystem",
     }

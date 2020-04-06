@@ -169,7 +169,11 @@ class GedisServer:
                     actor_name = resp[0].decode()
                     method_name = resp[1].decode()
                     args = resp[2:]
-                    print("SERVICE: {} METHOD: {} ARGS : {} ".format(actor_name, method_name, args))
+                    print(
+                        "SERVICE: {} METHOD: {} ARGS : {} ".format(
+                            actor_name, method_name, args
+                        )
+                    )
                     if actor_name not in self.actors:
                         encoder.encode("actor {} isn't loaded".format(actor_name))
                     else:
