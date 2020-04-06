@@ -1,5 +1,6 @@
 from .factory import StoredFactory
-import re
+from urllib.parse import urlparse
+import ipaddress, time, re
 
 
 # TODO: validation/serialization using https://marshmallow.readthedocs.io/en/stable/ or http://alecthomas.github.io/voluptuous/docs/_build/html/index.html
@@ -118,10 +119,12 @@ class Email(Field):
         Returns:
             Boolean expresion"""
         super().validate(value)
-        return re.search(self.regex, value) is not None
+        if not re.match(self.regex, value):
+            raise ValidationError("Error in Email validation")
 
 
 class Path(Field):
+    # TODO: Validate that it is working on windows
     def __init__(self, default="", **kwargs):
         super().__init__(default, **kwargs)
         self.regex = r"^(/[^/ ]*)+/?$"
@@ -133,7 +136,8 @@ class Path(Field):
         Returns:
             Boolean expresion"""
         super().validate(value)
-        return re.search(self.regex, value) is not None
+        if not re.match(self.regex, value):
+            raise ValidationError("Error in Path validation")
 
 
 class URL(Field):
@@ -145,10 +149,12 @@ class URL(Field):
         """Check whether provided value is a valid URL representation
         Args:
             value (str)
-        Returbs:
+        Returns:
             Boolean expresion"""
         super().validate(value)
-        return re.search(self.regex, value) is not None
+        url = urlparse(value)
+        if not url.scheme or not url.netloc:
+            raise ValidationError("Error in URL validation")
 
 
 class Tel(Field):
@@ -160,13 +166,15 @@ class Tel(Field):
         """Check whether provided value is a valid Telephone number representation
         Args:
             value (str)
-        Returbs:
+        Returns:
             Boolean expresion"""
         super().validate(value)
         value = self._clean(value)
-        return re.search(self.regex, value) is not None
+        if not re.search(self.regex, value):
+            raise ValidationError("Error in Tel validation")
 
     def _clean(self, value):
+        """clean the telephone function from unwanted signs like , - ( )"""
         if value is not None:
             value = value.replace(",", "")
             value = value.replace("-", "")
@@ -182,18 +190,17 @@ class IPAddress(Field):
 
     def validate(self, value):
         """Check whether provided value is a valid IPaddress representation
+        including IPv4,IPv6 and network
         Args:
             value (str)
         Returns:
             Boolean expresion"""
-        import ipaddress
 
         super().validate(value)
         try:
-            ipaddress.IPv4Address(value)
-            return True
+            ipaddress.ip_interface(value)
         except ipaddress.AddressValueError:
-            return False
+            raise ValidationError("Error in Ipaddress validation")
 
 
 class DateTime(Field):
@@ -205,12 +212,16 @@ class DateTime(Field):
 
     def validate(self, value):
         """Check whether provided value is a valid datetime representation
-        Arguments:
+        Args:
             value (str)
-        Returbs:
+        Returns:
             Boolean expresion"""
         super().validate(value)
-        return re.search(self.regex, value) is not None
+        default_format = "%Y-%m-%d %H:%M"
+        try:
+            time.strptime(value, default_format)
+        except Exception:
+            raise ValidationError("Error in Datetime validation")
 
 
 class Date(Field):
@@ -224,10 +235,14 @@ class Date(Field):
         """Check whether provided value is a valid date representation
         Args:
             value (str)
-        Returbs:
+        Returns:
             Boolean expresion"""
         super().validate(value)
-        return re.search(self.regex, value) is not None
+        default_format = "%Y-%m-%d"
+        try:
+            time.strptime(value, default_format)
+        except Exception:
+            raise ValidationError("Error in Date validation")
 
 
 class Time(Field):
@@ -241,10 +256,14 @@ class Time(Field):
         """Check whether provided value is a valid time representation
         Arguments:
             value (str)
-        Returbs:
+        Returns:
             Boolean expresion"""
         super().validate(value)
-        return re.search(self.regex, value) is not None
+        default_format = "%H:%M"
+        try:
+            time.strptime(value, default_format)
+        except Exception:
+            raise ValidationError("Error in Time validation")
 
 
 class Duration(Field):
@@ -258,10 +277,11 @@ class Duration(Field):
         """Check whether provided value is a valid duration representation
         Args:
             value (str)
-        Returbs:
+        Returns:
             Boolean expresion"""
         super().validate(value)
-        return re.search(self.regex, value) is not None
+        if not re.match(self.regex, value):
+            raise ValidationError("Error in Duration validation")
 
 
 class Factory(StoredFactory):
