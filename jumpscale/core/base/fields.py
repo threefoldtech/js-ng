@@ -1,4 +1,7 @@
 from .factory import StoredFactory
+from urllib.parse import urlparse
+import ipaddress, time, re
+
 
 # TODO: validation/serialization using https://marshmallow.readthedocs.io/en/stable/ or http://alecthomas.github.io/voluptuous/docs/_build/html/index.html
 
@@ -8,7 +11,9 @@ class ValidationError(Exception):
 
 
 class Field:
-    def __init__(self, default=None, required=False, indexed=False, validators=None, **kwargs):
+    def __init__(
+        self, default=None, required=False, indexed=False, validators=None, **kwargs
+    ):
         self.default = default
         self.required = required
         self.indexed = indexed
@@ -26,7 +31,6 @@ class Field:
         if value is None:
             if self.required:
                 raise ValidationError("field is required")
-
         for validator in self.validators:
             validator(value)
 
@@ -105,5 +109,166 @@ class List(Field):
             self.field.validate(item)
 
 
+class Email(Field):
+    def __init__(self, default="", **kwargs):
+        super().__init__(default, **kwargs)
+        self.regex = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+
+    def validate(self, value):
+        """Check whether provided value is a valid email representation
+        Args:
+            value (str)
+        Returns:
+            Boolean expresion"""
+        super().validate(value)
+        if not re.match(self.regex, value):
+            raise ValidationError(f"{value} is not a valid Email address")
+
+
+class Path(Field):
+    # TODO: Validate that it is working on windows
+    def __init__(self, default="", **kwargs):
+        super().__init__(default, **kwargs)
+        self.regex = r"^(/[^/ ]*)+/?$"
+
+    def validate(self, value):
+        """Check whether provided value is a valid path representation
+        Args:
+            value (str)
+        Returns:
+            Boolean expresion"""
+        super().validate(value)
+        if not re.match(self.regex, value):
+            raise ValidationError(f"{value} is not a valid Path")
+
+
+class URL(Field):
+    def __init__(self, default="", **kwargs):
+        super().__init__(default, **kwargs)
+        self.regex = r"^(https?|ftp)://[^\s/$.?#].[^\s]*$"
+
+    def validate(self, value):
+        """Check whether provided value is a valid URL representation
+        Args:
+            value (str)
+        Returns:
+            Boolean expresion"""
+        super().validate(value)
+        url = urlparse(value)
+        if not url.scheme or not url.netloc:
+            raise ValidationError(f"{value} is not a valid URL address")
+
+
+class Tel(Field):
+    def __init__(self, default="", **kwargs):
+        default = self._clean(default)
+        super().__init__(default, **kwargs)
+        self.regex = r"^\+?[0-9]{6,15}(?:x[0-9]+)?$"
+
+    def validate(self, value):
+        """Check whether provided value is a valid Telephone number representation
+        Args:
+            value (str)
+        Returns:
+            Boolean expresion"""
+        super().validate(value)
+        value = self._clean(value)
+        if not re.search(self.regex, value):
+            raise ValidationError(f"{value} is not a valid Telephone")
+
+    def _clean(self, value):
+        """clean the telephone function from unwanted signs like , - ( )"""
+        if value is not None:
+            value = value.replace(",", "")
+            value = value.replace("-", "")
+            value = value.replace("(", "")
+            value = value.replace(")", "")
+            value = value.replace(" ", "")
+            return value
+
+
+class IPAddress(Field):
+    def __init__(self, default="", **kwargs):
+        super().__init__(default, **kwargs)
+
+    def validate(self, value):
+        """Check whether provided value is a valid IPaddress representation
+        including IPv4,IPv6 and network
+        Args:
+            value (str)
+        Returns:
+            Boolean expresion"""
+
+        super().validate(value)
+        try:
+            ipaddress.ip_interface(value)
+        except Exception:
+            raise ValidationError(f"{value} is not a valid IP address")
+
+
+class DateTime(Field):
+    """Supported format: yyyy-mm-dd hh:mm"""
+
+    def __init__(self, default="", **kwargs):
+        super().__init__(default, **kwargs)
+        self.regex = r"^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1]) (2[0-3]|[01][0-9]):[0-5][0-9]$"
+
+    def validate(self, value):
+        """Check whether provided value is a valid datetime representation
+        Args:
+            value (str)
+        Returns:
+            Boolean expresion"""
+        super().validate(value)
+        default_format = "%Y-%m-%d %H:%M"
+        try:
+            time.strptime(value, default_format)
+        except Exception:
+            raise ValidationError(f"{value} is not a valid Datetime")
+
+
+class Date(Field):
+    """Support yyyy-mm-dd format"""
+
+    def __init__(self, default="", **kwargs):
+        super().__init__(default, **kwargs)
+        self.regex = r"[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])"
+
+    def validate(self, value):
+        """Check whether provided value is a valid date representation
+        Args:
+            value (str)
+        Returns:
+            Boolean expresion"""
+        super().validate(value)
+        default_format = "%Y-%m-%d"
+        try:
+            time.strptime(value, default_format)
+        except Exception:
+            raise ValidationError(f"{value} is not a valid Date")
+
+
+class Time(Field):
+    """Supported format : hh:mm"""
+
+    def __init__(self, default="", **kwargs):
+        super().__init__(default, **kwargs)
+        self.regex = r"(2[0-3]|[01][0-9]):[0-5][0-9]"
+
+    def validate(self, value):
+        """Check whether provided value is a valid time representation
+        Arguments:
+            value (str)
+        Returns:
+            Boolean expresion"""
+        super().validate(value)
+        default_format = "%H:%M"
+        try:
+            time.strptime(value, default_format)
+        except Exception:
+            raise ValidationError(f"{value} is not a valid Time")
+
+
+# TODO: add duration field
 class Factory(StoredFactory):
     pass
