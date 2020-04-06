@@ -11,7 +11,9 @@ class ValidationError(Exception):
 
 
 class Field:
-    def __init__(self, default=None, required=False, indexed=False, validators=None, **kwargs):
+    def __init__(
+        self, default=None, required=False, indexed=False, validators=None, **kwargs
+    ):
         self.default = default
         self.required = required
         self.indexed = indexed
@@ -120,7 +122,7 @@ class Email(Field):
             Boolean expresion"""
         super().validate(value)
         if not re.match(self.regex, value):
-            raise ValidationError("Error in Email validation")
+            raise ValidationError(f"{value} is not a valid Email address")
 
 
 class Path(Field):
@@ -137,7 +139,7 @@ class Path(Field):
             Boolean expresion"""
         super().validate(value)
         if not re.match(self.regex, value):
-            raise ValidationError("Error in Path validation")
+            raise ValidationError(f"{value} is not a valid Path")
 
 
 class URL(Field):
@@ -154,11 +156,12 @@ class URL(Field):
         super().validate(value)
         url = urlparse(value)
         if not url.scheme or not url.netloc:
-            raise ValidationError("Error in URL validation")
+            raise ValidationError(f"{value} is not a valid URL address")
 
 
 class Tel(Field):
     def __init__(self, default="", **kwargs):
+        default = self._clean(default)
         super().__init__(default, **kwargs)
         self.regex = r"^\+?[0-9]{6,15}(?:x[0-9]+)?$"
 
@@ -171,7 +174,7 @@ class Tel(Field):
         super().validate(value)
         value = self._clean(value)
         if not re.search(self.regex, value):
-            raise ValidationError("Error in Tel validation")
+            raise ValidationError(f"{value} is not a valid Telephone")
 
     def _clean(self, value):
         """clean the telephone function from unwanted signs like , - ( )"""
@@ -199,8 +202,8 @@ class IPAddress(Field):
         super().validate(value)
         try:
             ipaddress.ip_interface(value)
-        except ipaddress.AddressValueError:
-            raise ValidationError("Error in Ipaddress validation")
+        except Exception:
+            raise ValidationError(f"{value} is not a valid IP address")
 
 
 class DateTime(Field):
@@ -221,7 +224,7 @@ class DateTime(Field):
         try:
             time.strptime(value, default_format)
         except Exception:
-            raise ValidationError("Error in Datetime validation")
+            raise ValidationError(f"{value} is not a valid Datetime")
 
 
 class Date(Field):
@@ -242,7 +245,7 @@ class Date(Field):
         try:
             time.strptime(value, default_format)
         except Exception:
-            raise ValidationError("Error in Date validation")
+            raise ValidationError(f"{value} is not a valid Date")
 
 
 class Time(Field):
@@ -263,26 +266,9 @@ class Time(Field):
         try:
             time.strptime(value, default_format)
         except Exception:
-            raise ValidationError("Error in Time validation")
+            raise ValidationError(f"{value} is not a valid Time")
 
 
-class Duration(Field):
-    """Supported format : (n)y (n)m (n)d (n)h (n)m (n)s"""
-
-    def __init__(self, default="", **kwargs):
-        super().__init__(default, **kwargs)
-        self.regex = r"((\d{1,2}y\s?)?(\d{1,2}m\s?)?(\d{1,2}d\s?)?(\d{1,2}h\s?)?(\d{1,2}m\s?)?(\d{1,2}s\s?)?)|\d{1,2}"
-
-    def validate(self, value):
-        """Check whether provided value is a valid duration representation
-        Args:
-            value (str)
-        Returns:
-            Boolean expresion"""
-        super().validate(value)
-        if not re.match(self.regex, value):
-            raise ValidationError("Error in Duration validation")
-
-
+# TODO: add duration field
 class Factory(StoredFactory):
     pass
