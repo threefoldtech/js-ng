@@ -35,6 +35,12 @@ open the shell using `poetry run jsng`
 #### In the virtual env
 just type `jsng`
 
+**Note**: if you have any problems with setuptools, just try to upgrade it before starting js-ng.
+
+```bash
+python3 -m pip install setuptools -U
+```
+
 ## Running tests
 - `make tests`
 
