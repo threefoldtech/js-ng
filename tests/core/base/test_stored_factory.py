@@ -19,8 +19,19 @@ class Wallet(Base):
     addresses = fields.Factory(Address)
 
 
+class Permission(Base):
+    is_admin = fields.Boolean()
+
+
+class User(Base):
+    emails = fields.List(fields.String())
+    permissions = fields.List(fields.Object(Permission))
+    custom_config = fields.Typed(dict)
+
+
 class Client(Base):
     wallets = fields.Factory(Wallet)
+    users = fields.Factory(User)
 
 
 class TestStoredFactory(unittest.TestCase):
@@ -28,13 +39,13 @@ class TestStoredFactory(unittest.TestCase):
         self.factory = StoredFactory(Client)
 
     def test_create_stored_factory(self):
-        cl = self.factory.new("client")
+        cl = self.factory.get("client")
         w = cl.wallets.get("aa")
         self.assertEqual(cl.wallets.count, 1)
 
-        addr1 = w.addresses.new("mine")
+        addr1 = w.addresses.get("mine")
         addr1.x = 456
-        addr2 = w.addresses.new("another")
+        addr2 = w.addresses.get("another")
         addr2.x = 680
         self.assertEqual(w.addresses.count, 2)
         w.addresses.delete("another")
@@ -47,6 +58,31 @@ class TestStoredFactory(unittest.TestCase):
         # create another instance
         new_cl = Client()
         self.assertEqual(new_cl.wallets.count, 0)
+
+    def test_create_with_list_field(self):
+        cl = self.factory.get("test_list")
+
+        # test saving
+        user = cl.users.get("auser")
+        emails = ["a@b.com"]
+        perm1 = Permission()
+        perm1.is_admin = True
+        permissions = [perm1]
+
+        user.emails = emails
+        user.permissions = permissions
+        user.save()
+        cl.save()
+
+        # reset-factory for now, need to always get from store
+        self.factory = StoredFactory(Client)
+        ret_cl = self.factory.get("test_list")
+
+        self.assertNotEqual(cl, ret_cl)
+        user = ret_cl.users.get("auser")
+
+        self.assertEqual(user.emails, emails)
+        self.assertEqual(user.emails, emails)
 
     def tearDown(self):
         for name in self.factory.store.list_all():
