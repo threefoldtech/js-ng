@@ -83,13 +83,16 @@ class Object(Field):
             self.default = self.type(**self.type_kwargs)
 
     def validate(self, value):
-        """validate objet of Base
+        """validate Base objects
 
         Args:
             value (Base): object
         """
         super().validate(value)
-        value.validate()
+        try:
+            value.validate()
+        except AttributeError:
+            raise ValidationError("object of Base must have validate()")
 
 
 class List(Field):

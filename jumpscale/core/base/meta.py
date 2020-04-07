@@ -2,20 +2,20 @@ from collections import namedtuple
 from types import SimpleNamespace
 
 from .factory import Factory, DuplicateError
-from .fields import Field, Secret, Object, ValidationError
+from .fields import Field, List, Object, Secret, ValidationError
 
 
 def get_field_property(name, field):
     inner_name = f"__{name}"
 
     def getter(self):
-        return getattr(self, inner_name)
+        if hasattr(self, inner_name):
+            return getattr(self, inner_name)
+        return field.default
 
     def setter(self, value):
-        if hasattr(value, "validate"):
-            value.validate()
-        else:
-            field.validate(value)
+        field.validate(value)
+
         setattr(self, inner_name, value)
         self._data_updated(name, value)
 
@@ -69,11 +69,11 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
     def _get_fields(self):
         return {}
 
-    def _get_embedded_objects(self):
-        return [getattr(self, name) for name, field in self._get_fields().items() if isinstance(field, Object)]
-
     def _get_factory_info(self):
         return []
+
+    def _get_embedded_objects(self):
+        return [getattr(self, name) for name, field in self._get_fields().items() if isinstance(field, Object)]
 
     def __init__(self, parent=None):
         self.parent = parent
@@ -100,6 +100,8 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
                 data[f"__{name}"] = value
             elif isinstance(field, Object):
                 data[name] = value._get_data()
+            elif isinstance(field, List) and isinstance(field.field, Object):
+                data[name] = [obj._get_data() for obj in value]
             else:
                 data[name] = value
 
@@ -115,6 +117,13 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
                         obj = field.type()
                         obj._set_data(value)
                         value = obj
+                    if isinstance(value, list) and isinstance(field.field, Object):
+                        value_as_objects = []
+                        for item in value:
+                            obj = field.field.type()
+                            obj._set_data(item)
+                            value_as_objects.append(obj)
+                        value = value_as_objects
                     setattr(self, f"__{name}", value)
                 except ValidationError:
                     pass
