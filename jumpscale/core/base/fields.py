@@ -11,9 +11,7 @@ class ValidationError(Exception):
 
 
 class Field:
-    def __init__(
-        self, default=None, required=False, indexed=False, validators=None, **kwargs
-    ):
+    def __init__(self, default=None, required=False, indexed=False, validators=None, **kwargs):
         self.default = default
         self.required = required
         self.indexed = indexed
@@ -253,7 +251,7 @@ class Time(Field):
 
     def __init__(self, default="", **kwargs):
         super().__init__(default, **kwargs)
-        self.regex = r"(2[0-3]|[01][0-9]):[0-5][0-9]"
+        self.default_format = "%H:%M"
 
     def validate(self, value):
         """Check whether provided value is a valid time representation
@@ -262,11 +260,32 @@ class Time(Field):
         Returns:
             Boolean expresion"""
         super().validate(value)
-        default_format = "%H:%M"
         try:
-            time.strptime(value, default_format)
+            time.strptime(value, self.default_format)
         except Exception:
             raise ValidationError(f"{value} is not a valid Time")
+
+    def add_hours(self, hours):
+        self._hours_operations("add", hours)
+
+    def subtract_hours(self, hours):
+        self._hours_operations("sub", hours)
+
+    def _hours_operations(self, operation, hours):
+        stored_time = time.strptime(self.default, self.default_format)
+        # Get index of hour in stored_time tuple to replace its value
+        hour_index = stored_time.index(int(self.default.split(":")[0]))
+        tm_hours = stored_time.tm_hour
+
+        # apply the operation
+        if operation == "add":
+            tm_hours += hours
+        elif operation == "sub":
+            tm_hours -= hours
+        temp_time = stored_time[:hour_index] + (tm_hours,) + stored_time[hour_index + 1 :]
+
+        # Assigning the new time
+        self.default = time.strftime(self.default_format, temp_time)
 
 
 # TODO: add duration field

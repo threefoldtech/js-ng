@@ -23,6 +23,19 @@ class Client(Base):
     wallets = Factory(Wallet)
 
 
+class Student(Base):
+    ID = fields.Integer()
+    name = fields.String()
+    email = fields.Email()
+    tel = fields.Tel()
+    web = fields.URL()
+    birthday = fields.Date()
+
+
+class StudentClient(Base):
+    students = Factory(Student)
+
+
 class TestBaseFactory(unittest.TestCase):
     def test_create_with_different_instances(self):
         cl = Client()
@@ -45,3 +58,19 @@ class TestBaseFactory(unittest.TestCase):
         new_cl = Client()
         self.assertEqual(new_cl.wallets.count, 0)
 
+    def test_create_instance_with_different_fields(self):
+        cl = StudentClient()
+        st = cl.students.new("test_student")
+        self.assertEqual(cl.students.count, 1)
+
+        st.name = "sam"
+        st.email = "sam@gmail.com"
+        st.tel = "0122222222"
+        st.web = "https://www.sam.com"
+        st.birthday = "1990-12-03"
+
+        self.assertEqual(st.name, "sam")
+        self.assertEqual(st.email, "sam@gmail.com")
+        self.assertEqual(st.tel, "0122222222")
+        self.assertEqual(st.web, "https://www.sam.com")
+        self.assertEqual(st.birthday, "1990-12-03")
