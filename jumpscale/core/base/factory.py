@@ -12,8 +12,9 @@ class DuplicateError(Exception):
 
 
 class Factory:
-    def __init__(self, type_):
+    def __init__(self, type_, parent=None):
         self.type = type_
+        self.parent = parent
         self.__count = 0
 
     def new(self, name, *args, **kwargs):
@@ -75,6 +76,10 @@ class StoredFactory(Factory):
 
     def _set_parent_name(self, name):
         self.__parent_name = name
+
+    @property
+    def parent_name(self):
+        return self.__parent_name
 
     @property
     def store(self):
@@ -141,18 +146,17 @@ class StoredFactory(Factory):
         # factories
         # TODO: better use events for factory updates
         for prop_name, factory in instance._get_factories().items():
-            factory._set_parent_name(
-                self._get_sub_factory_location_name(name, prop_name)
-            )
-            factory._updated = partial(
-                self._instance_sub_factory_updated, name, factory
-            )
+            factory._set_parent_name(self._get_sub_factory_location_name(name, prop_name))
+            factory.parent = instance
+            factory._updated = partial(self._instance_sub_factory_updated, name, factory)
             factory._load()
 
     def new(self, name, *args, **kwargs):
         instance = super().new(name, *args, **kwargs)
         self._setup_data_handlers(name, instance)
         self._setup_sub_factories(name, instance)
+        if self.parent:
+            instance.parent = self.parent
         return instance
 
     def _load(self):

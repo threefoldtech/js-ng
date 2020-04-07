@@ -76,6 +76,8 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
         return []
 
     def __init__(self):
+        self.parent = None
+
         for name, field in self._get_fields().items():
             setattr(self, f"__{name}", field.default)
 
