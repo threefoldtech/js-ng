@@ -25,6 +25,7 @@ class Factory:
             self.find(name)
         except AttributeError:
             instance = self.type(*args, **kwargs)
+            instance.parent = self.parent
             setattr(self, name, instance)
 
             self.count += 1
@@ -155,8 +156,6 @@ class StoredFactory(Factory):
         instance = super().new(name, *args, **kwargs)
         self._setup_data_handlers(name, instance)
         self._setup_sub_factories(name, instance)
-        if self.parent:
-            instance.parent = self.parent
         return instance
 
     def _load(self):

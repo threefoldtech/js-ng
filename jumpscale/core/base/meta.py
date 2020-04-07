@@ -75,8 +75,8 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
     def _get_factory_info(self):
         return []
 
-    def __init__(self):
-        self.parent = None
+    def __init__(self, parent=None):
+        self.parent = parent
 
         for name, field in self._get_fields().items():
             setattr(self, f"__{name}", field.default)
