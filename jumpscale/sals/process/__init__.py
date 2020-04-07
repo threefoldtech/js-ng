@@ -9,10 +9,7 @@ import sys
 # import queue
 import random
 
-try:
-    import psutil
-except:
-    pass
+import psutil
 import subprocess
 import signal
 from subprocess import Popen
@@ -24,145 +21,145 @@ from fcntl import fcntl, F_GETFL, F_SETFL
 from os import O_NONBLOCK, read
 
 
-def executeWithoutPipe(command, die=True, printCommandToStdout=False):
-    """
-
-    Execute command without opening pipes, returns only the exitcode
-    This is platform independent
-    @param command: command to execute
-    @param die: boolean to die if got non zero exitcode
-    @param printCommandToStdout: boolean to show/hide output to stdout
-    @param showout: Deprecated. Use 'printCommandToStdout' instead.
-    @rtype: integer represents the exitcode
-    if exitcode is not zero then the executed command returned with errors
-    """
-
-    exitcode = os.system(command)
-
-    if exitcode != 0 and die:
-        
-        raise j.exceptions.RuntimeError("Error during execution!\nCommand: %s\nExitcode: %s" % (command, exitcode))
-
-    return exitcode
-
 def execute(
     cmd,
-    showout=True,
-    useShell=True,
+    showout=False,
     cwd=None,
+    shell="/bin/bash",
     timeout=600,
-    die=True,
-    async_=False,
+    asynchronous=False,
     env=None,
-    interactive=False,
-    replace=False,
-    args={},
+    replace_env=False,
+    die=False,
 ):
-    """
+    """[summary]
 
-    :param command:
-    :param showout: show the output while executing
-    :param useShell: use a shell when executing, std True
-    :param cwd: directory to go to when executing
-    :param timeout: timout in sec, std 10 min
-    :param die: die when not ok
-    :param async_: return the pipe, don't wait
-    :param env: is arguments which will be replaced om the command core.text_replace(... feature)
-    :return: (rc,out,err)
+    Arguments:
+        cmd {str} -- command to be executed
+
+    Keyword Arguments:
+        showout {bool} -- show stdout of the command (default: {False})
+        cwd {[type]} -- specify a working directory for the command (default: {None})
+        shell {str} -- specify a shell to execute the command (default: {"/bin/bash"})
+        timeout {int} -- timeout before kill the process (default: {600})
+        asynchronous {bool} -- execute in asyncronous mode or not (default: {False})
+        env {dict} -- add environment variables here (default: {{}})
+        replace_env {bool} -- replace entire environment with env (default: {False})
+        die {bool} -- die if command failed (default: {False})
+
+
+    Returns:
+        [tuple] -- (rc, out, err)
     """
     return j.core.executors.run_local(
         cmd=cmd,
+        hide=not showout,
+        cwd=cwd,
+        shell=shell,
         timeout=timeout,
-        env=env,
+        asynchronous=asynchronous,
+        env=env or {},
+        replace_env=replace_env,
+        warn=not die,
     )
 
 
-def executeInteractive(command, die=True):
-    exitcode = os.system(command)
-    if exitcode != 0 and die:
-        raise j.exceptions.Base("Could not execute %s" % command)
-    return exitcode
-
-def isPidAlive(pid):
-    """Checks whether this pid is alive.
-        For unix, a signal is sent to check that the process is alive.
-        For windows, the process information is retrieved and it is double checked that the process is python.exe
-        or pythonw.exe
-    """
+def is_alive(pid):
+    """Checks if pid is Running
     
-    if j.data.platform.is_linux():
-        # Unix strategy: send signal SIGCONT to process pid
-        # Achilles heal: another process which happens to have the same pid could be running
-        # and incorrectly considered as this process
-        import signal
-
-        try:
-            os.kill(pid, 0)
-        except OSError:
-            return False
-
-        return True
-
-
-
-def checkInstalled(cmdname):
-    """
-    @param cmdname is cmd to check e.g. curl
-    """
-    return j.core.tools.cmd_installed(cmdname)
-
-def kill(pid, sig=None):
-    """
-    Kill a process with a signal
-    @param pid: pid of the process to kill
-    @param sig: signal. If no signal is specified signal.SIGKILL is used
+    Arguments:
+        pid {int} -- pid of the process to be checked
+    
+    Returns:
+        [bool] -- True if process is running
     """
     pid = int(pid)
+    return psutil.pid_exists(pid)
+
+
+def is_installed(cmd):
+    """[summary]
+    Checks if a specific command is available on system e.g. curl
+    Arguments:
+        cmd {str} -- command to be checked
     
-    if j.data.platform.is_linux():
-        try:
-            if sig is None:
-                sig = signal.SIGKILL
-
-            os.kill(pid, sig)
-
-        except OSError as e:
-            raise j.exceptions.RuntimeError("Could not kill process with id %s.\n%s" % (pid, e))
-
-
-def psfind(name):
-    rc, out, err = execute("ps ax | grep %s" % name, showout=False)
-    for line in out.split("\n"):
-        if line.strip() == "":
-            continue
-        if "grep" in line:
-            continue
+    Returns:
+        [bool] -- True if command is installed
+    """
+    rc, _, _ = execute("which %s" % cmd, die=False)
+    if rc:
+        return False
+    else:
         return True
+
+
+def kill(pid, sig=signal.SIGTERM.value):
+    """Kill a process with a signal
+    
+    Arguments:
+        pid {int} -- pid of the process to be killed
+    
+    Keyword Arguments:
+        sig {int]} -- which signal you want to kill the process with (default: {signal.SIGTERM.value})
+    
+    Raises:
+        j.exceptions.RuntimeError: in case killing process failed
+    
+    Returns:
+        [type] -- [description]
+    """
+    pid = int(pid)
+    sig = int(sig)
+    proc = psutil.Process(pid)
+    try:
+        proc.send_signal(sig)
+        return True
+    except Exception as e:
+        raise j.exceptions.RuntimeError(
+            "Could not kill process with id %s.\n%s" % (pid, e)
+        )
+
+
+def ps_find(name):
+    """find process by name
+    
+    Arguments:
+        name {str} -- process name
+    
+    Returns:
+        [bool] -- True if process is found
+    """
+    for proc in psutil.process_iter():
+        if proc.name() == name:
+            return True
     return False
 
-def killall(name):
-    rc, out, err = execute("ps ax | grep %s" % name, showout=False)
-    for line in out.split("\n"):
-        # print("L:%s" % line)
-        if line.strip() == "":
-            continue
-        if "grep" in line:
-            continue
-        line = line.strip()
-        pid = line.split(" ")[0]
-        
-        kill(pid)
-    if psfind(name):
-        raise j.exceptions.Base("Could not kill:%s, is still, there check if its not autorestarting." % name)
 
-def getPidsByFilterSortable(filterstr, sortkey=None):
+def kill_all(name, sig=signal.SIGKILL):
+    """Kill all processes with a given name
+    
+    Arguments:
+        name {str} -- process name
+    
+    Keyword Arguments:
+        sig {int} -- signal number (default: {signal.SIGKILL})
     """
-    Get pids of process by a filter string and optionally sort by sortkey
+    sig = int(sig)
+    for proc in psutil.process_iter():
+        if proc.name() == name:
+            kill(proc.pid, sig)
 
-    @param filterstr string: filter string.
-    @param sortkey   string: sort key for ps command
-    sortkey can be one of the following:
-        %cpu           cpu utilization of the process in
+
+def get_pids_filtered_sorted(filterstr, sortkey=None):
+    """Get pids of process by a filter string and optionally sort by sortkey
+    
+    Arguments:
+        filterstr {[str]} -- filter string.
+    
+    Keyword Arguments:
+        sortkey {[str]} -- sort key for ps command (default: {None})
+        sortkey can be one of the following:
+            %cpu           cpu utilization of the process in
         %mem           ratio of the process's resident set size  to the physical memory on the machine, expressed as a percentage.
         cputime        cumulative CPU time, "[DD-]hh:mm:ss" format.  (alias time).
         egid           effective group ID number of the process as a decimal integer.  (alias gid).
@@ -175,10 +172,14 @@ def getPidsByFilterSortable(filterstr, sortkey=None):
         psr            processor that process is currently assigned to.
         start_time     starting time or date of the process.
 
-
+    
+    Returns:
+        [list(int)] -- processes pids
     """
     if sortkey is not None:
-        cmd = "ps aux --sort={sortkey} | grep '{filterstr}'".format(filterstr=filterstr, sortkey=sortkey)
+        cmd = "ps aux --sort={sortkey} | grep '{filterstr}'".format(
+            filterstr=filterstr, sortkey=sortkey
+        )
     else:
         cmd = "ps ax | grep '{filterstr}'".format(filterstr=filterstr)
     rcode, out, err = execute(cmd)
@@ -196,7 +197,19 @@ def getPidsByFilterSortable(filterstr, sortkey=None):
                     found.append(int(line.split(" ")[0]))
     return found
 
-def process_pids_get_by_filter(filterstr, excludes=None):
+
+def get_filtered_pids(filterstr, excludes=None):
+    """Get pids filtered by filterstr and execludes
+    
+    Arguments:
+        filterstr {str} -- filter string.
+    
+    Keyword Arguments:
+        excludes {list(str)} -- execlude list (default: {None})
+    
+    Returns:
+        [list(int)] -- pids
+    """
     excludes = excludes or []
     cmd = "ps ax | grep '%s'" % filterstr
     rcode, out, err = j.core.executors.run_local(cmd)
@@ -221,85 +234,116 @@ def process_pids_get_by_filter(filterstr, excludes=None):
                     found.append(int(line.split(" ")[0]))
     return found
 
-def getPidsByFilter(filterstr="", regex_list=None, excludes=None):
-    regex_list = regex_list or []
+
+def get_pids_filtered_by_regex(regex_list, excludes=None):
+    """get pids of a process filtered by Regex list
+    
+    Arguments:
+        regex_list {list(str)} -- list of regex expressions
+    
+    Keyword Arguments:
+        excludes {list(str)} -- list of excludes (default: {None})
+    
+    Returns:
+        [list(int)] -- list of pids
+    """
     excludes = excludes or []
-    if not regex_list:
-        return process_pids_get_by_filter(filterstr, excludes=excludes)
-    elif filterstr == "":
-        res = []
-        for process in psutil.process_iter():
-            try:
-                cmdline = process.cmdline()
-            except psutil.NoSuchProcess:
-                cmdline = None
-            except psutil.AccessDenied:
-                cmdline = None
-            if cmdline:
-                name = " ".join(cmdline)
-                for r in regex_list:
-                    if name.strip() != "":
-                        if j.data.regex.match(r, name):
-                            res.append(process.pid)
-        return res
-    else:
-        raise j.exceptions.Base("filterstr or regexes")
+    res = []
+    for process in psutil.process_iter():
+        try:
+            cmdline = process.cmdline()
+        except psutil.NoSuchProcess:
+            cmdline = None
+        except psutil.AccessDenied:
+            cmdline = None
+        if cmdline:
+            name = " ".join(cmdline)
+            for r in regex_list:
+                if name.strip() != "":
+                    if j.data.regex.match(r, name):
+                        res.append(process.pid)
+    return res
 
-def checkstart(cmd, filterstr, nrtimes=1, retry=1):
-    """
-    @param cmd is which command to execute to start e.g. a daemon
-    @param filterstr is what to check on if its running
-    @param nrtimes is how many processes need to run
-    """
 
-    found = getPidsByFilter(filterstr)
+def check_start(cmd, filterstr, nrinstances=1, retry=1):
+    """Run command and check if it is started based on filterstr
+    
+    Arguments:
+        cmd {str} -- command to be executed
+        filterstr {str} -- filter string
+    
+    Keyword Arguments:
+        instances {int} -- number of needed instances (default: {1})
+        retry {int} -- number of retries (default: {1})
+    
+    Raises:
+        j.exceptions.RuntimeError: will be raised if we didn't reach number of required instances
+    """
+    found = get_filtered_pids(filterstr)
     for i in range(retry):
-        if len(found) == nrtimes:
+        if len(found) == nrinstances:
             return
         # print "START:%s"%cmd
         execute(cmd)
         time.sleep(1)
-        found = getPidsByFilter(filterstr)
-    if len(found) != nrtimes:
+    found = get_filtered_pids(filterstr)
+    if len(found) != nrinstances:
         raise j.exceptions.RuntimeError(
-            "could not start %s, found %s nr of instances. Needed %s." % (cmd, len(found), nrtimes)
+            "could not start %s, found %s nr of instances. Needed %s."
+            % (cmd, len(found), nrinstances)
         )
 
-def checkstop(cmd, filterstr, retry=1, nrinstances=0):
-    """
-    @param cmd is which command to execute to start e.g. a daemon
-    @param filterstr is what to check on if its running
-    @param nrtimes is how many processes need to run
+
+def check_stop(cmd, filterstr, retry=1, nrinstances=0):
+    """Executes a stop command and check if it is already stopped based on filterstr
+    
+    Arguments:
+        cmd {str} -- command to be executed
+        filterstr {str} -- filter string
+    
+    Keyword Arguments:
+        retry {int} -- number of retries (default: {1})
+        nrinstances {int} -- number of instances after stop (default: {0})
+    
+    Raises:
+        j.exceptions.RuntimeError: if nr of instances not matched
     """
 
-    found = getPidsByFilter(filterstr)
+    found = get_filtered_pids(filterstr)
     for i in range(retry):
         if len(found) == nrinstances:
             return
         # print "START:%s"%cmd
         execute(cmd, die=False)
         time.sleep(1)
-        found = getPidsByFilter(filterstr)
+        found = get_filtered_pids(filterstr)
         for item in found:
             kill(int(item), 9)
-        found = getPidsByFilter(filterstr)
+        found = get_filtered_pids(filterstr)
 
     if len(found) != 0:
-        raise j.exceptions.RuntimeError("could not stop %s, found %s nr of instances." % (cmd, len(found)))
+        raise j.exceptions.RuntimeError(
+            "could not stop %s, found %s nr of instances." % (cmd, len(found))
+        )
 
-def getProcessPid(process, match_predicate=None):
+
+def get_pids(process, match_predicate=None):
     """Get process ID(s) for a given process
     
-    :param process: process to look for
-    :type process: str
-    :param match_predicate: function that does matching between 
+    Arguments:
+        process {str} -- process name
+    
+    Keyword Arguments:
+        match_predicate {callable} -- function that does matching between 
         found processes and the targested process, the function should accept 
-        two arguments and return a boolean, defaults to None
-    :type match_predicate: callable, optional
-    :raises j.exceptions.RuntimeError: If process is None
-    :raises NotImplementedError: If called on a non-unix system
-    :return: list of matching process IDs
-    :rtype: list
+        two arguments and return a boolean, defaults to None (default: {None})
+    
+    Raises:
+        j.exceptions.RuntimeError: [description]
+        j.exceptions.NotImplemented: [description]
+    
+    Returns:
+        [list(int)] -- list of pids
     """
     # default match predicate
     # why aren't we using psutil ??
@@ -338,85 +382,124 @@ def getProcessPid(process, match_predicate=None):
     else:
         raise j.exceptions.NotImplemented("getProcessPid is only implemented for unix")
 
-def getMyProcessObject():
-    return getProcessObject(os.getpid())
 
-def getProcessObject(pid, die=True):
+def get_my_process():
+    """get process object of current process
+    
+    Returns:
+        [psutil.Process] -- process object
+    """
+    return get_process_object(os.getpid())
 
-    for process in psutil.process_iter():
-        if process.pid == pid:
-            return process
-    if die:
-        raise j.exceptions.NotFound("Could not find process with pid:%s" % pid)
 
-def getProcessPidsFromUser(user):
+def get_process_object(pid, die=True):
+    """Get Process object of a process id
+    
+    Arguments:
+        pid {int} -- pid of the process
+    
+    Keyword Arguments:
+        die {bool} -- die if process not found (default: {True})
+    
+    Raises:
+        psutil.NoSuchProcess: if process not found and die = True
+    
+    Returns:
+        [psutil.Process] -- process object
+    """
+    try:
+        return psutil.Process(pid)
+    except psutil.NoSuchProcess as e:
+        if die:
+            raise e
+        else:
+            return None
 
+
+def get_user_processes(user):
+    """Get all process for a specific user
+    
+    Arguments:
+        user {str} -- username
+    
+    Returns:
+        [list(int)] -- list of process pids for that user
+    """
     result = []
     for process in psutil.process_iter():
         if process.username == user:
             result.append(process.pid)
     return result
 
-def killUserProcesses(user):
-    for pid in getProcessPidsFromUser(user):
+
+def kill_user_processes(user):
+    """Kill all processes for a specific user
+    
+    Arguments:
+        user {str} -- username
+    """
+    for pid in get_user_processes(user):
         kill(pid)
 
-def getSimularProcesses():
 
-    myprocess = getMyProcessObject()
+def get_similar_processes():
+    """Gets similar processes to current process
+    
+    Returns:
+        [list(psutil.Process)] -- list of similar process
+    """
+    myprocess = get_my_process()
     result = []
     for item in psutil.process_iter():
         try:
-            if item.cmdline == myprocess.cmdline:
+            if item.cmdline() == myprocess.cmdline():
                 result.append(item)
         except psutil.NoSuchProcess:
             pass
     return result
 
-def checkProcessRunning(process, min=1):
-    """
-    Check if a certain process is running on the system.
-    you can specify minimal running processes needed.
-    @param process: String with the name of the process we
-        are trying to check
-    @param min: (int) minimal threads that should run.
-    @return True if ok
-    """
+
+def check_running(process, min=1):
+    """Checks if a process is running
     
+    Arguments:
+        process {str} -- process name to be checked
+    
+    Keyword Arguments:
+        min {int} -- min number of instances required to be running (default: {1})
+    
+    Returns:
+        [bool] -- true if process is running
+    """
     if j.data.platform.is_linux():
-        pids = getProcessPid(process)
+        pids = get_pids(process)
         if len(pids) >= min:
             return True
         return False
 
-def checkProcessForPid(pid, process):
-    """
-    Check whether a given pid actually does belong to a given process name.
-    @param pid: (int) the pid to check
-    @param process: (str) the process that should have the pid
-    @return status: (int) 0 when ok, 1 when not ok.
-    """
+
+def check_process_for_pid(pid, process_name):
+    """Check whether a given pid actually does belong to a given process name.
     
-    if j.data.platform.is_linux():
-        command = "ps -p %i" % pid
-        (exitcode, output, err) = execute(command, die=False, showout=False)
-        i = 0
-        for line in output.splitlines():
-            match = re.match(".{23}.*(\s|\/)%s(\s|$).*" % process, line)
-            if match:
-                i = i + 1
-        if i >= 1:
-            return 0
-        return 1
+    Arguments:
+        pid {int} -- process pid
+        process {str} -- process name
+    
+    Returns:
+        [bool] -- True if process_name matched process name of the pid
+    """
+    pid = int(pid)
+    proc = psutil.Process(pid)
+    return proc.name() == process_name
 
 
-def setEnvironmentVariable(varnames, varvalues):
+def set_env_var(varnames, varvalues):
     """Set the value of the environment variables C{varnames}. Existing variable are overwritten
-
-    @param varnames: A list of the names of all the environment variables to set
-    @type varnames: list<string>
-    @param varvalues: A list of all values for the environment variables
-    @type varvalues: list<string>
+    
+    Arguments:
+        varnames {list(str)} --  A list of the names of all the environment variables to set
+        varvalues {list(str)} -- A list of all values for the environment variables
+    
     """
     try:
         for i in range(len(varnames)):
@@ -424,68 +507,81 @@ def setEnvironmentVariable(varnames, varvalues):
     except Exception as e:
         raise j.exceptions.RuntimeError(e)
 
-def getPidsByPort(port):
-    """
-    Returns pid of the process that is listening on the given port
-    """
-    name = getProcessByPort(port)
-    if name is None:
-        return []
-    # print "found name:'%s'"%name
-    pids = getProcessPid(name)
-    # print pids
-    return pids
 
-def killProcessByName(name, sig=None, match_predicate=None):
+def get_pid_by_port(port):
+    """Returns pids of the process that is listening on the given port
+    
+    Arguments:
+        port {int} -- port number
+    
+    Returns:
+        int -- pid of process that listen on that port
+    """
+
+    process = get_process_by_port(port)
+    if process is None:
+        return []
+    return process.pid
+
+
+def kill_process_by_name(name, sig=signal.SIGTERM.value, match_predicate=None):
     """Kill all processes for a given command
     
-    :param name: Name of the command that started the process(s)
-    :type name: str
-    :param sig: os signal to send to the process(s), defaults to None
-    :type sig: int, optional
-    :param match_predicate: function that does matching between 
-        found processes and the targested process, the function should accept 
-        two arguments and return a boolean, defaults to None
-    :type match_predicate: callable, optional
+    Arguments:
+        name {str} -- Name of the command that started the process(s)
+    
+    Keyword Arguments:
+        sig {bool} -- os signal to send to the process(s) (default: {signal.SIGTERM.value})
+        match_predicate {callable} -- function that does matching between 
+            found processes and the targested process, the function should accept 
+            two arguments and return a boolean (default: {None})
     """
 
-    pids = getProcessPid(name, match_predicate=match_predicate)
+    pids = get_pids(name, match_predicate=match_predicate)
     for pid in pids:
         kill(pid, sig)
 
-def killProcessByPort(port):
-    for pid in getPidsByPort(port):
+
+def kill_process_by_port(port):
+    """Kill process by port
+    
+    Arguments:
+        port {int} -- port number
+    """
+    pid = int(pid)
+    for pid in get_pid_by_port(port):
         kill(pid)
 
-def getProcessByPort(port):
+
+def get_process_by_port(port):
+    """Returns the full name of the process that is listening on the given port
+    
+    Arguments:
+        port {int} -- the port for which to find the command
+    
+    Returns:
+        [psutil.Process] -- process object
     """
-    Returns the full name of the process that is listening on the given port
+    for process in psutil.process_iter():
+        try:
+            cc = [
+                con
+                for con in process.connections()
+                if con.status == psutil.CONN_LISTEN and con.laddr[1] == port
+            ]
+            if cc:
+                return process
+        except Exception as e:
+            pass
+    return None
 
-    @param port: the port for which to find the command
-    @type port: int
-    @return: full process name
-    @rtype: string
+
+def get_defunct_processes():
+    """Gets defunc processes
+    
+    Returns:
+        [list(int)] -- list of processes pids
     """
-    if port == 0:
-        return None
-
-
-        for process in psutil.process_iter():
-            try:
-                cc = [x for x in process.connections() if x.status == psutil.CONN_LISTEN]
-            except Exception as e:
-                if str(e).find("psutil.AccessDenied") == -1:
-                    raise j.exceptions.RuntimeError(str(e))
-                continue
-            if cc != []:
-                for conn in cc:
-                    portfound = conn.laddr[1]
-                    if port == portfound:
-                        return process
-        return None
-
-
-def getDefunctProcesses():
     rc, out, err = execute("ps ax")
     llist = []
     for line in out.split("\n"):
@@ -500,11 +596,15 @@ def getDefunctProcesses():
 
     return llist
 
+
 def getEnviron(pid):
-    environ = j.sal.fs.read_file("/proc/%s/environ" % pid)
-    env = dict()
-    for line in environ.split("\0"):
-        if "=" in line:
-            key, value = line.split("=", 1)
-            env[key] = value
-    return env
+    """Gets env vars for a specific process based on pid
+    
+    Arguments:
+        pid {int} -- process pid
+    
+    Returns:
+        [dict] -- dict of env variables
+    """
+    pid = int(pid)
+    return psutil.Process(pid).environ()

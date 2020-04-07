@@ -1,4 +1,5 @@
 import invoke
+
 """
 JS-NG> j.core.executors.run_local("echo $WHOME", env={'WHOME':'abc'}, ech
      1 o=True)                                                           
@@ -137,9 +138,16 @@ def execute(cmd, **command_ctx):
         When not ``None``, this parameter will override that auto-detection
         and force, or disable, echoing.
     :param timeout:
-
     """
     ## use formatter to format command
     command_ctx = command_ctx or {}
+    if "cwd" in command_ctx:
+        if command_ctx['cwd']:
+            cwd = command_ctx["cwd"]
+            del command_ctx["cwd"]
+            c = invoke.Context()
+            with c.cd(command_ctx["cwd"]):
+                return c.run(cmd, **command_ctx)
+        del command_ctx['cwd']
     res = invoke.run(cmd, **command_ctx)
     return res.return_code, res.stdout, res.stderr
