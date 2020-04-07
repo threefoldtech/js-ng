@@ -33,9 +33,9 @@ To access the virtual env `poetry shell`
 open the shell using `poetry run jsng`
 
 #### In the virtual env
-just type `jsng`
+just type `jsng`.
 
-**Note**: if you have any problems with setuptools, just try to upgrade it before starting js-ng.
+if you have any problems related to `setuptools`, just try to upgrade it before starting `jsng`.
 
 ```bash
 python3 -m pip install setuptools -U
