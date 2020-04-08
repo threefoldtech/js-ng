@@ -73,10 +73,11 @@ def is_dir(path: str) -&gt; bool:
 def is_file(path: str) -&gt; bool:
     &#34;&#34;&#34;Checks if path is a file
 
-    :param path: path to check
-    :type path: str
-    :return: True if is file else False
-    :rtype: bool
+    Args:
+        path (str): path to check if is file
+
+    Returns:
+        bool: True if is file and False otherwise
     &#34;&#34;&#34;
     return pathlib.Path(path).is_file()
 
@@ -371,9 +372,7 @@ def touch(path: str):
     return pathlib.Path(path).touch()
 
 
-def get_temp_filename(
-    mode=&#34;w+b&#34;, buffering=-1, encoding=None, newline=None, suffix=None, prefix=None, dir=None,
-) -&gt; str:
+def get_temp_filename(mode=&#34;w+b&#34;, buffering=-1, encoding=None, newline=None, suffix=None, prefix=None, dir=None) -&gt; str:
     &#34;&#34;&#34;Get temp filename
 
     Args:
@@ -1112,9 +1111,7 @@ j.sals.fs.expanduser("~/work") -&gt; '/home/xmonader/work'</p>
 <p>[str]: temp filename</p></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def get_temp_filename(
-    mode=&#34;w+b&#34;, buffering=-1, encoding=None, newline=None, suffix=None, prefix=None, dir=None,
-) -&gt; str:
+<pre><code class="python">def get_temp_filename(mode=&#34;w+b&#34;, buffering=-1, encoding=None, newline=None, suffix=None, prefix=None, dir=None) -&gt; str:
     &#34;&#34;&#34;Get temp filename
 
     Args:
@@ -1316,19 +1313,26 @@ j.sals.fs.expanduser("~/work") -&gt; '/home/xmonader/work'</p>
 </code></dt>
 <dd>
 <section class="desc"><p>Checks if path is a file</p>
-<p>:param path: path to check
-:type path: str
-:return: True if is file else False
-:rtype: bool</p></section>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
+<dd>path to check if is file</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>bool</code></strong></dt>
+<dd>True if is file and False otherwise</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def is_file(path: str) -&gt; bool:
     &#34;&#34;&#34;Checks if path is a file
 
-    :param path: path to check
-    :type path: str
-    :return: True if is file else False
-    :rtype: bool
+    Args:
+        path (str): path to check if is file
+
+    Returns:
+        bool: True if is file and False otherwise
     &#34;&#34;&#34;
     return pathlib.Path(path).is_file()</code></pre>
 </details>
