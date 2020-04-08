@@ -3,7 +3,6 @@ import re
 from jumpscale.god import j
 
 SSH_URL_MATCH = "^(git@)(?P<netloc>.*?)(:|/)(?P<path>.*?)/?$"
-CODE_DIR = str(j.sals.fs.expanduser("~/sandbox/code"))
 
 
 def rewrite_git_https_url_to_ssh(url):
@@ -29,37 +28,33 @@ def rewrite_git_ssh_url_to_https(url, login=None, passwd=None):
     if not match:
         raise j.exceptions.Input("not a ssh url: {}".format(url))
     if (login or passwd) and not (login and passwd):
-        raise j.exceptions.Input(
-            "Need to specify both login and passwd if either one is specified"
-        )
+        raise j.exceptions.Input("Need to specify both login and passwd if either one is specified")
     elif login and passwd:
-        rewrite_url = "https://{login}:{passwd}@{netloc}/{path}".format(
-            **match.groupdict(), login=login, passwd=passwd
-        )
+        rewrite_url = "https://{login}:{passwd}@{netloc}/{path}".format(**match.groupdict(), login=login, passwd=passwd)
     else:
         rewrite_url = "https://{netloc}/{path}".format(**url_data)
     return rewrite_url
 
 
-def ensure_repo(
-    url: str, dest: str, branch_or_tag="", commit_id="", discard_changes=False, depth=0
-):
+def ensure_repo(url: str, dest="", branch_or_tag="", commit_id="", discard_changes=False, depth=0):
     """Makes sure that repo exists in specified dest with correct branch
 
     Args:
         url (str): url of the repo
-        dest (str): the repo path, if it doesn't exist will clone it
+        dest (str, optional): the repo path, if it doesn't exist will clone it. Will get path from url if not specified.
         branch_or_tag (str, optional): clone from a specific branch or tag. Defaults to "".
         commit_id (str, optional): commit to checkout to. Defaults to "".
         discard_changes (bool, optional): Will remove changes in repo if True during pull. Defaults to False.
         depth (int, optional): specify the depth of the clone. Defaults to 0.
     """
+    dest = dest or get_path_from_url(url)
     if j.sals.fs.exists(dest):
         revision = branch_or_tag or commit_id
         pull_repo(dest, discard_changes, revision)
     else:
-        dest = str(j.sals.fs.parent(dest))
-        clone_repo(url, dest, branch_or_tag, depth)
+        parent_dir = str(j.sals.fs.parent(dest))
+        clone_repo(url, parent_dir, branch_or_tag, depth)
+    return dest
 
 
 def clone_repo(url: str, dest: str, branch_or_tag="", depth=0, commit_id=""):
@@ -74,7 +69,9 @@ def clone_repo(url: str, dest: str, branch_or_tag="", depth=0, commit_id=""):
     """
     j.sals.fs.mkdirs(dest)
     prefix = f"cd {dest} && "
-    cmd = prefix + f"git clone --single-branch -b {branch_or_tag} {url}"
+    cmd = prefix + f"git clone --single-branch {url}"
+    if branch_or_tag:
+        cmd += f" -b {branch_or_tag}"
     if depth != 0:
         cmd += f" --depth={depth}"
     j.core.executors.run_local(cmd)
@@ -144,7 +141,7 @@ def get_path_from_url(url: str):
     """
 
     def _get_path(netloc, path):
-        return f"{CODE_DIR}/{netloc.split('.')[0]}/{path.split('.git')[0]}"
+        return f"{j.core.dirs.CODEDIR}/{netloc.split('.')[0]}/{path.split('.git')[0]}"
 
     match = re.match(SSH_URL_MATCH, url)
     if match:
@@ -158,7 +155,7 @@ def get_path_from_url(url: str):
 
 
 def find(account="", name=""):
-    """find all repo paths in CODE_DIR
+    """find all repo paths in j.core.dirs.CODEDIR
 
     Args:
         account (str, optional): returns repos under this account only. Defaults to "".
@@ -177,7 +174,7 @@ def find(account="", name=""):
             return False
 
     return [
-        j.sals.fs.parent(path) for path in j.sals.fs.walk(CODE_DIR, pat="*.git", filter_fun=_filter_paths)
+        j.sals.fs.parent(path) for path in j.sals.fs.walk(j.core.dirs.CODEDIR, pat="*.git", filter_fun=_filter_paths)
     ]
 
 
