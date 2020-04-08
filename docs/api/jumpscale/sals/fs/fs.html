@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.6.3" />
+<meta name="generator" content="pdoc 0.6.4" />
 <title>jumpscale.sals.fs.fs API documentation</title>
 <meta name="description" content="" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
@@ -30,15 +30,6 @@ import stat
 from distutils import dir_util
 from typing import List
 
-
-def home():
-    return str(pathlib.Path.home())
-
-
-def cwd():
-    return str(pathlib.Path.cwd())
-
-
 basename = os.path.basename
 dirname = os.path.dirname
 common_path = os.path.commonpath
@@ -52,6 +43,19 @@ sep = os.path.sep
 is_samefile = os.path.samefile
 expandvars = os.path.expandvars
 expanduser = os.path.expanduser
+
+
+def home():
+    return str(pathlib.Path.home())
+
+
+def cwd():
+    &#34;&#34;&#34;Return current working directory.
+
+    Returns:
+        str: current directory.
+    &#34;&#34;&#34;
+    return str(pathlib.Path.cwd())
 
 
 def is_dir(path: str) -&gt; bool:
@@ -441,7 +445,7 @@ def rmtree(path: str):
         path (str): path to remove
     &#34;&#34;&#34;
     path = pathlib.Path(path)
-    if path.is_file() or path.is_link():
+    if path.is_file() or path.is_symlink():
         os.remove(path)
     elif path.is_dir():
         shutil.rmtree(path)
@@ -630,10 +634,10 @@ def walk(path: str, pat=&#34;*&#34;, filter_fun=default_filter_fun):
     for entry in p.rglob(pat):
         # use rglob instead of glob(&#34;**/*&#34;)
         if filter_fun(entry):
-            yield str(entry)
+            yield str(entry )
 
 
-def walk_non_recursive(path: str, fun=lambda e: True, filter_fun=default_filter_fun):
+def walk_non_recursive(path: str, filter_fun=default_filter_fun):
     &#34;&#34;&#34;walks non recursively on path
     e.g
         for el in walk(&#39;/tmp&#39;, filter=j.sals.fs.is_file) : ..
@@ -856,10 +860,20 @@ shutil.copy and shutil.copy2 are not supported but are easy to do.</p>
 <span>def <span class="ident">cwd</span></span>(<span>)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>Return current working directory.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>str</code></strong></dt>
+<dd>current directory.</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def cwd():
+    &#34;&#34;&#34;Return current working directory.
+
+    Returns:
+        str: current directory.
+    &#34;&#34;&#34;
     return str(pathlib.Path.cwd())</code></pre>
 </details>
 </dd>
@@ -1056,7 +1070,7 @@ j.sals.fs.expanduser("~/work") -&gt; '/home/xmonader/work'</p>
 </details>
 </dd>
 <dt id="jumpscale.sals.fs.fs.get_temp_filename"><code class="name flex">
-<span>def <span class="ident">get_temp_filename</span></span>(<span>mode='w+b', buffering=-1, encoding=None, newline=None, suffix=None, prefix=None, dir=None)</span>
+<span>def <span class="ident">get_temp_filename</span></span>(<span>mode=&#39;w+b&#39;, buffering=-1, encoding=None, newline=None, suffix=None, prefix=None, dir=None)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Get temp filename</p>
@@ -1904,7 +1918,7 @@ e.g
         path (str): path to remove
     &#34;&#34;&#34;
     path = pathlib.Path(path)
-    if path.is_file() or path.is_link():
+    if path.is_file() or path.is_symlink():
         os.remove(path)
     elif path.is_dir():
         shutil.rmtree(path)</code></pre>
@@ -2021,7 +2035,7 @@ Out[3]: 'tmp-5383p1GOmMOOwvfi'
 </details>
 </dd>
 <dt id="jumpscale.sals.fs.fs.walk"><code class="name flex">
-<span>def <span class="ident">walk</span></span>(<span>path, pat='*', filter_fun=<function default_filter_fun at 0x7f87ceebd9e0>)</span>
+<span>def <span class="ident">walk</span></span>(<span>path, pat=&#39;*&#39;, filter_fun=&lt;function default_filter_fun&gt;)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>walk recursively on path
@@ -2057,7 +2071,7 @@ for el in walk('/tmp', filter_fun= lambda x: len(x)&gt;4 and (j.sals.fs.is_file(
     for entry in p.rglob(pat):
         # use rglob instead of glob(&#34;**/*&#34;)
         if filter_fun(entry):
-            yield str(entry)</code></pre>
+            yield str(entry )</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.sals.fs.fs.walk_dirs"><code class="name flex">
@@ -2135,7 +2149,7 @@ e.g</p>
 </details>
 </dd>
 <dt id="jumpscale.sals.fs.fs.walk_non_recursive"><code class="name flex">
-<span>def <span class="ident">walk_non_recursive</span></span>(<span>path, fun=<function <lambda> at 0x7f87ceebdb00>, filter_fun=<function default_filter_fun at 0x7f87ceebd9e0>)</span>
+<span>def <span class="ident">walk_non_recursive</span></span>(<span>path, filter_fun=&lt;function default_filter_fun&gt;)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>walks non recursively on path
@@ -2154,7 +2168,7 @@ for el in walk('/tmp', filter= lambda x: len(x)&gt;4 and (j.sals.fs.is_file(x) o
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def walk_non_recursive(path: str, fun=lambda e: True, filter_fun=default_filter_fun):
+<pre><code class="python">def walk_non_recursive(path: str, filter_fun=default_filter_fun):
     &#34;&#34;&#34;walks non recursively on path
     e.g
         for el in walk(&#39;/tmp&#39;, filter=j.sals.fs.is_file) : ..
@@ -2419,7 +2433,7 @@ for el in walk('/tmp', filter= lambda x: len(x)&gt;4 and (j.sals.fs.is_file(x) o
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.6.3</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.6.4</a>.</p>
 </footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
 <script>hljs.initHighlightingOnLoad()</script>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.6.3" />
+<meta name="generator" content="pdoc 0.6.4" />
 <title>jumpscale.core.base.meta API documentation</title>
 <meta name="description" content="" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
@@ -26,16 +26,27 @@
 from types import SimpleNamespace
 
 from .factory import Factory, DuplicateError
-from .fields import Field, Secret, ValidationError
+from .fields import Field, List, Object, Secret, ValidationError
 
 
 def get_field_property(name, field):
     inner_name = f&#34;__{name}&#34;
 
     def getter(self):
-        return getattr(self, inner_name)
+        if hasattr(self, inner_name):
+            return getattr(self, inner_name)
+
+        # accept raw value as default too
+        return field.default
 
     def setter(self, value):
+        # accept if this is a raw value too
+        value = field.from_raw(value)
+
+        # validate
+        field.validate(value)
+
+        # se attribute
         setattr(self, inner_name, value)
         self._data_updated(name, value)
 
@@ -64,6 +75,17 @@ FactoryInfo = namedtuple(&#34;FactoryInfo&#34;, [&#34;name&#34;, &#34;type&#34;,
 
 class BaseMeta(type):
     def __new__(cls, name, based, attrs):
+        &#34;&#34;&#34;
+        this will return a new class with fields,factories as property (function descriptors)
+
+        Args:
+            name (str): class name
+            based (tuple): super class types
+            attrs (dict): current attributes
+
+        Returns:
+            any: a new class
+        &#34;&#34;&#34;
         factories = []
         fields = {}
         new_attrs = {}
@@ -92,7 +114,12 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
     def _get_factory_info(self):
         return []
 
-    def __init__(self):
+    def _get_embedded_objects(self):
+        return [getattr(self, name) for name, field in self._get_fields().items() if isinstance(field, Object)]
+
+    def __init__(self, parent=None):
+        self.parent = parent
+
         for name, field in self._get_fields().items():
             setattr(self, f&#34;__{name}&#34;, field.default)
 
@@ -102,7 +129,7 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
     def _get_factories(self):
         return {info.name: getattr(self, info.name) for info in self._get_factory_info()}
 
-    def _validate(self):
+    def validate(self):
         for name, field in self._get_fields().items():
             field.validate(getattr(self, name))
 
@@ -111,22 +138,28 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
 
         for name, field in self._get_fields().items():
             value = getattr(self, name)
+            raw_value = field.to_raw(value)
             if isinstance(field, Secret):
-                data[f&#34;__{name}&#34;] = value
+                data[f&#34;__{name}&#34;] = raw_value
             else:
-                data[name] = value
+                data[name] = raw_value
 
         return data
 
     def _set_data(self, new_data):
-        for name in self._get_fields().keys():
+        for name, field in self._get_fields().items():
             if name in new_data:
                 try:
-                    setattr(self, name, new_data[name])
-                except Exception:  # should be ValidationError
+                    setattr(self, f&#34;__{name}&#34;, field.from_raw(new_data[name]))
+                except (ValidationError, ValueError):
+                    # should at least log validation and value errors
+                    # this can happen in case of e.g. fields type change
                     pass
 
     def _data_updated(self, name, value):
+        pass
+
+    def _on_data_update(self, name, value):
         pass</code></pre>
 </details>
 </section>
@@ -148,9 +181,20 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
     inner_name = f&#34;__{name}&#34;
 
     def getter(self):
-        return getattr(self, inner_name)
+        if hasattr(self, inner_name):
+            return getattr(self, inner_name)
+
+        # accept raw value as default too
+        return field.default
 
     def setter(self, value):
+        # accept if this is a raw value too
+        value = field.from_raw(value)
+
+        # validate
+        field.validate(value)
+
+        # se attribute
         setattr(self, inner_name, value)
         self._data_updated(name, value)
 
@@ -192,6 +236,7 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
 <dl>
 <dt id="jumpscale.core.base.meta.Base"><code class="flex name class">
 <span>class <span class="ident">Base</span></span>
+<span>(</span><span>parent=None)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>A simple attribute-based namespace.</p>
@@ -205,7 +250,12 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
     def _get_factory_info(self):
         return []
 
-    def __init__(self):
+    def _get_embedded_objects(self):
+        return [getattr(self, name) for name, field in self._get_fields().items() if isinstance(field, Object)]
+
+    def __init__(self, parent=None):
+        self.parent = parent
+
         for name, field in self._get_fields().items():
             setattr(self, f&#34;__{name}&#34;, field.default)
 
@@ -215,7 +265,7 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
     def _get_factories(self):
         return {info.name: getattr(self, info.name) for info in self._get_factory_info()}
 
-    def _validate(self):
+    def validate(self):
         for name, field in self._get_fields().items():
             field.validate(getattr(self, name))
 
@@ -224,22 +274,28 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
 
         for name, field in self._get_fields().items():
             value = getattr(self, name)
+            raw_value = field.to_raw(value)
             if isinstance(field, Secret):
-                data[f&#34;__{name}&#34;] = value
+                data[f&#34;__{name}&#34;] = raw_value
             else:
-                data[name] = value
+                data[name] = raw_value
 
         return data
 
     def _set_data(self, new_data):
-        for name in self._get_fields().keys():
+        for name, field in self._get_fields().items():
             if name in new_data:
                 try:
-                    setattr(self, name, new_data[name])
-                except Exception:  # should be ValidationError
+                    setattr(self, f&#34;__{name}&#34;, field.from_raw(new_data[name]))
+                except (ValidationError, ValueError):
+                    # should at least log validation and value errors
+                    # this can happen in case of e.g. fields type change
                     pass
 
     def _data_updated(self, name, value):
+        pass
+
+    def _on_data_update(self, name, value):
         pass</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -250,7 +306,23 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
 <ul class="hlist">
 <li><a title="jumpscale.clients.base.Client" href="../../clients/base.html#jumpscale.clients.base.Client">Client</a></li>
 <li><a title="jumpscale.clients.github.base.base" href="../../clients/github/base.html#jumpscale.clients.github.base.base">base</a></li>
+<li><a title="jumpscale.clients.gogs.gogs.User" href="../../clients/gogs/gogs.html#jumpscale.clients.gogs.gogs.User">User</a></li>
 </ul>
+<h3>Methods</h3>
+<dl>
+<dt id="jumpscale.core.base.meta.Base.validate"><code class="name flex">
+<span>def <span class="ident">validate</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def validate(self):
+    for name, field in self._get_fields().items():
+        field.validate(getattr(self, name))</code></pre>
+</details>
+</dd>
+</dl>
 </dd>
 <dt id="jumpscale.core.base.meta.BaseMeta"><code class="flex name class">
 <span>class <span class="ident">BaseMeta</span></span>
@@ -264,6 +336,17 @@ type(name, bases, dict) -&gt; a new type</p></section>
 <summary>Source code</summary>
 <pre><code class="python">class BaseMeta(type):
     def __new__(cls, name, based, attrs):
+        &#34;&#34;&#34;
+        this will return a new class with fields,factories as property (function descriptors)
+
+        Args:
+            name (str): class name
+            based (tuple): super class types
+            attrs (dict): current attributes
+
+        Returns:
+            any: a new class
+        &#34;&#34;&#34;
         factories = []
         fields = {}
         new_attrs = {}
@@ -340,6 +423,9 @@ type(name, bases, dict) -&gt; a new type</p></section>
 <ul>
 <li>
 <h4><code><a title="jumpscale.core.base.meta.Base" href="#jumpscale.core.base.meta.Base">Base</a></code></h4>
+<ul class="">
+<li><code><a title="jumpscale.core.base.meta.Base.validate" href="#jumpscale.core.base.meta.Base.validate">validate</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="jumpscale.core.base.meta.BaseMeta" href="#jumpscale.core.base.meta.BaseMeta">BaseMeta</a></code></h4>
@@ -358,7 +444,7 @@ type(name, bases, dict) -&gt; a new type</p></section>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.6.3</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.6.4</a>.</p>
 </footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
 <script>hljs.initHighlightingOnLoad()</script>

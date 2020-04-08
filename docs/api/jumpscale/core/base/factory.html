@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.6.3" />
+<meta name="generator" content="pdoc 0.6.4" />
 <title>jumpscale.core.base.factory API documentation</title>
 <meta name="description" content="" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
@@ -36,8 +36,9 @@ class DuplicateError(Exception):
 
 
 class Factory:
-    def __init__(self, type_):
+    def __init__(self, type_, parent=None):
         self.type = type_
+        self.parent = parent
         self.__count = 0
 
     def new(self, name, *args, **kwargs):
@@ -48,6 +49,7 @@ class Factory:
             self.find(name)
         except AttributeError:
             instance = self.type(*args, **kwargs)
+            instance.parent = self.parent
             setattr(self, name, instance)
 
             self.count += 1
@@ -75,6 +77,9 @@ class Factory:
     def _updated(self, new_count):
         pass
 
+    def _on_update(self, new_count):
+        pass
+
     def __get_count(self):
         return self.__count
 
@@ -98,36 +103,83 @@ class StoredFactory(Factory):
         self.__parent_name = name
 
     @property
+    def parent_name(self):
+        return self.__parent_name
+
+    @property
     def store(self):
         return self.STORE(self.type, self.__parent_name)
 
-    def _validate_and_save_instance(self, name):
-        instance = self.get(name)
-        instance._validate()
+    def _validate_and_save_instance(self, name, instance):
+        instance.validate()
         self.store.save(name, instance._get_data())
 
-    def _instance_updated(self, name):
+    def _try_save_instance(self, name):
         # try to save instance if it&#39;s validated
+        instance = self.get(name)
         try:
-            self._validate_and_save_instance(name)
+            self._validate_and_save_instance(name, instance)
         except:
-            raise
+            pass
+        return instance
 
-    def _instance_sub_factory_updated(self, name, new_count):
-        self._instance_updated(name)
+    def _instance_updated(self, name, prop, value):
+        &#34;&#34;&#34;called when data is updated for an instance
+
+        Args:
+            name (str): instance name
+            prop (str): property/field name
+            value (any): updated value
+        &#34;&#34;&#34;
+        instance = self._try_save_instance(name)
+        instance._on_data_update(prop, value)
+
+    def _instance_sub_factory_updated(self, name, factory, new_count):
+        &#34;&#34;&#34;called when a sub-factory is updated for an instance
+
+        Args:
+            name (str): instance name
+            factory (fields.Factory): factory field/object
+            new_count (int): new count for this factory instance
+        &#34;&#34;&#34;
+        self._try_save_instance(name)
+        factory._on_update(new_count)
 
     def _get_sub_factory_location_name(self, parent_name, factory_name):
         return &#34;.&#34;.join([self.store.location.name, parent_name, factory_name])
 
-    def new(self, name, *args, **kwargs):
-        instance = super().new(name, *args, **kwargs)
-        instance.save = partial(self._validate_and_save_instance, name)
+    def _setup_data_handlers(self, name, instance):
+        &#34;&#34;&#34;setup data update and save handlers for a given instance
 
+        Args:
+            name (str)
+            instance (Base): instance object
+        &#34;&#34;&#34;
+        # save method
+        instance.save = partial(self._validate_and_save_instance, name, instance)
+
+        # TODO: better use events for data updates
+        instance_updated = partial(self._instance_updated, name)
+        instance._data_updated = instance_updated
+        # for embedded objects too
+        for obj in instance._get_embedded_objects():
+            obj._data_updated = instance_updated
+
+        return instance
+
+    def _setup_sub_factories(self, name, instance):
+        # factories
+        # TODO: better use events for factory updates
         for prop_name, factory in instance._get_factories().items():
             factory._set_parent_name(self._get_sub_factory_location_name(name, prop_name))
-            factory._updated = partial(self._instance_sub_factory_updated, name)
+            factory.parent = instance
+            factory._updated = partial(self._instance_sub_factory_updated, name, factory)
             factory._load()
 
+    def new(self, name, *args, **kwargs):
+        instance = super().new(name, *args, **kwargs)
+        self._setup_data_handlers(name, instance)
+        self._setup_sub_factories(name, instance)
         return instance
 
     def _load(self):
@@ -176,15 +228,16 @@ class StoredFactory(Factory):
 </dd>
 <dt id="jumpscale.core.base.factory.Factory"><code class="flex name class">
 <span>class <span class="ident">Factory</span></span>
-<span>(</span><span>type_)</span>
+<span>(</span><span>type_, parent=None)</span>
 </code></dt>
 <dd>
 <section class="desc"></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class Factory:
-    def __init__(self, type_):
+    def __init__(self, type_, parent=None):
         self.type = type_
+        self.parent = parent
         self.__count = 0
 
     def new(self, name, *args, **kwargs):
@@ -195,6 +248,7 @@ class StoredFactory(Factory):
             self.find(name)
         except AttributeError:
             instance = self.type(*args, **kwargs)
+            instance.parent = self.parent
             setattr(self, name, instance)
 
             self.count += 1
@@ -220,6 +274,9 @@ class StoredFactory(Factory):
             delattr(self, name)
 
     def _updated(self, new_count):
+        pass
+
+    def _on_update(self, new_count):
         pass
 
     def __get_count(self):
@@ -305,6 +362,7 @@ class StoredFactory(Factory):
         self.find(name)
     except AttributeError:
         instance = self.type(*args, **kwargs)
+        instance.parent = self.parent
         setattr(self, name, instance)
 
         self.count += 1
@@ -336,36 +394,83 @@ class StoredFactory(Factory):
         self.__parent_name = name
 
     @property
+    def parent_name(self):
+        return self.__parent_name
+
+    @property
     def store(self):
         return self.STORE(self.type, self.__parent_name)
 
-    def _validate_and_save_instance(self, name):
-        instance = self.get(name)
-        instance._validate()
+    def _validate_and_save_instance(self, name, instance):
+        instance.validate()
         self.store.save(name, instance._get_data())
 
-    def _instance_updated(self, name):
+    def _try_save_instance(self, name):
         # try to save instance if it&#39;s validated
+        instance = self.get(name)
         try:
-            self._validate_and_save_instance(name)
+            self._validate_and_save_instance(name, instance)
         except:
-            raise
+            pass
+        return instance
 
-    def _instance_sub_factory_updated(self, name, new_count):
-        self._instance_updated(name)
+    def _instance_updated(self, name, prop, value):
+        &#34;&#34;&#34;called when data is updated for an instance
+
+        Args:
+            name (str): instance name
+            prop (str): property/field name
+            value (any): updated value
+        &#34;&#34;&#34;
+        instance = self._try_save_instance(name)
+        instance._on_data_update(prop, value)
+
+    def _instance_sub_factory_updated(self, name, factory, new_count):
+        &#34;&#34;&#34;called when a sub-factory is updated for an instance
+
+        Args:
+            name (str): instance name
+            factory (fields.Factory): factory field/object
+            new_count (int): new count for this factory instance
+        &#34;&#34;&#34;
+        self._try_save_instance(name)
+        factory._on_update(new_count)
 
     def _get_sub_factory_location_name(self, parent_name, factory_name):
         return &#34;.&#34;.join([self.store.location.name, parent_name, factory_name])
 
-    def new(self, name, *args, **kwargs):
-        instance = super().new(name, *args, **kwargs)
-        instance.save = partial(self._validate_and_save_instance, name)
+    def _setup_data_handlers(self, name, instance):
+        &#34;&#34;&#34;setup data update and save handlers for a given instance
 
+        Args:
+            name (str)
+            instance (Base): instance object
+        &#34;&#34;&#34;
+        # save method
+        instance.save = partial(self._validate_and_save_instance, name, instance)
+
+        # TODO: better use events for data updates
+        instance_updated = partial(self._instance_updated, name)
+        instance._data_updated = instance_updated
+        # for embedded objects too
+        for obj in instance._get_embedded_objects():
+            obj._data_updated = instance_updated
+
+        return instance
+
+    def _setup_sub_factories(self, name, instance):
+        # factories
+        # TODO: better use events for factory updates
         for prop_name, factory in instance._get_factories().items():
             factory._set_parent_name(self._get_sub_factory_location_name(name, prop_name))
-            factory._updated = partial(self._instance_sub_factory_updated, name)
+            factory.parent = instance
+            factory._updated = partial(self._instance_sub_factory_updated, name, factory)
             factory._load()
 
+    def new(self, name, *args, **kwargs):
+        instance = super().new(name, *args, **kwargs)
+        self._setup_data_handlers(name, instance)
+        self._setup_sub_factories(name, instance)
         return instance
 
     def _load(self):
@@ -402,6 +507,16 @@ class StoredFactory(Factory):
 </dl>
 <h3>Instance variables</h3>
 <dl>
+<dt id="jumpscale.core.base.factory.StoredFactory.parent_name"><code class="name">var <span class="ident">parent_name</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def parent_name(self):
+    return self.__parent_name</code></pre>
+</details>
+</dd>
 <dt id="jumpscale.core.base.factory.StoredFactory.store"><code class="name">var <span class="ident">store</span></code></dt>
 <dd>
 <section class="desc"></section>
@@ -447,13 +562,8 @@ def store(self):
 <summary>Source code</summary>
 <pre><code class="python">def new(self, name, *args, **kwargs):
     instance = super().new(name, *args, **kwargs)
-    instance.save = partial(self._validate_and_save_instance, name)
-
-    for prop_name, factory in instance._get_factories().items():
-        factory._set_parent_name(self._get_sub_factory_location_name(name, prop_name))
-        factory._updated = partial(self._instance_sub_factory_updated, name)
-        factory._load()
-
+    self._setup_data_handlers(name, instance)
+    self._setup_sub_factories(name, instance)
     return instance</code></pre>
 </details>
 </dd>
@@ -490,11 +600,12 @@ def store(self):
 </li>
 <li>
 <h4><code><a title="jumpscale.core.base.factory.StoredFactory" href="#jumpscale.core.base.factory.StoredFactory">StoredFactory</a></code></h4>
-<ul class="">
+<ul class="two-column">
 <li><code><a title="jumpscale.core.base.factory.StoredFactory.STORE" href="#jumpscale.core.base.factory.StoredFactory.STORE">STORE</a></code></li>
 <li><code><a title="jumpscale.core.base.factory.StoredFactory.delete" href="#jumpscale.core.base.factory.StoredFactory.delete">delete</a></code></li>
 <li><code><a title="jumpscale.core.base.factory.StoredFactory.list_all" href="#jumpscale.core.base.factory.StoredFactory.list_all">list_all</a></code></li>
 <li><code><a title="jumpscale.core.base.factory.StoredFactory.new" href="#jumpscale.core.base.factory.StoredFactory.new">new</a></code></li>
+<li><code><a title="jumpscale.core.base.factory.StoredFactory.parent_name" href="#jumpscale.core.base.factory.StoredFactory.parent_name">parent_name</a></code></li>
 <li><code><a title="jumpscale.core.base.factory.StoredFactory.store" href="#jumpscale.core.base.factory.StoredFactory.store">store</a></code></li>
 </ul>
 </li>
@@ -504,7 +615,7 @@ def store(self):
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.6.3</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.6.4</a>.</p>
 </footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
 <script>hljs.initHighlightingOnLoad()</script>

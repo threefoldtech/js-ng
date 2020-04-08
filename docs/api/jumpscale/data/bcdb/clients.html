@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.6.3" />
+<meta name="generator" content="pdoc 0.6.4" />
 <title>jumpscale.data.bcdb.clients API documentation</title>
 <meta name="description" content="" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
@@ -31,7 +31,7 @@ from jumpscale.god import j
 class JSONSerializer(SerializerInterface):
     def loads(self, model, s):
         return model.load_obj_from_dict(json.loads(s))
-        
+
     def dumps(self, model, data):
         return json.dumps(model.get_dict(data))
 
@@ -44,10 +44,10 @@ class RedisStorageClient(StorageInterface):
     def get(self, model, obj_id):
         obj_str = self.redis_client.get(f&#34;{self.bcdb_namespace}.{model.name}://{obj_id}&#34;)
         return self.serializer.loads(model, obj_str) if obj_str else None
-    
+
     def set(self, model, obj_id, value):
         return self.redis_client.set(f&#34;{self.bcdb_namespace}.{model.name}://{obj_id}&#34;, self.serializer.dumps(model, value))
-    
+
     def get_keys_in_model(self, model):
         pattern = f&#34;{self.bcdb_namespace}.{model.name}://*&#34;
         result = []
@@ -57,7 +57,7 @@ class RedisStorageClient(StorageInterface):
             cur, keys = self.redis_client.scan(cursor=cur, match=pattern, count=2)
             result.extend(keys)
         return [self.get(model, int(x.split(b&#39;://&#39;)[1])) for x in result]
-        
+
     def incr_id(self, model):
         return self.redis_client.incr(f&#34;{self.bcdb_namespace}.{model.name}.lastid&#34;)
 
@@ -78,7 +78,7 @@ class RedisIndexClient(IndexInterface):
 class SQLiteIndexSetClient(IndexSetInterface):
     def __init__(self, bcdb_namespace):
         self.bcdb_namespace = bcdb_namespace
-    
+
     def _create_if_not_exists(self, model):
         conn = sqlite3.connect(f&#34;{self.bcdb_namespace}_index.db&#34;)
         c = conn.cursor()
@@ -93,13 +93,13 @@ class SQLiteIndexSetClient(IndexSetInterface):
                 prop_type = &#34;INTEGER&#34; if isinstance(prop.type, j.data.types.Integer) else &#34;TEXT&#34;
                 props_str += f&#34;, {prop.name} {prop_type}&#34;
                 props.append(prop.name)
-        
+
         c.execute(f&#34;CREATE TABLE IF NOT EXISTS {table_name} (id int primary key{props_str})&#34;)
         for prop in props:
             c.execute(f&#34;CREATE INDEX IF NOT EXISTS {table_name}_{prop}_index on {table_name}({prop})&#34;)
         conn.commit()
         conn.close()
-        
+
     def get(self, model, index_prop, min, max):
         self._create_if_not_exists(model)
         conn = sqlite3.connect(f&#34;{self.bcdb_namespace}_index.db&#34;)
@@ -121,11 +121,11 @@ class SQLiteIndexSetClient(IndexSetInterface):
             if prop.name != &#34;id&#34; and prop.index_key:
                 props_str += f&#34;, {prop.name}&#34;
                 props.append(getattr(obj, prop.name))
-            
+
         c.execute(f&#34;REPLACE INTO {table_name} ({props_str}) VALUES (?{&#39;, ?&#39; * (len(props) - 1)})&#34;, props)
         conn.commit()
         conn.close()
-        
+
 
 class SonicIndexTextClient(IndexTextInterface):
     def __init__(self, bcdb_namespace):
@@ -142,7 +142,7 @@ class SonicIndexTextClient(IndexTextInterface):
 
     def get(self, model, index_prop, pattern):
         return self.sonic_client.query(self.bcdb_namespace, f&#34;{model.name}_{index_prop}&#34;, pattern)
-        
+
                </code></pre>
 </details>
 </section>
@@ -166,7 +166,7 @@ class SonicIndexTextClient(IndexTextInterface):
 <pre><code class="python">class JSONSerializer(SerializerInterface):
     def loads(self, model, s):
         return model.load_obj_from_dict(json.loads(s))
-        
+
     def dumps(self, model, data):
         return json.dumps(model.get_dict(data))</code></pre>
 </details>
@@ -272,10 +272,10 @@ class SonicIndexTextClient(IndexTextInterface):
     def get(self, model, obj_id):
         obj_str = self.redis_client.get(f&#34;{self.bcdb_namespace}.{model.name}://{obj_id}&#34;)
         return self.serializer.loads(model, obj_str) if obj_str else None
-    
+
     def set(self, model, obj_id, value):
         return self.redis_client.set(f&#34;{self.bcdb_namespace}.{model.name}://{obj_id}&#34;, self.serializer.dumps(model, value))
-    
+
     def get_keys_in_model(self, model):
         pattern = f&#34;{self.bcdb_namespace}.{model.name}://*&#34;
         result = []
@@ -285,7 +285,7 @@ class SonicIndexTextClient(IndexTextInterface):
             cur, keys = self.redis_client.scan(cursor=cur, match=pattern, count=2)
             result.extend(keys)
         return [self.get(model, int(x.split(b&#39;://&#39;)[1])) for x in result]
-        
+
     def incr_id(self, model):
         return self.redis_client.incr(f&#34;{self.bcdb_namespace}.{model.name}.lastid&#34;)</code></pre>
 </details>
@@ -360,7 +360,7 @@ class SonicIndexTextClient(IndexTextInterface):
 <pre><code class="python">class SQLiteIndexSetClient(IndexSetInterface):
     def __init__(self, bcdb_namespace):
         self.bcdb_namespace = bcdb_namespace
-    
+
     def _create_if_not_exists(self, model):
         conn = sqlite3.connect(f&#34;{self.bcdb_namespace}_index.db&#34;)
         c = conn.cursor()
@@ -375,13 +375,13 @@ class SonicIndexTextClient(IndexTextInterface):
                 prop_type = &#34;INTEGER&#34; if isinstance(prop.type, j.data.types.Integer) else &#34;TEXT&#34;
                 props_str += f&#34;, {prop.name} {prop_type}&#34;
                 props.append(prop.name)
-        
+
         c.execute(f&#34;CREATE TABLE IF NOT EXISTS {table_name} (id int primary key{props_str})&#34;)
         for prop in props:
             c.execute(f&#34;CREATE INDEX IF NOT EXISTS {table_name}_{prop}_index on {table_name}({prop})&#34;)
         conn.commit()
         conn.close()
-        
+
     def get(self, model, index_prop, min, max):
         self._create_if_not_exists(model)
         conn = sqlite3.connect(f&#34;{self.bcdb_namespace}_index.db&#34;)
@@ -403,7 +403,7 @@ class SonicIndexTextClient(IndexTextInterface):
             if prop.name != &#34;id&#34; and prop.index_key:
                 props_str += f&#34;, {prop.name}&#34;
                 props.append(getattr(obj, prop.name))
-            
+
         c.execute(f&#34;REPLACE INTO {table_name} ({props_str}) VALUES (?{&#39;, ?&#39; * (len(props) - 1)})&#34;, props)
         conn.commit()
         conn.close()</code></pre>
@@ -450,7 +450,7 @@ class SonicIndexTextClient(IndexTextInterface):
         if prop.name != &#34;id&#34; and prop.index_key:
             props_str += f&#34;, {prop.name}&#34;
             props.append(getattr(obj, prop.name))
-        
+
     c.execute(f&#34;REPLACE INTO {table_name} ({props_str}) VALUES (?{&#39;, ?&#39; * (len(props) - 1)})&#34;, props)
     conn.commit()
     conn.close()</code></pre>
@@ -573,7 +573,7 @@ class SonicIndexTextClient(IndexTextInterface):
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.6.3</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.6.4</a>.</p>
 </footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
 <script>hljs.initHighlightingOnLoad()</script>
