@@ -1,3 +1,4 @@
+import datetime
 import unittest
 
 
@@ -73,4 +74,4 @@ class TestBaseFactory(unittest.TestCase):
         self.assertEqual(st.email, "sam@gmail.com")
         self.assertEqual(st.tel, "0122222222")
         self.assertEqual(st.web, "https://www.sam.com")
-        self.assertEqual(st.birthday, "1990-12-03")
+        self.assertEqual(st.birthday, datetime.date(1990, 12, 3))

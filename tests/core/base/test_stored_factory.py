@@ -1,3 +1,4 @@
+from enum import Enum
 import unittest
 
 
@@ -23,10 +24,16 @@ class Permission(Base):
     is_admin = fields.Boolean()
 
 
+class UserType(Enum):
+    USER = "user"
+    ADMIN = "admin"
+
+
 class User(Base):
     emails = fields.List(fields.String())
     permissions = fields.List(fields.Object(Permission))
     custom_config = fields.Typed(dict)
+    type = fields.Enum(UserType)
 
 
 class Client(Base):
@@ -83,6 +90,26 @@ class TestStoredFactory(unittest.TestCase):
 
         self.assertEqual(user.emails, emails)
         self.assertEqual(user.emails, emails)
+
+    def test_create_with_enum_field(self):
+        cl = self.factory.get("test_enum")
+
+        # test saving
+        user = cl.users.get("admin")
+        # default value, still
+        self.assertEqual(user.type, UserType.USER)
+
+        # now set and test if it's saved
+        user.type = UserType.ADMIN
+        user.save()
+        cl.save()
+        # reset-factory for now, need to always get from store
+        self.factory = StoredFactory(Client)
+        ret_cl = self.factory.get("test_enum")
+
+        self.assertNotEqual(cl, ret_cl)
+        user = ret_cl.users.get("admin")
+        self.assertEqual(user.type, UserType.ADMIN)
 
     def tearDown(self):
         for name in self.factory.store.list_all():

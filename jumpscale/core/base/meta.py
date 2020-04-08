@@ -11,11 +11,18 @@ def get_field_property(name, field):
     def getter(self):
         if hasattr(self, inner_name):
             return getattr(self, inner_name)
-        return field.default
+
+        # accept raw value as default too
+        return field.from_raw(field.default)
 
     def setter(self, value):
+        # accept if this is a raw value too
+        value = field.from_raw(value)
+
+        # validate
         field.validate(value)
 
+        # se attribute
         setattr(self, inner_name, value)
         self._data_updated(name, value)
 
@@ -44,6 +51,17 @@ FactoryInfo = namedtuple("FactoryInfo", ["name", "type", "factory"])
 
 class BaseMeta(type):
     def __new__(cls, name, based, attrs):
+        """
+        this will return a new class with fields,factories as property (function descriptors)
+
+        Args:
+            name (str): class name
+            based (tuple): super class types
+            attrs (dict): current attributes
+
+        Returns:
+            any: a new class
+        """
         factories = []
         fields = {}
         new_attrs = {}
@@ -79,7 +97,8 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
         self.parent = parent
 
         for name, field in self._get_fields().items():
-            setattr(self, f"__{name}", field.default)
+            # accept raw as a default value
+            setattr(self, f"__{name}", field.from_raw(field.default))
 
         for info in self._get_factory_info():
             setattr(self, info.name, info.factory(info.type))
@@ -96,36 +115,22 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
 
         for name, field in self._get_fields().items():
             value = getattr(self, name)
+            raw_value = field.to_raw(value)
             if isinstance(field, Secret):
-                data[f"__{name}"] = value
-            elif isinstance(field, Object):
-                data[name] = value._get_data()
-            elif isinstance(field, List) and isinstance(field.field, Object):
-                data[name] = [obj._get_data() for obj in value]
+                data[f"__{name}"] = raw_value
             else:
-                data[name] = value
+                data[name] = raw_value
 
         return data
 
     def _set_data(self, new_data):
         for name, field in self._get_fields().items():
             if name in new_data:
-                value = new_data[name]
                 try:
-                    if isinstance(value, dict):
-                        # fields.Object
-                        obj = field.type()
-                        obj._set_data(value)
-                        value = obj
-                    if isinstance(value, list) and isinstance(field.field, Object):
-                        value_as_objects = []
-                        for item in value:
-                            obj = field.field.type()
-                            obj._set_data(item)
-                            value_as_objects.append(obj)
-                        value = value_as_objects
-                    setattr(self, f"__{name}", value)
-                except ValidationError:
+                    setattr(self, f"__{name}", field.from_raw(new_data[name]))
+                except (ValidationError, ValueError):
+                    # should at least log validation and value errors
+                    # this can happen in case of e.g. fields type change
                     pass
 
     def _data_updated(self, name, value):
