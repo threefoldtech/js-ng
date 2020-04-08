@@ -56,7 +56,7 @@ def migrate_config():
 
 if not os.path.exists(config_path):
     os.makedirs(os.path.dirname(config_path), exist_ok=True)
-    with os.open(config_path, "w") as f:
+    with open(config_path, "w") as f:
         # don't ues mknod https://github.com/js-next/js-ng/issues/182
         f.close()
 
