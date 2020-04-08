@@ -49,10 +49,11 @@ def is_dir(path: str) -> bool:
 def is_file(path: str) -> bool:
     """Checks if path is a file
 
-    :param path: path to check
-    :type path: str
-    :return: True if is file else False
-    :rtype: bool
+    Args:
+        path (str): path to check if is file
+
+    Returns:
+        bool: True if is file and False otherwise
     """
     return pathlib.Path(path).is_file()
 
@@ -347,9 +348,7 @@ def touch(path: str):
     return pathlib.Path(path).touch()
 
 
-def get_temp_filename(
-    mode="w+b", buffering=-1, encoding=None, newline=None, suffix=None, prefix=None, dir=None,
-) -> str:
+def get_temp_filename(mode="w+b", buffering=-1, encoding=None, newline=None, suffix=None, prefix=None, dir=None) -> str:
     """Get temp filename
 
     Args:
