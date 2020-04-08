@@ -146,7 +146,7 @@ def execute(cmd, **command_ctx):
             cwd = command_ctx["cwd"]
             del command_ctx["cwd"]
             c = invoke.Context()
-            with c.cd(command_ctx["cwd"]):
+            with c.cd(cwd):
                 return c.run(cmd, **command_ctx)
         del command_ctx['cwd']
     res = invoke.run(cmd, **command_ctx)
