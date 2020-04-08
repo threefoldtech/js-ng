@@ -19,6 +19,7 @@ sep = os.path.sep
 is_samefile = os.path.samefile
 expandvars = os.path.expandvars
 expanduser = os.path.expanduser
+realpath = os.path.realpath
 
 
 def home():
@@ -346,7 +347,9 @@ def touch(path: str):
     return pathlib.Path(path).touch()
 
 
-def get_temp_filename(mode="w+b", buffering=-1, encoding=None, newline=None, suffix=None, prefix=None, dir=None) -> str:
+def get_temp_filename(
+    mode="w+b", buffering=-1, encoding=None, newline=None, suffix=None, prefix=None, dir=None,
+) -> str:
     """Get temp filename
 
     Args:
@@ -462,6 +465,20 @@ def copy_file(src: str, dst: str, times=False, perms=False):
     shutil.copyfile(src, dst)
     if times or perms:
         copy_stat(src, dst, times, perms)
+
+
+def symlink(src: str, dst: str, overwrite=False):
+    """Create a symbolic link.
+
+    Args:
+        src (str): Source of link
+        dst (str): Destination path of link
+        overwrite (bool, optional): If link exists will delete it. Defaults to False.
+    """
+    if overwrite and exists(dst):
+        os.unlink(dst)
+
+    os.symlink(src, dst)
 
 
 copy_tree = dir_util.copy_tree
@@ -610,7 +627,7 @@ def walk(path: str, pat="*", filter_fun=default_filter_fun):
     for entry in p.rglob(pat):
         # use rglob instead of glob("**/*")
         if filter_fun(entry):
-            yield str(entry )
+            yield str(entry)
 
 
 def walk_non_recursive(path: str, filter_fun=default_filter_fun):

@@ -21,29 +21,27 @@ class Factory:
         if not name.isidentifier():
             raise ValueError("{} is not a valid identifier".format(name))
 
-        try:
-            self.find(name)
-        except AttributeError:
-            instance = self.type(*args, **kwargs)
-            instance.parent = self.parent
-            setattr(self, name, instance)
+        if self.find(name):
+            raise DuplicateError(f"Instance with name {name} already exists")
 
-            self.count += 1
-            return instance
+        instance = self.type(*args, **kwargs)
+        instance.parent = self.parent
+        setattr(self, name, instance)
 
-        raise DuplicateError
+        self.count += 1
+        return instance
 
     def find(self, name):
-        instance = getattr(self, name)
-        if not isinstance(instance, self.type):
+        instance = getattr(self, name, None)
+        if instance and not isinstance(instance, self.type):
             raise ValueError("{} is an internal attribute".format(name))
         return instance
 
     def get(self, name, *args, **kwargs):
-        try:
-            return self.find(name)
-        except AttributeError:
-            return self.new(name, *args, **kwargs)
+        instance = self.find(name)
+        if instance:
+            return instance
+        return self.new(name, *args, **kwargs)
 
     def delete(self, name):
         self.count -= 1
