@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.4" />
-<title>jumpscale.clients.docker API documentation</title>
+<title>jumpscale.servers.openresty.utils API documentation</title>
 <meta name="description" content="" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
@@ -17,31 +17,41 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>jumpscale.clients.docker</code></h1>
+<h1 class="title">Module <code>jumpscale.servers.openresty.utils</code></h1>
 </header>
 <section id="section-intro">
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">from jumpscale.core.base import StoredFactory
-
-from .docker import DockerClient
+<pre><code class="python">from jumpscale.god import j
 
 
-export_module_as = StoredFactory(DockerClient)</code></pre>
+DIR_PATH = j.sals.fs.dirname(j.sals.fs.realpath(__file__))
+env = j.tools.jinja2.get_env(j.sals.fs.join_paths(DIR_PATH, &#34;templates&#34;))
+
+
+def render_config_template(name, **kwargs):
+    return env.get_template(f&#34;{name}.conf&#34;).render(**kwargs)</code></pre>
 </details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt><code class="name"><a title="jumpscale.clients.docker.docker" href="docker.html">jumpscale.clients.docker.docker</a></code></dt>
+<dt id="jumpscale.servers.openresty.utils.render_config_template"><code class="name flex">
+<span>def <span class="ident">render_config_template</span></span>(<span>name, **kwargs)</span>
+</code></dt>
 <dd>
 <section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def render_config_template(name, **kwargs):
+    return env.get_template(f&#34;{name}.conf&#34;).render(**kwargs)</code></pre>
+</details>
 </dd>
 </dl>
-</section>
-<section>
-</section>
-<section>
 </section>
 <section>
 </section>
@@ -54,12 +64,12 @@ export_module_as = StoredFactory(DockerClient)</code></pre>
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="jumpscale.clients" href="../index.html">jumpscale.clients</a></code></li>
+<li><code><a title="jumpscale.servers.openresty" href="index.html">jumpscale.servers.openresty</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
-<ul>
-<li><code><a title="jumpscale.clients.docker.docker" href="docker.html">jumpscale.clients.docker.docker</a></code></li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="jumpscale.servers.openresty.utils.render_config_template" href="#jumpscale.servers.openresty.utils.render_config_template">render_config_template</a></code></li>
 </ul>
 </li>
 </ul>

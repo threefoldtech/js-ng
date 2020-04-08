@@ -44,7 +44,7 @@ def get_currency_data(api_key, fake=False, fakeonerror=False):
             data[&#34;USDETH&#34;] = 1 / cc.get_price(&#34;ETH&#34;, &#34;USD&#34;)[&#34;ETH&#34;][&#34;USD&#34;]
             data[&#34;USDXRP&#34;] = cc.get_price(&#34;USD&#34;, &#34;XRP&#34;)[&#34;USD&#34;][&#34;XRP&#34;]
             data[&#34;USDBTC&#34;] = 1 / cc.get_price(&#34;BTC&#34;, &#34;USD&#34;)[&#34;BTC&#34;][&#34;USD&#34;]
-
+            
             normalized_data = {k.lower().lstrip(&#34;usd&#34;):v for k,v in data.items()}
             return normalized_data
 
@@ -136,7 +136,7 @@ class CurrencyLayerClient(Client):
             data[&#34;USDETH&#34;] = 1 / cc.get_price(&#34;ETH&#34;, &#34;USD&#34;)[&#34;ETH&#34;][&#34;USD&#34;]
             data[&#34;USDXRP&#34;] = cc.get_price(&#34;USD&#34;, &#34;XRP&#34;)[&#34;USD&#34;][&#34;XRP&#34;]
             data[&#34;USDBTC&#34;] = 1 / cc.get_price(&#34;BTC&#34;, &#34;USD&#34;)[&#34;BTC&#34;][&#34;USD&#34;]
-
+            
             normalized_data = {k.lower().lstrip(&#34;usd&#34;):v for k,v in data.items()}
             return normalized_data
 

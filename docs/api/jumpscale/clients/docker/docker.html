@@ -56,11 +56,11 @@ class DockerClient(Client):
                 A dictionary to configure volumes mounted inside the container. The key is either the host path or a volume name, and the value is a dictionary with the keys:
                 bind The path to mount the volume inside the container
                 mode Either rw to mount the volume read/write, or ro to mount it read-only.
-                example
+                example 
                 {&#39;/home/user1/&#39;: {&#39;bind&#39;: &#39;/mnt/vol2&#39;, &#39;mode&#39;: &#39;rw&#39;},
                 &#39;/var/www&#39;: {&#39;bind&#39;: &#39;/mnt/vol1&#39;, &#39;mode&#39;: &#39;ro&#39;}}
             detach (bool, optional): detach from container after running it.
-            ports The port number, as an integer. For example,
+            ports The port number, as an integer. For example, 
                 - {&#39;2222/tcp&#39;: 3333} will expose port 2222 inside the container as port 3333 on the host.
                 - None, to assign a random host port. For example, {&#39;2222/tcp&#39;: None}.
                 - A tuple of (address, port) if you want to specify the host interface. For example, {&#39;1111/tcp&#39;: (&#39;127.0.0.1&#39;, 1111)}.
@@ -84,11 +84,11 @@ class DockerClient(Client):
                 A dictionary to configure volumes mounted inside the container. The key is either the host path or a volume name, and the value is a dictionary with the keys:
                 bind The path to mount the volume inside the container
                 mode Either rw to mount the volume read/write, or ro to mount it read-only.
-                example
+                example 
                 {&#39;/home/user1/&#39;: {&#39;bind&#39;: &#39;/mnt/vol2&#39;, &#39;mode&#39;: &#39;rw&#39;},
                 &#39;/var/www&#39;: {&#39;bind&#39;: &#39;/mnt/vol1&#39;, &#39;mode&#39;: &#39;ro&#39;}}
             detach (bool, optional): detach from container after running it.
-            ports The port number, as an integer. For example,
+            ports The port number, as an integer. For example, 
                 - {&#39;2222/tcp&#39;: 3333} will expose port 2222 inside the container as port 3333 on the host.
                 - None, to assign a random host port. For example, {&#39;2222/tcp&#39;: None}.
                 - A tuple of (address, port) if you want to specify the host interface. For example, {&#39;1111/tcp&#39;: (&#39;127.0.0.1&#39;, 1111)}.
@@ -192,15 +192,15 @@ class DockerClient(Client):
             workdir (str) – Path to working directory for this exec session
             demux (bool) – Return stdout and stderr separately
 
-        Returns:
+        Returns:        
             A tuple of (exit_code, output)
             exit_code: (int):
             Exit code for the executed command or None if either stream or socket is True.
 
             output: (generator, bytes, or tuple):
-                If stream=True, a generator yielding response chunks.
-                If socket=True, a socket object for the connection.
-                If demux=True, a tuple of two bytes: stdout and stderr.
+                If stream=True, a generator yielding response chunks. 
+                If socket=True, a socket object for the connection. 
+                If demux=True, a tuple of two bytes: stdout and stderr. 
                 A bytestring containing response data otherwise.
         &#34;&#34;&#34;
         docker = self.get(container_id)
@@ -252,11 +252,11 @@ class DockerClient(Client):
                 A dictionary to configure volumes mounted inside the container. The key is either the host path or a volume name, and the value is a dictionary with the keys:
                 bind The path to mount the volume inside the container
                 mode Either rw to mount the volume read/write, or ro to mount it read-only.
-                example
+                example 
                 {&#39;/home/user1/&#39;: {&#39;bind&#39;: &#39;/mnt/vol2&#39;, &#39;mode&#39;: &#39;rw&#39;},
                 &#39;/var/www&#39;: {&#39;bind&#39;: &#39;/mnt/vol1&#39;, &#39;mode&#39;: &#39;ro&#39;}}
             detach (bool, optional): detach from container after running it.
-            ports The port number, as an integer. For example,
+            ports The port number, as an integer. For example, 
                 - {&#39;2222/tcp&#39;: 3333} will expose port 2222 inside the container as port 3333 on the host.
                 - None, to assign a random host port. For example, {&#39;2222/tcp&#39;: None}.
                 - A tuple of (address, port) if you want to specify the host interface. For example, {&#39;1111/tcp&#39;: (&#39;127.0.0.1&#39;, 1111)}.
@@ -280,11 +280,11 @@ class DockerClient(Client):
                 A dictionary to configure volumes mounted inside the container. The key is either the host path or a volume name, and the value is a dictionary with the keys:
                 bind The path to mount the volume inside the container
                 mode Either rw to mount the volume read/write, or ro to mount it read-only.
-                example
+                example 
                 {&#39;/home/user1/&#39;: {&#39;bind&#39;: &#39;/mnt/vol2&#39;, &#39;mode&#39;: &#39;rw&#39;},
                 &#39;/var/www&#39;: {&#39;bind&#39;: &#39;/mnt/vol1&#39;, &#39;mode&#39;: &#39;ro&#39;}}
             detach (bool, optional): detach from container after running it.
-            ports The port number, as an integer. For example,
+            ports The port number, as an integer. For example, 
                 - {&#39;2222/tcp&#39;: 3333} will expose port 2222 inside the container as port 3333 on the host.
                 - None, to assign a random host port. For example, {&#39;2222/tcp&#39;: None}.
                 - A tuple of (address, port) if you want to specify the host interface. For example, {&#39;1111/tcp&#39;: (&#39;127.0.0.1&#39;, 1111)}.
@@ -388,15 +388,15 @@ class DockerClient(Client):
             workdir (str) – Path to working directory for this exec session
             demux (bool) – Return stdout and stderr separately
 
-        Returns:
+        Returns:        
             A tuple of (exit_code, output)
             exit_code: (int):
             Exit code for the executed command or None if either stream or socket is True.
 
             output: (generator, bytes, or tuple):
-                If stream=True, a generator yielding response chunks.
-                If socket=True, a socket object for the connection.
-                If demux=True, a tuple of two bytes: stdout and stderr.
+                If stream=True, a generator yielding response chunks. 
+                If socket=True, a socket object for the connection. 
+                If demux=True, a tuple of two bytes: stdout and stderr. 
                 A bytestring containing response data otherwise.
         &#34;&#34;&#34;
         docker = self.get(container_id)
@@ -490,11 +490,11 @@ auto_remove (bool) – enable auto-removal of the container on daemon side</p>
             A dictionary to configure volumes mounted inside the container. The key is either the host path or a volume name, and the value is a dictionary with the keys:
             bind The path to mount the volume inside the container
             mode Either rw to mount the volume read/write, or ro to mount it read-only.
-            example
+            example 
             {&#39;/home/user1/&#39;: {&#39;bind&#39;: &#39;/mnt/vol2&#39;, &#39;mode&#39;: &#39;rw&#39;},
             &#39;/var/www&#39;: {&#39;bind&#39;: &#39;/mnt/vol1&#39;, &#39;mode&#39;: &#39;ro&#39;}}
         detach (bool, optional): detach from container after running it.
-        ports The port number, as an integer. For example,
+        ports The port number, as an integer. For example, 
             - {&#39;2222/tcp&#39;: 3333} will expose port 2222 inside the container as port 3333 on the host.
             - None, to assign a random host port. For example, {&#39;2222/tcp&#39;: None}.
             - A tuple of (address, port) if you want to specify the host interface. For example, {&#39;1111/tcp&#39;: (&#39;127.0.0.1&#39;, 1111)}.
@@ -595,15 +595,15 @@ A bytestring containing response data otherwise.</p>
         workdir (str) – Path to working directory for this exec session
         demux (bool) – Return stdout and stderr separately
 
-    Returns:
+    Returns:        
         A tuple of (exit_code, output)
         exit_code: (int):
         Exit code for the executed command or None if either stream or socket is True.
 
         output: (generator, bytes, or tuple):
-            If stream=True, a generator yielding response chunks.
-            If socket=True, a socket object for the connection.
-            If demux=True, a tuple of two bytes: stdout and stderr.
+            If stream=True, a generator yielding response chunks. 
+            If socket=True, a socket object for the connection. 
+            If demux=True, a tuple of two bytes: stdout and stderr. 
             A bytestring containing response data otherwise.
     &#34;&#34;&#34;
     docker = self.get(container_id)
@@ -781,11 +781,11 @@ auto_remove (bool) – enable auto-removal of the container on daemon side</p>
             A dictionary to configure volumes mounted inside the container. The key is either the host path or a volume name, and the value is a dictionary with the keys:
             bind The path to mount the volume inside the container
             mode Either rw to mount the volume read/write, or ro to mount it read-only.
-            example
+            example 
             {&#39;/home/user1/&#39;: {&#39;bind&#39;: &#39;/mnt/vol2&#39;, &#39;mode&#39;: &#39;rw&#39;},
             &#39;/var/www&#39;: {&#39;bind&#39;: &#39;/mnt/vol1&#39;, &#39;mode&#39;: &#39;ro&#39;}}
         detach (bool, optional): detach from container after running it.
-        ports The port number, as an integer. For example,
+        ports The port number, as an integer. For example, 
             - {&#39;2222/tcp&#39;: 3333} will expose port 2222 inside the container as port 3333 on the host.
             - None, to assign a random host port. For example, {&#39;2222/tcp&#39;: None}.
             - A tuple of (address, port) if you want to specify the host interface. For example, {&#39;1111/tcp&#39;: (&#39;127.0.0.1&#39;, 1111)}.

@@ -31,8 +31,7 @@ from jumpscale.shell import ptconfig
 
 from ptpython.repl import embed
 
-
-BASE_CONFIG_DIR = os.path.join(os.environ[&#34;HOME&#34;], &#34;.jsng&#34;)
+BASE_CONFIG_DIR = os.path.join(os.environ.get(&#34;HOME&#34;, &#34;/root&#34;), &#34;.jsng&#34;)
 HISTORY_FILENAME = os.path.join(BASE_CONFIG_DIR, &#34;history.txt&#34;)
 
 

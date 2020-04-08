@@ -28,10 +28,10 @@
 
 
 JS-NG&gt; with j.core.executors.RemoteExecutor(host=&#34;localhost&#34;, connect_kwargs={&#34;key_filename&#34;:
-                                                                              &#34;/home/xmonader/.ssh/id_rsa&#34;,}) as c:
-            c.run(&#34;hostname&#34;)
+                                                                              &#34;/home/xmonader/.ssh/id_rsa&#34;,}) as c: 
+            c.run(&#34;hostname&#34;)                           
 xmonader-ThinkPad-E580
-JS-NG&gt;
+JS-NG&gt;  
 &#34;&#34;&#34;
 
 
@@ -48,7 +48,7 @@ class RemoteExecutor:
     @property
     def connection(self):
         return fabric.Connection(**self._connection_ctx)
-
+    
     @property
     def sftp(self):
         return self.connection.sftp()
@@ -117,7 +117,7 @@ def execute(cmd, command_ctx, connection_ctx):
     @property
     def connection(self):
         return fabric.Connection(**self._connection_ctx)
-
+    
     @property
     def sftp(self):
         return self.connection.sftp()
