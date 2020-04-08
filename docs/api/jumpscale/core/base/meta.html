@@ -37,7 +37,7 @@ def get_field_property(name, field):
             return getattr(self, inner_name)
 
         # accept raw value as default too
-        return field.default
+        return field.from_raw(field.default)
 
     def setter(self, value):
         # accept if this is a raw value too
@@ -121,7 +121,8 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
         self.parent = parent
 
         for name, field in self._get_fields().items():
-            setattr(self, f&#34;__{name}&#34;, field.default)
+            # accept raw as a default value
+            setattr(self, f&#34;__{name}&#34;, field.from_raw(field.default))
 
         for info in self._get_factory_info():
             setattr(self, info.name, info.factory(info.type))
@@ -185,7 +186,7 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
             return getattr(self, inner_name)
 
         # accept raw value as default too
-        return field.default
+        return field.from_raw(field.default)
 
     def setter(self, value):
         # accept if this is a raw value too
@@ -257,7 +258,8 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
         self.parent = parent
 
         for name, field in self._get_fields().items():
-            setattr(self, f&#34;__{name}&#34;, field.default)
+            # accept raw as a default value
+            setattr(self, f&#34;__{name}&#34;, field.from_raw(field.default))
 
         for info in self._get_factory_info():
             setattr(self, info.name, info.factory(info.type))

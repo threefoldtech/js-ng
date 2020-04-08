@@ -142,7 +142,7 @@ class ValidationError(Exception):
 
 
 class Field:
-    def __init__(self, default=None, required=False, indexed=False, validators=None, **kwargs):
+    def __init__(self, default=None, required=False, indexed=False, readonly=False, validators=None, **kwargs):
         &#34;&#34;&#34;
         Base field for all field types, have some common options that can be used any other field type too.
 
@@ -151,11 +151,13 @@ class Field:
             default (any, optional): default value. Defaults to None.
             required (bool, optional): required or not. Defaults to False.
             indexed (bool, optional): indexed or not. Defaults to False.
+            readonly (bool, optional): can only get the value. Defaults to False.
             validators (list of function, optional): a list of functions that takes a value and raises ValidationError if not valid. Defaults to None.
         &#34;&#34;&#34;
         self.default = default
         self.required = required
         self.indexed = indexed
+        self.readonly = readonly
         self.kwargs = kwargs
 
         self.validators = validators
@@ -287,7 +289,7 @@ class String(Typed):
         self.maxlen = maxlen
 
     def validate(self, value):
-        super.validate(value)
+        super().validate(value)
         if self.maxlen is not None:
             if len(value) &gt; self.maxlen:
                 raise ValidationError(f&#34;length of the string exceeds {self.maxlen}&#34;)
@@ -435,6 +437,10 @@ class Enum(Typed):
         ```
 
         field = fields.Enum(UserType)
+
+        Args:
+            enum_type (type): enum type (class)
+            kwargs: any keyword arguments supported by `Field`
         &#34;&#34;&#34;
         # default is the first value
         default = next(iter(enum_type))
@@ -466,11 +472,19 @@ class Enum(Typed):
         try:
             return self.enum_type(value)
         except ValueError:
+            # let validate() do the validation
             return value
 
 
 class Email(Field):
     def __init__(self, default=&#34;&#34;, **kwargs):
+        &#34;&#34;&#34;
+        email field, will validate the value of emails
+
+        Args:
+            default (str, optional): default value. Defaults to &#34;&#34;
+            kwargs: any keyword arguments supported by `Field`
+        &#34;&#34;&#34;
         super().__init__(default, **kwargs)
         self.regex = r&#34;^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$&#34;
 
@@ -492,6 +506,13 @@ class Email(Field):
 class Path(Field):
     # TODO: Validate that it is working on windows
     def __init__(self, default=&#34;&#34;, **kwargs):
+        &#34;&#34;&#34;
+        path field, will validate the value of file system paths
+
+        Args:
+            default (str, optional): default value. Defaults to &#34;&#34;
+            kwargs: any keyword arguments supported by `Field`
+        &#34;&#34;&#34;
         super().__init__(default, **kwargs)
         self.regex = r&#34;^(/[^/ ]*)+/?$&#34;
 
@@ -512,6 +533,13 @@ class Path(Field):
 
 class URL(Field):
     def __init__(self, default=&#34;&#34;, **kwargs):
+        &#34;&#34;&#34;
+        url field, will validate the value of urls
+
+        Args:
+            default (str, optional): default value. Defaults to &#34;&#34;
+            kwargs: any keyword arguments supported by `Field`
+        &#34;&#34;&#34;
         super().__init__(default, **kwargs)
         self.regex = r&#34;^(https?|ftp)://[^\s/$.?#].[^\s]*$&#34;
 
@@ -533,6 +561,17 @@ class URL(Field):
 
 class Tel(Field):
     def __init__(self, default=&#34;&#34;, **kwargs):
+        &#34;&#34;&#34;
+        email field, will validate the value of telephone numbers
+
+        will be stored as a string at the end.
+
+        It will strip any additional characters that are not numbers.
+
+        Args:
+            default (str, optional): default value. Defaults to &#34;&#34;
+            kwargs: any keyword arguments supported by `Field`
+        &#34;&#34;&#34;
         super().__init__(default, **kwargs)
         self.regex = r&#34;^\+?[0-9]{6,15}(?:x[0-9]+)?$&#34;
 
@@ -564,6 +603,15 @@ class Tel(Field):
 
 class IPAddress(Field):
     def __init__(self, default=&#34;&#34;, **kwargs):
+        &#34;&#34;&#34;
+        ip address field, will validate the value of ip address (v4 and v6)
+
+        will be stored as a string.
+
+        Args:
+            default (str, optional): default value. Defaults to &#34;&#34;
+            kwargs: any keyword arguments supported by `Field`
+        &#34;&#34;&#34;
         super().__init__(default, **kwargs)
 
     def validate(self, value):
@@ -586,6 +634,7 @@ class IPAddress(Field):
 
 
 class DateTime(Typed):
+    # maybe add something like auto_now and auto_today for date/time fields
     def __init__(self, default=None, format_=None, **kwargs):
         &#34;&#34;&#34;
         datetime field, actual value will be converted to datetime (utc) object
@@ -593,105 +642,147 @@ class DateTime(Typed):
         Args:
             default (datetime): default value. Defaults to None.
             format_ (str, optional): datetime format. Defaults to &#34;%Y-%m-%d %H:%M&#34; if None.
+            kwargs: any keyword arguments supported by `Field`
         &#34;&#34;&#34;
         super().__init__(type_=datetime.datetime, default=default, **kwargs)
-        self.regex = r&#34;^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1]) (2[0-3]|[01][0-9]):[0-5][0-9]$&#34;
         if not format_:
-            self.format = &#34;%Y-%m-%d %H:%M&#34;
+            format_ = &#34;%Y-%m-%d %H:%M&#34;
+        self.format = format_
 
-        def from_raw(self, value):
-            &#34;&#34;&#34;
-            get a datetime object from a numberic (epoch) or string value
-
-
-            Args:
-                value (str or int or float): value as a number or a string
-
-            Returns:
-                datetime.datetime: `datetime.datetime` object
-            &#34;&#34;&#34;
-            if isinstance(value, (int, float)):
-                return datetime.datetime.utcfromtimestamp(value)
-            elif isinstance(value, str):
-                return datetime.datetime.strptime(value, format=self.format)
-            raise value
-
-        def to_raw(self, dt_obj):
-            &#34;&#34;&#34;
-            get a utc timestamp from datetime object
-
-            Args:
-                dt_obj (datetime.datetime): datetime object
-
-            Returns:
-                int: utc timestamp
-            &#34;&#34;&#34;
-            if isinstance(dt_obj, datetime.datetime):
-                return dt_obj.replace(tzinfo=datetime.timezone.utc).timestamp()
-            return dt_obj
+    def from_raw(self, value):
+        &#34;&#34;&#34;
+        get a datetime object from a numberic (epoch) or string value
 
 
-class Date(Field):
-    &#34;&#34;&#34;Support yyyy-mm-dd format&#34;&#34;&#34;
-
-    def __init__(self, default=&#34;&#34;, **kwargs):
-        super().__init__(default, **kwargs)
-        self.regex = r&#34;[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])&#34;
-
-    def validate(self, value):
-        &#34;&#34;&#34;Check whether provided value is a valid date representation
         Args:
-            value (str)
+            value (str or int or float): value as a number or a string
+
         Returns:
-            Boolean expresion&#34;&#34;&#34;
-        super().validate(value)
-        default_format = &#34;%Y-%m-%d&#34;
-        try:
-            time.strptime(value, default_format)
-        except Exception:
-            raise ValidationError(f&#34;{value} is not a valid Date&#34;)
+            datetime.datetime: `datetime.datetime` object
+        &#34;&#34;&#34;
+        if isinstance(value, (int, float)):
+            return datetime.datetime.utcfromtimestamp(value)
+        elif isinstance(value, str):
+            return datetime.datetime.strptime(value, self.format)
+        return value
 
+    def to_raw(self, dt_obj):
+        &#34;&#34;&#34;
+        get a utc timestamp from datetime object
 
-class Time(Field):
-    &#34;&#34;&#34;Supported format : hh:mm&#34;&#34;&#34;
+        Args:
+            dt_obj (datetime.datetime): datetime object
 
-    def __init__(self, default=&#34;&#34;, **kwargs):
-        super().__init__(default, **kwargs)
-        self.default_format = &#34;%H:%M&#34;
-
-    def validate(self, value):
-        &#34;&#34;&#34;Check whether provided value is a valid time representation
-        Arguments:
-            value (str)
         Returns:
-            Boolean expresion&#34;&#34;&#34;
-        super().validate(value)
-        try:
-            time.strptime(value, self.default_format)
-        except Exception:
-            raise ValidationError(f&#34;{value} is not a valid Time&#34;)
+            float: utc timestamp
+        &#34;&#34;&#34;
+        if isinstance(dt_obj, datetime.date):
+            return dt_obj.replace(tzinfo=datetime.timezone.utc).timestamp()
+        return dt_obj
 
-    def add_hours(self, hours):
-        self._hours_operations(&#34;add&#34;, hours)
 
-    def subtract_hours(self, hours):
-        self._hours_operations(&#34;sub&#34;, hours)
+class Date(Typed):
+    def __init__(self, default=None, format_=None, **kwargs):
+        &#34;&#34;&#34;
+        date field, actual value will be converted to date object
 
-    def _hours_operations(self, operation, hours):
-        stored_time = time.strptime(self.default, self.default_format)
-        # Get index of hour in stored_time tuple to replace its value
-        hour_index = stored_time.index(int(self.default.split(&#34;:&#34;)[0]))
-        tm_hours = stored_time.tm_hour
+        Args:
+            default (date): default value. Defaults to None.
+            format_ (str, optional): date format. Defaults to &#34;%Y-%m-%d&#34; if None.
+            kwargs: any keyword arguments supported by `Field`
+        &#34;&#34;&#34;
+        super().__init__(type_=datetime.date, default=default, **kwargs)
+        if not format_:
+            format_ = &#34;%Y-%m-%d&#34;
+        self.format = format_
 
-        # apply the operation
-        if operation == &#34;add&#34;:
-            tm_hours += hours
-        elif operation == &#34;sub&#34;:
-            tm_hours -= hours
-        temp_time = stored_time[:hour_index] + (tm_hours,) + stored_time[hour_index + 1 :]
+    def from_raw(self, value):
+        &#34;&#34;&#34;
+        get a date object from a numberic (epoch) or string value
 
-        # Assigning the new time
-        self.default = time.strftime(self.default_format, temp_time)
+
+        Args:
+            value (str or int or float): value as a number or a string
+
+        Returns:
+            datetime.date: `datetime.date` object
+        &#34;&#34;&#34;
+        if isinstance(value, (int, float)):
+            return datetime.date.fromtimestamp(value)
+        elif isinstance(value, str):
+            try:
+                return datetime.datetime.strptime(value, self.format).date()
+            except ValueError:
+                pass
+        return value
+
+    def to_raw(self, d_obj):
+        &#34;&#34;&#34;
+        get a utc timestamp from date object
+
+        Args:
+            d_obj (datetime.date): date object
+
+        Returns:
+            float: timestamp (epoch)
+        &#34;&#34;&#34;
+        if isinstance(d_obj, datetime.date):
+            return time.mktime(d_obj.timetuple())
+        return d_obj
+
+
+class Time(Typed):
+    def __init__(self, default=None, format_=None, **kwargs):
+        &#34;&#34;&#34;
+        time field, actual value will be converted to time object
+
+        Args:
+            default (date): default value. Defaults to None.
+            format_ (str, optional): time format. Defaults to &#34;%H:%M&#34; if None.
+            kwargs: any keyword arguments supported by `Field`
+        &#34;&#34;&#34;
+        super().__init__(default=default, type_=datetime.time, **kwargs)
+        if not format_:
+            format_ = &#34;%H:%M&#34;
+        self.format = format_
+        self.mktime_format = &#34;%a %b %d %H:%M:%S %Y&#34;
+
+    def from_raw(self, value):
+        &#34;&#34;&#34;
+        get a time object from a numberic or string value
+
+
+        Args:
+            value (str or int or float): value as a number or a string
+
+        Returns:
+            datetime.time: `datetime.time` object
+        &#34;&#34;&#34;
+        if isinstance(value, (int, float)):
+            return datetime.datetime.utcfromtimestamp(value).time()
+        elif isinstance(value, str):
+            try:
+                return datetime.datetime.strptime(value, self.format).time()
+            except ValueError:
+                pass
+        return value
+
+    def to_raw(self, t_obj):
+        &#34;&#34;&#34;
+        get a utc timestamp from t_obj object
+
+        Args:
+            t_obj (datetime.time): time object
+
+        Returns:
+            float: timestamp (epoch)
+        &#34;&#34;&#34;
+        if isinstance(t_obj, datetime.time):
+            dt_obj = datetime.datetime(
+                1970, 1, 1, t_obj.hour, t_obj.minute, t_obj.second, int(t_obj.microsecond / 1000)
+            )
+            return dt_obj.replace(tzinfo=datetime.timezone.utc).timestamp()
+        return t_obj
 
 
 # TODO: add duration field
@@ -752,85 +843,150 @@ class Factory(StoredFactory):
 </dd>
 <dt id="jumpscale.core.base.fields.Date"><code class="flex name class">
 <span>class <span class="ident">Date</span></span>
-<span>(</span><span>default='', **kwargs)</span>
+<span>(</span><span>default=None, format_=None, **kwargs)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Support yyyy-mm-dd format</p>
-<p>Base field for all field types, have some common options that can be used any other field type too.</p>
+<section class="desc"><p>date field, actual value will be converted to date object</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>default</code></strong> :&ensp;<code>any</code>, optional</dt>
+<dt><strong><code>default</code></strong> :&ensp;<code>date</code></dt>
 <dd>default value. Defaults to None.</dd>
-<dt><strong><code>required</code></strong> :&ensp;<code>bool</code>, optional</dt>
-<dd>required or not. Defaults to False.</dd>
-<dt><strong><code>indexed</code></strong> :&ensp;<code>bool</code>, optional</dt>
-<dd>indexed or not. Defaults to False.</dd>
-<dt><strong><code>validators</code></strong> :&ensp;<code>list</code> of <code>function</code>, optional</dt>
-<dd>a list of functions that takes a value and raises ValidationError if not valid. Defaults to None.</dd>
+<dt><strong><code>format_</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>date format. Defaults to "%Y-%m-%d" if None.</dd>
+<dt><strong><code>kwargs</code></strong></dt>
+<dd>any keyword arguments supported by <a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field"><code>Field</code></a></dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class Date(Field):
-    &#34;&#34;&#34;Support yyyy-mm-dd format&#34;&#34;&#34;
+<pre><code class="python">class Date(Typed):
+    def __init__(self, default=None, format_=None, **kwargs):
+        &#34;&#34;&#34;
+        date field, actual value will be converted to date object
 
-    def __init__(self, default=&#34;&#34;, **kwargs):
-        super().__init__(default, **kwargs)
-        self.regex = r&#34;[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])&#34;
-
-    def validate(self, value):
-        &#34;&#34;&#34;Check whether provided value is a valid date representation
         Args:
-            value (str)
+            default (date): default value. Defaults to None.
+            format_ (str, optional): date format. Defaults to &#34;%Y-%m-%d&#34; if None.
+            kwargs: any keyword arguments supported by `Field`
+        &#34;&#34;&#34;
+        super().__init__(type_=datetime.date, default=default, **kwargs)
+        if not format_:
+            format_ = &#34;%Y-%m-%d&#34;
+        self.format = format_
+
+    def from_raw(self, value):
+        &#34;&#34;&#34;
+        get a date object from a numberic (epoch) or string value
+
+
+        Args:
+            value (str or int or float): value as a number or a string
+
         Returns:
-            Boolean expresion&#34;&#34;&#34;
-        super().validate(value)
-        default_format = &#34;%Y-%m-%d&#34;
-        try:
-            time.strptime(value, default_format)
-        except Exception:
-            raise ValidationError(f&#34;{value} is not a valid Date&#34;)</code></pre>
+            datetime.date: `datetime.date` object
+        &#34;&#34;&#34;
+        if isinstance(value, (int, float)):
+            return datetime.date.fromtimestamp(value)
+        elif isinstance(value, str):
+            try:
+                return datetime.datetime.strptime(value, self.format).date()
+            except ValueError:
+                pass
+        return value
+
+    def to_raw(self, d_obj):
+        &#34;&#34;&#34;
+        get a utc timestamp from date object
+
+        Args:
+            d_obj (datetime.date): date object
+
+        Returns:
+            float: timestamp (epoch)
+        &#34;&#34;&#34;
+        if isinstance(d_obj, datetime.date):
+            return time.mktime(d_obj.timetuple())
+        return d_obj</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></li>
 <li><a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field">Field</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="jumpscale.core.base.fields.Date.validate"><code class="name flex">
-<span>def <span class="ident">validate</span></span>(<span>self, value)</span>
+<dt id="jumpscale.core.base.fields.Date.from_raw"><code class="name flex">
+<span>def <span class="ident">from_raw</span></span>(<span>self, value)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Check whether provided value is a valid date representation</p>
+<section class="desc"><p>get a date object from a numberic (epoch) or string value</p>
 <h2 id="args">Args</h2>
-<p>value (str)</p>
+<dl>
+<dt><strong><code>value</code></strong> :&ensp;<code>str</code> or <code>int</code> or <code>float</code></dt>
+<dd>value as a number or a string</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>datetime.date: <code>datetime.date</code> object</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def from_raw(self, value):
+    &#34;&#34;&#34;
+    get a date object from a numberic (epoch) or string value
+
+
+    Args:
+        value (str or int or float): value as a number or a string
+
+    Returns:
+        datetime.date: `datetime.date` object
+    &#34;&#34;&#34;
+    if isinstance(value, (int, float)):
+        return datetime.date.fromtimestamp(value)
+    elif isinstance(value, str):
+        try:
+            return datetime.datetime.strptime(value, self.format).date()
+        except ValueError:
+            pass
+    return value</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.core.base.fields.Date.to_raw"><code class="name flex">
+<span>def <span class="ident">to_raw</span></span>(<span>self, d_obj)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>get a utc timestamp from date object</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>d_obj</code></strong> :&ensp;<code>datetime.date</code></dt>
+<dd>date object</dd>
+</dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><a title="jumpscale.core.base.fields.Boolean" href="#jumpscale.core.base.fields.Boolean"><code>Boolean</code></a> <code>expresion</code></dt>
-<dd>&nbsp;</dd>
+<dt><strong><code>float</code></strong></dt>
+<dd>timestamp (epoch)</dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def validate(self, value):
-    &#34;&#34;&#34;Check whether provided value is a valid date representation
+<pre><code class="python">def to_raw(self, d_obj):
+    &#34;&#34;&#34;
+    get a utc timestamp from date object
+
     Args:
-        value (str)
+        d_obj (datetime.date): date object
+
     Returns:
-        Boolean expresion&#34;&#34;&#34;
-    super().validate(value)
-    default_format = &#34;%Y-%m-%d&#34;
-    try:
-        time.strptime(value, default_format)
-    except Exception:
-        raise ValidationError(f&#34;{value} is not a valid Date&#34;)</code></pre>
+        float: timestamp (epoch)
+    &#34;&#34;&#34;
+    if isinstance(d_obj, datetime.date):
+        return time.mktime(d_obj.timetuple())
+    return d_obj</code></pre>
 </details>
 </dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field">Field</a></b></code>:
+<li><code><b><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></b></code>:
 <ul class="hlist">
-<li><code><a title="jumpscale.core.base.fields.Field.from_raw" href="#jumpscale.core.base.fields.Field.from_raw">from_raw</a></code></li>
-<li><code><a title="jumpscale.core.base.fields.Field.to_raw" href="#jumpscale.core.base.fields.Field.to_raw">to_raw</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.Typed.validate" href="#jumpscale.core.base.fields.Field.validate">validate</a></code></li>
 </ul>
 </li>
 </ul>
@@ -847,10 +1003,13 @@ class Factory(StoredFactory):
 <dd>default value. Defaults to None.</dd>
 <dt><strong><code>format_</code></strong> :&ensp;<code>str</code>, optional</dt>
 <dd>datetime format. Defaults to "%Y-%m-%d %H:%M" if None.</dd>
+<dt><strong><code>kwargs</code></strong></dt>
+<dd>any keyword arguments supported by <a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field"><code>Field</code></a></dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class DateTime(Typed):
+    # maybe add something like auto_now and auto_today for date/time fields
     def __init__(self, default=None, format_=None, **kwargs):
         &#34;&#34;&#34;
         datetime field, actual value will be converted to datetime (utc) object
@@ -858,54 +1017,120 @@ class Factory(StoredFactory):
         Args:
             default (datetime): default value. Defaults to None.
             format_ (str, optional): datetime format. Defaults to &#34;%Y-%m-%d %H:%M&#34; if None.
+            kwargs: any keyword arguments supported by `Field`
         &#34;&#34;&#34;
         super().__init__(type_=datetime.datetime, default=default, **kwargs)
-        self.regex = r&#34;^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1]) (2[0-3]|[01][0-9]):[0-5][0-9]$&#34;
         if not format_:
-            self.format = &#34;%Y-%m-%d %H:%M&#34;
+            format_ = &#34;%Y-%m-%d %H:%M&#34;
+        self.format = format_
 
-        def from_raw(self, value):
-            &#34;&#34;&#34;
-            get a datetime object from a numberic (epoch) or string value
+    def from_raw(self, value):
+        &#34;&#34;&#34;
+        get a datetime object from a numberic (epoch) or string value
 
 
-            Args:
-                value (str or int or float): value as a number or a string
+        Args:
+            value (str or int or float): value as a number or a string
 
-            Returns:
-                datetime.datetime: `datetime.datetime` object
-            &#34;&#34;&#34;
-            if isinstance(value, (int, float)):
-                return datetime.datetime.utcfromtimestamp(value)
-            elif isinstance(value, str):
-                return datetime.datetime.strptime(value, format=self.format)
-            raise value
+        Returns:
+            datetime.datetime: `datetime.datetime` object
+        &#34;&#34;&#34;
+        if isinstance(value, (int, float)):
+            return datetime.datetime.utcfromtimestamp(value)
+        elif isinstance(value, str):
+            return datetime.datetime.strptime(value, self.format)
+        return value
 
-        def to_raw(self, dt_obj):
-            &#34;&#34;&#34;
-            get a utc timestamp from datetime object
+    def to_raw(self, dt_obj):
+        &#34;&#34;&#34;
+        get a utc timestamp from datetime object
 
-            Args:
-                dt_obj (datetime.datetime): datetime object
+        Args:
+            dt_obj (datetime.datetime): datetime object
 
-            Returns:
-                int: utc timestamp
-            &#34;&#34;&#34;
-            if isinstance(dt_obj, datetime.datetime):
-                return dt_obj.replace(tzinfo=datetime.timezone.utc).timestamp()
-            return dt_obj</code></pre>
+        Returns:
+            float: utc timestamp
+        &#34;&#34;&#34;
+        if isinstance(dt_obj, datetime.date):
+            return dt_obj.replace(tzinfo=datetime.timezone.utc).timestamp()
+        return dt_obj</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></li>
 <li><a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field">Field</a></li>
 </ul>
+<h3>Methods</h3>
+<dl>
+<dt id="jumpscale.core.base.fields.DateTime.from_raw"><code class="name flex">
+<span>def <span class="ident">from_raw</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>get a datetime object from a numberic (epoch) or string value</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>value</code></strong> :&ensp;<code>str</code> or <code>int</code> or <code>float</code></dt>
+<dd>value as a number or a string</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>datetime.datetime: <code>datetime.datetime</code> object</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def from_raw(self, value):
+    &#34;&#34;&#34;
+    get a datetime object from a numberic (epoch) or string value
+
+
+    Args:
+        value (str or int or float): value as a number or a string
+
+    Returns:
+        datetime.datetime: `datetime.datetime` object
+    &#34;&#34;&#34;
+    if isinstance(value, (int, float)):
+        return datetime.datetime.utcfromtimestamp(value)
+    elif isinstance(value, str):
+        return datetime.datetime.strptime(value, self.format)
+    return value</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.core.base.fields.DateTime.to_raw"><code class="name flex">
+<span>def <span class="ident">to_raw</span></span>(<span>self, dt_obj)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>get a utc timestamp from datetime object</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>dt_obj</code></strong> :&ensp;<code>datetime.datetime</code></dt>
+<dd>datetime object</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>float</code></strong></dt>
+<dd>utc timestamp</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def to_raw(self, dt_obj):
+    &#34;&#34;&#34;
+    get a utc timestamp from datetime object
+
+    Args:
+        dt_obj (datetime.datetime): datetime object
+
+    Returns:
+        float: utc timestamp
+    &#34;&#34;&#34;
+    if isinstance(dt_obj, datetime.date):
+        return dt_obj.replace(tzinfo=datetime.timezone.utc).timestamp()
+    return dt_obj</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></b></code>:
 <ul class="hlist">
-<li><code><a title="jumpscale.core.base.fields.Typed.from_raw" href="#jumpscale.core.base.fields.Field.from_raw">from_raw</a></code></li>
-<li><code><a title="jumpscale.core.base.fields.Typed.to_raw" href="#jumpscale.core.base.fields.Field.to_raw">to_raw</a></code></li>
 <li><code><a title="jumpscale.core.base.fields.Typed.validate" href="#jumpscale.core.base.fields.Field.validate">validate</a></code></li>
 </ul>
 </li>
@@ -916,22 +1141,25 @@ class Factory(StoredFactory):
 <span>(</span><span>default='', **kwargs)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Base field for all field types, have some common options that can be used any other field type too.</p>
+<section class="desc"><p>email field, will validate the value of emails</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>default</code></strong> :&ensp;<code>any</code>, optional</dt>
-<dd>default value. Defaults to None.</dd>
-<dt><strong><code>required</code></strong> :&ensp;<code>bool</code>, optional</dt>
-<dd>required or not. Defaults to False.</dd>
-<dt><strong><code>indexed</code></strong> :&ensp;<code>bool</code>, optional</dt>
-<dd>indexed or not. Defaults to False.</dd>
-<dt><strong><code>validators</code></strong> :&ensp;<code>list</code> of <code>function</code>, optional</dt>
-<dd>a list of functions that takes a value and raises ValidationError if not valid. Defaults to None.</dd>
+<dt><strong><code>default</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>default value. Defaults to ""</dd>
+<dt><strong><code>kwargs</code></strong></dt>
+<dd>any keyword arguments supported by <a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field"><code>Field</code></a></dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class Email(Field):
     def __init__(self, default=&#34;&#34;, **kwargs):
+        &#34;&#34;&#34;
+        email field, will validate the value of emails
+
+        Args:
+            default (str, optional): default value. Defaults to &#34;&#34;
+            kwargs: any keyword arguments supported by `Field`
+        &#34;&#34;&#34;
         super().__init__(default, **kwargs)
         self.regex = r&#34;^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$&#34;
 
@@ -1006,7 +1234,14 @@ Example:</p>
     USER = &quot;user&quot;
     ADMIN = &quot;admin&quot;
 </code></pre>
-<p>field = fields.Enum(UserType)</p></section>
+<p>field = fields.Enum(UserType)</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>enum_type</code></strong> :&ensp;<code>type</code></dt>
+<dd>enum type (class)</dd>
+<dt><strong><code>kwargs</code></strong></dt>
+<dd>any keyword arguments supported by <code>Field</code></dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class Enum(Typed):
@@ -1022,6 +1257,10 @@ Example:</p>
         ```
 
         field = fields.Enum(UserType)
+
+        Args:
+            enum_type (type): enum type (class)
+            kwargs: any keyword arguments supported by `Field`
         &#34;&#34;&#34;
         # default is the first value
         default = next(iter(enum_type))
@@ -1053,6 +1292,7 @@ Example:</p>
         try:
             return self.enum_type(value)
         except ValueError:
+            # let validate() do the validation
             return value</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -1092,6 +1332,7 @@ Example:</p>
     try:
         return self.enum_type(value)
     except ValueError:
+        # let validate() do the validation
         return value</code></pre>
 </details>
 </dd>
@@ -1162,7 +1403,7 @@ Example:</p>
 </dd>
 <dt id="jumpscale.core.base.fields.Field"><code class="flex name class">
 <span>class <span class="ident">Field</span></span>
-<span>(</span><span>default=None, required=False, indexed=False, validators=None, **kwargs)</span>
+<span>(</span><span>default=None, required=False, indexed=False, readonly=False, validators=None, **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Base field for all field types, have some common options that can be used any other field type too.</p>
@@ -1174,13 +1415,15 @@ Example:</p>
 <dd>required or not. Defaults to False.</dd>
 <dt><strong><code>indexed</code></strong> :&ensp;<code>bool</code>, optional</dt>
 <dd>indexed or not. Defaults to False.</dd>
+<dt><strong><code>readonly</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>can only get the value. Defaults to False.</dd>
 <dt><strong><code>validators</code></strong> :&ensp;<code>list</code> of <code>function</code>, optional</dt>
 <dd>a list of functions that takes a value and raises ValidationError if not valid. Defaults to None.</dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class Field:
-    def __init__(self, default=None, required=False, indexed=False, validators=None, **kwargs):
+    def __init__(self, default=None, required=False, indexed=False, readonly=False, validators=None, **kwargs):
         &#34;&#34;&#34;
         Base field for all field types, have some common options that can be used any other field type too.
 
@@ -1189,11 +1432,13 @@ Example:</p>
             default (any, optional): default value. Defaults to None.
             required (bool, optional): required or not. Defaults to False.
             indexed (bool, optional): indexed or not. Defaults to False.
+            readonly (bool, optional): can only get the value. Defaults to False.
             validators (list of function, optional): a list of functions that takes a value and raises ValidationError if not valid. Defaults to None.
         &#34;&#34;&#34;
         self.default = default
         self.required = required
         self.indexed = indexed
+        self.readonly = readonly
         self.kwargs = kwargs
 
         self.validators = validators
@@ -1253,8 +1498,6 @@ Example:</p>
 <li><a title="jumpscale.core.base.fields.URL" href="#jumpscale.core.base.fields.URL">URL</a></li>
 <li><a title="jumpscale.core.base.fields.Tel" href="#jumpscale.core.base.fields.Tel">Tel</a></li>
 <li><a title="jumpscale.core.base.fields.IPAddress" href="#jumpscale.core.base.fields.IPAddress">IPAddress</a></li>
-<li><a title="jumpscale.core.base.fields.Date" href="#jumpscale.core.base.fields.Date">Date</a></li>
-<li><a title="jumpscale.core.base.fields.Time" href="#jumpscale.core.base.fields.Time">Time</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -1401,22 +1644,28 @@ Example:</p>
 <span>(</span><span>default='', **kwargs)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Base field for all field types, have some common options that can be used any other field type too.</p>
+<section class="desc"><p>ip address field, will validate the value of ip address (v4 and v6)</p>
+<p>will be stored as a string.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>default</code></strong> :&ensp;<code>any</code>, optional</dt>
-<dd>default value. Defaults to None.</dd>
-<dt><strong><code>required</code></strong> :&ensp;<code>bool</code>, optional</dt>
-<dd>required or not. Defaults to False.</dd>
-<dt><strong><code>indexed</code></strong> :&ensp;<code>bool</code>, optional</dt>
-<dd>indexed or not. Defaults to False.</dd>
-<dt><strong><code>validators</code></strong> :&ensp;<code>list</code> of <code>function</code>, optional</dt>
-<dd>a list of functions that takes a value and raises ValidationError if not valid. Defaults to None.</dd>
+<dt><strong><code>default</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>default value. Defaults to ""</dd>
+<dt><strong><code>kwargs</code></strong></dt>
+<dd>any keyword arguments supported by <a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field"><code>Field</code></a></dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class IPAddress(Field):
     def __init__(self, default=&#34;&#34;, **kwargs):
+        &#34;&#34;&#34;
+        ip address field, will validate the value of ip address (v4 and v6)
+
+        will be stored as a string.
+
+        Args:
+            default (str, optional): default value. Defaults to &#34;&#34;
+            kwargs: any keyword arguments supported by `Field`
+        &#34;&#34;&#34;
         super().__init__(default, **kwargs)
 
     def validate(self, value):
@@ -1890,23 +2139,26 @@ Will just call the field.validate of the given field</p></section>
 <span>(</span><span>default='', **kwargs)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Base field for all field types, have some common options that can be used any other field type too.</p>
+<section class="desc"><p>path field, will validate the value of file system paths</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>default</code></strong> :&ensp;<code>any</code>, optional</dt>
-<dd>default value. Defaults to None.</dd>
-<dt><strong><code>required</code></strong> :&ensp;<code>bool</code>, optional</dt>
-<dd>required or not. Defaults to False.</dd>
-<dt><strong><code>indexed</code></strong> :&ensp;<code>bool</code>, optional</dt>
-<dd>indexed or not. Defaults to False.</dd>
-<dt><strong><code>validators</code></strong> :&ensp;<code>list</code> of <code>function</code>, optional</dt>
-<dd>a list of functions that takes a value and raises ValidationError if not valid. Defaults to None.</dd>
+<dt><strong><code>default</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>default value. Defaults to ""</dd>
+<dt><strong><code>kwargs</code></strong></dt>
+<dd>any keyword arguments supported by <a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field"><code>Field</code></a></dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class Path(Field):
     # TODO: Validate that it is working on windows
     def __init__(self, default=&#34;&#34;, **kwargs):
+        &#34;&#34;&#34;
+        path field, will validate the value of file system paths
+
+        Args:
+            default (str, optional): default value. Defaults to &#34;&#34;
+            kwargs: any keyword arguments supported by `Field`
+        &#34;&#34;&#34;
         super().__init__(default, **kwargs)
         self.regex = r&#34;^(/[^/ ]*)+/?$&#34;
 
@@ -2054,7 +2306,7 @@ Will just call the field.validate of the given field</p></section>
         self.maxlen = maxlen
 
     def validate(self, value):
-        super.validate(value)
+        super().validate(value)
         if self.maxlen is not None:
             if len(value) &gt; self.maxlen:
                 raise ValidationError(f&#34;length of the string exceeds {self.maxlen}&#34;)</code></pre>
@@ -2084,22 +2336,31 @@ Will just call the field.validate of the given field</p></section>
 <span>(</span><span>default='', **kwargs)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Base field for all field types, have some common options that can be used any other field type too.</p>
+<section class="desc"><p>email field, will validate the value of telephone numbers</p>
+<p>will be stored as a string at the end.</p>
+<p>It will strip any additional characters that are not numbers.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>default</code></strong> :&ensp;<code>any</code>, optional</dt>
-<dd>default value. Defaults to None.</dd>
-<dt><strong><code>required</code></strong> :&ensp;<code>bool</code>, optional</dt>
-<dd>required or not. Defaults to False.</dd>
-<dt><strong><code>indexed</code></strong> :&ensp;<code>bool</code>, optional</dt>
-<dd>indexed or not. Defaults to False.</dd>
-<dt><strong><code>validators</code></strong> :&ensp;<code>list</code> of <code>function</code>, optional</dt>
-<dd>a list of functions that takes a value and raises ValidationError if not valid. Defaults to None.</dd>
+<dt><strong><code>default</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>default value. Defaults to ""</dd>
+<dt><strong><code>kwargs</code></strong></dt>
+<dd>any keyword arguments supported by <a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field"><code>Field</code></a></dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class Tel(Field):
     def __init__(self, default=&#34;&#34;, **kwargs):
+        &#34;&#34;&#34;
+        email field, will validate the value of telephone numbers
+
+        will be stored as a string at the end.
+
+        It will strip any additional characters that are not numbers.
+
+        Args:
+            default (str, optional): default value. Defaults to &#34;&#34;
+            kwargs: any keyword arguments supported by `Field`
+        &#34;&#34;&#34;
         super().__init__(default, **kwargs)
         self.regex = r&#34;^\+?[0-9]{6,15}(?:x[0-9]+)?$&#34;
 
@@ -2194,127 +2455,157 @@ Will just call the field.validate of the given field</p></section>
 </dd>
 <dt id="jumpscale.core.base.fields.Time"><code class="flex name class">
 <span>class <span class="ident">Time</span></span>
-<span>(</span><span>default='', **kwargs)</span>
+<span>(</span><span>default=None, format_=None, **kwargs)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Supported format : hh:mm</p>
-<p>Base field for all field types, have some common options that can be used any other field type too.</p>
+<section class="desc"><p>time field, actual value will be converted to time object</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>default</code></strong> :&ensp;<code>any</code>, optional</dt>
+<dt><strong><code>default</code></strong> :&ensp;<code>date</code></dt>
 <dd>default value. Defaults to None.</dd>
-<dt><strong><code>required</code></strong> :&ensp;<code>bool</code>, optional</dt>
-<dd>required or not. Defaults to False.</dd>
-<dt><strong><code>indexed</code></strong> :&ensp;<code>bool</code>, optional</dt>
-<dd>indexed or not. Defaults to False.</dd>
-<dt><strong><code>validators</code></strong> :&ensp;<code>list</code> of <code>function</code>, optional</dt>
-<dd>a list of functions that takes a value and raises ValidationError if not valid. Defaults to None.</dd>
+<dt><strong><code>format_</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>time format. Defaults to "%H:%M" if None.</dd>
+<dt><strong><code>kwargs</code></strong></dt>
+<dd>any keyword arguments supported by <a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field"><code>Field</code></a></dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class Time(Field):
-    &#34;&#34;&#34;Supported format : hh:mm&#34;&#34;&#34;
+<pre><code class="python">class Time(Typed):
+    def __init__(self, default=None, format_=None, **kwargs):
+        &#34;&#34;&#34;
+        time field, actual value will be converted to time object
 
-    def __init__(self, default=&#34;&#34;, **kwargs):
-        super().__init__(default, **kwargs)
-        self.default_format = &#34;%H:%M&#34;
+        Args:
+            default (date): default value. Defaults to None.
+            format_ (str, optional): time format. Defaults to &#34;%H:%M&#34; if None.
+            kwargs: any keyword arguments supported by `Field`
+        &#34;&#34;&#34;
+        super().__init__(default=default, type_=datetime.time, **kwargs)
+        if not format_:
+            format_ = &#34;%H:%M&#34;
+        self.format = format_
+        self.mktime_format = &#34;%a %b %d %H:%M:%S %Y&#34;
 
-    def validate(self, value):
-        &#34;&#34;&#34;Check whether provided value is a valid time representation
-        Arguments:
-            value (str)
+    def from_raw(self, value):
+        &#34;&#34;&#34;
+        get a time object from a numberic or string value
+
+
+        Args:
+            value (str or int or float): value as a number or a string
+
         Returns:
-            Boolean expresion&#34;&#34;&#34;
-        super().validate(value)
-        try:
-            time.strptime(value, self.default_format)
-        except Exception:
-            raise ValidationError(f&#34;{value} is not a valid Time&#34;)
+            datetime.time: `datetime.time` object
+        &#34;&#34;&#34;
+        if isinstance(value, (int, float)):
+            return datetime.datetime.utcfromtimestamp(value).time()
+        elif isinstance(value, str):
+            try:
+                return datetime.datetime.strptime(value, self.format).time()
+            except ValueError:
+                pass
+        return value
 
-    def add_hours(self, hours):
-        self._hours_operations(&#34;add&#34;, hours)
+    def to_raw(self, t_obj):
+        &#34;&#34;&#34;
+        get a utc timestamp from t_obj object
 
-    def subtract_hours(self, hours):
-        self._hours_operations(&#34;sub&#34;, hours)
+        Args:
+            t_obj (datetime.time): time object
 
-    def _hours_operations(self, operation, hours):
-        stored_time = time.strptime(self.default, self.default_format)
-        # Get index of hour in stored_time tuple to replace its value
-        hour_index = stored_time.index(int(self.default.split(&#34;:&#34;)[0]))
-        tm_hours = stored_time.tm_hour
-
-        # apply the operation
-        if operation == &#34;add&#34;:
-            tm_hours += hours
-        elif operation == &#34;sub&#34;:
-            tm_hours -= hours
-        temp_time = stored_time[:hour_index] + (tm_hours,) + stored_time[hour_index + 1 :]
-
-        # Assigning the new time
-        self.default = time.strftime(self.default_format, temp_time)</code></pre>
+        Returns:
+            float: timestamp (epoch)
+        &#34;&#34;&#34;
+        if isinstance(t_obj, datetime.time):
+            dt_obj = datetime.datetime(
+                1970, 1, 1, t_obj.hour, t_obj.minute, t_obj.second, int(t_obj.microsecond / 1000)
+            )
+            return dt_obj.replace(tzinfo=datetime.timezone.utc).timestamp()
+        return t_obj</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></li>
 <li><a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field">Field</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="jumpscale.core.base.fields.Time.add_hours"><code class="name flex">
-<span>def <span class="ident">add_hours</span></span>(<span>self, hours)</span>
+<dt id="jumpscale.core.base.fields.Time.from_raw"><code class="name flex">
+<span>def <span class="ident">from_raw</span></span>(<span>self, value)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>get a time object from a numberic or string value</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>value</code></strong> :&ensp;<code>str</code> or <code>int</code> or <code>float</code></dt>
+<dd>value as a number or a string</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>datetime.time: <code>datetime.time</code> object</p></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def add_hours(self, hours):
-    self._hours_operations(&#34;add&#34;, hours)</code></pre>
+<pre><code class="python">def from_raw(self, value):
+    &#34;&#34;&#34;
+    get a time object from a numberic or string value
+
+
+    Args:
+        value (str or int or float): value as a number or a string
+
+    Returns:
+        datetime.time: `datetime.time` object
+    &#34;&#34;&#34;
+    if isinstance(value, (int, float)):
+        return datetime.datetime.utcfromtimestamp(value).time()
+    elif isinstance(value, str):
+        try:
+            return datetime.datetime.strptime(value, self.format).time()
+        except ValueError:
+            pass
+    return value</code></pre>
 </details>
 </dd>
-<dt id="jumpscale.core.base.fields.Time.subtract_hours"><code class="name flex">
-<span>def <span class="ident">subtract_hours</span></span>(<span>self, hours)</span>
+<dt id="jumpscale.core.base.fields.Time.to_raw"><code class="name flex">
+<span>def <span class="ident">to_raw</span></span>(<span>self, t_obj)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def subtract_hours(self, hours):
-    self._hours_operations(&#34;sub&#34;, hours)</code></pre>
-</details>
-</dd>
-<dt id="jumpscale.core.base.fields.Time.validate"><code class="name flex">
-<span>def <span class="ident">validate</span></span>(<span>self, value)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Check whether provided value is a valid time representation</p>
-<h2 id="arguments">Arguments</h2>
-<p>value (str)</p>
+<section class="desc"><p>get a utc timestamp from t_obj object</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>t_obj</code></strong> :&ensp;<code>datetime.time</code></dt>
+<dd>time object</dd>
+</dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><a title="jumpscale.core.base.fields.Boolean" href="#jumpscale.core.base.fields.Boolean"><code>Boolean</code></a> <code>expresion</code></dt>
-<dd>&nbsp;</dd>
+<dt><strong><code>float</code></strong></dt>
+<dd>timestamp (epoch)</dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def validate(self, value):
-    &#34;&#34;&#34;Check whether provided value is a valid time representation
-    Arguments:
-        value (str)
+<pre><code class="python">def to_raw(self, t_obj):
+    &#34;&#34;&#34;
+    get a utc timestamp from t_obj object
+
+    Args:
+        t_obj (datetime.time): time object
+
     Returns:
-        Boolean expresion&#34;&#34;&#34;
-    super().validate(value)
-    try:
-        time.strptime(value, self.default_format)
-    except Exception:
-        raise ValidationError(f&#34;{value} is not a valid Time&#34;)</code></pre>
+        float: timestamp (epoch)
+    &#34;&#34;&#34;
+    if isinstance(t_obj, datetime.time):
+        dt_obj = datetime.datetime(
+            1970, 1, 1, t_obj.hour, t_obj.minute, t_obj.second, int(t_obj.microsecond / 1000)
+        )
+        return dt_obj.replace(tzinfo=datetime.timezone.utc).timestamp()
+    return t_obj</code></pre>
 </details>
 </dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field">Field</a></b></code>:
+<li><code><b><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></b></code>:
 <ul class="hlist">
-<li><code><a title="jumpscale.core.base.fields.Field.from_raw" href="#jumpscale.core.base.fields.Field.from_raw">from_raw</a></code></li>
-<li><code><a title="jumpscale.core.base.fields.Field.to_raw" href="#jumpscale.core.base.fields.Field.to_raw">to_raw</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.Typed.validate" href="#jumpscale.core.base.fields.Field.validate">validate</a></code></li>
 </ul>
 </li>
 </ul>
@@ -2365,6 +2656,8 @@ Will just call the field.validate of the given field</p></section>
 <li><a title="jumpscale.core.base.fields.Object" href="#jumpscale.core.base.fields.Object">Object</a></li>
 <li><a title="jumpscale.core.base.fields.Enum" href="#jumpscale.core.base.fields.Enum">Enum</a></li>
 <li><a title="jumpscale.core.base.fields.DateTime" href="#jumpscale.core.base.fields.DateTime">DateTime</a></li>
+<li><a title="jumpscale.core.base.fields.Date" href="#jumpscale.core.base.fields.Date">Date</a></li>
+<li><a title="jumpscale.core.base.fields.Time" href="#jumpscale.core.base.fields.Time">Time</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -2382,22 +2675,25 @@ Will just call the field.validate of the given field</p></section>
 <span>(</span><span>default='', **kwargs)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Base field for all field types, have some common options that can be used any other field type too.</p>
+<section class="desc"><p>url field, will validate the value of urls</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>default</code></strong> :&ensp;<code>any</code>, optional</dt>
-<dd>default value. Defaults to None.</dd>
-<dt><strong><code>required</code></strong> :&ensp;<code>bool</code>, optional</dt>
-<dd>required or not. Defaults to False.</dd>
-<dt><strong><code>indexed</code></strong> :&ensp;<code>bool</code>, optional</dt>
-<dd>indexed or not. Defaults to False.</dd>
-<dt><strong><code>validators</code></strong> :&ensp;<code>list</code> of <code>function</code>, optional</dt>
-<dd>a list of functions that takes a value and raises ValidationError if not valid. Defaults to None.</dd>
+<dt><strong><code>default</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>default value. Defaults to ""</dd>
+<dt><strong><code>kwargs</code></strong></dt>
+<dd>any keyword arguments supported by <a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field"><code>Field</code></a></dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class URL(Field):
     def __init__(self, default=&#34;&#34;, **kwargs):
+        &#34;&#34;&#34;
+        url field, will validate the value of urls
+
+        Args:
+            default (str, optional): default value. Defaults to &#34;&#34;
+            kwargs: any keyword arguments supported by `Field`
+        &#34;&#34;&#34;
         super().__init__(default, **kwargs)
         self.regex = r&#34;^(https?|ftp)://[^\s/$.?#].[^\s]*$&#34;
 
@@ -2504,11 +2800,16 @@ Will just call the field.validate of the given field</p></section>
 <li>
 <h4><code><a title="jumpscale.core.base.fields.Date" href="#jumpscale.core.base.fields.Date">Date</a></code></h4>
 <ul class="">
-<li><code><a title="jumpscale.core.base.fields.Date.validate" href="#jumpscale.core.base.fields.Date.validate">validate</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.Date.from_raw" href="#jumpscale.core.base.fields.Date.from_raw">from_raw</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.Date.to_raw" href="#jumpscale.core.base.fields.Date.to_raw">to_raw</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="jumpscale.core.base.fields.DateTime" href="#jumpscale.core.base.fields.DateTime">DateTime</a></code></h4>
+<ul class="">
+<li><code><a title="jumpscale.core.base.fields.DateTime.from_raw" href="#jumpscale.core.base.fields.DateTime.from_raw">from_raw</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.DateTime.to_raw" href="#jumpscale.core.base.fields.DateTime.to_raw">to_raw</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="jumpscale.core.base.fields.Email" href="#jumpscale.core.base.fields.Email">Email</a></code></h4>
@@ -2584,9 +2885,8 @@ Will just call the field.validate of the given field</p></section>
 <li>
 <h4><code><a title="jumpscale.core.base.fields.Time" href="#jumpscale.core.base.fields.Time">Time</a></code></h4>
 <ul class="">
-<li><code><a title="jumpscale.core.base.fields.Time.add_hours" href="#jumpscale.core.base.fields.Time.add_hours">add_hours</a></code></li>
-<li><code><a title="jumpscale.core.base.fields.Time.subtract_hours" href="#jumpscale.core.base.fields.Time.subtract_hours">subtract_hours</a></code></li>
-<li><code><a title="jumpscale.core.base.fields.Time.validate" href="#jumpscale.core.base.fields.Time.validate">validate</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.Time.from_raw" href="#jumpscale.core.base.fields.Time.from_raw">from_raw</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.Time.to_raw" href="#jumpscale.core.base.fields.Time.to_raw">to_raw</a></code></li>
 </ul>
 </li>
 <li>

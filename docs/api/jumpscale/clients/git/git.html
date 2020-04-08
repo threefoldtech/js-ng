@@ -212,7 +212,7 @@ def branch_name(self):
         return getattr(self, inner_name)
 
     # accept raw value as default too
-    return field.default</code></pre>
+    return field.from_raw(field.default)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.clients.git.git.GitClient.remote_url"><code class="name">var <span class="ident">remote_url</span></code></dt>
