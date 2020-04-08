@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.6.3" />
+<meta name="generator" content="pdoc 0.6.4" />
 <title>jumpscale.clients.gogs.gogs API documentation</title>
 <meta name="description" content="" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
@@ -22,12 +22,19 @@
 <section id="section-intro">
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">from jumpscale.clients.base import Client
+<pre><code class="python">from jumpscale.clients.base import Base, Client
 from jumpscale.core.base import fields
 
 
+class User(Base):
+    username = fields.String(required=True)
+    password = fields.Secret(required=True)
+
+
 class Gogs(Client):
-    access_token = fields.Secret(required=True)</code></pre>
+    access_token = fields.Secret(required=True)
+    user = fields.Object(User)
+    admins = fields.List(fields.String(required=True), required=True)</code></pre>
 </details>
 </section>
 <section>
@@ -41,6 +48,7 @@ class Gogs(Client):
 <dl>
 <dt id="jumpscale.clients.gogs.gogs.Gogs"><code class="flex name class">
 <span>class <span class="ident">Gogs</span></span>
+<span>(</span><span>parent=None)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>A simple attribute-based namespace.</p>
@@ -48,7 +56,9 @@ class Gogs(Client):
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class Gogs(Client):
-    access_token = fields.Secret(required=True)</code></pre>
+    access_token = fields.Secret(required=True)
+    user = fields.Object(User)
+    admins = fields.List(fields.String(required=True), required=True)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -64,7 +74,85 @@ class Gogs(Client):
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def getter(self):
-    return getattr(self, inner_name)</code></pre>
+    if hasattr(self, inner_name):
+        return getattr(self, inner_name)
+
+    # accept raw value as default too
+    return field.from_raw(field.default)</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.clients.gogs.gogs.Gogs.admins"><code class="name">var <span class="ident">admins</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def getter(self):
+    if hasattr(self, inner_name):
+        return getattr(self, inner_name)
+
+    # accept raw value as default too
+    return field.from_raw(field.default)</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.clients.gogs.gogs.Gogs.user"><code class="name">var <span class="ident">user</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def getter(self):
+    if hasattr(self, inner_name):
+        return getattr(self, inner_name)
+
+    # accept raw value as default too
+    return field.from_raw(field.default)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="jumpscale.clients.gogs.gogs.User"><code class="flex name class">
+<span>class <span class="ident">User</span></span>
+<span>(</span><span>parent=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>A simple attribute-based namespace.</p>
+<p>SimpleNamespace(**kwargs)</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class User(Base):
+    username = fields.String(required=True)
+    password = fields.Secret(required=True)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="jumpscale.core.base.meta.Base" href="../../core/base/meta.html#jumpscale.core.base.meta.Base">Base</a></li>
+<li>types.SimpleNamespace</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="jumpscale.clients.gogs.gogs.User.password"><code class="name">var <span class="ident">password</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def getter(self):
+    if hasattr(self, inner_name):
+        return getattr(self, inner_name)
+
+    # accept raw value as default too
+    return field.from_raw(field.default)</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.clients.gogs.gogs.User.username"><code class="name">var <span class="ident">username</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def getter(self):
+    if hasattr(self, inner_name):
+        return getattr(self, inner_name)
+
+    # accept raw value as default too
+    return field.from_raw(field.default)</code></pre>
 </details>
 </dd>
 </dl>
@@ -89,6 +177,15 @@ class Gogs(Client):
 <h4><code><a title="jumpscale.clients.gogs.gogs.Gogs" href="#jumpscale.clients.gogs.gogs.Gogs">Gogs</a></code></h4>
 <ul class="">
 <li><code><a title="jumpscale.clients.gogs.gogs.Gogs.access_token" href="#jumpscale.clients.gogs.gogs.Gogs.access_token">access_token</a></code></li>
+<li><code><a title="jumpscale.clients.gogs.gogs.Gogs.admins" href="#jumpscale.clients.gogs.gogs.Gogs.admins">admins</a></code></li>
+<li><code><a title="jumpscale.clients.gogs.gogs.Gogs.user" href="#jumpscale.clients.gogs.gogs.Gogs.user">user</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="jumpscale.clients.gogs.gogs.User" href="#jumpscale.clients.gogs.gogs.User">User</a></code></h4>
+<ul class="">
+<li><code><a title="jumpscale.clients.gogs.gogs.User.password" href="#jumpscale.clients.gogs.gogs.User.password">password</a></code></li>
+<li><code><a title="jumpscale.clients.gogs.gogs.User.username" href="#jumpscale.clients.gogs.gogs.User.username">username</a></code></li>
 </ul>
 </li>
 </ul>
@@ -97,7 +194,7 @@ class Gogs(Client):
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.6.3</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.6.4</a>.</p>
 </footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
 <script>hljs.initHighlightingOnLoad()</script>

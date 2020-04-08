@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.6.3" />
+<meta name="generator" content="pdoc 0.6.4" />
 <title>jumpscale.clients.s3.s3 API documentation</title>
 <meta name="description" content="" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
@@ -39,7 +39,7 @@ class S3Client(Client):
     secret_key = fields.String()
     bucket = fields.String()
     create_bucket = fields.Boolean()
-    
+
     def __init__(self):
         super().__init__()
         # Create the http client to be able to set timeout
@@ -101,7 +101,7 @@ class S3Client(Client):
         :type object_name: str
         :param file_path: local path to which object data will be written
         :type file_path: str
-        :return: object stat info (includes: size, etag, content_type,last_modified, metadata) 
+        :return: object stat info (includes: size, etag, content_type,last_modified, metadata)
         :rtype: Object
         &#34;&#34;&#34;
 
@@ -117,7 +117,7 @@ class S3Client(Client):
 
     def list_objects(self, bucket_name, prefix=None, recursive=None):
         &#34;&#34;&#34;List objects in a specific bucket
-        
+
         :param bucket_name: name of bucket
         :type bucket_name: str
         :param prefix: prefix of the objects that should be listed, defaults to None
@@ -140,7 +140,7 @@ class S3Client(Client):
 
     def remove_object(self, bucket_name, object_name):
         &#34;&#34;&#34;Remove object from bucket
-        
+
         :param bucket_name: name of bucket
         :type bucket_name: str
         :param object_name: name of object to be removed
@@ -175,7 +175,7 @@ class S3Client(Client):
     secret_key = fields.String()
     bucket = fields.String()
     create_bucket = fields.Boolean()
-    
+
     def __init__(self):
         super().__init__()
         # Create the http client to be able to set timeout
@@ -237,7 +237,7 @@ class S3Client(Client):
         :type object_name: str
         :param file_path: local path to which object data will be written
         :type file_path: str
-        :return: object stat info (includes: size, etag, content_type,last_modified, metadata) 
+        :return: object stat info (includes: size, etag, content_type,last_modified, metadata)
         :rtype: Object
         &#34;&#34;&#34;
 
@@ -253,7 +253,7 @@ class S3Client(Client):
 
     def list_objects(self, bucket_name, prefix=None, recursive=None):
         &#34;&#34;&#34;List objects in a specific bucket
-        
+
         :param bucket_name: name of bucket
         :type bucket_name: str
         :param prefix: prefix of the objects that should be listed, defaults to None
@@ -276,7 +276,7 @@ class S3Client(Client):
 
     def remove_object(self, bucket_name, object_name):
         &#34;&#34;&#34;Remove object from bucket
-        
+
         :param bucket_name: name of bucket
         :type bucket_name: str
         :param object_name: name of object to be removed
@@ -299,7 +299,11 @@ class S3Client(Client):
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def getter(self):
-    return getattr(self, inner_name)</code></pre>
+    if hasattr(self, inner_name):
+        return getattr(self, inner_name)
+
+    # accept raw value as default too
+    return field.from_raw(field.default)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.clients.s3.s3.S3Client.address"><code class="name">var <span class="ident">address</span></code></dt>
@@ -308,7 +312,11 @@ class S3Client(Client):
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def getter(self):
-    return getattr(self, inner_name)</code></pre>
+    if hasattr(self, inner_name):
+        return getattr(self, inner_name)
+
+    # accept raw value as default too
+    return field.from_raw(field.default)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.clients.s3.s3.S3Client.bucket"><code class="name">var <span class="ident">bucket</span></code></dt>
@@ -317,7 +325,11 @@ class S3Client(Client):
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def getter(self):
-    return getattr(self, inner_name)</code></pre>
+    if hasattr(self, inner_name):
+        return getattr(self, inner_name)
+
+    # accept raw value as default too
+    return field.from_raw(field.default)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.clients.s3.s3.S3Client.create_bucket"><code class="name">var <span class="ident">create_bucket</span></code></dt>
@@ -326,7 +338,11 @@ class S3Client(Client):
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def getter(self):
-    return getattr(self, inner_name)</code></pre>
+    if hasattr(self, inner_name):
+        return getattr(self, inner_name)
+
+    # accept raw value as default too
+    return field.from_raw(field.default)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.clients.s3.s3.S3Client.name"><code class="name">var <span class="ident">name</span></code></dt>
@@ -335,7 +351,11 @@ class S3Client(Client):
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def getter(self):
-    return getattr(self, inner_name)</code></pre>
+    if hasattr(self, inner_name):
+        return getattr(self, inner_name)
+
+    # accept raw value as default too
+    return field.from_raw(field.default)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.clients.s3.s3.S3Client.port"><code class="name">var <span class="ident">port</span></code></dt>
@@ -344,7 +364,11 @@ class S3Client(Client):
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def getter(self):
-    return getattr(self, inner_name)</code></pre>
+    if hasattr(self, inner_name):
+        return getattr(self, inner_name)
+
+    # accept raw value as default too
+    return field.from_raw(field.default)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.clients.s3.s3.S3Client.secret_key"><code class="name">var <span class="ident">secret_key</span></code></dt>
@@ -353,7 +377,11 @@ class S3Client(Client):
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def getter(self):
-    return getattr(self, inner_name)</code></pre>
+    if hasattr(self, inner_name):
+        return getattr(self, inner_name)
+
+    # accept raw value as default too
+    return field.from_raw(field.default)</code></pre>
 </details>
 </dd>
 </dl>
@@ -383,7 +411,7 @@ class S3Client(Client):
     :type object_name: str
     :param file_path: local path to which object data will be written
     :type file_path: str
-    :return: object stat info (includes: size, etag, content_type,last_modified, metadata) 
+    :return: object stat info (includes: size, etag, content_type,last_modified, metadata)
     :rtype: Object
     &#34;&#34;&#34;
 
@@ -425,7 +453,7 @@ class S3Client(Client):
 <summary>Source code</summary>
 <pre><code class="python">def list_objects(self, bucket_name, prefix=None, recursive=None):
     &#34;&#34;&#34;List objects in a specific bucket
-    
+
     :param bucket_name: name of bucket
     :type bucket_name: str
     :param prefix: prefix of the objects that should be listed, defaults to None
@@ -470,7 +498,7 @@ class S3Client(Client):
 <summary>Source code</summary>
 <pre><code class="python">def remove_object(self, bucket_name, object_name):
     &#34;&#34;&#34;Remove object from bucket
-    
+
     :param bucket_name: name of bucket
     :type bucket_name: str
     :param object_name: name of object to be removed
@@ -481,7 +509,7 @@ class S3Client(Client):
 </details>
 </dd>
 <dt id="jumpscale.clients.s3.s3.S3Client.upload"><code class="name flex">
-<span>def <span class="ident">upload</span></span>(<span>self, bucket_name, object_name, file_path, content_type='text/plain', meta_data=None)</span>
+<span>def <span class="ident">upload</span></span>(<span>self, bucket_name, object_name, file_path, content_type=&#39;text/plain&#39;, meta_data=None)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Upload contents from a file specified by file_path, to object_name</p>
@@ -564,7 +592,7 @@ class S3Client(Client):
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.6.3</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.6.4</a>.</p>
 </footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
 <script>hljs.initHighlightingOnLoad()</script>

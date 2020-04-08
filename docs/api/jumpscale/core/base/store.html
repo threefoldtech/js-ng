@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.6.3" />
+<meta name="generator" content="pdoc 0.6.4" />
 <title>jumpscale.core.base.store API documentation</title>
 <meta name="description" content="" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
@@ -28,11 +28,12 @@ import shutil
 import redis
 
 from abc import ABC, abstractmethod
+from enum import Enum
 
 from jumpscale.data.nacl import NACL
 from jumpscale.data.serializers import base64, json
 from jumpscale.core.config import Environment
-from jumpscale.sals.fs import read_file_binary, write_file_binary
+from jumpscale.sals.fs import read_file_binary, write_file_binary, rmtree
 
 
 class InvalidPrivateKey(Exception):
@@ -62,6 +63,11 @@ class Location:
     @property
     def path(self):
         return os.path.join(*self.name.split(&#34;.&#34;))
+
+
+class EncryptionMode(Enum):
+    Encrypt = 0
+    Decrypt = 1
 
 
 class EncryptionMixin:
@@ -106,7 +112,7 @@ class ConfigStore(ABC):
         pass
 
     @abstractmethod
-    def delete(self):
+    def delete(self, instance_name):
         pass
 
 
@@ -134,6 +140,33 @@ class EncryptedConfigStore(ConfigStore, EncryptionMixin):
     def location(self):
         return self.get_type_location(self.type, self.parent_name)
 
+    def _encrypt_value(self, value):
+        return base64.encode(self.encrypt(value)).decode(&#34;ascii&#34;)
+
+    def _decrypt_value(self, value):
+        return self.decrypt(base64.decode(value))
+
+    def _process_config(self, config, mode):
+        &#34;&#34;&#34;return the config encrypted or decrypted
+
+        Args:
+            config (dict): config dict (can be nested)
+            mode (EncryptionMode)
+        &#34;&#34;&#34;
+        new_config = {}
+        for name, value in config.items():
+            if name.startswith(&#34;__&#34;):
+                if mode == EncryptionMode.Decrypt:
+                    new_config[name.lstrip(&#34;__&#34;)] = self._decrypt_value(value)
+                else:
+                    # preserve __ to know it&#39;s an encrypted value
+                    new_config[name] = self._encrypt_value(value)
+            elif isinstance(value, dict):
+                new_config[name] = self._process_config(value, mode)
+            else:
+                new_config[name] = value
+        return new_config
+
     def get(self, instance_name):
         &#34;&#34;&#34;get instance config
 
@@ -143,15 +176,8 @@ class EncryptedConfigStore(ConfigStore, EncryptionMixin):
         Returns:
             dict: instance config as dict (key, values)
         &#34;&#34;&#34;
-        new_config = {}
         config = json.loads(self.read(instance_name))
-
-        for name, value in config.items():
-            if name.startswith(&#34;__&#34;):
-                new_config[name.lstrip(&#34;__&#34;)] = self.decrypt(base64.decode(value))
-            else:
-                new_config[name] = value
-        return new_config
+        return self._process_config(config, EncryptionMode.Decrypt)
 
     def get_all(self):
         return {name: self.get(name) for name in self.list_all()}
@@ -166,12 +192,7 @@ class EncryptedConfigStore(ConfigStore, EncryptionMixin):
         Returns:
             bool: written or not
         &#34;&#34;&#34;
-        new_config = {}
-        for name, value in config.items():
-            if name.startswith(&#34;__&#34;):
-                new_config[name] = base64.encode(self.encrypt(value)).decode(&#34;ascii&#34;)
-            else:
-                new_config[name] = value
+        new_config = self._process_config(config, EncryptionMode.Encrypt)
         return self.write(instance_name, json.dumps(new_config))
 
 
@@ -212,8 +233,7 @@ class FileSystemStore(EncryptedConfigStore):
     def delete(self, instance_name):
         path = self.get_instance_root(instance_name)
         if os.path.exists(path):
-            # TODO: replace with sal fs
-            shutil.rmtree(path)
+            rmtree(path)
 
 
 class RedisStore(EncryptedConfigStore):
@@ -284,7 +304,7 @@ class RedisStore(EncryptedConfigStore):
         pass
 
     @abstractmethod
-    def delete(self):
+    def delete(self, instance_name):
         pass</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -298,14 +318,14 @@ class RedisStore(EncryptedConfigStore):
 <h3>Methods</h3>
 <dl>
 <dt id="jumpscale.core.base.store.ConfigStore.delete"><code class="name flex">
-<span>def <span class="ident">delete</span></span>(<span>self)</span>
+<span>def <span class="ident">delete</span></span>(<span>self, instance_name)</span>
 </code></dt>
 <dd>
 <section class="desc"></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">@abstractmethod
-def delete(self):
+def delete(self, instance_name):
     pass</code></pre>
 </details>
 </dd>
@@ -379,6 +399,33 @@ def write(self, instance_name, data):
     def location(self):
         return self.get_type_location(self.type, self.parent_name)
 
+    def _encrypt_value(self, value):
+        return base64.encode(self.encrypt(value)).decode(&#34;ascii&#34;)
+
+    def _decrypt_value(self, value):
+        return self.decrypt(base64.decode(value))
+
+    def _process_config(self, config, mode):
+        &#34;&#34;&#34;return the config encrypted or decrypted
+
+        Args:
+            config (dict): config dict (can be nested)
+            mode (EncryptionMode)
+        &#34;&#34;&#34;
+        new_config = {}
+        for name, value in config.items():
+            if name.startswith(&#34;__&#34;):
+                if mode == EncryptionMode.Decrypt:
+                    new_config[name.lstrip(&#34;__&#34;)] = self._decrypt_value(value)
+                else:
+                    # preserve __ to know it&#39;s an encrypted value
+                    new_config[name] = self._encrypt_value(value)
+            elif isinstance(value, dict):
+                new_config[name] = self._process_config(value, mode)
+            else:
+                new_config[name] = value
+        return new_config
+
     def get(self, instance_name):
         &#34;&#34;&#34;get instance config
 
@@ -388,15 +435,8 @@ def write(self, instance_name, data):
         Returns:
             dict: instance config as dict (key, values)
         &#34;&#34;&#34;
-        new_config = {}
         config = json.loads(self.read(instance_name))
-
-        for name, value in config.items():
-            if name.startswith(&#34;__&#34;):
-                new_config[name.lstrip(&#34;__&#34;)] = self.decrypt(base64.decode(value))
-            else:
-                new_config[name] = value
-        return new_config
+        return self._process_config(config, EncryptionMode.Decrypt)
 
     def get_all(self):
         return {name: self.get(name) for name in self.list_all()}
@@ -411,12 +451,7 @@ def write(self, instance_name, data):
         Returns:
             bool: written or not
         &#34;&#34;&#34;
-        new_config = {}
-        for name, value in config.items():
-            if name.startswith(&#34;__&#34;):
-                new_config[name] = base64.encode(self.encrypt(value)).decode(&#34;ascii&#34;)
-            else:
-                new_config[name] = value
+        new_config = self._process_config(config, EncryptionMode.Encrypt)
         return self.write(instance_name, json.dumps(new_config))</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -471,15 +506,8 @@ def location(self):
     Returns:
         dict: instance config as dict (key, values)
     &#34;&#34;&#34;
-    new_config = {}
     config = json.loads(self.read(instance_name))
-
-    for name, value in config.items():
-        if name.startswith(&#34;__&#34;):
-            new_config[name.lstrip(&#34;__&#34;)] = self.decrypt(base64.decode(value))
-        else:
-            new_config[name] = value
-    return new_config</code></pre>
+    return self._process_config(config, EncryptionMode.Decrypt)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.core.base.store.EncryptedConfigStore.get_all"><code class="name flex">
@@ -533,12 +561,7 @@ def location(self):
     Returns:
         bool: written or not
     &#34;&#34;&#34;
-    new_config = {}
-    for name, value in config.items():
-        if name.startswith(&#34;__&#34;):
-            new_config[name] = base64.encode(self.encrypt(value)).decode(&#34;ascii&#34;)
-        else:
-            new_config[name] = value
+    new_config = self._process_config(config, EncryptionMode.Encrypt)
     return self.write(instance_name, json.dumps(new_config))</code></pre>
 </details>
 </dd>
@@ -654,6 +677,34 @@ def location(self):
 </dd>
 </dl>
 </dd>
+<dt id="jumpscale.core.base.store.EncryptionMode"><code class="flex name class">
+<span>class <span class="ident">EncryptionMode</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>An enumeration.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class EncryptionMode(Enum):
+    Encrypt = 0
+    Decrypt = 1</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>enum.Enum</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="jumpscale.core.base.store.EncryptionMode.Decrypt"><code class="name">var <span class="ident">Decrypt</span></code></dt>
+<dd>
+<section class="desc"></section>
+</dd>
+<dt id="jumpscale.core.base.store.EncryptionMode.Encrypt"><code class="name">var <span class="ident">Encrypt</span></code></dt>
+<dd>
+<section class="desc"></section>
+</dd>
+</dl>
+</dd>
 <dt id="jumpscale.core.base.store.FileSystemStore"><code class="flex name class">
 <span>class <span class="ident">FileSystemStore</span></span>
 <span>(</span><span>type_, parent_name=None)</span>
@@ -699,8 +750,7 @@ def location(self):
     def delete(self, instance_name):
         path = self.get_instance_root(instance_name)
         if os.path.exists(path):
-            # TODO: replace with sal fs
-            shutil.rmtree(path)</code></pre>
+            rmtree(path)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -734,8 +784,7 @@ def config_root(self):
 <pre><code class="python">def delete(self, instance_name):
     path = self.get_instance_root(instance_name)
     if os.path.exists(path):
-        # TODO: replace with sal fs
-        shutil.rmtree(path)</code></pre>
+        rmtree(path)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.core.base.store.FileSystemStore.get_instance_root"><code class="name flex">
@@ -1091,6 +1140,13 @@ def path(self):
 </ul>
 </li>
 <li>
+<h4><code><a title="jumpscale.core.base.store.EncryptionMode" href="#jumpscale.core.base.store.EncryptionMode">EncryptionMode</a></code></h4>
+<ul class="">
+<li><code><a title="jumpscale.core.base.store.EncryptionMode.Decrypt" href="#jumpscale.core.base.store.EncryptionMode.Decrypt">Decrypt</a></code></li>
+<li><code><a title="jumpscale.core.base.store.EncryptionMode.Encrypt" href="#jumpscale.core.base.store.EncryptionMode.Encrypt">Encrypt</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="jumpscale.core.base.store.FileSystemStore" href="#jumpscale.core.base.store.FileSystemStore">FileSystemStore</a></code></h4>
 <ul class="two-column">
 <li><code><a title="jumpscale.core.base.store.FileSystemStore.config_root" href="#jumpscale.core.base.store.FileSystemStore.config_root">config_root</a></code></li>
@@ -1131,7 +1187,7 @@ def path(self):
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.6.3</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.6.4</a>.</p>
 </footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
 <script>hljs.initHighlightingOnLoad()</script>
