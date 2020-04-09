@@ -562,7 +562,7 @@ def kill_process_by_port(port):
     Arguments:
         port {int} -- port number
     """
-    pid = int(pid)
+    port = int(port)
     for pid in get_pid_by_port(port):
         kill(pid)
 
@@ -592,7 +592,7 @@ def get_defunct_processes():
     Returns:
         [list(int)] -- list of processes pids
     """
-    rc, out, err = execute("ps ax")
+    _, out, _ = execute("ps ax")
     llist = []
     for line in out.split("\n"):
         if line.strip() == "":

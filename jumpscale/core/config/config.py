@@ -46,11 +46,22 @@ def get_default_config():
     """
     return {
         "debug": True,
+        "logging": {
+            "redis": {
+                "enabled": True,
+                "level": 15,
+                "max_size": 1000,
+                "dump": True,
+                "dump_dir": os.path.join(config_root, 'logs/redis'),
+            },
+            "filesystem": {
+                "enabled": True,
+                "level": 15,
+                "log_dir": os.path.join(config_root, 'logs/fs/log.txt'),
+                "rotation": "5 MB"
+            }
+        },
         "ssh_key_path": "",
-        "logging": {"handlers": []},
-        "log_to_redis": False,
-        "log_to_files": True,
-        "log_level": 15,
         "private_key_path": "",
         "stores": {
             "redis": {"hostname": "localhost", "port": 6379},
@@ -139,6 +150,9 @@ class Environment:
         if name not in stores:
             raise StoreTypeNotFound(f"'{name}' store is not found")
         return stores[name]
+
+    def get_logging_config(self):
+        return get_config()["logging"]
 
 
 migrate_config()
