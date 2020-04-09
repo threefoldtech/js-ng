@@ -65,6 +65,7 @@ parameterized = "^0.7.0"
 
 [tool.poetry.scripts]
 jsng = "jumpscale.entry_points.jsng:run"
+usershell = "jumpscale.entry_points.usershell:run"
 jsctl = "jumpscale.entry_points.jsctl:cli"
 jsync = "jumpscale.entry_points.jsync:cli"
 
