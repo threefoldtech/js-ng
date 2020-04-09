@@ -51,19 +51,20 @@ class Handler:
         pass
 
 
-listeners = defaultdict(set)
-listeners[Any] = set()
+listeners = defaultdict(list)
+listeners[Any] = []
 
 
 def add_listenter(handler, *event_types):
     if not event_types:
         raise ValueError("must specify at least 1 event type/class")
     for event_type in event_types:
-        listeners[event_type].add(handler)
+        if handler not in listeners[event_type]:
+            listeners[event_type].append(handler)
 
 
 def add_global_listener(handler):
-    listeners[Any].add(handler)
+    add_listenter(handler, Any)
 
 
 def handle_many(*event_types):
@@ -104,7 +105,7 @@ def handle(event_type):
 
 def notify(event):
     event_type = event.__class__
-    interested = listeners.get(event_type, set()).union(listeners[Any])
+    interested = listeners.get(event_type, []) + listeners[Any]
 
     for handler in interested:
         if isinstance(handler, Handler):
