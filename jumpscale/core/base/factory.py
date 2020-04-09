@@ -7,8 +7,9 @@ The backend to store configurations
 
 """
 from functools import partial
-from jumpscale.core import config
+from jumpscale.core import config, events
 
+from .events import InstanceCreateEvent, InstanceDeleteEvent
 from .store import FileSystemStore, RedisStore
 
 STORES = {"filesystem": FileSystemStore, "redis": RedisStore}
@@ -19,23 +20,28 @@ class DuplicateError(Exception):
 
 
 class Factory:
-    def __init__(self, type_, parent=None):
+    def __init__(self, type_, parent_=None):
         self.type = type_
-        self.parent = parent
-        self.__count = 0
+        self.__parent = parent_
+        self.count = 0
+
+    @property
+    def parent(self):
+        return self.__parent
 
     def new(self, name, *args, **kwargs):
         if not name.isidentifier():
             raise ValueError("{} is not a valid identifier".format(name))
 
         if self.find(name):
-            raise DuplicateError(f"Instance with name {name} already exists")
+            raise DuplicateError(f"instance with name {name} already exists")
 
         instance = self.type(*args, **kwargs)
-        instance.parent = self.parent
+        instance.set_parent(self.parent)
         setattr(self, name, instance)
 
         self.count += 1
+        self._created(name, instance)
         return instance
 
     def find(self, name):
@@ -54,28 +60,25 @@ class Factory:
         self.count -= 1
         if hasattr(self, name):
             delattr(self, name)
+        self._deleted(name)
 
-    def _updated(self, new_count):
-        pass
+    def _deleted(self, name):
+        event = InstanceDeleteEvent(name, instance=None)
+        events.notify(event)
 
-    def _on_update(self, new_count):
-        pass
+    def _created(self, name, instance):
+        event = InstanceCreateEvent(name, instance)
+        events.notify(event)
 
-    def __get_count(self):
-        return self.__count
-
-    def __set_count(self, new_count):
-        self.__count = new_count
-        self._updated(new_count)
-
-    count = property(__get_count, __set_count)
+    def list_all(self):
+        return [name for name, value in self.__dict__ if isinstance(value, self.type)]
 
 
 class StoredFactory(Factory):
     STORE = STORES[config.get_config()["store"]]
 
-    def __init__(self, type_, parent_name=None):
-        super(StoredFactory, self).__init__(type_)
+    def __init__(self, type_, parent_=None, parent_name=None):
+        super().__init__(type_, parent_=parent_)
         self._set_parent_name(parent_name)
         if not parent_name:
             self._load()
@@ -153,7 +156,6 @@ class StoredFactory(Factory):
         # TODO: better use events for factory updates
         for prop_name, factory in instance._get_factories().items():
             factory._set_parent_name(self._get_sub_factory_location_name(name, prop_name))
-            factory.parent = instance
             factory._updated = partial(self._instance_sub_factory_updated, name, factory)
             factory._load()
 

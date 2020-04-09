@@ -13,7 +13,7 @@ class RedisClient(Client):
 
     def __dir__(self):
         return list(self.__dict__.keys()) + dir(self.redis_client)
-    
+
     @property
     def redis_client(self):
         if not self.__client:
