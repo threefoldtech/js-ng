@@ -7,4 +7,4 @@ coverage:
 	pytest tests -s --cov=jumpscale
 
 docs:
-	pdoc3 jumpscale --html --output-dir docs/api --overwrite
+	pdoc3 jumpscale --html --output-dir docs/api --force
