@@ -1,3 +1,78 @@
+"""This module is providing everything needed for decent filesystem management
+
+```
+        j.sals.fs.cwd()  -> '/home/rafy' 
+        j.sals.fs.is_dir(path= '/home/rafy')  -> True
+        j.sals.fs.is_file(path= '/home/rafy')  -> False
+        j.sals.fs.is_absolute('/home/rafy/')  -> True
+        j.sals.fs.is_empty_dir("/home/rafy/empty_dir")  -> True
+        j.sals.fs.mkdirs("/home/rafy/testing_make_dir/test1/test2",exist_ok=False) 
+        j.sals.fs.mkdirs("/home/rafy/testing_make_dir/test1/test2",exist_ok=True) 
+        j.sals.fs.is_ascii_file(path="/home/rafy/testfile")  -> True
+        j.sals.fs.stem("/tmp/tmp-5383p1GOmMOOwvfi.tpl")  -> 'tmp-5383p1GOmMOOwvfi'
+        j.sals.fs.parent("/home/rafy/testing_make_dir/test1")  -> '/home/rafy/testing_make_dir'
+        j.sals.fs.parents("/tmp/home/ahmed/myfile.py") -> 
+    [PosixPath('/tmp/home/ahmed'),
+    PosixPath('/tmp/home'),
+    PosixPath('/tmp'),
+    PosixPath('/')]
+```
+
+
+```
+> j.sals.fs.exists("/home/rafy/testing_make_dir/test1")
+True
+> j.sals.fs.rename("/home/rafy/testing_make_dir","/home/rafy/testing_dir") 
+> j.sals.fs.expanduser("~/work")
+'/home/xmonader/work'
+> j.sals.fs.unlink("/home/rafy/testfile3")
+> j.sals.fs.read_text("/home/rafy/testing_text.txt")
+'hello world\n'
+> j.sals.fs.read_bytes("/home/rafy/testing_text.txt")
+b'hello world\n'
+> j.sals.fs.write_text(path="/home/rafy/testing_text.txt",data="hello world")  
+11
+> j.sals.fs.write_bytes(path="/home/rafy/testing_text.txt",data=b"hello world")  
+11
+> j.sals.fs.touch("/home/rafy/testing_touch")
+> j.sals.fs.get_temp_filename(dir="/home/rafy/")  
+'/home/rafy/tmp6x7w71ml'
+> j.sals.fs.get_temp_dirname(dir="/home/rafy")  
+'/home/rafy/tmpntm2ptqy'
+> j.sals.fs.join_paths("home","rafy")  
+'home/rafy' 
+> j.sals.fs.rm_emptry_dir("/home/rafy/empty_dir")   
+> j.sals.fs.copy_file(src="/home/rafy/testing_text.txt",dst="/home/rafy/Documents/testing_text.txt")
+> j.sals.fs.symlink(src="/home/rafy/testing_text.txt",dst="/home/rafy/link_test")
+> j.sals.fs.change_dir("/home/rafy/Documents")  
+'/home/rafy/Documents'
+> j.sals.fs.chmod("/home/rafy/testing_dir",777)
+> j.sals.fs.stat("/home/rafy/test_dir/test")  
+os.stat_result(st_mode=33204, st_ino=795348, st_dev=2049, st_nlink=1, st_uid=1000, st_gid=1000, st_size=0, st_atime=1586445434, st_mtime=1586445434, st_ctime=1586445434)
+> j.sals.fs.lstat("/home/rafy/testing_link")  
+os.stat_result(st_mode=41471, st_ino=7081257, st_dev=2049, st_nlink=1, st_uid=1000, st_gid=1000, st_size=16, st_atime=1586445737, st_mtime=1586445734, st_ctime=1586445734)
+> j.sals.fs.resolve("")  
+PosixPath('/home/rafy/Documents')
+> j.sals.fs.resolve("./testing_text.txt")  
+PosixPath('/home/rafy/Documents/testing_text.txt')
+> '/home/ahmed/myfile.py' 
+`.py` if include_dot else `py`
+
+```
+And very fancy walkers
+```        
+        for el in walk('/tmp', filter_fun=j.sals.fs.is_file) : ..
+        for el in walk('/tmp', filter_fun=j.sals.fs.is_dir) : ..
+        for el in walk('/tmp', filter_fun= lambda x: len(x)>4 and (j.sals.fs.is_file(x) or j.sals.fs.is_dir(x)) ) : ..
+        for el in walk('/tmp', filter=j.sals.fs.is_file) : ..
+        for el in walk('/tmp', filter=j.sals.fs.is_dir) : ..
+        for el in walk('/tmp', filter= lambda x: len(x)>4 and (j.sals.fs.is_file(x) or j.sals.fs.is_dir(x)) ) : ..
+        for el in walk_files('/tmp') : ..
+        for el in walk_dirs('/tmp') : ..
+```
+
+"""
+
 import pathlib
 import tempfile
 import os
@@ -552,7 +627,7 @@ def copy_file(src: str, dst: str, times=False, perms=False):
 def symlink(src: str, dst: str, overwrite=False):
     """Create a symbolic link.
     e.g
-        j.sals.fs.copy_file(src="/home/rafy/testing_text.txt",dst="/home/rafy/link_test")
+        j.sals.fs.symlink(src="/home/rafy/testing_text.txt",dst="/home/rafy/link_test")
 
     Args:
         src (str): Source of link

@@ -22,23 +22,307 @@
 <section id="section-intro">
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">from .hostsfile import *</code></pre>
+<pre><code class="python">import re
+
+
+class HostsFile:
+    def __init__(self, hosts_file_path):
+        self.path = hosts_file_path
+        self.content = self._parse()
+
+    def _parse(self):
+        with open(self.path, &#34;r&#34;) as file:
+            content_text = file.read()
+        content_lines = content_text.splitlines()
+        ip_lines = []
+        regex = r&#34;&#34;&#34;\d+\.\d+\.\d+\.\d+&#34;&#34;&#34;
+        for line in content_lines:
+            if re.search(regex, line):
+                ip_lines.append(line)
+        content_dict = {}
+        for line in ip_lines:
+            key, value = line.split(&#34;\t&#34;)[0], line.split(&#34;\t&#34;)[1]
+            content_dict[key] = value
+        return content_dict
+
+    def write(self):
+        &#34;&#34;&#34;
+        write the changes into the file.
+        &#34;&#34;&#34;
+        content_text = &#34;&#34;
+        for key, value in self.content.items():
+            content_text += f&#34;\n{key}\t{value}&#34;
+        with open(self.path, &#34;w&#34;) as file:
+            file.write(content_text)
+
+    def remove(self, ip):
+        &#34;&#34;&#34;
+        remove the ip and its hostname from hosts file
+        Args:
+            ip (str) : the ip address
+        &#34;&#34;&#34;
+        del self.content[ip]
+
+    def add(self, ip, domain):
+        &#34;&#34;&#34;
+        add new entry to the hosts file
+        Args:
+            ip (str) : the ip address
+            domain (str) : the host name
+        &#34;&#34;&#34;
+        self.content[ip] = domain
+
+    def set_hostname(self, ip, domain):
+        &#34;&#34;&#34;
+        update the hostname for ip
+        Args:
+            ip (str) : the ip address
+            domain (str) : the host name           
+        &#34;&#34;&#34;
+        self.content[ip] = domain
+
+    def exists(self, ip):
+        &#34;&#34;&#34;
+        check for the existence of the ip in hosts file.
+        Args:
+            ip (str) : the ip address
+        Return:
+            boolen expression
+        &#34;&#34;&#34;
+        return ip in self.content
+
+    def get_hostname(self, ip):
+        &#34;&#34;&#34;
+        get the hostname for ip
+        Args:
+            ip (str) : the ip address
+        Returns:
+            the hostname for the ip address
+        &#34;&#34;&#34;
+        return self.content[ip]</code></pre>
 </details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt><code class="name"><a title="jumpscale.sals.hostsfile.hostsfile" href="hostsfile.html">jumpscale.sals.hostsfile.hostsfile</a></code></dt>
+<dt id="jumpscale.sals.hostsfile.HostsFile"><code class="flex name class">
+<span>class <span class="ident">HostsFile</span></span>
+<span>(</span><span>hosts_file_path)</span>
+</code></dt>
 <dd>
 <section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class HostsFile:
+    def __init__(self, hosts_file_path):
+        self.path = hosts_file_path
+        self.content = self._parse()
+
+    def _parse(self):
+        with open(self.path, &#34;r&#34;) as file:
+            content_text = file.read()
+        content_lines = content_text.splitlines()
+        ip_lines = []
+        regex = r&#34;&#34;&#34;\d+\.\d+\.\d+\.\d+&#34;&#34;&#34;
+        for line in content_lines:
+            if re.search(regex, line):
+                ip_lines.append(line)
+        content_dict = {}
+        for line in ip_lines:
+            key, value = line.split(&#34;\t&#34;)[0], line.split(&#34;\t&#34;)[1]
+            content_dict[key] = value
+        return content_dict
+
+    def write(self):
+        &#34;&#34;&#34;
+        write the changes into the file.
+        &#34;&#34;&#34;
+        content_text = &#34;&#34;
+        for key, value in self.content.items():
+            content_text += f&#34;\n{key}\t{value}&#34;
+        with open(self.path, &#34;w&#34;) as file:
+            file.write(content_text)
+
+    def remove(self, ip):
+        &#34;&#34;&#34;
+        remove the ip and its hostname from hosts file
+        Args:
+            ip (str) : the ip address
+        &#34;&#34;&#34;
+        del self.content[ip]
+
+    def add(self, ip, domain):
+        &#34;&#34;&#34;
+        add new entry to the hosts file
+        Args:
+            ip (str) : the ip address
+            domain (str) : the host name
+        &#34;&#34;&#34;
+        self.content[ip] = domain
+
+    def set_hostname(self, ip, domain):
+        &#34;&#34;&#34;
+        update the hostname for ip
+        Args:
+            ip (str) : the ip address
+            domain (str) : the host name           
+        &#34;&#34;&#34;
+        self.content[ip] = domain
+
+    def exists(self, ip):
+        &#34;&#34;&#34;
+        check for the existence of the ip in hosts file.
+        Args:
+            ip (str) : the ip address
+        Return:
+            boolen expression
+        &#34;&#34;&#34;
+        return ip in self.content
+
+    def get_hostname(self, ip):
+        &#34;&#34;&#34;
+        get the hostname for ip
+        Args:
+            ip (str) : the ip address
+        Returns:
+            the hostname for the ip address
+        &#34;&#34;&#34;
+        return self.content[ip]</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="jumpscale.sals.hostsfile.HostsFile.add"><code class="name flex">
+<span>def <span class="ident">add</span></span>(<span>self, ip, domain)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>add new entry to the hosts file</p>
+<h2 id="args">Args</h2>
+<p>ip (str) : the ip address
+domain (str) : the host name</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def add(self, ip, domain):
+    &#34;&#34;&#34;
+    add new entry to the hosts file
+    Args:
+        ip (str) : the ip address
+        domain (str) : the host name
+    &#34;&#34;&#34;
+    self.content[ip] = domain</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.sals.hostsfile.HostsFile.exists"><code class="name flex">
+<span>def <span class="ident">exists</span></span>(<span>self, ip)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>check for the existence of the ip in hosts file.</p>
+<h2 id="args">Args</h2>
+<p>ip (str) : the ip address</p>
+<h2 id="return">Return</h2>
+<p>boolen expression</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def exists(self, ip):
+    &#34;&#34;&#34;
+    check for the existence of the ip in hosts file.
+    Args:
+        ip (str) : the ip address
+    Return:
+        boolen expression
+    &#34;&#34;&#34;
+    return ip in self.content</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.sals.hostsfile.HostsFile.get_hostname"><code class="name flex">
+<span>def <span class="ident">get_hostname</span></span>(<span>self, ip)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>get the hostname for ip</p>
+<h2 id="args">Args</h2>
+<p>ip (str) : the ip address</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>the</code> <code>hostname</code> <code>for</code> <code>the</code> <code>ip</code> <code>address</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_hostname(self, ip):
+    &#34;&#34;&#34;
+    get the hostname for ip
+    Args:
+        ip (str) : the ip address
+    Returns:
+        the hostname for the ip address
+    &#34;&#34;&#34;
+    return self.content[ip]</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.sals.hostsfile.HostsFile.remove"><code class="name flex">
+<span>def <span class="ident">remove</span></span>(<span>self, ip)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>remove the ip and its hostname from hosts file</p>
+<h2 id="args">Args</h2>
+<p>ip (str) : the ip address</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def remove(self, ip):
+    &#34;&#34;&#34;
+    remove the ip and its hostname from hosts file
+    Args:
+        ip (str) : the ip address
+    &#34;&#34;&#34;
+    del self.content[ip]</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.sals.hostsfile.HostsFile.set_hostname"><code class="name flex">
+<span>def <span class="ident">set_hostname</span></span>(<span>self, ip, domain)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>update the hostname for ip</p>
+<h2 id="args">Args</h2>
+<p>ip (str) : the ip address
+domain (str) : the host name</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def set_hostname(self, ip, domain):
+    &#34;&#34;&#34;
+    update the hostname for ip
+    Args:
+        ip (str) : the ip address
+        domain (str) : the host name           
+    &#34;&#34;&#34;
+    self.content[ip] = domain</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.sals.hostsfile.HostsFile.write"><code class="name flex">
+<span>def <span class="ident">write</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>write the changes into the file.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def write(self):
+    &#34;&#34;&#34;
+    write the changes into the file.
+    &#34;&#34;&#34;
+    content_text = &#34;&#34;
+    for key, value in self.content.items():
+        content_text += f&#34;\n{key}\t{value}&#34;
+    with open(self.path, &#34;w&#34;) as file:
+        file.write(content_text)</code></pre>
+</details>
 </dd>
 </dl>
-</section>
-<section>
-</section>
-<section>
-</section>
-<section>
+</dd>
+</dl>
 </section>
 </article>
 <nav id="sidebar">
@@ -52,9 +336,19 @@
 <li><code><a title="jumpscale.sals" href="../index.html">jumpscale.sals</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
+<li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
-<li><code><a title="jumpscale.sals.hostsfile.hostsfile" href="hostsfile.html">jumpscale.sals.hostsfile.hostsfile</a></code></li>
+<li>
+<h4><code><a title="jumpscale.sals.hostsfile.HostsFile" href="#jumpscale.sals.hostsfile.HostsFile">HostsFile</a></code></h4>
+<ul class="two-column">
+<li><code><a title="jumpscale.sals.hostsfile.HostsFile.add" href="#jumpscale.sals.hostsfile.HostsFile.add">add</a></code></li>
+<li><code><a title="jumpscale.sals.hostsfile.HostsFile.exists" href="#jumpscale.sals.hostsfile.HostsFile.exists">exists</a></code></li>
+<li><code><a title="jumpscale.sals.hostsfile.HostsFile.get_hostname" href="#jumpscale.sals.hostsfile.HostsFile.get_hostname">get_hostname</a></code></li>
+<li><code><a title="jumpscale.sals.hostsfile.HostsFile.remove" href="#jumpscale.sals.hostsfile.HostsFile.remove">remove</a></code></li>
+<li><code><a title="jumpscale.sals.hostsfile.HostsFile.set_hostname" href="#jumpscale.sals.hostsfile.HostsFile.set_hostname">set_hostname</a></code></li>
+<li><code><a title="jumpscale.sals.hostsfile.HostsFile.write" href="#jumpscale.sals.hostsfile.HostsFile.write">write</a></code></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
