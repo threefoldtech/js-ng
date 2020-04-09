@@ -2,7 +2,7 @@ import os
 import pathlib
 import sys
 
-from jumpscale.god import j, jsng
+from jumpscale.god import j
 from jumpscale.shell import ptconfig
 
 from ptpython.repl import embed
