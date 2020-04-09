@@ -31,14 +31,14 @@ from typing import List, Dict, Optional
 DEFAULT_IGNORED_PATTERNS = [&#34;.git&#34;, &#34;.pyc&#34;, &#34;__pycache__&#34;, &#34;.swp&#34;, &#34;.swx&#34;]
 
 &#34;&#34;&#34;
-JS-NG&gt; xmonader = j.clients.sshkey.new(&#34;xmonader&#34;)
-JS-NG&gt; xmonader.private_key_path = &#34;/home/xmonader/.ssh/id_rsa&#34;
-JS-NG&gt; xmonader.load_from_file_system()
-JS-NG&gt; xmonader.save()
-JS-NG&gt; xmonader = j.clients.sshclient.new(&#34;xmonader&#34;)
-JS-NG&gt; xmonader.sshkey = &#34;xmonader&#34;
-JS-NG&gt; s = j.tools.syncer.Syncer([&#34;xmonader&#34;], {&#34;/home/xmonader/wspace/tfchain-py&#34;:&#34;/tmp/tfchain-py&#34;})
-JS-NG&gt; s.start()
+JS-NG&gt; xmonader = j.clients.sshkey.new(&#34;xmonader&#34;)                                                                               
+JS-NG&gt; xmonader.private_key_path = &#34;/home/xmonader/.ssh/id_rsa&#34;                                                                  
+JS-NG&gt; xmonader.load_from_file_system()                                                                                          
+JS-NG&gt; xmonader.save()                                                                                                           
+JS-NG&gt; xmonader = j.clients.sshclient.new(&#34;xmonader&#34;)                                                                            
+JS-NG&gt; xmonader.sshkey = &#34;xmonader&#34;                                                                                              
+JS-NG&gt; s = j.tools.syncer.Syncer([&#34;xmonader&#34;], {&#34;/home/xmonader/wspace/tfchain-py&#34;:&#34;/tmp/tfchain-py&#34;}) 
+JS-NG&gt; s.start()                                                                                                                 
 2019-09-03T11:38:47.183394+0200 - paths: {&#39;/home/xmonader/wspace/tfchain-py&#39;: &#39;/tmp/tfchain-py&#39;}
 &#34;&#34;&#34;
 

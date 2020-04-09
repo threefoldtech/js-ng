@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.4" />
-<title>jumpscale.clients.docker API documentation</title>
+<title>jumpscale.servers.openresty API documentation</title>
 <meta name="description" content="" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
@@ -17,23 +17,29 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>jumpscale.clients.docker</code></h1>
+<h1 class="title">Module <code>jumpscale.servers.openresty</code></h1>
 </header>
 <section id="section-intro">
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">from jumpscale.core.base import StoredFactory
+from .server import OpenRestyServer
 
-from .docker import DockerClient
-
-
-export_module_as = StoredFactory(DockerClient)</code></pre>
+export_module_as = StoredFactory(OpenRestyServer)</code></pre>
 </details>
 </section>
 <section>
 <h2 class="section-title" id="header-submodules">Sub-modules</h2>
 <dl>
-<dt><code class="name"><a title="jumpscale.clients.docker.docker" href="docker.html">jumpscale.clients.docker.docker</a></code></dt>
+<dt><code class="name"><a title="jumpscale.servers.openresty.location" href="location.html">jumpscale.servers.openresty.location</a></code></dt>
+<dd>
+<section class="desc"></section>
+</dd>
+<dt><code class="name"><a title="jumpscale.servers.openresty.server" href="server.html">jumpscale.servers.openresty.server</a></code></dt>
+<dd>
+<section class="desc"></section>
+</dd>
+<dt><code class="name"><a title="jumpscale.servers.openresty.utils" href="utils.html">jumpscale.servers.openresty.utils</a></code></dt>
 <dd>
 <section class="desc"></section>
 </dd>
@@ -54,12 +60,14 @@ export_module_as = StoredFactory(DockerClient)</code></pre>
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="jumpscale.clients" href="../index.html">jumpscale.clients</a></code></li>
+<li><code><a title="jumpscale.servers" href="../index.html">jumpscale.servers</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
-<li><code><a title="jumpscale.clients.docker.docker" href="docker.html">jumpscale.clients.docker.docker</a></code></li>
+<li><code><a title="jumpscale.servers.openresty.location" href="location.html">jumpscale.servers.openresty.location</a></code></li>
+<li><code><a title="jumpscale.servers.openresty.server" href="server.html">jumpscale.servers.openresty.server</a></code></li>
+<li><code><a title="jumpscale.servers.openresty.utils" href="utils.html">jumpscale.servers.openresty.utils</a></code></li>
 </ul>
 </li>
 </ul>

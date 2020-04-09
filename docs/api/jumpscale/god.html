@@ -28,6 +28,7 @@ import traceback
 import importlib
 import pkgutil
 import importlib.util
+
 # import lazy_import
 
 &#34;&#34;&#34;
@@ -109,9 +110,11 @@ js-ext
 
 __all__ = [&#34;j&#34;]
 
+
 def load():
     import jumpscale
-    loadeddict = {&#39;jumpscale&#39;:{}}
+
+    loadeddict = {&#34;jumpscale&#34;: {}}
     for jsnamespace in jumpscale.__path__:
         for root, dirs, files in os.walk(jsnamespace):
             for d in dirs:
@@ -120,12 +123,11 @@ def load():
                 if os.path.basename(root) == &#34;jumpscale&#34;:
                     continue
 
-
                 if os.path.dirname(root) != jsnamespace:
                     continue
                 # print(&#34;root: {} d: {}&#34;.format(root, d))
                 rootbase = os.path.basename(root)
-                loadeddict[&#39;jumpscale&#39;].setdefault(rootbase, {})
+                loadeddict[&#34;jumpscale&#34;].setdefault(rootbase, {})
                 pkgname = d
                 importedpkgstr = &#34;jumpscale.{}.{}&#34;.format(rootbase, pkgname)
                 __all__.append(importedpkgstr)
@@ -141,10 +143,10 @@ def load():
                     if hasattr(m, &#34;export_module_as&#34;):
                         # print(&#34;rootbase: &#34;, rootbase, importedpkgstr)
                         # print(m.export_module_as)
-                        loadeddict[&#39;jumpscale&#39;][rootbase][pkgname] = m.export_module_as
+                        loadeddict[&#34;jumpscale&#34;][rootbase][pkgname] = m.export_module_as
                         # loadeddict[importedpkgstr] = m.export_module_as
                     else:
-                        loadeddict[&#39;jumpscale&#39;][rootbase][pkgname] = m
+                        loadeddict[&#34;jumpscale&#34;][rootbase][pkgname] = m
 
     return loadeddict
 
@@ -152,37 +154,40 @@ def load():
 class Group:
     def __init__(self, d):
         self.d = d
-        for k,v in d.items():
+        for k, v in d.items():
             setattr(self, k, v)
+
     def __getattr__(self, a):
         return self.d[a]
 
     def __dir__(self):
         return list(self.d.keys())
 
+
 class J:
     &#34;&#34;&#34;
         Here we simulate god object `j` by delegating the calls to suitable subnamespace
     &#34;&#34;&#34;
+
     def __init__(self):
         self.__loaded = False
         self.__loaded_dict = {}
 
     def __dir__(self):
         self._load()
-        return list(self.__loaded_dict[&#39;jumpscale&#39;].keys()) + [&#39;config&#39;, &#39;exceptions&#39;, &#39;logger&#39;]
+        return list(self.__loaded_dict[&#34;jumpscale&#34;].keys()) + [&#34;config&#34;, &#34;exceptions&#34;, &#34;logger&#34;]
 
     @property
     def logger(self):
-        return self.__loaded_dict[&#39;jumpscale&#39;][&#39;core&#39;][&#39;logging&#39;].logger
+        return self.__loaded_dict[&#34;jumpscale&#34;][&#34;core&#34;][&#34;logging&#34;].logger
 
     @property
     def config(self):
-        return self.__loaded_dict[&#39;jumpscale&#39;][&#39;core&#39;][&#39;config&#39;]
+        return self.__loaded_dict[&#34;jumpscale&#34;][&#34;core&#34;][&#34;config&#34;]
 
     @property
     def exceptions(self):
-        return self.__loaded_dict[&#39;jumpscale&#39;][&#39;core&#39;][&#39;exceptions&#39;]
+        return self.__loaded_dict[&#34;jumpscale&#34;][&#34;core&#34;][&#34;exceptions&#34;]
 
     def reload(self):
         self.__loaded = False
@@ -195,8 +200,9 @@ class J:
     def __getattr__(self, name):
         self._load()
 
-        d = self.__loaded_dict[&#39;jumpscale&#39;][name]
+        d = self.__loaded_dict[&#34;jumpscale&#34;][name]
         return Group(d)
+
 
 j = J()
 
@@ -250,7 +256,9 @@ j = J()
 # jclass = get_j_class()
 # print(jclass)
 # exec(jclass)
-# j = J_codegen()</code></pre>
+# j = J_codegen()
+
+__all__ = dir(j)</code></pre>
 </details>
 </section>
 <section>

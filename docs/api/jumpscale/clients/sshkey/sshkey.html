@@ -34,7 +34,7 @@ class SSHKeyClient(Client):
     passphrase = fields.String(default=&#34;&#34;) # should use secret.
     duration = fields.Integer()
     allow_agent = fields.Boolean()
-
+    
     def __init__(self):
         super().__init__()
         if self.private_key_path and j.sals.fs.exists(self.private_key_path):
@@ -43,7 +43,7 @@ class SSHKeyClient(Client):
     def load_from_file_system(self):
         self.public_key = j.sals.fs.read_file(self.public_key_path)
         self.private_key = j.sals.fs.read_file(self.private_key_path)
-
+        
 
     def generate_keys(self):
         if not self.private_key_path:
@@ -52,7 +52,7 @@ class SSHKeyClient(Client):
             j.sals.fs.mkdirs(sshkeys_dir)
             self.private_key_path = j.sals.fs.join_paths(sshkeys_dir, j.data.idgenerator.chars(8))
         if self.passphrase and len(self.passphrase) &lt; 5:
-            raise ValueError(&#34;invalid passphrase length: should be at least 5 chars.&#34;)
+            raise ValueError(&#34;invalid passphrase length: should be at least 5 chars.&#34;) 
         cmd = &#39;ssh-keygen -f {} -N &#34;{}&#34;&#39;.format(self.private_key_path, self.passphrase)
         rc, out, err = j.core.executors.run_local(cmd)
         if rc == 0:
@@ -68,10 +68,10 @@ class SSHKeyClient(Client):
     def write_to_filesystem(self):
         if not self.private_key:
             raise RuntimeError(&#34;no private key to write&#34;)
-
+        
         if not self.public_key:
             raise RuntimeError(&#34;no public key to write&#34;)
-
+        
         j.sals.fs.write_file(self.private_key_path, self.private_key)
         j.sals.fs.write_file(self.public_key_path, self.public_key)
 
@@ -104,7 +104,7 @@ class SSHKeyClient(Client):
     passphrase = fields.String(default=&#34;&#34;) # should use secret.
     duration = fields.Integer()
     allow_agent = fields.Boolean()
-
+    
     def __init__(self):
         super().__init__()
         if self.private_key_path and j.sals.fs.exists(self.private_key_path):
@@ -113,7 +113,7 @@ class SSHKeyClient(Client):
     def load_from_file_system(self):
         self.public_key = j.sals.fs.read_file(self.public_key_path)
         self.private_key = j.sals.fs.read_file(self.private_key_path)
-
+        
 
     def generate_keys(self):
         if not self.private_key_path:
@@ -122,7 +122,7 @@ class SSHKeyClient(Client):
             j.sals.fs.mkdirs(sshkeys_dir)
             self.private_key_path = j.sals.fs.join_paths(sshkeys_dir, j.data.idgenerator.chars(8))
         if self.passphrase and len(self.passphrase) &lt; 5:
-            raise ValueError(&#34;invalid passphrase length: should be at least 5 chars.&#34;)
+            raise ValueError(&#34;invalid passphrase length: should be at least 5 chars.&#34;) 
         cmd = &#39;ssh-keygen -f {} -N &#34;{}&#34;&#39;.format(self.private_key_path, self.passphrase)
         rc, out, err = j.core.executors.run_local(cmd)
         if rc == 0:
@@ -138,10 +138,10 @@ class SSHKeyClient(Client):
     def write_to_filesystem(self):
         if not self.private_key:
             raise RuntimeError(&#34;no private key to write&#34;)
-
+        
         if not self.public_key:
             raise RuntimeError(&#34;no public key to write&#34;)
-
+        
         j.sals.fs.write_file(self.private_key_path, self.private_key)
         j.sals.fs.write_file(self.public_key_path, self.public_key)
 
@@ -285,7 +285,7 @@ def public_key_path(self):
         j.sals.fs.mkdirs(sshkeys_dir)
         self.private_key_path = j.sals.fs.join_paths(sshkeys_dir, j.data.idgenerator.chars(8))
     if self.passphrase and len(self.passphrase) &lt; 5:
-        raise ValueError(&#34;invalid passphrase length: should be at least 5 chars.&#34;)
+        raise ValueError(&#34;invalid passphrase length: should be at least 5 chars.&#34;) 
     cmd = &#39;ssh-keygen -f {} -N &#34;{}&#34;&#39;.format(self.private_key_path, self.passphrase)
     rc, out, err = j.core.executors.run_local(cmd)
     if rc == 0:
@@ -317,10 +317,10 @@ def public_key_path(self):
 <pre><code class="python">def write_to_filesystem(self):
     if not self.private_key:
         raise RuntimeError(&#34;no private key to write&#34;)
-
+    
     if not self.public_key:
         raise RuntimeError(&#34;no public key to write&#34;)
-
+    
     j.sals.fs.write_file(self.private_key_path, self.private_key)
     j.sals.fs.write_file(self.public_key_path, self.public_key)</code></pre>
 </details>

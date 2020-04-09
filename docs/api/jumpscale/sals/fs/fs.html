@@ -43,6 +43,7 @@ sep = os.path.sep
 is_samefile = os.path.samefile
 expandvars = os.path.expandvars
 expanduser = os.path.expanduser
+realpath = os.path.realpath
 
 
 def home():
@@ -72,10 +73,11 @@ def is_dir(path: str) -&gt; bool:
 def is_file(path: str) -&gt; bool:
     &#34;&#34;&#34;Checks if path is a file
 
-    :param path: path to check
-    :type path: str
-    :return: True if is file else False
-    :rtype: bool
+    Args:
+        path (str): path to check if is file
+
+    Returns:
+        bool: True if is file and False otherwise
     &#34;&#34;&#34;
     return pathlib.Path(path).is_file()
 
@@ -488,6 +490,20 @@ def copy_file(src: str, dst: str, times=False, perms=False):
         copy_stat(src, dst, times, perms)
 
 
+def symlink(src: str, dst: str, overwrite=False):
+    &#34;&#34;&#34;Create a symbolic link.
+
+    Args:
+        src (str): Source of link
+        dst (str): Destination path of link
+        overwrite (bool, optional): If link exists will delete it. Defaults to False.
+    &#34;&#34;&#34;
+    if overwrite and exists(dst):
+        os.unlink(dst)
+
+    os.symlink(src, dst)
+
+
 copy_tree = dir_util.copy_tree
 chdir = os.chdir
 
@@ -634,7 +650,7 @@ def walk(path: str, pat=&#34;*&#34;, filter_fun=default_filter_fun):
     for entry in p.rglob(pat):
         # use rglob instead of glob(&#34;**/*&#34;)
         if filter_fun(entry):
-            yield str(entry )
+            yield str(entry)
 
 
 def walk_non_recursive(path: str, filter_fun=default_filter_fun):
@@ -1297,19 +1313,26 @@ j.sals.fs.expanduser("~/work") -&gt; '/home/xmonader/work'</p>
 </code></dt>
 <dd>
 <section class="desc"><p>Checks if path is a file</p>
-<p>:param path: path to check
-:type path: str
-:return: True if is file else False
-:rtype: bool</p></section>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
+<dd>path to check if is file</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>bool</code></strong></dt>
+<dd>True if is file and False otherwise</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def is_file(path: str) -&gt; bool:
     &#34;&#34;&#34;Checks if path is a file
 
-    :param path: path to check
-    :type path: str
-    :return: True if is file else False
-    :rtype: bool
+    Args:
+        path (str): path to check if is file
+
+    Returns:
+        bool: True if is file and False otherwise
     &#34;&#34;&#34;
     return pathlib.Path(path).is_file()</code></pre>
 </details>
@@ -1989,6 +2012,36 @@ Out[3]: 'tmp-5383p1GOmMOOwvfi'
     return pathlib.Path(path).stem</code></pre>
 </details>
 </dd>
+<dt id="jumpscale.sals.fs.fs.symlink"><code class="name flex">
+<span>def <span class="ident">symlink</span></span>(<span>src, dst, overwrite=False)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Create a symbolic link.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>src</code></strong> :&ensp;<code>str</code></dt>
+<dd>Source of link</dd>
+<dt><strong><code>dst</code></strong> :&ensp;<code>str</code></dt>
+<dd>Destination path of link</dd>
+<dt><strong><code>overwrite</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>If link exists will delete it. Defaults to False.</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def symlink(src: str, dst: str, overwrite=False):
+    &#34;&#34;&#34;Create a symbolic link.
+
+    Args:
+        src (str): Source of link
+        dst (str): Destination path of link
+        overwrite (bool, optional): If link exists will delete it. Defaults to False.
+    &#34;&#34;&#34;
+    if overwrite and exists(dst):
+        os.unlink(dst)
+
+    os.symlink(src, dst)</code></pre>
+</details>
+</dd>
 <dt id="jumpscale.sals.fs.fs.touch"><code class="name flex">
 <span>def <span class="ident">touch</span></span>(<span>path)</span>
 </code></dt>
@@ -2071,7 +2124,7 @@ for el in walk('/tmp', filter_fun= lambda x: len(x)&gt;4 and (j.sals.fs.is_file(
     for entry in p.rglob(pat):
         # use rglob instead of glob(&#34;**/*&#34;)
         if filter_fun(entry):
-            yield str(entry )</code></pre>
+            yield str(entry)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.sals.fs.fs.walk_dirs"><code class="name flex">
@@ -2415,6 +2468,7 @@ for el in walk('/tmp', filter= lambda x: len(x)&gt;4 and (j.sals.fs.is_file(x) o
 <li><code><a title="jumpscale.sals.fs.fs.rmtree" href="#jumpscale.sals.fs.fs.rmtree">rmtree</a></code></li>
 <li><code><a title="jumpscale.sals.fs.fs.stat" href="#jumpscale.sals.fs.fs.stat">stat</a></code></li>
 <li><code><a title="jumpscale.sals.fs.fs.stem" href="#jumpscale.sals.fs.fs.stem">stem</a></code></li>
+<li><code><a title="jumpscale.sals.fs.fs.symlink" href="#jumpscale.sals.fs.fs.symlink">symlink</a></code></li>
 <li><code><a title="jumpscale.sals.fs.fs.touch" href="#jumpscale.sals.fs.fs.touch">touch</a></code></li>
 <li><code><a title="jumpscale.sals.fs.fs.unlink" href="#jumpscale.sals.fs.fs.unlink">unlink</a></code></li>
 <li><code><a title="jumpscale.sals.fs.fs.walk" href="#jumpscale.sals.fs.fs.walk">walk</a></code></li>

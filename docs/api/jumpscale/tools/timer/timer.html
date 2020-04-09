@@ -32,7 +32,7 @@ def time(func):
         end_time = time.time()
         diff = end_time - start_time
         j.logger.info(&#34;func {} with args: {}, kwargs: {} took {}&#34;.format(func.__name__, args, kwargs, diff))
-
+        
         return result
 
     return wrapper</code></pre>
@@ -59,7 +59,7 @@ def time(func):
         end_time = time.time()
         diff = end_time - start_time
         j.logger.info(&#34;func {} with args: {}, kwargs: {} took {}&#34;.format(func.__name__, args, kwargs, diff))
-
+        
         return result
 
     return wrapper</code></pre>
