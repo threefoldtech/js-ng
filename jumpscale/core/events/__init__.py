@@ -1,6 +1,8 @@
 """
 This module is for event handling, where any component can listen to certain event notifications
 
+The modules is based on https://github.com/xmonader/events.
+
 Events can be of any type (class), there are two ways for listening to an event:
 
 Using decorators:
