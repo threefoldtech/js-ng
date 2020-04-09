@@ -11,32 +11,6 @@ from jumpscale.god import j
 from .systemactor import SystemActor
 
 
-"""
-~>  redis-cli -p 16000 greeter hi
-actor greeter isn't loaded
- ~>  redis-cli -p 16000 system register_actor greeter /home/ahmed/wspace/js-next/js-ng/jumpscale/servers/gedis/example_greeter.py
-(integer) -1
- ~>  redis-cli -p 16000 greeter hi
- hello world
- ~>  redis-cli -p 16000 greeter add2 jo deboeck
- "jodeboeck"
- ~>  fuser -k 16000/tcp
-
-16000/tcp:           29331
- ~>  redis-cli -p 16000 greeter hi
- actor greeter isn't loaded
- ~>  redis-cli -p 16000 system register_actor greeter /home/ahmed/wspace/js-next/js-ng/jumpscale/servers/gedis/example_greeter.py
-(integer) -1
- ~>  redis-cli -p 16000 greeter hi
- hello world
- ~>  redis-cli -p 16000 greeter ping
-
-pong no?
- ~>  redis-cli -p 16000 greeter add2 reem khamis
-"reemkhamis"
-"""
-
-
 class RedisConnectionAdapter:
     def __init__(self, sock):
         self.socket = sock
@@ -169,11 +143,7 @@ class GedisServer:
                     actor_name = resp[0].decode()
                     method_name = resp[1].decode()
                     args = resp[2:]
-                    print(
-                        "SERVICE: {} METHOD: {} ARGS : {} ".format(
-                            actor_name, method_name, args
-                        )
-                    )
+                    print("SERVICE: {} METHOD: {} ARGS : {} ".format(actor_name, method_name, args))
                     if actor_name not in self.actors:
                         encoder.encode("actor {} isn't loaded".format(actor_name))
                     else:
@@ -209,4 +179,3 @@ def new_server(actors=None):
     s.actors = {**s.actors, **default_actors}
     s.start()
     gevent.wait()
-

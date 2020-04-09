@@ -1,3 +1,10 @@
+"""
+Helper to get nameservers information and resolving domains.
+
+"""
+# TODO: update code
+
+
 try:
     import dns
     import dns.message
@@ -8,6 +15,7 @@ try:
 
 except ImportError as e:
     print("WARNING install dnspython: 'pip3 install dnspython'")
+
 
 class DNSClient:
     def __init__(self, nameservers=None, port=53):
@@ -37,5 +45,6 @@ class DNSClient:
         for rr in answer:
             res.append(rr.address)
         return res
+
 
 resolver = DNSClient()

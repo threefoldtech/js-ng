@@ -1,3 +1,21 @@
+"""syncing tool to sync over certain set of directories against remote machine.
+list available clients
+```
+~> poetry run jsync list-ssh-clients           
+['xmonader']
+
+```
+
+sync with a client certain set of paths
+~> poetry run jsync sync --clients "xmonader" --paths "~/wspace/tq,/tmp/proj:/tmp/proj2"
+['xmonader'] {'~/wspace/tq': '~/wspace/tq', '/tmp/proj': '/tmp/proj2'}
+```
+
+```
+poetry run jsync sync --clients "xmonader" --paths "~/wspace/tq:/tmp/tq" --sync
+```
+"""
+
 import click
 from jumpscale.god import j
 
@@ -8,18 +26,6 @@ def list_ssh_clients():
     return print(j.clients.sshclient.list_all())
 
 
-"""
-➜  js-ng git:(development_syncer) ✗ poetry run jsync list-ssh-clients           
-['xmonader']
- poetry run jsync sync --clients "xmonader" --paths "~/wspace/tq,/tmp/proj:/tmp/proj2"
-['xmonader'] {'~/wspace/tq': '~/wspace/tq', '/tmp/proj': '/tmp/proj2'}
-➜  js-ng git:(development_syncer) ✗ 
-nts
-
-
- poetry run jsync sync --clients "xmonader" --paths "~/wspace/tq:/tmp/tq" --sync
-
-"""
 # jsync --clients "xmonader,client2" --paths "/home/xmonader/wspace/tq:/tmp/tq,..."
 @click.command()
 @click.option("--clients")
@@ -52,4 +58,3 @@ cli.add_command(list_ssh_clients)
 
 if __name__ == "__main__":
     cli()
-

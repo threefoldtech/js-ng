@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.4" />
 <title>jumpscale.sals.process API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="TODO Examples for sal process" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -20,9 +20,15 @@
 <h1 class="title">Module <code>jumpscale.sals.process</code></h1>
 </header>
 <section id="section-intro">
+<h1 id="todo-examples-for-sal-process">TODO Examples for sal process</h1>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">import os
+<pre><code class="python">&#34;&#34;&#34;
+# TODO Examples for sal process
+
+&#34;&#34;&#34;
+
+import os
 import os.path
 import re
 import time
@@ -139,9 +145,7 @@ def kill(pid, sig=signal.SIGTERM.value):
         proc.send_signal(sig)
         return True
     except Exception as e:
-        raise j.exceptions.RuntimeError(
-            &#34;Could not kill process with id %s.\n%s&#34; % (pid, e)
-        )
+        raise j.exceptions.RuntimeError(&#34;Could not kill process with id %s.\n%s&#34; % (pid, e))
 
 
 def ps_find(name):
@@ -201,9 +205,7 @@ def get_pids_filtered_sorted(filterstr, sortkey=None):
         [list(int)] -- processes pids
     &#34;&#34;&#34;
     if sortkey is not None:
-        cmd = &#34;ps aux --sort={sortkey} | grep &#39;{filterstr}&#39;&#34;.format(
-            filterstr=filterstr, sortkey=sortkey
-        )
+        cmd = &#34;ps aux --sort={sortkey} | grep &#39;{filterstr}&#39;&#34;.format(filterstr=filterstr, sortkey=sortkey)
     else:
         cmd = &#34;ps ax | grep &#39;{filterstr}&#39;&#34;.format(filterstr=filterstr)
     rcode, out, err = execute(cmd)
@@ -313,8 +315,7 @@ def check_start(cmd, filterstr, nrinstances=1, retry=1):
     found = get_filtered_pids(filterstr)
     if len(found) != nrinstances:
         raise j.exceptions.RuntimeError(
-            &#34;could not start %s, found %s nr of instances. Needed %s.&#34;
-            % (cmd, len(found), nrinstances)
+            &#34;could not start %s, found %s nr of instances. Needed %s.&#34; % (cmd, len(found), nrinstances)
         )
 
 
@@ -346,9 +347,7 @@ def check_stop(cmd, filterstr, retry=1, nrinstances=0):
         found = get_filtered_pids(filterstr)
 
     if len(found) != 0:
-        raise j.exceptions.RuntimeError(
-            &#34;could not stop %s, found %s nr of instances.&#34; % (cmd, len(found))
-        )
+        raise j.exceptions.RuntimeError(&#34;could not stop %s, found %s nr of instances.&#34; % (cmd, len(found)))
 
 
 def get_pids(process, match_predicate=None):
@@ -588,11 +587,7 @@ def get_process_by_port(port):
     &#34;&#34;&#34;
     for process in psutil.process_iter():
         try:
-            cc = [
-                con
-                for con in process.connections()
-                if con.status == psutil.CONN_LISTEN and con.laddr[1] == port
-            ]
+            cc = [con for con in process.connections() if con.status == psutil.CONN_LISTEN and con.laddr[1] == port]
             if cc:
                 return process
         except Exception as e:
@@ -635,13 +630,6 @@ def getEnviron(pid):
 </details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
-<dl>
-<dt><code class="name"><a title="jumpscale.sals.process.process" href="process.html">jumpscale.sals.process.process</a></code></dt>
-<dd>
-<section class="desc"></section>
-</dd>
-</dl>
 </section>
 <section>
 </section>
@@ -749,8 +737,7 @@ retry {int} &ndash; number of retries (default: {1})</p>
     found = get_filtered_pids(filterstr)
     if len(found) != nrinstances:
         raise j.exceptions.RuntimeError(
-            &#34;could not start %s, found %s nr of instances. Needed %s.&#34;
-            % (cmd, len(found), nrinstances)
+            &#34;could not start %s, found %s nr of instances. Needed %s.&#34; % (cmd, len(found), nrinstances)
         )</code></pre>
 </details>
 </dd>
@@ -800,9 +787,7 @@ nrinstances {int} &ndash; number of instances after stop (default: {0})</p>
         found = get_filtered_pids(filterstr)
 
     if len(found) != 0:
-        raise j.exceptions.RuntimeError(
-            &#34;could not stop %s, found %s nr of instances.&#34; % (cmd, len(found))
-        )</code></pre>
+        raise j.exceptions.RuntimeError(&#34;could not stop %s, found %s nr of instances.&#34; % (cmd, len(found)))</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.sals.process.execute"><code class="name flex">
@@ -999,7 +984,7 @@ excludes {list(str)} &ndash; execlude list (default: {None})</p>
 <p>port {int} &ndash; port number</p>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>int</code> &ndash; <code>pid</code> of <a title="jumpscale.sals.process.process" href="process.html"><code>jumpscale.sals.process.process</code></a> <code>that</code> <code>listen</code> <code>on</code> <code>that</code> <code>port</code></dt>
+<dt><code>int</code> &ndash; <code>pid</code> of <code>process</code> <code>that</code> <code>listen</code> <code>on</code> <code>that</code> <code>port</code></dt>
 <dd>&nbsp;</dd>
 </dl></section>
 <details class="source">
@@ -1212,9 +1197,7 @@ starting time or date of the process.</p>
         [list(int)] -- processes pids
     &#34;&#34;&#34;
     if sortkey is not None:
-        cmd = &#34;ps aux --sort={sortkey} | grep &#39;{filterstr}&#39;&#34;.format(
-            filterstr=filterstr, sortkey=sortkey
-        )
+        cmd = &#34;ps aux --sort={sortkey} | grep &#39;{filterstr}&#39;&#34;.format(filterstr=filterstr, sortkey=sortkey)
     else:
         cmd = &#34;ps ax | grep &#39;{filterstr}&#39;&#34;.format(filterstr=filterstr)
     rcode, out, err = execute(cmd)
@@ -1255,11 +1238,7 @@ starting time or date of the process.</p>
     &#34;&#34;&#34;
     for process in psutil.process_iter():
         try:
-            cc = [
-                con
-                for con in process.connections()
-                if con.status == psutil.CONN_LISTEN and con.laddr[1] == port
-            ]
+            cc = [con for con in process.connections() if con.status == psutil.CONN_LISTEN and con.laddr[1] == port]
             if cc:
                 return process
         except Exception as e:
@@ -1278,7 +1257,7 @@ Keyword Arguments:
 die {bool} &ndash; die if process not found (default: {True})</p>
 <h2 id="raises">Raises</h2>
 <dl>
-<dt><code>psutil.NoSuchProcess</code>: <code>if</code> <a title="jumpscale.sals.process.process" href="process.html"><code>jumpscale.sals.process.process</code></a> <code>not</code> <code>found</code> <code>and</code> <code>die</code> = <code>True</code></dt>
+<dt><code>psutil.NoSuchProcess</code>: <code>if</code> <code>process</code> <code>not</code> <code>found</code> <code>and</code> <code>die</code> = <code>True</code></dt>
 <dd>&nbsp;</dd>
 </dl>
 <h2 id="returns">Returns</h2>
@@ -1425,7 +1404,7 @@ Keyword Arguments:
 sig {int]} &ndash; which signal you want to kill the process with (default: {signal.SIGTERM.value})</p>
 <h2 id="raises">Raises</h2>
 <dl>
-<dt><code>j.exceptions.RuntimeError</code>: <code>in</code> <code>case</code> <code>killing</code> <a title="jumpscale.sals.process.process" href="process.html"><code>jumpscale.sals.process.process</code></a> <code>failed</code></dt>
+<dt><code>j.exceptions.RuntimeError</code>: <code>in</code> <code>case</code> <code>killing</code> <code>process</code> <code>failed</code></dt>
 <dd>&nbsp;</dd>
 </dl>
 <h2 id="returns">Returns</h2>
@@ -1454,9 +1433,7 @@ sig {int]} &ndash; which signal you want to kill the process with (default: {sig
         proc.send_signal(sig)
         return True
     except Exception as e:
-        raise j.exceptions.RuntimeError(
-            &#34;Could not kill process with id %s.\n%s&#34; % (pid, e)
-        )</code></pre>
+        raise j.exceptions.RuntimeError(&#34;Could not kill process with id %s.\n%s&#34; % (pid, e))</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.sals.process.kill_all"><code class="name flex">
@@ -1616,17 +1593,14 @@ varvalues {list(str)} &ndash; A list of all values for the environment variables
 <nav id="sidebar">
 <h1>Index</h1>
 <div class="toc">
-<ul></ul>
+<ul>
+<li><a href="#todo-examples-for-sal-process">TODO Examples for sal process</a></li>
+</ul>
 </div>
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
 <li><code><a title="jumpscale.sals" href="../index.html">jumpscale.sals</a></code></li>
-</ul>
-</li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
-<ul>
-<li><code><a title="jumpscale.sals.process.process" href="process.html">jumpscale.sals.process.process</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>

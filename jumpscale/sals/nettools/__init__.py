@@ -1,3 +1,7 @@
+"""
+Docs for nettools
+
+"""
 # TODO: test *2
 
 import time
@@ -157,9 +161,7 @@ def get_nic_type(interface):
         exitcode, output, err = j.core.executors.run_local(command, hide=True, warn=True)
         if exitcode != 0:
             # temporary plumb the interface to lookup its mac
-            j.logger.info(
-                f"Interface {interface} is down. Temporarily plumbing it to be able to lookup its nic type"
-            )
+            j.logger.info(f"Interface {interface} is down. Temporarily plumbing it to be able to lookup its nic type")
             j.core.executors.run_local(f"{command} plumb", hide=True)
             exitcode, output, err = j.core.executors.run_local(command, hide=True)
             j.core.executors.run_local(f"{command} unplumb", hide=True)

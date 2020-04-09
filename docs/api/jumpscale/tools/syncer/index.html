@@ -5,7 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.4" />
 <title>jumpscale.tools.syncer API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="Module to help syncing multiple machines with specific directories you have.
+used in the jsync tool.
+```
+JS-NG&gt; xmonader = …" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -20,17 +23,23 @@
 <h1 class="title">Module <code>jumpscale.tools.syncer</code></h1>
 </header>
 <section id="section-intro">
+<p>Module to help syncing multiple machines with specific directories you have.
+used in the jsync tool.</p>
+<pre><code>JS-NG&gt; xmonader = j.clients.sshkey.new(&quot;xmonader&quot;)                                                                               
+JS-NG&gt; xmonader.private_key_path = &quot;/home/xmonader/.ssh/id_rsa&quot;                                                                  
+JS-NG&gt; xmonader.load_from_file_system()                                                                                          
+JS-NG&gt; xmonader.save()                                                                                                           
+JS-NG&gt; xmonader = j.clients.sshclient.new(&quot;xmonader&quot;)                                                                            
+JS-NG&gt; xmonader.sshkey = &quot;xmonader&quot;                                                                                              
+JS-NG&gt; s = j.tools.syncer.Syncer([&quot;xmonader&quot;], {&quot;/home/xmonader/wspace/tfchain-py&quot;:&quot;/tmp/tfchain-py&quot;}) 
+JS-NG&gt; s.start()                                                                                                                 
+2019-09-03T11:38:47.183394+0200 - paths: {'/home/xmonader/wspace/tfchain-py': '/tmp/tfchain-py'}
+</code></pre>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">from jumpscale.god import j
-from watchdog.events import PatternMatchingEventHandler
-from watchdog.observers import Observer
-import gevent
-from typing import List, Dict, Optional
-
-DEFAULT_IGNORED_PATTERNS = [&#34;.git&#34;, &#34;.pyc&#34;, &#34;__pycache__&#34;, &#34;.swp&#34;, &#34;.swx&#34;]
-
-&#34;&#34;&#34;
+<pre><code class="python">&#34;&#34;&#34;Module to help syncing multiple machines with specific directories you have.
+used in the jsync tool.
+```
 JS-NG&gt; xmonader = j.clients.sshkey.new(&#34;xmonader&#34;)                                                                               
 JS-NG&gt; xmonader.private_key_path = &#34;/home/xmonader/.ssh/id_rsa&#34;                                                                  
 JS-NG&gt; xmonader.load_from_file_system()                                                                                          
@@ -40,7 +49,16 @@ JS-NG&gt; xmonader.sshkey = &#34;xmonader&#34;
 JS-NG&gt; s = j.tools.syncer.Syncer([&#34;xmonader&#34;], {&#34;/home/xmonader/wspace/tfchain-py&#34;:&#34;/tmp/tfchain-py&#34;}) 
 JS-NG&gt; s.start()                                                                                                                 
 2019-09-03T11:38:47.183394+0200 - paths: {&#39;/home/xmonader/wspace/tfchain-py&#39;: &#39;/tmp/tfchain-py&#39;}
+```
 &#34;&#34;&#34;
+
+from jumpscale.god import j
+from watchdog.events import PatternMatchingEventHandler
+from watchdog.observers import Observer
+import gevent
+from typing import List, Dict, Optional
+
+DEFAULT_IGNORED_PATTERNS = [&#34;.git&#34;, &#34;.pyc&#34;, &#34;__pycache__&#34;, &#34;.swp&#34;, &#34;.swx&#34;]
 
 
 class Syncer(PatternMatchingEventHandler):
@@ -233,28 +251,6 @@ class Syncer(PatternMatchingEventHandler):
 <section>
 </section>
 <section>
-<h2 class="section-title" id="header-variables">Global variables</h2>
-<dl>
-<dt id="jumpscale.tools.syncer.DEFAULT_IGNORED_PATTERNS"><code class="name">var <span class="ident">DEFAULT_IGNORED_PATTERNS</span></code></dt>
-<dd>
-<section class="desc"><p>JS-NG&gt; xmonader = j.clients.sshkey.new("xmonader")
-<br>
-JS-NG&gt; xmonader.private_key_path = "/home/xmonader/.ssh/id_rsa"
-<br>
-JS-NG&gt; xmonader.load_from_file_system()
-<br>
-JS-NG&gt; xmonader.save()
-<br>
-JS-NG&gt; xmonader = j.clients.sshclient.new("xmonader")
-<br>
-JS-NG&gt; xmonader.sshkey = "xmonader"
-<br>
-JS-NG&gt; s = j.tools.syncer.Syncer(["xmonader"], {"/home/xmonader/wspace/tfchain-py":"/tmp/tfchain-py"})
-JS-NG&gt; s.start()
-<br>
-2019-09-03T11:38:47.183394+0200 - paths: {'/home/xmonader/wspace/tfchain-py': '/tmp/tfchain-py'}</p></section>
-</dd>
-</dl>
 </section>
 <section>
 </section>
@@ -658,11 +654,6 @@ sync {bool} &ndash; sync dirs/files first (default: {True})</p></section>
 <li><h3>Super-module</h3>
 <ul>
 <li><code><a title="jumpscale.tools" href="../index.html">jumpscale.tools</a></code></li>
-</ul>
-</li>
-<li><h3><a href="#header-variables">Global variables</a></h3>
-<ul class="">
-<li><code><a title="jumpscale.tools.syncer.DEFAULT_IGNORED_PATTERNS" href="#jumpscale.tools.syncer.DEFAULT_IGNORED_PATTERNS">DEFAULT_IGNORED_PATTERNS</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>

@@ -5,7 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.4" />
 <title>jumpscale.god API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="This module coverts the god object j and its loading process.
+the idea is with hierarchy like this
+```
+project1/
+/rootnamespace (jumpscale)
+…" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -20,20 +25,84 @@
 <h1 class="title">Module <code>jumpscale.god</code></h1>
 </header>
 <section id="section-intro">
+<p>This module coverts the god object j and its loading process.
+the idea is with hierarchy like this</p>
+<pre><code>project1/
+         /rootnamespace (jumpscale)
+            /subnamespace1
+                ... pkg1
+                ... pkg2
+            /subnamespace2
+                ... pkg1
+                ... pkg2
+project2/
+         /rootnamespace (jumpscale)
+            /subnamespace1
+                ... pkg1
+                ... pkg2
+            /subnamespace2
+                ... pkg1
+                ... pkg2
+</code></pre>
+<ul>
+<li>we get all the paths of the <code>rootnamespace</code></li>
+<li>we get all the subnamespaces</li>
+<li>we get all the inner packages and import all of them (lazily) or load them eagerly but just once.</li>
+</ul>
+<p>real example:</p>
+<pre><code>js-ng
+├── jumpscale   &lt;- root namespace
+│   ├── clients  &lt;- subnamespace where people can register on
+│   │   ├── base.py
+│   │   ├── github   &lt;- package in subnamespace
+│   │   │   ├── github.py
+│   │   │   └── __init__.py
+│   │   └── gogs
+│   │       ├── gogs.py
+│   │       └── __init__.py
+│   ├── core
+│   │   ├── config.py
+│   │   ├── exceptions.py
+│   │   └── logging.py
+│   ├── data
+│   │   ├── idgenerator
+│   │   │   ├── idgenerator.py
+│   │   │   └── __init__.py
+│   │   └── serializers
+│   │       ├── __init__.py
+│   │       └── serializers.py
+│   ├── god.py
+│   ├── sals
+│   │   └── fs
+│   │       ├── fs.py
+│   │       └── __init__.py
+│   └── tools
+│       └── keygen
+│           ├── __init__.py
+│           └── keygen.py
+├── README.md
+└── tests
+    └── test_loads_j.py
+js-ext
+├── jumpscale
+│   ├── clients
+│   │   └── gitlab
+│   │       ├── gitlab.py
+│   │       └── __init__.py
+│   ├── sals
+│   │   └── zos
+│   │       ├── __init__.py
+│   │       └── zos.py
+│   └── tools
+├── README.md
+└── tests
+    └── test_success.py
+</code></pre>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">import sys
-import os
-import traceback
-import importlib
-import pkgutil
-import importlib.util
-
-# import lazy_import
-
-&#34;&#34;&#34;
+<pre><code class="python">&#34;&#34;&#34;This module coverts the god object j and its loading process.
 the idea is with hierarchy like this
-
+```
 project1/
          /rootnamespace (jumpscale)
             /subnamespace1
@@ -50,13 +119,14 @@ project2/
             /subnamespace2
                 ... pkg1
                 ... pkg2
-
+```
 - we get all the paths of the `rootnamespace`
 - we get all the subnamespaces
 - we get all the inner packages and import all of them (lazily) or load them eagerly but just once.
 
 
 real example:
+```
 js-ng
 ├── jumpscale   &lt;- root namespace
 │   ├── clients  &lt;- subnamespace where people can register on
@@ -104,9 +174,19 @@ js-ext
 ├── README.md
 └── tests
     └── test_success.py
-
-
+```
 &#34;&#34;&#34;
+
+
+import sys
+import os
+import traceback
+import importlib
+import pkgutil
+import importlib.util
+
+# import lazy_import
+
 
 __all__ = [&#34;j&#34;]
 
@@ -256,9 +336,7 @@ j = J()
 # jclass = get_j_class()
 # print(jclass)
 # exec(jclass)
-# j = J_codegen()
-
-__all__ = dir(j)</code></pre>
+# j = J_codegen()</code></pre>
 </details>
 </section>
 <section>

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.4" />
 <title>jumpscale.servers.gedis API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="Gedis server package provides all code needed to have an RPC server using redis protocol for messaging …" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -20,9 +20,64 @@
 <h1 class="title">Module <code>jumpscale.servers.gedis</code></h1>
 </header>
 <section id="section-intro">
+<p>Gedis server package provides all code needed to have an RPC server using redis protocol for messaging</p>
+<h1 id="todo-add-code-to-show-how-to-start-gedis">TODO: add code to show how to start gedis.</h1>
+<pre><code>~&gt;  redis-cli -p 16000 greeter hi
+actor greeter isn't loaded
+ ~&gt;  redis-cli -p 16000 system register_actor greeter /home/ahmed/wspace/js-next/js-ng/jumpscale/servers/gedis/example_greeter.py
+(integer) -1
+ ~&gt;  redis-cli -p 16000 greeter hi
+ hello world
+ ~&gt;  redis-cli -p 16000 greeter add2 jo deboeck
+ &quot;jodeboeck&quot;
+ ~&gt;  fuser -k 16000/tcp
+
+16000/tcp:           29331
+ ~&gt;  redis-cli -p 16000 greeter hi
+ actor greeter isn't loaded
+ ~&gt;  redis-cli -p 16000 system register_actor greeter /home/ahmed/wspace/js-next/js-ng/jumpscale/servers/gedis/example_greeter.py
+(integer) -1
+ ~&gt;  redis-cli -p 16000 greeter hi
+ hello world
+ ~&gt;  redis-cli -p 16000 greeter ping
+
+pong no?
+ ~&gt;  redis-cli -p 16000 greeter add2 reem khamis
+&quot;reemkhamis&quot;
+</code></pre>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">from .server import *</code></pre>
+<pre><code class="python">&#34;&#34;&#34;Gedis server package provides all code needed to have an RPC server using redis protocol for messaging
+
+# TODO: add code to show how to start gedis.
+```
+~&gt;  redis-cli -p 16000 greeter hi
+actor greeter isn&#39;t loaded
+ ~&gt;  redis-cli -p 16000 system register_actor greeter /home/ahmed/wspace/js-next/js-ng/jumpscale/servers/gedis/example_greeter.py
+(integer) -1
+ ~&gt;  redis-cli -p 16000 greeter hi
+ hello world
+ ~&gt;  redis-cli -p 16000 greeter add2 jo deboeck
+ &#34;jodeboeck&#34;
+ ~&gt;  fuser -k 16000/tcp
+
+16000/tcp:           29331
+ ~&gt;  redis-cli -p 16000 greeter hi
+ actor greeter isn&#39;t loaded
+ ~&gt;  redis-cli -p 16000 system register_actor greeter /home/ahmed/wspace/js-next/js-ng/jumpscale/servers/gedis/example_greeter.py
+(integer) -1
+ ~&gt;  redis-cli -p 16000 greeter hi
+ hello world
+ ~&gt;  redis-cli -p 16000 greeter ping
+
+pong no?
+ ~&gt;  redis-cli -p 16000 greeter add2 reem khamis
+&#34;reemkhamis&#34;
+```
+&#34;&#34;&#34;
+
+
+from .server import *</code></pre>
 </details>
 </section>
 <section>
@@ -56,7 +111,9 @@
 <nav id="sidebar">
 <h1>Index</h1>
 <div class="toc">
-<ul></ul>
+<ul>
+<li><a href="#todo-add-code-to-show-how-to-start-gedis">TODO: add code to show how to start gedis.</a></li>
+</ul>
 </div>
 <ul id="index">
 <li><h3>Super-module</h3>

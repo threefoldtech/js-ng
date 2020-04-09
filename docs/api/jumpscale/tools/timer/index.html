@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.4" />
 <title>jumpscale.tools.timer API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="Helps with timing functions and see how long they took …" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -20,9 +20,76 @@
 <h1 class="title">Module <code>jumpscale.tools.timer</code></h1>
 </header>
 <section id="section-intro">
+<p>Helps with timing functions and see how long they took</p>
+<p>example</p>
+<pre><code>JS-NG&gt; @j.tools.timer.timeit 
+       def fact(n): 
+           if n == 1: 
+               return 1 
+           else: 
+               return n * fact(n-1)                                                                              
+JS-NG&gt; fact(1)                                                                                                   
+2020-04-09 10:41:57.175 | INFO     | jumpscale.tools.timer.timer:wrapper:11 - func fact with args: (1,), kwargs: 
+{} took 2.384185791015625e-06
+1
+
+JS-NG&gt; fact(5)                                                                                                   
+2020-04-09 10:41:59.959 | INFO     | jumpscale.tools.timer.timer:wrapper:11 - func fact with args: (1,), kwargs: 
+{} took 1.1920928955078125e-06
+2020-04-09 10:41:59.960 | INFO     | jumpscale.tools.timer.timer:wrapper:11 - func fact with args: (2,), kwargs: 
+{} took 0.0003504753112792969
+2020-04-09 10:41:59.960 | INFO     | jumpscale.tools.timer.timer:wrapper:11 - func fact with args: (3,), kwargs: 
+{} took 0.0005877017974853516
+2020-04-09 10:41:59.960 | INFO     | jumpscale.tools.timer.timer:wrapper:11 - func fact with args: (4,), kwargs: 
+{} took 0.0008087158203125
+2020-04-09 10:41:59.960 | INFO     | jumpscale.tools.timer.timer:wrapper:11 - func fact with args: (5,), kwargs: {} took 0.0010216236114501953
+120
+</code></pre>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">from .timer import *</code></pre>
+<pre><code class="python">&#34;&#34;&#34;Helps with timing functions and see how long they took
+
+example
+```
+JS-NG&gt; @j.tools.timer.timeit 
+       def fact(n): 
+           if n == 1: 
+               return 1 
+           else: 
+               return n * fact(n-1)                                                                              
+JS-NG&gt; fact(1)                                                                                                   
+2020-04-09 10:41:57.175 | INFO     | jumpscale.tools.timer.timer:wrapper:11 - func fact with args: (1,), kwargs: 
+{} took 2.384185791015625e-06
+1
+
+JS-NG&gt; fact(5)                                                                                                   
+2020-04-09 10:41:59.959 | INFO     | jumpscale.tools.timer.timer:wrapper:11 - func fact with args: (1,), kwargs: 
+{} took 1.1920928955078125e-06
+2020-04-09 10:41:59.960 | INFO     | jumpscale.tools.timer.timer:wrapper:11 - func fact with args: (2,), kwargs: 
+{} took 0.0003504753112792969
+2020-04-09 10:41:59.960 | INFO     | jumpscale.tools.timer.timer:wrapper:11 - func fact with args: (3,), kwargs: 
+{} took 0.0005877017974853516
+2020-04-09 10:41:59.960 | INFO     | jumpscale.tools.timer.timer:wrapper:11 - func fact with args: (4,), kwargs: 
+{} took 0.0008087158203125
+2020-04-09 10:41:59.960 | INFO     | jumpscale.tools.timer.timer:wrapper:11 - func fact with args: (5,), kwargs: {} took 0.0010216236114501953
+120
+```
+
+&#34;&#34;&#34;
+import time
+from jumpscale.god import j
+
+
+def timeit(func):
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        end_time = time.time()
+        diff = end_time - start_time
+        j.logger.info(&#34;func {} with args: {}, kwargs: {} took {}&#34;.format(func.__name__, args, kwargs, diff))
+        return result
+
+    return wrapper</code></pre>
 </details>
 </section>
 <section>
@@ -37,6 +104,28 @@
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="jumpscale.tools.timer.timeit"><code class="name flex">
+<span>def <span class="ident">timeit</span></span>(<span>func)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def timeit(func):
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        end_time = time.time()
+        diff = end_time - start_time
+        j.logger.info(&#34;func {} with args: {}, kwargs: {} took {}&#34;.format(func.__name__, args, kwargs, diff))
+        return result
+
+    return wrapper</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 </section>
@@ -55,6 +144,11 @@
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
 <li><code><a title="jumpscale.tools.timer.timer" href="timer.html">jumpscale.tools.timer.timer</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="jumpscale.tools.timer.timeit" href="#jumpscale.tools.timer.timeit">timeit</a></code></li>
 </ul>
 </li>
 </ul>

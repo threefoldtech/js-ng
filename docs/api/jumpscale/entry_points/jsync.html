@@ -5,7 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.4" />
 <title>jumpscale.entry_points.jsync API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="syncing tool to sync over certain set of directories against remote machine.
+list available clients
+```
+~&gt; poetry run jsync list-ssh-clients …" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -20,9 +23,40 @@
 <h1 class="title">Module <code>jumpscale.entry_points.jsync</code></h1>
 </header>
 <section id="section-intro">
+<p>syncing tool to sync over certain set of directories against remote machine.
+list available clients</p>
+<pre><code>~&gt; poetry run jsync list-ssh-clients           
+['xmonader']
+
+</code></pre>
+<p>sync with a client certain set of paths
+~&gt; poetry run jsync sync &ndash;clients "xmonader" &ndash;paths "~/wspace/tq,/tmp/proj:/tmp/proj2"
+['xmonader'] {'~/wspace/tq': '~/wspace/tq', '/tmp/proj': '/tmp/proj2'}</p>
+<pre><code>
+</code></pre>
+<p>poetry run jsync sync &ndash;clients "xmonader" &ndash;paths "~/wspace/tq:/tmp/tq" &ndash;sync
+```</p>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">import click
+<pre><code class="python">&#34;&#34;&#34;syncing tool to sync over certain set of directories against remote machine.
+list available clients
+```
+~&gt; poetry run jsync list-ssh-clients           
+[&#39;xmonader&#39;]
+
+```
+
+sync with a client certain set of paths
+~&gt; poetry run jsync sync --clients &#34;xmonader&#34; --paths &#34;~/wspace/tq,/tmp/proj:/tmp/proj2&#34;
+[&#39;xmonader&#39;] {&#39;~/wspace/tq&#39;: &#39;~/wspace/tq&#39;, &#39;/tmp/proj&#39;: &#39;/tmp/proj2&#39;}
+```
+
+```
+poetry run jsync sync --clients &#34;xmonader&#34; --paths &#34;~/wspace/tq:/tmp/tq&#34; --sync
+```
+&#34;&#34;&#34;
+
+import click
 from jumpscale.god import j
 
 
@@ -32,18 +66,6 @@ def list_ssh_clients():
     return print(j.clients.sshclient.list_all())
 
 
-&#34;&#34;&#34;
-➜  js-ng git:(development_syncer) ✗ poetry run jsync list-ssh-clients           
-[&#39;xmonader&#39;]
- poetry run jsync sync --clients &#34;xmonader&#34; --paths &#34;~/wspace/tq,/tmp/proj:/tmp/proj2&#34;
-[&#39;xmonader&#39;] {&#39;~/wspace/tq&#39;: &#39;~/wspace/tq&#39;, &#39;/tmp/proj&#39;: &#39;/tmp/proj2&#39;}
-➜  js-ng git:(development_syncer) ✗ 
-nts
-
-
- poetry run jsync sync --clients &#34;xmonader&#34; --paths &#34;~/wspace/tq:/tmp/tq&#34; --sync
-
-&#34;&#34;&#34;
 # jsync --clients &#34;xmonader,client2&#34; --paths &#34;/home/xmonader/wspace/tq:/tmp/tq,...&#34;
 @click.command()
 @click.option(&#34;--clients&#34;)

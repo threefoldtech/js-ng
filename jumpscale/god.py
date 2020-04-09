@@ -1,15 +1,6 @@
-import sys
-import os
-import traceback
-import importlib
-import pkgutil
-import importlib.util
-
-# import lazy_import
-
-"""
+"""This module coverts the god object j and its loading process.
 the idea is with hierarchy like this
-
+```
 project1/
          /rootnamespace (jumpscale)
             /subnamespace1
@@ -26,13 +17,14 @@ project2/
             /subnamespace2
                 ... pkg1
                 ... pkg2
-
+```
 - we get all the paths of the `rootnamespace`
 - we get all the subnamespaces
 - we get all the inner packages and import all of them (lazily) or load them eagerly but just once.
 
 
 real example:
+```
 js-ng
 ├── jumpscale   <- root namespace
 │   ├── clients  <- subnamespace where people can register on
@@ -80,9 +72,19 @@ js-ext
 ├── README.md
 └── tests
     └── test_success.py
-
-
+```
 """
+
+
+import sys
+import os
+import traceback
+import importlib
+import pkgutil
+import importlib.util
+
+# import lazy_import
+
 
 __all__ = ["j"]
 

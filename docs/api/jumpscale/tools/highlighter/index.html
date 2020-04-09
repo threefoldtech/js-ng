@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.4" />
 <title>jumpscale.tools.highlighter API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="Highlighter module helps with formatting text to be highlighted in terminal and in web …" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -20,9 +20,95 @@
 <h1 class="title">Module <code>jumpscale.tools.highlighter</code></h1>
 </header>
 <section id="section-intro">
+<p>Highlighter module helps with formatting text to be highlighted in terminal and in web</p>
+<p>example:</p>
+<pre><code>def test():
+    C = &quot;&quot;&quot;
+    def _init(self,**kwargs):
+        self.lexers = Lexers()
+        self.formatters = Formatters()
+
+
+    def print_python(self,text,formatter=&quot;terminal&quot;):
+        C=Tools.text_replace(text)
+        print(pygments.highlight(C,self.lexers.get(&quot;python&quot;), self.formatters.get(formatter)))
+
+
+    &quot;&quot;&quot;
+
+    print_python(C)
+    print_highlighted(C)
+
+    print(&quot;####TOML EXAMPLE####&quot;)
+
+    C = &quot;&quot;&quot;
+
+    title = &quot;TOML Example&quot;
+
+    [owner]
+    name = &quot;Tom Preston-Werner&quot;
+    organization = &quot;GitHub&quot;
+    bio = &quot;GitHub Cofounder &amp; CEO&quot;
+    dob = 1979-05-27T07:32:00Z # First class dates? Why not?
+
+    [database]
+    server = &quot;192.168.1.1&quot;
+    ports = [ 8001, 8001, 8002 ]
+    connection_max = 5000
+    enabled = true
+
+    &quot;&quot;&quot;
+    print_toml(C)
+    print_highlighted(C)
+</code></pre>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">import pygments
+<pre><code class="python">&#39;&#39;&#39;Highlighter module helps with formatting text to be highlighted in terminal and in web
+
+example:
+
+```
+def test():
+    C = &#34;&#34;&#34;
+    def _init(self,**kwargs):
+        self.lexers = Lexers()
+        self.formatters = Formatters()
+        
+
+    def print_python(self,text,formatter=&#34;terminal&#34;):
+        C=Tools.text_replace(text)
+        print(pygments.highlight(C,self.lexers.get(&#34;python&#34;), self.formatters.get(formatter)))
+
+
+    &#34;&#34;&#34;
+
+    print_python(C)
+    print_highlighted(C)
+
+    print(&#34;####TOML EXAMPLE####&#34;)
+
+    C = &#34;&#34;&#34;
+
+    title = &#34;TOML Example&#34;
+
+    [owner]
+    name = &#34;Tom Preston-Werner&#34;
+    organization = &#34;GitHub&#34;
+    bio = &#34;GitHub Cofounder &amp; CEO&#34;
+    dob = 1979-05-27T07:32:00Z # First class dates? Why not?
+
+    [database]
+    server = &#34;192.168.1.1&#34;
+    ports = [ 8001, 8001, 8002 ]
+    connection_max = 5000
+    enabled = true
+            
+    &#34;&#34;&#34;
+    print_toml(C)
+    print_highlighted(C)
+```
+&#39;&#39;&#39;
+import pygments
 from pygments.formatters import get_formatter_by_name
 from pygments.lexers import guess_lexer, find_lexer_class_by_name
 
@@ -31,8 +117,10 @@ def print_highlighted(txt, lexer=None, formatter=&#34;terminal&#34;):
     lexer = find_lexer_class_by_name(lexer) if lexer else guess_lexer(txt)
     print(pygments.highlight(txt, lexer, get_formatter_by_name(formatter)))
 
+
 print_python = print_highlighted
 print_toml = print_highlighted
+
 
 def test():
     C = &#34;&#34;&#34;

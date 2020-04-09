@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.4" />
 <title>jumpscale.core.executors.tmux API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="tmux module allows manipulation of tmux sessions, pane and launching background commands in it" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -20,18 +20,24 @@
 <h1 class="title">Module <code>jumpscale.core.executors.tmux</code></h1>
 </header>
 <section id="section-intro">
+<p>tmux module allows manipulation of tmux sessions, pane and launching background commands in it</p>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">import libtmux
+<pre><code class="python">&#34;&#34;&#34;tmux module allows manipulation of tmux sessions, pane and launching background commands in it
+
+&#34;&#34;&#34;
+import libtmux
 from jumpscale.god import j
 
-__all__ = [&#39;execute_in_window&#39;]
+__all__ = [&#34;execute_in_window&#34;]
 
 server = libtmux.Server()
 JS_SESSION_NAME = &#34;js-ng&#34;
 
+
 def create_session(session_name, kill_if_exists=False):
     return server.new_session(session_name, kill_session=kill_if_exists)
+
 
 def get_js_session():
     s = server.find_where({&#34;session_name&#34;: JS_SESSION_NAME})
@@ -39,6 +45,7 @@ def get_js_session():
         return create_session(JS_SESSION_NAME)
     else:
         return s
+
 
 def get_js_window(window_name):
     s = get_js_session()
@@ -49,11 +56,13 @@ def get_js_window(window_name):
 
     return w
 
+
 def get_window(window_name):
     w = server.find_where({&#34;window_name&#34;: window_name})
     if not w:
         w = get_js_window(window_name)
     return w
+
 
 def execute_in_window(window_name, cmd):
     try:

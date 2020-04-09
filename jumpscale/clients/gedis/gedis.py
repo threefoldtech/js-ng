@@ -5,66 +5,6 @@ from functools import partial
 import json
 from typing import List
 
-"""
-JS-NG> gedis = j.clients.gedis.get("local")
-JS-NG> gedis.list_actors()
-['system']
-
-JS-NG> gedis.register_actor("greeter", "/home/ahmed/wspace/js-next/js-ng/jumpscale/servers/gedis/example_greeter.py")
-1
-
-JS-NG> gedis.list_actors()
-['system', 'greeter']
-
-JS-NG>
-
-
-JS-NG> gedis.ppdoc("greeter")
-{
-  "add2": {
-    "args": [
-      "a",
-      "b"
-    ],
-    "doc": "Add two args\n        \n        "
-  },
-  "hi": {
-    "args": [],
-    "doc": "returns hello world\n        "
-  },
-  "info": {
-    "args": [
-      "result",
-      "members",
-      "name",
-      "attr"
-    ],
-    "doc": ""
-  },
-  "ping": {
-    "args": [],
-    "doc": "\n        \n        "
-  }
-}
-JS-NG> gedis.execute("greeter", "hi")
-b'hello world'
-
-JS-NG> gedis.execute("greeter", "ping")
-b'pong no?'
-
-JS-NG> gedis.execute("greeter", "add2", "first", "second")
-b'firstsecond'
-
-
-JS-NG> gedis = j.clients.gedis.get("local")
-JS-NG> gedis.actors.greeter.hi()
-b'hello world'
-
-JS-NG> gedis.actors.greeter.add2("a", "b")
-b'ab'
-JS-NG>
-"""
-
 
 class ActorProxy:
     def __init__(self, actor_name, actor_info, gedis_client):

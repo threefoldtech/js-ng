@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.4" />
 <title>jumpscale.tools.dnstool API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="Helper to get nameservers information and resolving domains." />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -20,9 +20,17 @@
 <h1 class="title">Module <code>jumpscale.tools.dnstool</code></h1>
 </header>
 <section id="section-intro">
+<p>Helper to get nameservers information and resolving domains.</p>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">try:
+<pre><code class="python">&#34;&#34;&#34;
+Helper to get nameservers information and resolving domains.
+
+&#34;&#34;&#34;
+# TODO: update code
+
+
+try:
     import dns
     import dns.message
     import dns.rdataclass
@@ -32,6 +40,7 @@
 
 except ImportError as e:
     print(&#34;WARNING install dnspython: &#39;pip3 install dnspython&#39;&#34;)
+
 
 class DNSClient:
     def __init__(self, nameservers=None, port=53):
@@ -61,6 +70,7 @@ class DNSClient:
         for rr in answer:
             res.append(rr.address)
         return res
+
 
 resolver = DNSClient()</code></pre>
 </details>
