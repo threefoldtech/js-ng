@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.4" />
 <title>jumpscale.core.base.factory API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="Hierarchal ConfigurationWe is implemented using Factory …" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -20,10 +20,21 @@
 <h1 class="title">Module <code>jumpscale.core.base.factory</code></h1>
 </header>
 <section id="section-intro">
+<p>Hierarchal ConfigurationWe is implemented using Factory</p>
+<p>The backend to store configurations
+- can be encrypted or plain
+- Multiple backends (InMemoryStore, FileSystemStore, RedisStore)</p>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">from functools import partial
+<pre><code class="python">&#34;&#34;&#34;
+Hierarchal ConfigurationWe is implemented using Factory
 
+The backend to store configurations
+- can be encrypted or plain
+- Multiple backends (InMemoryStore, FileSystemStore, RedisStore)
+
+&#34;&#34;&#34;
+from functools import partial
 from jumpscale.core import config
 
 from .store import FileSystemStore, RedisStore
@@ -496,7 +507,8 @@ class StoredFactory(Factory):
 <dl>
 <dt id="jumpscale.core.base.factory.StoredFactory.STORE"><code class="name">var <span class="ident">STORE</span></code></dt>
 <dd>
-<section class="desc"><p>secure config storage base</p></section>
+<section class="desc"><p>Filesystem store is an EncryptedConfigStore
+It saves the config relative to <code>config_env.get_store_config("filesystem")</code></p></section>
 </dd>
 </dl>
 <h3>Instance variables</h3>

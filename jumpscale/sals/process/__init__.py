@@ -1,3 +1,8 @@
+"""
+# TODO Examples for sal process
+
+"""
+
 import os
 import os.path
 import re
@@ -115,9 +120,7 @@ def kill(pid, sig=signal.SIGTERM.value):
         proc.send_signal(sig)
         return True
     except Exception as e:
-        raise j.exceptions.RuntimeError(
-            "Could not kill process with id %s.\n%s" % (pid, e)
-        )
+        raise j.exceptions.RuntimeError("Could not kill process with id %s.\n%s" % (pid, e))
 
 
 def ps_find(name):
@@ -177,9 +180,7 @@ def get_pids_filtered_sorted(filterstr, sortkey=None):
         [list(int)] -- processes pids
     """
     if sortkey is not None:
-        cmd = "ps aux --sort={sortkey} | grep '{filterstr}'".format(
-            filterstr=filterstr, sortkey=sortkey
-        )
+        cmd = "ps aux --sort={sortkey} | grep '{filterstr}'".format(filterstr=filterstr, sortkey=sortkey)
     else:
         cmd = "ps ax | grep '{filterstr}'".format(filterstr=filterstr)
     rcode, out, err = execute(cmd)
@@ -289,8 +290,7 @@ def check_start(cmd, filterstr, nrinstances=1, retry=1):
     found = get_filtered_pids(filterstr)
     if len(found) != nrinstances:
         raise j.exceptions.RuntimeError(
-            "could not start %s, found %s nr of instances. Needed %s."
-            % (cmd, len(found), nrinstances)
+            "could not start %s, found %s nr of instances. Needed %s." % (cmd, len(found), nrinstances)
         )
 
 
@@ -322,9 +322,7 @@ def check_stop(cmd, filterstr, retry=1, nrinstances=0):
         found = get_filtered_pids(filterstr)
 
     if len(found) != 0:
-        raise j.exceptions.RuntimeError(
-            "could not stop %s, found %s nr of instances." % (cmd, len(found))
-        )
+        raise j.exceptions.RuntimeError("could not stop %s, found %s nr of instances." % (cmd, len(found)))
 
 
 def get_pids(process, match_predicate=None):
@@ -564,11 +562,7 @@ def get_process_by_port(port):
     """
     for process in psutil.process_iter():
         try:
-            cc = [
-                con
-                for con in process.connections()
-                if con.status == psutil.CONN_LISTEN and con.laddr[1] == port
-            ]
+            cc = [con for con in process.connections() if con.status == psutil.CONN_LISTEN and con.laddr[1] == port]
             if cc:
                 return process
         except Exception as e:

@@ -29,66 +29,6 @@ from functools import partial
 import json
 from typing import List
 
-&#34;&#34;&#34;
-JS-NG&gt; gedis = j.clients.gedis.get(&#34;local&#34;)
-JS-NG&gt; gedis.list_actors()
-[&#39;system&#39;]
-
-JS-NG&gt; gedis.register_actor(&#34;greeter&#34;, &#34;/home/ahmed/wspace/js-next/js-ng/jumpscale/servers/gedis/example_greeter.py&#34;)
-1
-
-JS-NG&gt; gedis.list_actors()
-[&#39;system&#39;, &#39;greeter&#39;]
-
-JS-NG&gt;
-
-
-JS-NG&gt; gedis.ppdoc(&#34;greeter&#34;)
-{
-  &#34;add2&#34;: {
-    &#34;args&#34;: [
-      &#34;a&#34;,
-      &#34;b&#34;
-    ],
-    &#34;doc&#34;: &#34;Add two args\n        \n        &#34;
-  },
-  &#34;hi&#34;: {
-    &#34;args&#34;: [],
-    &#34;doc&#34;: &#34;returns hello world\n        &#34;
-  },
-  &#34;info&#34;: {
-    &#34;args&#34;: [
-      &#34;result&#34;,
-      &#34;members&#34;,
-      &#34;name&#34;,
-      &#34;attr&#34;
-    ],
-    &#34;doc&#34;: &#34;&#34;
-  },
-  &#34;ping&#34;: {
-    &#34;args&#34;: [],
-    &#34;doc&#34;: &#34;\n        \n        &#34;
-  }
-}
-JS-NG&gt; gedis.execute(&#34;greeter&#34;, &#34;hi&#34;)
-b&#39;hello world&#39;
-
-JS-NG&gt; gedis.execute(&#34;greeter&#34;, &#34;ping&#34;)
-b&#39;pong no?&#39;
-
-JS-NG&gt; gedis.execute(&#34;greeter&#34;, &#34;add2&#34;, &#34;first&#34;, &#34;second&#34;)
-b&#39;firstsecond&#39;
-
-
-JS-NG&gt; gedis = j.clients.gedis.get(&#34;local&#34;)
-JS-NG&gt; gedis.actors.greeter.hi()
-b&#39;hello world&#39;
-
-JS-NG&gt; gedis.actors.greeter.add2(&#34;a&#34;, &#34;b&#34;)
-b&#39;ab&#39;
-JS-NG&gt;
-&#34;&#34;&#34;
-
 
 class ActorProxy:
     def __init__(self, actor_name, actor_info, gedis_client):

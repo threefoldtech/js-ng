@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.4" />
 <title>jumpscale.data.idgenerator.idgenerator API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="idgenerator module helps with generating ids, guids, integers, chars, passwords, capnp id, a choice of a sequence …" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -20,19 +20,54 @@
 <h1 class="title">Module <code>jumpscale.data.idgenerator.idgenerator</code></h1>
 </header>
 <section id="section-intro">
+<p>idgenerator module helps with generating ids, guids, integers, chars, passwords, capnp id, a choice of a sequence</p>
+<pre><code>JS-NG&gt; j.data.idgenerator.guid()                                                                    
+'c1d14970-f17f-49a3-aa85-f722013ee448'
+
+JS-NG&gt; j.data.idgenerator.password(5)                                                               
+'b6~Sl'
+
+JS-NG&gt; j.data.idgenerator.capnp_id()                                                                
+'0xa414b890b73d0940'
+
+JS-NG&gt; j.data.idgenerator.random_int()                                                              
+7
+
+JS-NG&gt; j.data.idgenerator.random_int(0, 5)                                                          
+2
+</code></pre>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">import random
+<pre><code class="python">&#34;&#34;&#34;idgenerator module helps with generating ids, guids, integers, chars, passwords, capnp id, a choice of a sequence
+
+```
+JS-NG&gt; j.data.idgenerator.guid()                                                                    
+&#39;c1d14970-f17f-49a3-aa85-f722013ee448&#39;
+
+JS-NG&gt; j.data.idgenerator.password(5)                                                               
+&#39;b6~Sl&#39;
+
+JS-NG&gt; j.data.idgenerator.capnp_id()                                                                
+&#39;0xa414b890b73d0940&#39;
+
+JS-NG&gt; j.data.idgenerator.random_int()                                                              
+7
+
+JS-NG&gt; j.data.idgenerator.random_int(0, 5)                                                          
+2
+```
+&#34;&#34;&#34;
+import random
 import string
 import uuid
 from typing import List
 
 
-def random_int(from_: int, to: int) -&gt; int:
+def random_int(from_: int = 0, to: int = 10) -&gt; int:
     &#34;&#34;&#34;Generate random int within range from_, to
 
     Arguments:
-        from_ {int} -- lower limit
+        from_ {int} -- lower limit, default 0
         to {int} -- upper limit
 
     Returns:
@@ -292,12 +327,12 @@ choices {List[str]} &ndash; choices to pick from</p>
 </details>
 </dd>
 <dt id="jumpscale.data.idgenerator.idgenerator.random_int"><code class="name flex">
-<span>def <span class="ident">random_int</span></span>(<span>from_, to)</span>
+<span>def <span class="ident">random_int</span></span>(<span>from_=0, to=10)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Generate random int within range from_, to</p>
 <h2 id="arguments">Arguments</h2>
-<p>from_ {int} &ndash; lower limit
+<p>from_ {int} &ndash; lower limit, default 0
 to {int} &ndash; upper limit</p>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -306,11 +341,11 @@ to {int} &ndash; upper limit</p>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def random_int(from_: int, to: int) -&gt; int:
+<pre><code class="python">def random_int(from_: int = 0, to: int = 10) -&gt; int:
     &#34;&#34;&#34;Generate random int within range from_, to
 
     Arguments:
-        from_ {int} -- lower limit
+        from_ {int} -- lower limit, default 0
         to {int} -- upper limit
 
     Returns:

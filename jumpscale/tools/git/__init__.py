@@ -1,3 +1,7 @@
+"""Git module helps with everything around git management like pulling, cloning .. etc
+
+# TODO: examples
+"""
 import urllib
 import re
 from jumpscale.god import j

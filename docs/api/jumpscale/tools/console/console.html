@@ -5,7 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.4" />
 <title>jumpscale.tools.console.console API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="Console module helps with coloring in the console and asking for input from the user.
+```
+JS-NG&gt; …" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -20,16 +22,32 @@
 <h1 class="title">Module <code>jumpscale.tools.console.console</code></h1>
 </header>
 <section id="section-intro">
+<p>Console module helps with coloring in the console and asking for input from the user.</p>
+<pre><code>JS-NG&gt; j.tools.console.printcolors(&quot;{RED}Hello{BGRED}What{WHITE}OK&quot;)                                                                     
+JS-NG&gt; j.tools.console.printcolors(&quot;{RED}Hello{BGRED}What{RESET}{WHITE}OK&quot;)                                                              
+</code></pre>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">import colorama
+<pre><code class="python">&#34;&#34;&#34;Console module helps with coloring in the console and asking for input from the user.
+```
+JS-NG&gt; j.tools.console.printcolors(&#34;{RED}Hello{BGRED}What{WHITE}OK&#34;)                                                                     
+JS-NG&gt; j.tools.console.printcolors(&#34;{RED}Hello{BGRED}What{RESET}{WHITE}OK&#34;)                                                              
+```
+
+&#34;&#34;&#34;
+
+
+import colorama
 import getpass
 import os
 
+<<<<<<< HEAD
 &#34;&#34;&#34;
 JS-NG&gt; j.tools.console.printcolors(&#34;{RED}Hello{BGRED}What{WHITE}OK&#34;)                                                                     
 JS-NG&gt; j.tools.console.printcolors(&#34;{RED}Hello{BGRED}What{RESET}{WHITE}OK&#34;)                                                              
 &#34;&#34;&#34;
+=======
+>>>>>>> development
 
 NAMES_TO_COLORS = {}
 for attrname in dir(colorama.Fore):
@@ -38,9 +56,9 @@ for attrname in dir(colorama.Fore):
 
 for attrname in dir(colorama.Back):
     if attrname.isupper():
-        NAMES_TO_COLORS[&#34;BG&#34;+attrname] = getattr(colorama.Back, attrname)
+        NAMES_TO_COLORS[&#34;BG&#34; + attrname] = getattr(colorama.Back, attrname)
 
-NAMES_TO_COLORS[&#39;RESET&#39;] = colorama.Style.RESET_ALL
+NAMES_TO_COLORS[&#34;RESET&#34;] = colorama.Style.RESET_ALL
 
 
 def format(s):
@@ -245,8 +263,10 @@ def ask_string(prompt=&#34;Type :&#34;):
 
     print(format(s))
 
+
 def printobj(obj):
     from pprint import pprint
+
     pprint(obj)</code></pre>
 </details>
 </section>
@@ -620,6 +640,7 @@ s {[type]} &ndash; [description]</p></section>
 <summary>Source code</summary>
 <pre><code class="python">def printobj(obj):
     from pprint import pprint
+
     pprint(obj)</code></pre>
 </details>
 </dd>

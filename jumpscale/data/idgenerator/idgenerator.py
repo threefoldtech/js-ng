@@ -1,14 +1,33 @@
+"""idgenerator module helps with generating ids, guids, integers, chars, passwords, capnp id, a choice of a sequence
+
+```
+JS-NG> j.data.idgenerator.guid()                                                                    
+'c1d14970-f17f-49a3-aa85-f722013ee448'
+
+JS-NG> j.data.idgenerator.password(5)                                                               
+'b6~Sl'
+
+JS-NG> j.data.idgenerator.capnp_id()                                                                
+'0xa414b890b73d0940'
+
+JS-NG> j.data.idgenerator.random_int()                                                              
+7
+
+JS-NG> j.data.idgenerator.random_int(0, 5)                                                          
+2
+```
+"""
 import random
 import string
 import uuid
 from typing import List
 
 
-def random_int(from_: int, to: int) -> int:
+def random_int(from_: int = 0, to: int = 10) -> int:
     """Generate random int within range from_, to
 
     Arguments:
-        from_ {int} -- lower limit
+        from_ {int} -- lower limit, default 0
         to {int} -- upper limit
 
     Returns:

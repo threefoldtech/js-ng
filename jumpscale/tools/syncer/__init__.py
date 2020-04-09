@@ -1,12 +1,6 @@
-from jumpscale.god import j
-from watchdog.events import PatternMatchingEventHandler
-from watchdog.observers import Observer
-import gevent
-from typing import List, Dict, Optional
-
-DEFAULT_IGNORED_PATTERNS = [".git", ".pyc", "__pycache__", ".swp", ".swx"]
-
-"""
+"""Module to help syncing multiple machines with specific directories you have.
+used in the jsync tool.
+```
 JS-NG> xmonader = j.clients.sshkey.new("xmonader")                                                                               
 JS-NG> xmonader.private_key_path = "/home/xmonader/.ssh/id_rsa"                                                                  
 JS-NG> xmonader.load_from_file_system()                                                                                          
@@ -16,7 +10,16 @@ JS-NG> xmonader.sshkey = "xmonader"
 JS-NG> s = j.tools.syncer.Syncer(["xmonader"], {"/home/xmonader/wspace/tfchain-py":"/tmp/tfchain-py"}) 
 JS-NG> s.start()                                                                                                                 
 2019-09-03T11:38:47.183394+0200 - paths: {'/home/xmonader/wspace/tfchain-py': '/tmp/tfchain-py'}
+```
 """
+
+from jumpscale.god import j
+from watchdog.events import PatternMatchingEventHandler
+from watchdog.observers import Observer
+import gevent
+from typing import List, Dict, Optional
+
+DEFAULT_IGNORED_PATTERNS = [".git", ".pyc", "__pycache__", ".swp", ".swx"]
 
 
 class Syncer(PatternMatchingEventHandler):

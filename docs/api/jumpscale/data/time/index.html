@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.4" />
 <title>jumpscale.data.time API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="Time helpers based on arrow …" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -20,9 +20,185 @@
 <h1 class="title">Module <code>jumpscale.data.time</code></h1>
 </header>
 <section id="section-intro">
+<p>Time helpers based on arrow</p>
+<pre><code>&gt;&gt;&gt; j.data.time.get('2013-05-11T21:23:58.970460+07:00')
+&lt;Arrow [2013-05-11T21:23:58.970460+07:00]&gt;
+
+&gt;&gt;&gt; utc = j.data.time.utcnow()
+&gt;&gt;&gt; utc
+&lt;Arrow [2013-05-11T21:23:58.970460+00:00]&gt;
+
+&gt;&gt;&gt; utc = utc.shift(hours=-1)
+&gt;&gt;&gt; utc
+&lt;Arrow [2013-05-11T20:23:58.970460+00:00]&gt;
+</code></pre>
+<p>JS-NG&gt; j.data.time.now()
+<br>
+<Arrow [2020-04-09T10:19:19.013636+02:00]></p>
+<p>JS-NG&gt; j.data.time.now().shift(hours=15)
+<br>
+<Arrow [2020-04-10T01:19:23.225311+02:00]></p>
+<pre><code>&gt;&gt;&gt; local = utc.to('US/Pacific')
+&gt;&gt;&gt; local
+&lt;Arrow [2013-05-11T13:23:58.970460-07:00]&gt;
+
+&gt;&gt;&gt; local.timestamp
+1368303838
+
+&gt;&gt;&gt; local.format()
+'2013-05-11 13:23:58 -07:00'
+
+&gt;&gt;&gt; local.format('YYYY-MM-DD HH:mm:ss ZZ')
+'2013-05-11 13:23:58 -07:00'
+
+&gt;&gt;&gt; local.humanize()
+'an hour ago'
+
+&gt;&gt;&gt; local.humanize(locale='ko_kr')
+'1시간 전'
+
+
+
+
+
+&gt;&gt;&gt; j.data.time.utcnow()
+&lt;Arrow [2013-05-07T04:20:39.369271+00:00]&gt;
+
+&gt;&gt;&gt; j.data.time.now()
+&lt;Arrow [2013-05-06T21:20:40.841085-07:00]&gt;
+
+&gt;&gt;&gt; j.data.time.now('US/Pacific')
+&lt;Arrow [2013-05-06T21:20:44.761511-07:00]&gt;
+
+&gt;&gt;&gt; j.data.time.get(1367900664)
+&lt;Arrow [2013-05-07T04:24:24+00:00]&gt;
+
+&gt;&gt;&gt; j.data.time.get(1367900664.152325)
+&lt;Arrow [2013-05-07T04:24:24.152325+00:00]&gt;
+
+&gt;&gt;&gt; j.data.time.get(datetime.utcnow())
+&lt;Arrow [2013-05-07T04:24:24.152325+00:00]&gt;
+
+&gt;&gt;&gt; j.data.time.get(datetime(2013, 5, 5), 'US/Pacific')
+&lt;Arrow [2013-05-05T00:00:00-07:00]&gt;
+
+&gt;&gt;&gt; from dateutil import tz
+&gt;&gt;&gt; j.data.time.get(datetime(2013, 5, 5), tz.gettz('US/Pacific'))
+&lt;Arrow [2013-05-05T00:00:00-07:00]&gt;
+
+&gt;&gt;&gt; j.data.time.get(datetime.now(tz.gettz('US/Pacific')))
+&lt;Arrow [2013-05-06T21:24:49.552236-07:00]&gt;
+
+&gt;&gt;&gt; j.data.time.get('2013-05-05 12:30:45', 'YYYY-MM-DD HH:mm:ss')
+&lt;Arrow [2013-05-05T12:30:45+00:00]&gt;
+
+&gt;&gt;&gt; j.data.time.get('June was born in May 1980', 'MMMM YYYY')
+&lt;Arrow [1980-05-01T00:00:00+00:00]&gt;
+
+
+
+
+
+&gt;&gt;&gt; arw = j.data.time.utcnow()
+&gt;&gt;&gt; arw
+&lt;Arrow [2013-05-12T03:29:35.334214+00:00]&gt;
+
+&gt;&gt;&gt; arw.replace(hour=4, minute=40)
+&lt;Arrow [2013-05-12T04:40:35.334214+00:00]&gt;
+
+&gt;&gt;&gt; arw.shift(weeks=+3)
+&lt;Arrow [2013-06-02T03:29:35.334214+00:00]&gt;
+</code></pre>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">from arrow import *</code></pre>
+<pre><code class="python">&#34;&#34;&#34;
+Time helpers based on arrow
+
+&gt;&gt;&gt; j.data.time.get(&#39;2013-05-11T21:23:58.970460+07:00&#39;)
+&lt;Arrow [2013-05-11T21:23:58.970460+07:00]&gt;
+
+&gt;&gt;&gt; utc = j.data.time.utcnow()
+&gt;&gt;&gt; utc
+&lt;Arrow [2013-05-11T21:23:58.970460+00:00]&gt;
+
+&gt;&gt;&gt; utc = utc.shift(hours=-1)
+&gt;&gt;&gt; utc
+&lt;Arrow [2013-05-11T20:23:58.970460+00:00]&gt;
+
+JS-NG&gt; j.data.time.now()                                                                                         
+&lt;Arrow [2020-04-09T10:19:19.013636+02:00]&gt;
+
+JS-NG&gt; j.data.time.now().shift(hours=15)                                                                         
+&lt;Arrow [2020-04-10T01:19:23.225311+02:00]&gt;
+
+
+&gt;&gt;&gt; local = utc.to(&#39;US/Pacific&#39;)
+&gt;&gt;&gt; local
+&lt;Arrow [2013-05-11T13:23:58.970460-07:00]&gt;
+
+&gt;&gt;&gt; local.timestamp
+1368303838
+
+&gt;&gt;&gt; local.format()
+&#39;2013-05-11 13:23:58 -07:00&#39;
+
+&gt;&gt;&gt; local.format(&#39;YYYY-MM-DD HH:mm:ss ZZ&#39;)
+&#39;2013-05-11 13:23:58 -07:00&#39;
+
+&gt;&gt;&gt; local.humanize()
+&#39;an hour ago&#39;
+
+&gt;&gt;&gt; local.humanize(locale=&#39;ko_kr&#39;)
+&#39;1시간 전&#39;
+
+
+&gt;&gt;&gt; j.data.time.utcnow()
+&lt;Arrow [2013-05-07T04:20:39.369271+00:00]&gt;
+
+&gt;&gt;&gt; j.data.time.now()
+&lt;Arrow [2013-05-06T21:20:40.841085-07:00]&gt;
+
+&gt;&gt;&gt; j.data.time.now(&#39;US/Pacific&#39;)
+&lt;Arrow [2013-05-06T21:20:44.761511-07:00]&gt;
+
+&gt;&gt;&gt; j.data.time.get(1367900664)
+&lt;Arrow [2013-05-07T04:24:24+00:00]&gt;
+
+&gt;&gt;&gt; j.data.time.get(1367900664.152325)
+&lt;Arrow [2013-05-07T04:24:24.152325+00:00]&gt;
+
+&gt;&gt;&gt; j.data.time.get(datetime.utcnow())
+&lt;Arrow [2013-05-07T04:24:24.152325+00:00]&gt;
+
+&gt;&gt;&gt; j.data.time.get(datetime(2013, 5, 5), &#39;US/Pacific&#39;)
+&lt;Arrow [2013-05-05T00:00:00-07:00]&gt;
+
+&gt;&gt;&gt; from dateutil import tz
+&gt;&gt;&gt; j.data.time.get(datetime(2013, 5, 5), tz.gettz(&#39;US/Pacific&#39;))
+&lt;Arrow [2013-05-05T00:00:00-07:00]&gt;
+
+&gt;&gt;&gt; j.data.time.get(datetime.now(tz.gettz(&#39;US/Pacific&#39;)))
+&lt;Arrow [2013-05-06T21:24:49.552236-07:00]&gt;
+
+&gt;&gt;&gt; j.data.time.get(&#39;2013-05-05 12:30:45&#39;, &#39;YYYY-MM-DD HH:mm:ss&#39;)
+&lt;Arrow [2013-05-05T12:30:45+00:00]&gt;
+
+&gt;&gt;&gt; j.data.time.get(&#39;June was born in May 1980&#39;, &#39;MMMM YYYY&#39;)
+&lt;Arrow [1980-05-01T00:00:00+00:00]&gt;
+
+
+&gt;&gt;&gt; arw = j.data.time.utcnow()
+&gt;&gt;&gt; arw
+&lt;Arrow [2013-05-12T03:29:35.334214+00:00]&gt;
+
+&gt;&gt;&gt; arw.replace(hour=4, minute=40)
+&lt;Arrow [2013-05-12T04:40:35.334214+00:00]&gt;
+
+&gt;&gt;&gt; arw.shift(weeks=+3)
+&lt;Arrow [2013-06-02T03:29:35.334214+00:00]&gt;
+&#34;&#34;&#34;
+
+from arrow import *</code></pre>
 </details>
 </section>
 <section>

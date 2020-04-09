@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.4" />
 <title>jumpscale.core.dirs.dirs API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="This module defines main dirs in jumpscale to be used" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -20,17 +20,22 @@
 <h1 class="title">Module <code>jumpscale.core.dirs.dirs</code></h1>
 </header>
 <section id="section-intro">
+<p>This module defines main dirs in jumpscale to be used</p>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">import os
+<pre><code class="python">&#34;&#34;&#34;
+This module defines main dirs in jumpscale to be used
+&#34;&#34;&#34;
+
+import os
 
 
 class Dirs:
 
-    HOMEDIR = os.path.expanduser(&#34;~&#34;)
+    HOMEDIR = os.path.expanduser(&#34;~&#34;)  # TODO: ؤاثؤن homedir defined in sal.fs
     BASEDIR = os.path.join(HOMEDIR, &#34;sandbox&#34;)
     BINDIR = os.path.join(BASEDIR, &#34;bin&#34;)
-    CFGDIR = os.path.join(BASEDIR, &#34;cfg&#34;)
+    CFGDIR = os.path.join(BASEDIR, &#34;cfg&#34;)  # TODO: check conflict with core.config_root..
     CODEDIR = os.path.join(BASEDIR, &#34;code&#34;)
     VARDIR = os.path.join(BASEDIR, &#34;var&#34;)
     LOGDIR = os.path.join(VARDIR, &#34;log&#34;)
@@ -57,10 +62,10 @@ class Dirs:
 <summary>Source code</summary>
 <pre><code class="python">class Dirs:
 
-    HOMEDIR = os.path.expanduser(&#34;~&#34;)
+    HOMEDIR = os.path.expanduser(&#34;~&#34;)  # TODO: ؤاثؤن homedir defined in sal.fs
     BASEDIR = os.path.join(HOMEDIR, &#34;sandbox&#34;)
     BINDIR = os.path.join(BASEDIR, &#34;bin&#34;)
-    CFGDIR = os.path.join(BASEDIR, &#34;cfg&#34;)
+    CFGDIR = os.path.join(BASEDIR, &#34;cfg&#34;)  # TODO: check conflict with core.config_root..
     CODEDIR = os.path.join(BASEDIR, &#34;code&#34;)
     VARDIR = os.path.join(BASEDIR, &#34;var&#34;)
     LOGDIR = os.path.join(VARDIR, &#34;log&#34;)

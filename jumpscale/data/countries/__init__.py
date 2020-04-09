@@ -1,7 +1,5 @@
-import pycountry
-import random
-
-"""
+"""This module helps picking a random country or even listing all countries.
+```
 JS-NG> j.data.countries.names()                                                        
 ['Aruba', 'Afghanistan', 'Angola', 'Anguilla', 'Åland Islands', 'Albania', 'Andorra', '
 United Arab Emirates', 'Argentina', 'Armenia', 'American Samoa', 'Antarctica', 'French 
@@ -15,8 +13,10 @@ JS-NG> j.data.countries.random_country()
 
 JS-NG> j.data.countries.random_country()                                               
 'Malawi'
-
+```
 """
+import pycountry
+import random
 
 
 def names():

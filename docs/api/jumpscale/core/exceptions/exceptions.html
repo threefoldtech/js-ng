@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.4" />
 <title>jumpscale.core.exceptions.exceptions API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="Exceptions module provide a carefully picked list of exceptions to be used across the framework …" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -20,9 +20,48 @@
 <h1 class="title">Module <code>jumpscale.core.exceptions.exceptions</code></h1>
 </header>
 <section id="section-intro">
+<p>Exceptions module provide a carefully picked list of exceptions to be used across the framework</p>
+<ul>
+<li>Base</li>
+<li>Permission</li>
+<li>Halt</li>
+<li>Runtime</li>
+<li>Input</li>
+<li>Value</li>
+<li>NotImplemented</li>
+<li>Bug</li>
+<li>Operations</li>
+<li>IO</li>
+<li>NotFound</li>
+<li>Timeout</li>
+<li>SSH</li>
+<li>SSHTimeout</li>
+</ul>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class JSException(Exception):
+<pre><code class="python">&#34;&#34;&#34;
+Exceptions module provide a carefully picked list of exceptions to be used across the framework
+
+- Base
+- Permission
+- Halt
+- Runtime
+- Input
+- Value
+- NotImplemented
+- Bug
+- Operations
+- IO
+- NotFound
+- Timeout
+- SSH
+- SSHTimeout
+
+
+&#34;&#34;&#34;
+
+
+class JSException(Exception):
     def __init__(self, message, category=None, level=None, context=None):
         super().__init__(message)
 

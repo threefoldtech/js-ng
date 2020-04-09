@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.4" />
 <title>jumpscale.clients.gedis API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="This module gives you all the facilities to communicate with gedis server …" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -20,9 +20,146 @@
 <h1 class="title">Module <code>jumpscale.clients.gedis</code></h1>
 </header>
 <section id="section-intro">
+<p>This module gives you all the facilities to communicate with gedis server</p>
+<p>Connecting to a gedis server</p>
+<pre><code>JS-NG&gt; gedis = j.clients.gedis.get(&quot;local&quot;)
+JS-NG&gt; gedis.list_actors()
+['system']
+</code></pre>
+<p>Registering actor</p>
+<pre><code>JS-NG&gt; gedis.register_actor(&quot;greeter&quot;, &quot;/home/ahmed/wspace/js-next/js-ng/jumpscale/servers/gedis/example_greeter.py&quot;)
+1
+</code></pre>
+<p>Listing actors</p>
+<pre><code>JS-NG&gt; gedis.list_actors()
+['system', 'greeter']
+</code></pre>
+<p>Documentation of an actor</p>
+<pre><code>JS-NG&gt; gedis.ppdoc(&quot;greeter&quot;)
+{
+  &quot;add2&quot;: {
+    &quot;args&quot;: [
+      &quot;a&quot;,
+      &quot;b&quot;
+    ],
+    &quot;doc&quot;: &quot;Add two args
+
+        &quot;
+  },
+  &quot;hi&quot;: {
+    &quot;args&quot;: [],
+    &quot;doc&quot;: &quot;returns hello world
+        &quot;
+  },
+  &quot;info&quot;: {
+    &quot;args&quot;: [
+      &quot;result&quot;,
+      &quot;members&quot;,
+      &quot;name&quot;,
+      &quot;attr&quot;
+    ],
+    &quot;doc&quot;: &quot;&quot;
+  },
+  &quot;ping&quot;: {
+    &quot;args&quot;: [],
+    &quot;doc&quot;: &quot;
+
+        &quot;
+  }
+}
+</code></pre>
+<p>Invoking an actor method</p>
+<pre><code>JS-NG&gt; gedis.execute(&quot;greeter&quot;, &quot;hi&quot;)
+b'hello world'
+
+JS-NG&gt; gedis.execute(&quot;greeter&quot;, &quot;ping&quot;)
+b'pong no?'
+
+JS-NG&gt; gedis.execute(&quot;greeter&quot;, &quot;add2&quot;, &quot;first&quot;, &quot;second&quot;)
+b'firstsecond'
+</code></pre>
+<p>Invoking actor method with attribute access</p>
+<pre><code>JS-NG&gt; gedis.actors.greeter.hi()
+b'hello world'
+
+JS-NG&gt; gedis.actors.greeter.add2(&quot;a&quot;, &quot;b&quot;)
+b'ab'
+</code></pre>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">from jumpscale.core.base import StoredFactory
+<pre><code class="python">&#34;&#34;&#34;This module gives you all the facilities to communicate with gedis server
+
+Connecting to a gedis server
+```
+JS-NG&gt; gedis = j.clients.gedis.get(&#34;local&#34;)
+JS-NG&gt; gedis.list_actors()
+[&#39;system&#39;]
+```
+
+Registering actor
+```
+JS-NG&gt; gedis.register_actor(&#34;greeter&#34;, &#34;/home/ahmed/wspace/js-next/js-ng/jumpscale/servers/gedis/example_greeter.py&#34;)
+1
+```
+
+Listing actors
+```
+JS-NG&gt; gedis.list_actors()
+[&#39;system&#39;, &#39;greeter&#39;]
+```
+
+Documentation of an actor
+
+```
+JS-NG&gt; gedis.ppdoc(&#34;greeter&#34;)
+{
+  &#34;add2&#34;: {
+    &#34;args&#34;: [
+      &#34;a&#34;,
+      &#34;b&#34;
+    ],
+    &#34;doc&#34;: &#34;Add two args\n        \n        &#34;
+  },
+  &#34;hi&#34;: {
+    &#34;args&#34;: [],
+    &#34;doc&#34;: &#34;returns hello world\n        &#34;
+  },
+  &#34;info&#34;: {
+    &#34;args&#34;: [
+      &#34;result&#34;,
+      &#34;members&#34;,
+      &#34;name&#34;,
+      &#34;attr&#34;
+    ],
+    &#34;doc&#34;: &#34;&#34;
+  },
+  &#34;ping&#34;: {
+    &#34;args&#34;: [],
+    &#34;doc&#34;: &#34;\n        \n        &#34;
+  }
+}
+```
+Invoking an actor method
+```
+JS-NG&gt; gedis.execute(&#34;greeter&#34;, &#34;hi&#34;)
+b&#39;hello world&#39;
+
+JS-NG&gt; gedis.execute(&#34;greeter&#34;, &#34;ping&#34;)
+b&#39;pong no?&#39;
+
+JS-NG&gt; gedis.execute(&#34;greeter&#34;, &#34;add2&#34;, &#34;first&#34;, &#34;second&#34;)
+b&#39;firstsecond&#39;
+```
+Invoking actor method with attribute access
+```
+JS-NG&gt; gedis.actors.greeter.hi()
+b&#39;hello world&#39;
+
+JS-NG&gt; gedis.actors.greeter.add2(&#34;a&#34;, &#34;b&#34;)
+b&#39;ab&#39;
+```
+&#34;&#34;&#34;
+from jumpscale.core.base import StoredFactory
 
 from .gedis import GedisClient
 

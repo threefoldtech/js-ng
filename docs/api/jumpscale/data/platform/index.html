@@ -5,8 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.4" />
 <title>jumpscale.data.platform API documentation</title>
-<meta name="description" content="JS-NG&gt; j.data.platform.codename()
-&#39;bionic&#39; …" />
+<meta name="description" content="This module helps with getting all of the information of the platform related to the machine hosting js-ng …" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -21,27 +20,31 @@
 <h1 class="title">Module <code>jumpscale.data.platform</code></h1>
 </header>
 <section id="section-intro">
-<p>JS-NG&gt; j.data.platform.codename()
-<br>
-'bionic'</p>
-<p 18.04.3 LTS_="LTS'," _18.04_="'18.04'," _Ubuntu="'Ubuntu" _Ubuntu_="'Ubuntu'," _bionic_="'bionic'" _codename_:="'codename':" _description_:="'description':" _distributor_id_:="'distributor_id':" _release_:="'release':">JS-NG&gt; j.data.platform.lsb_release_info()
-<br></p>
-<dl>
-<dt>JS-NG&gt; j.data.platform.get_profile()</dt>
-<dt>{'username': 'xmonader', 'guid': 'ce5a52d09920b248b602caf28539073', 'hostname': 'xmonader-ThinkPad-E580', 'hostfqdn': 'xmonader-Th</dt>
-<dt>inkPad-E580', 'uname': {'system': 'Linux', 'node': 'xmonader-ThinkPad-E580', 'release': '4.15.0-55-generic', 'version': '#60-Ubunt</dt>
-<dt>u SMP Tue Jul 2 18:22:20 UTC 2019', 'machine': 'x86_64', 'processor': 'x86_64'}, 'linux_dist_name': 'debian', 'linux_dist_version'</dt>
-<dd>'buster/sid', 'cpu_count': 8, 'fs_encoding': 'utf-8', 'ulimit_soft': 1024, 'ulimit_hard': 1048576, 'cwd': '/home/xmonader/wspace
+<p>This module helps with getting all of the information of the platform related to the machine hosting js-ng</p>
+<pre><code>JS-NG&gt; j.data.platform.codename()                                                                                                 
+'bionic'
+
+JS-NG&gt; j.data.platform.lsb_release_info()                                                                                         
+{'distributor_id': 'Ubuntu', 'description': 'Ubuntu 18.04.3 LTS', 'release': '18.04', 'codename': 'bionic'}
+
+JS-NG&gt; j.data.platform.get_profile()                                                                                              
+{'username': 'xmonader', 'guid': 'ce5a52d09920b248b602caf28539073', 'hostname': 'xmonader-ThinkPad-E580', 'hostfqdn': 'xmonader-Th
+inkPad-E580', 'uname': {'system': 'Linux', 'node': 'xmonader-ThinkPad-E580', 'release': '4.15.0-55-generic', 'version': '#60-Ubunt
+u SMP Tue Jul 2 18:22:20 UTC 2019', 'machine': 'x86_64', 'processor': 'x86_64'}, 'linux_dist_name': 'debian', 'linux_dist_version'
+: 'buster/sid', 'cpu_count': 8, 'fs_encoding': 'utf-8', 'ulimit_soft': 1024, 'ulimit_hard': 1048576, 'cwd': '/home/xmonader/wspace
 /js-next/js-ng', 'umask': '0o2', 'python': {'argv': 'jsng', 'bin': '/home/xmonader/.cache/pypoetry/virtualenvs/js-ng-py3.7/bin/pyt
 hon', 'version': '3.7.4 (default, Jul 12 2019, 20:57:46) [GCC 5.4.0 20160609]', 'compiler': 'GCC 5.4.0 20160609', 'build_date': 'J
-ul 12 2019 20:57:46', 'version_info': [3, 7, 4, 'final', 0], 'features': {'openssl': 'OpenSSL 1.0.2s
-28 May 2019', 'expat': 'expa
+ul 12 2019 20:57:46', 'version_info': [3, 7, 4, 'final', 0], 'features': {'openssl': 'OpenSSL 1.0.2s  28 May 2019', 'expat': 'expa
 t_2.2.7', 'sqlite': '3.29.0', 'tkinter': '', 'zlib': '1.2.11', 'unicode_wide': True, 'readline': True, '64bit': True, 'ipv6': True
-, 'threading': True, 'urandom': True}}, 'time_utc': '2019-08-18 11:24:23.636866', 'time_utc_offset': 2.0}</dd>
-</dl>
+, 'threading': True, 'urandom': True}}, 'time_utc': '2019-08-18 11:24:23.636866', 'time_utc_offset': 2.0}
+
+</code></pre>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">&#34;&#34;&#34;
+<pre><code class="python">&#34;&#34;&#34;This module helps with getting all of the information of the platform related to the machine hosting js-ng
+
+
+```
 JS-NG&gt; j.data.platform.codename()                                                                                                 
 &#39;bionic&#39;
 
@@ -59,6 +62,7 @@ ul 12 2019 20:57:46&#39;, &#39;version_info&#39;: [3, 7, 4, &#39;final&#39;, 0],
 t_2.2.7&#39;, &#39;sqlite&#39;: &#39;3.29.0&#39;, &#39;tkinter&#39;: &#39;&#39;, &#39;zlib&#39;: &#39;1.2.11&#39;, &#39;unicode_wide&#39;: True, &#39;readline&#39;: True, &#39;64bit&#39;: True, &#39;ipv6&#39;: True
 , &#39;threading&#39;: True, &#39;urandom&#39;: True}}, &#39;time_utc&#39;: &#39;2019-08-18 11:24:23.636866&#39;, &#39;time_utc_offset&#39;: 2.0}
 
+```
 &#34;&#34;&#34;
 
 # from boltons.ecoutils
@@ -87,7 +91,7 @@ except Exception:
 INSTANCE_ID = hex(getrandbits(128))[2:-1].lower()
 
 IS_64BIT = struct.calcsize(&#34;P&#34;) &gt; 4
-HAVE_UCS4 = getattr(sys, &#39;maxunicode&#39;, 0) &gt; 65536
+HAVE_UCS4 = getattr(sys, &#34;maxunicode&#34;, 0) &gt; 65536
 HAVE_READLINE = True
 
 try:
@@ -97,54 +101,61 @@ except Exception:
 
 try:
     import sqlite3
+
     SQLITE_VERSION = sqlite3.sqlite_version
 except Exception:
     # note: 2.5 and older have sqlite, but not sqlite3
-    SQLITE_VERSION = &#39;&#39;
+    SQLITE_VERSION = &#34;&#34;
 
 
 try:
 
     import ssl
+
     try:
         OPENSSL_VERSION = ssl.OPENSSL_VERSION
     except AttributeError:
         # This is a conservative estimate for Python &lt;2.6
         # SSL module added in 2006, when 0.9.7 was standard
-        OPENSSL_VERSION = &#39;OpenSSL &gt;0.8.0&#39;
+        OPENSSL_VERSION = &#34;OpenSSL &gt;0.8.0&#34;
 except Exception:
-    OPENSSL_VERSION = &#39;&#39;
+    OPENSSL_VERSION = &#34;&#34;
 
 
 try:
     import Tkinter as tkinter
+
     TKINTER_VERSION = str(tkinter.TkVersion)
 except Exception:
-    TKINTER_VERSION = &#39;&#39;
+    TKINTER_VERSION = &#34;&#34;
 
 
 try:
     import zlib
+
     ZLIB_VERSION = zlib.ZLIB_VERSION
 except Exception:
-    ZLIB_VERSION = &#39;&#39;
+    ZLIB_VERSION = &#34;&#34;
 
 
 try:
     from xml.parsers import expat
+
     EXPAT_VERSION = expat.EXPAT_VERSION
 except Exception:
-    EXPAT_VERSION = &#39;&#39;
+    EXPAT_VERSION = &#34;&#34;
 
 
 try:
     from multiprocessing import cpu_count
+
     CPU_COUNT = cpu_count()
 except Exception:
     CPU_COUNT = 0
 
 try:
     import threading
+
     HAVE_THREADING = True
 except Exception:
     HAVE_THREADING = False
@@ -158,40 +169,42 @@ except Exception:
 
 try:
     from resource import getrlimit, RLIMIT_NOFILE
+
     RLIMIT_FDS_SOFT, RLIMIT_FDS_HARD = getrlimit(RLIMIT_NOFILE)
 except Exception:
     RLIMIT_FDS_SOFT, RLIMIT_FDS_HARD = 0, 0
 
 
-START_TIME_INFO = {&#39;time_utc&#39;: str(datetime.datetime.utcnow()),
-                   &#39;time_utc_offset&#39;: -time.timezone / 3600.0}
+START_TIME_INFO = {&#34;time_utc&#34;: str(datetime.datetime.utcnow()), &#34;time_utc_offset&#34;: -time.timezone / 3600.0}
 
 
 def get_python_info():
     ret = {}
-    ret[&#39;argv&#39;] = _escape_shell_args(sys.argv)
-    ret[&#39;bin&#39;] = sys.executable
+    ret[&#34;argv&#34;] = _escape_shell_args(sys.argv)
+    ret[&#34;bin&#34;] = sys.executable
 
     # Even though compiler/build_date are already here, they&#39;re
     # actually parsed from the version string. So, in the rare case of
     # the unparsable version string, we&#39;re still transmitting it.
-    ret[&#39;version&#39;] = &#39; &#39;.join(sys.version.split())
+    ret[&#34;version&#34;] = &#34; &#34;.join(sys.version.split())
 
-    ret[&#39;compiler&#39;] = platform.python_compiler()
-    ret[&#39;build_date&#39;] = platform.python_build()[1]
-    ret[&#39;version_info&#39;] = list(sys.version_info)
+    ret[&#34;compiler&#34;] = platform.python_compiler()
+    ret[&#34;build_date&#34;] = platform.python_build()[1]
+    ret[&#34;version_info&#34;] = list(sys.version_info)
 
-    ret[&#39;features&#39;] = {&#39;openssl&#39;: OPENSSL_VERSION,
-                       &#39;expat&#39;: EXPAT_VERSION,
-                       &#39;sqlite&#39;: SQLITE_VERSION,
-                       &#39;tkinter&#39;: TKINTER_VERSION,
-                       &#39;zlib&#39;: ZLIB_VERSION,
-                       &#39;unicode_wide&#39;: HAVE_UCS4,
-                       &#39;readline&#39;: HAVE_READLINE,
-                       &#39;64bit&#39;: IS_64BIT,
-                       &#39;ipv6&#39;: HAVE_IPV6,
-                       &#39;threading&#39;: HAVE_THREADING,
-                       &#39;urandom&#39;: HAVE_URANDOM}
+    ret[&#34;features&#34;] = {
+        &#34;openssl&#34;: OPENSSL_VERSION,
+        &#34;expat&#34;: EXPAT_VERSION,
+        &#34;sqlite&#34;: SQLITE_VERSION,
+        &#34;tkinter&#34;: TKINTER_VERSION,
+        &#34;zlib&#34;: ZLIB_VERSION,
+        &#34;unicode_wide&#34;: HAVE_UCS4,
+        &#34;readline&#34;: HAVE_READLINE,
+        &#34;64bit&#34;: IS_64BIT,
+        &#34;ipv6&#34;: HAVE_IPV6,
+        &#34;threading&#34;: HAVE_THREADING,
+        &#34;urandom&#34;: HAVE_URANDOM,
+    }
 
     return ret
 
@@ -212,45 +225,47 @@ def get_profile(scrub=False):
     &#34;&#34;&#34;
     ret = {}
     try:
-        ret[&#39;username&#39;] = getpass.getuser()
+        ret[&#34;username&#34;] = getpass.getuser()
     except Exception:
-        ret[&#39;username&#39;] = &#39;&#39;
-    ret[&#39;guid&#39;] = str(INSTANCE_ID)
-    ret[&#39;hostname&#39;] = socket.gethostname()
-    ret[&#39;hostfqdn&#39;] = socket.getfqdn()
+        ret[&#34;username&#34;] = &#34;&#34;
+    ret[&#34;guid&#34;] = str(INSTANCE_ID)
+    ret[&#34;hostname&#34;] = socket.gethostname()
+    ret[&#34;hostfqdn&#34;] = socket.getfqdn()
     uname = platform.uname()
-    ret[&#39;uname&#39;] = {&#39;system&#39;: uname[0],
-                    &#39;node&#39;: uname[1],
-                    &#39;release&#39;: uname[2],  # linux: distro name
-                    &#39;version&#39;: uname[3],  # linux: kernel version
-                    &#39;machine&#39;: uname[4],
-                    &#39;processor&#39;: uname[5]}
+    ret[&#34;uname&#34;] = {
+        &#34;system&#34;: uname[0],
+        &#34;node&#34;: uname[1],
+        &#34;release&#34;: uname[2],  # linux: distro name
+        &#34;version&#34;: uname[3],  # linux: kernel version
+        &#34;machine&#34;: uname[4],
+        &#34;processor&#34;: uname[5],
+    }
     try:
         linux_dist = platform.linux_distribution()
     except Exception:
-        linux_dist = (&#39;&#39;, &#39;&#39;, &#39;&#39;)
-    ret[&#39;linux_dist_name&#39;] = linux_dist[0]
-    ret[&#39;linux_dist_version&#39;] = linux_dist[1]
-    ret[&#39;cpu_count&#39;] = CPU_COUNT
+        linux_dist = (&#34;&#34;, &#34;&#34;, &#34;&#34;)
+    ret[&#34;linux_dist_name&#34;] = linux_dist[0]
+    ret[&#34;linux_dist_version&#34;] = linux_dist[1]
+    ret[&#34;cpu_count&#34;] = CPU_COUNT
 
-    ret[&#39;fs_encoding&#39;] = sys.getfilesystemencoding()
-    ret[&#39;ulimit_soft&#39;] = RLIMIT_FDS_SOFT
-    ret[&#39;ulimit_hard&#39;] = RLIMIT_FDS_HARD
-    ret[&#39;cwd&#39;] = os.getcwd()
-    ret[&#39;umask&#39;] = oct(os.umask(os.umask(2))).rjust(3, &#39;0&#39;)
+    ret[&#34;fs_encoding&#34;] = sys.getfilesystemencoding()
+    ret[&#34;ulimit_soft&#34;] = RLIMIT_FDS_SOFT
+    ret[&#34;ulimit_hard&#34;] = RLIMIT_FDS_HARD
+    ret[&#34;cwd&#34;] = os.getcwd()
+    ret[&#34;umask&#34;] = oct(os.umask(os.umask(2))).rjust(3, &#34;0&#34;)
 
-    ret[&#39;python&#39;] = get_python_info()
+    ret[&#34;python&#34;] = get_python_info()
     ret.update(START_TIME_INFO)
 
     if scrub:
         # mask identifiable information
-        ret[&#39;cwd&#39;] = &#39;-&#39;
-        ret[&#39;hostname&#39;] = &#39;-&#39;
-        ret[&#39;hostfqdn&#39;] = &#39;-&#39;
-        ret[&#39;python&#39;][&#39;bin&#39;] = &#39;-&#39;
-        ret[&#39;python&#39;][&#39;argv&#39;] = &#39;-&#39;
-        ret[&#39;uname&#39;][&#39;node&#39;] = &#39;-&#39;
-        ret[&#39;username&#39;] = &#39;-&#39;
+        ret[&#34;cwd&#34;] = &#34;-&#34;
+        ret[&#34;hostname&#34;] = &#34;-&#34;
+        ret[&#34;hostfqdn&#34;] = &#34;-&#34;
+        ret[&#34;python&#34;][&#34;bin&#34;] = &#34;-&#34;
+        ret[&#34;python&#34;][&#34;argv&#34;] = &#34;-&#34;
+        ret[&#34;uname&#34;][&#34;node&#34;] = &#34;-&#34;
+        ret[&#34;username&#34;] = &#34;-&#34;
 
     return ret
 
@@ -263,20 +278,20 @@ def _fake_json_dumps(val, indent=2):
     # the json module for a reason.
     def _fake_safe_repr(*a, **kw):
         res, is_read, is_rec = _real_safe_repr(*a, **kw)
-        if res == &#39;None&#39;:
-            res = &#39;null&#39;
-        if res == &#39;True&#39;:
-            res = &#39;true&#39;
-        if res == &#39;False&#39;:
-            res = &#39;false&#39;
+        if res == &#34;None&#34;:
+            res = &#34;null&#34;
+        if res == &#34;True&#34;:
+            res = &#34;true&#34;
+        if res == &#34;False&#34;:
+            res = &#34;false&#34;
         if not (res.startswith(&#34;&#39;&#34;) or res.startswith(&#34;u&#39;&#34;)):
             res = res
         else:
-            if res.startswith(&#39;u&#39;):
+            if res.startswith(&#34;u&#34;):
                 res = res[1:]
 
             contents = res[1:-1]
-            contents = contents.replace(&#39;&#34;&#39;, &#39;&#39;).replace(r&#39;\&#34;&#39;, &#39;&#39;)
+            contents = contents.replace(&#39;&#34;&#39;, &#34;&#34;).replace(r&#34;\&#34;&#34;, &#34;&#34;)
             res = &#39;&#34;&#39; + contents + &#39;&#34;&#39;
         return res, is_read, is_rec
 
@@ -303,36 +318,36 @@ def get_profile_json(indent=False):
             return json.dumps(val, sort_keys=True)
 
     except ImportError:
+
         def dumps(val, indent):
             ret = _fake_json_dumps(val, indent=indent)
             if not indent:
-                ret = re.sub(&#39;\n\s*&#39;, &#39; &#39;, ret)
+                ret = re.sub(&#34;\n\s*&#34;, &#34; &#34;, ret)
             return ret
 
     data_dict = get_profile()
     return dumps(data_dict, indent)
 
 
-
-def _escape_shell_args(args, sep=&#39; &#39;, style=None):
+def _escape_shell_args(args, sep=&#34; &#34;, style=None):
     if not style:
-        if sys.platform == &#39;win32&#39;:
-            style = &#39;cmd&#39;
+        if sys.platform == &#34;win32&#34;:
+            style = &#34;cmd&#34;
         else:
-            style = &#39;sh&#39;
+            style = &#34;sh&#34;
 
-    if style == &#39;sh&#39;:
+    if style == &#34;sh&#34;:
         return _args2sh(args, sep=sep)
-    elif style == &#39;cmd&#39;:
+    elif style == &#34;cmd&#34;:
         return _args2cmd(args, sep=sep)
 
     raise ValueError(&#34;style expected one of &#39;cmd&#39; or &#39;sh&#39;, not %r&#34; % style)
 
 
-_find_sh_unsafe = re.compile(r&#39;[^a-zA-Z0-9_@%+=:,./-]&#39;).search
+_find_sh_unsafe = re.compile(r&#34;[^a-zA-Z0-9_@%+=:,./-]&#34;).search
 
 
-def _args2sh(args, sep=&#39; &#39;):
+def _args2sh(args, sep=&#34; &#34;):
     # see strutils
     ret_list = []
 
@@ -347,10 +362,10 @@ def _args2sh(args, sep=&#39; &#39;):
         # the string $&#39;b is then quoted as &#39;$&#39;&#34;&#39;&#34;&#39;b&#39;
         ret_list.append(&#34;&#39;&#34; + arg.replace(&#34;&#39;&#34;, &#34;&#39;\&#34;&#39;\&#34;&#39;&#34;) + &#34;&#39;&#34;)
 
-    return &#39; &#39;.join(ret_list)
+    return &#34; &#34;.join(ret_list)
 
 
-def _args2cmd(args, sep=&#39; &#39;):
+def _args2cmd(args, sep=&#34; &#34;):
     # see strutils
     result = []
     needquote = False
@@ -359,19 +374,19 @@ def _args2cmd(args, sep=&#39; &#39;):
 
         # Add a space to separate this argument from the others
         if result:
-            result.append(&#39; &#39;)
+            result.append(&#34; &#34;)
 
         needquote = (&#34; &#34; in arg) or (&#34;\t&#34; in arg) or not arg
         if needquote:
             result.append(&#39;&#34;&#39;)
 
         for c in arg:
-            if c == &#39;\\&#39;:
+            if c == &#34;\\&#34;:
                 # Don&#39;t know if we need to double yet.
                 bs_buf.append(c)
             elif c == &#39;&#34;&#39;:
                 # Double backslashes.
-                result.append(&#39;\\&#39; * len(bs_buf)*2)
+                result.append(&#34;\\&#34; * len(bs_buf) * 2)
                 bs_buf = []
                 result.append(&#39;\\&#34;&#39;)
             else:
@@ -389,14 +404,16 @@ def _args2cmd(args, sep=&#39; &#39;):
             result.extend(bs_buf)
             result.append(&#39;&#34;&#39;)
 
-    return &#39;&#39;.join(result)
+    return &#34;&#34;.join(result)
 
 
 def is_linux():
     return sys.platform.lower() == &#34;linux&#34;
 
+
 def is_osx():
     return sys.platform.lower() == &#34;darwin&#34;
+
 
 if is_linux():
     from distro import *</code></pre>
@@ -443,45 +460,47 @@ remain in place.</p></section>
     &#34;&#34;&#34;
     ret = {}
     try:
-        ret[&#39;username&#39;] = getpass.getuser()
+        ret[&#34;username&#34;] = getpass.getuser()
     except Exception:
-        ret[&#39;username&#39;] = &#39;&#39;
-    ret[&#39;guid&#39;] = str(INSTANCE_ID)
-    ret[&#39;hostname&#39;] = socket.gethostname()
-    ret[&#39;hostfqdn&#39;] = socket.getfqdn()
+        ret[&#34;username&#34;] = &#34;&#34;
+    ret[&#34;guid&#34;] = str(INSTANCE_ID)
+    ret[&#34;hostname&#34;] = socket.gethostname()
+    ret[&#34;hostfqdn&#34;] = socket.getfqdn()
     uname = platform.uname()
-    ret[&#39;uname&#39;] = {&#39;system&#39;: uname[0],
-                    &#39;node&#39;: uname[1],
-                    &#39;release&#39;: uname[2],  # linux: distro name
-                    &#39;version&#39;: uname[3],  # linux: kernel version
-                    &#39;machine&#39;: uname[4],
-                    &#39;processor&#39;: uname[5]}
+    ret[&#34;uname&#34;] = {
+        &#34;system&#34;: uname[0],
+        &#34;node&#34;: uname[1],
+        &#34;release&#34;: uname[2],  # linux: distro name
+        &#34;version&#34;: uname[3],  # linux: kernel version
+        &#34;machine&#34;: uname[4],
+        &#34;processor&#34;: uname[5],
+    }
     try:
         linux_dist = platform.linux_distribution()
     except Exception:
-        linux_dist = (&#39;&#39;, &#39;&#39;, &#39;&#39;)
-    ret[&#39;linux_dist_name&#39;] = linux_dist[0]
-    ret[&#39;linux_dist_version&#39;] = linux_dist[1]
-    ret[&#39;cpu_count&#39;] = CPU_COUNT
+        linux_dist = (&#34;&#34;, &#34;&#34;, &#34;&#34;)
+    ret[&#34;linux_dist_name&#34;] = linux_dist[0]
+    ret[&#34;linux_dist_version&#34;] = linux_dist[1]
+    ret[&#34;cpu_count&#34;] = CPU_COUNT
 
-    ret[&#39;fs_encoding&#39;] = sys.getfilesystemencoding()
-    ret[&#39;ulimit_soft&#39;] = RLIMIT_FDS_SOFT
-    ret[&#39;ulimit_hard&#39;] = RLIMIT_FDS_HARD
-    ret[&#39;cwd&#39;] = os.getcwd()
-    ret[&#39;umask&#39;] = oct(os.umask(os.umask(2))).rjust(3, &#39;0&#39;)
+    ret[&#34;fs_encoding&#34;] = sys.getfilesystemencoding()
+    ret[&#34;ulimit_soft&#34;] = RLIMIT_FDS_SOFT
+    ret[&#34;ulimit_hard&#34;] = RLIMIT_FDS_HARD
+    ret[&#34;cwd&#34;] = os.getcwd()
+    ret[&#34;umask&#34;] = oct(os.umask(os.umask(2))).rjust(3, &#34;0&#34;)
 
-    ret[&#39;python&#39;] = get_python_info()
+    ret[&#34;python&#34;] = get_python_info()
     ret.update(START_TIME_INFO)
 
     if scrub:
         # mask identifiable information
-        ret[&#39;cwd&#39;] = &#39;-&#39;
-        ret[&#39;hostname&#39;] = &#39;-&#39;
-        ret[&#39;hostfqdn&#39;] = &#39;-&#39;
-        ret[&#39;python&#39;][&#39;bin&#39;] = &#39;-&#39;
-        ret[&#39;python&#39;][&#39;argv&#39;] = &#39;-&#39;
-        ret[&#39;uname&#39;][&#39;node&#39;] = &#39;-&#39;
-        ret[&#39;username&#39;] = &#39;-&#39;
+        ret[&#34;cwd&#34;] = &#34;-&#34;
+        ret[&#34;hostname&#34;] = &#34;-&#34;
+        ret[&#34;hostfqdn&#34;] = &#34;-&#34;
+        ret[&#34;python&#34;][&#34;bin&#34;] = &#34;-&#34;
+        ret[&#34;python&#34;][&#34;argv&#34;] = &#34;-&#34;
+        ret[&#34;uname&#34;][&#34;node&#34;] = &#34;-&#34;
+        ret[&#34;username&#34;] = &#34;-&#34;
 
     return ret</code></pre>
 </details>
@@ -507,10 +526,11 @@ remain in place.</p></section>
             return json.dumps(val, sort_keys=True)
 
     except ImportError:
+
         def dumps(val, indent):
             ret = _fake_json_dumps(val, indent=indent)
             if not indent:
-                ret = re.sub(&#39;\n\s*&#39;, &#39; &#39;, ret)
+                ret = re.sub(&#34;\n\s*&#34;, &#34; &#34;, ret)
             return ret
 
     data_dict = get_profile()
@@ -526,29 +546,31 @@ remain in place.</p></section>
 <summary>Source code</summary>
 <pre><code class="python">def get_python_info():
     ret = {}
-    ret[&#39;argv&#39;] = _escape_shell_args(sys.argv)
-    ret[&#39;bin&#39;] = sys.executable
+    ret[&#34;argv&#34;] = _escape_shell_args(sys.argv)
+    ret[&#34;bin&#34;] = sys.executable
 
     # Even though compiler/build_date are already here, they&#39;re
     # actually parsed from the version string. So, in the rare case of
     # the unparsable version string, we&#39;re still transmitting it.
-    ret[&#39;version&#39;] = &#39; &#39;.join(sys.version.split())
+    ret[&#34;version&#34;] = &#34; &#34;.join(sys.version.split())
 
-    ret[&#39;compiler&#39;] = platform.python_compiler()
-    ret[&#39;build_date&#39;] = platform.python_build()[1]
-    ret[&#39;version_info&#39;] = list(sys.version_info)
+    ret[&#34;compiler&#34;] = platform.python_compiler()
+    ret[&#34;build_date&#34;] = platform.python_build()[1]
+    ret[&#34;version_info&#34;] = list(sys.version_info)
 
-    ret[&#39;features&#39;] = {&#39;openssl&#39;: OPENSSL_VERSION,
-                       &#39;expat&#39;: EXPAT_VERSION,
-                       &#39;sqlite&#39;: SQLITE_VERSION,
-                       &#39;tkinter&#39;: TKINTER_VERSION,
-                       &#39;zlib&#39;: ZLIB_VERSION,
-                       &#39;unicode_wide&#39;: HAVE_UCS4,
-                       &#39;readline&#39;: HAVE_READLINE,
-                       &#39;64bit&#39;: IS_64BIT,
-                       &#39;ipv6&#39;: HAVE_IPV6,
-                       &#39;threading&#39;: HAVE_THREADING,
-                       &#39;urandom&#39;: HAVE_URANDOM}
+    ret[&#34;features&#34;] = {
+        &#34;openssl&#34;: OPENSSL_VERSION,
+        &#34;expat&#34;: EXPAT_VERSION,
+        &#34;sqlite&#34;: SQLITE_VERSION,
+        &#34;tkinter&#34;: TKINTER_VERSION,
+        &#34;zlib&#34;: ZLIB_VERSION,
+        &#34;unicode_wide&#34;: HAVE_UCS4,
+        &#34;readline&#34;: HAVE_READLINE,
+        &#34;64bit&#34;: IS_64BIT,
+        &#34;ipv6&#34;: HAVE_IPV6,
+        &#34;threading&#34;: HAVE_THREADING,
+        &#34;urandom&#34;: HAVE_URANDOM,
+    }
 
     return ret</code></pre>
 </details>

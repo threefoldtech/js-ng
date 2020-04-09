@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.4" />
 <title>jumpscale.core.executors.remote API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="Executor remote allows executing commands within specific env on the local machine. using the executor framework you can retrieve the stdout, stderr, …" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -20,19 +20,29 @@
 <h1 class="title">Module <code>jumpscale.core.executors.remote</code></h1>
 </header>
 <section id="section-intro">
+<p>Executor remote allows executing commands within specific env on the local machine. using the executor framework you can retrieve the stdout, stderr, and the return code as well.</p>
+<pre><code>JS-NG&gt; with j.core.executors.RemoteExecutor(host=&quot;localhost&quot;, connect_kwargs={&quot;key_filename&quot;:
+                                                                              &quot;/home/xmonader/.ssh/id_rsa&quot;,}) as c: 
+            c.run(&quot;hostname&quot;)                           
+xmonader-ThinkPad-E580
+JS-NG&gt; 
+</code></pre>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">import fabric
+<pre><code class="python">&#34;&#34;&#34;
+Executor remote allows executing commands within specific env on the local machine. using the executor framework you can retrieve the stdout, stderr, and the return code as well.
 
-&#34;&#34;&#34;
-
-
+```
 JS-NG&gt; with j.core.executors.RemoteExecutor(host=&#34;localhost&#34;, connect_kwargs={&#34;key_filename&#34;:
                                                                               &#34;/home/xmonader/.ssh/id_rsa&#34;,}) as c: 
             c.run(&#34;hostname&#34;)                           
 xmonader-ThinkPad-E580
-JS-NG&gt;  
+JS-NG&gt; 
+``` 
 &#34;&#34;&#34;
+
+
+import fabric
 
 
 class RemoteExecutor:
@@ -48,7 +58,7 @@ class RemoteExecutor:
     @property
     def connection(self):
         return fabric.Connection(**self._connection_ctx)
-    
+
     @property
     def sftp(self):
         return self.connection.sftp()
@@ -117,7 +127,7 @@ def execute(cmd, command_ctx, connection_ctx):
     @property
     def connection(self):
         return fabric.Connection(**self._connection_ctx)
-    
+
     @property
     def sftp(self):
         return self.connection.sftp()

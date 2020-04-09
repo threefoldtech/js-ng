@@ -1,3 +1,25 @@
+"""
+Exceptions module provide a carefully picked list of exceptions to be used across the framework
+
+- Base
+- Permission
+- Halt
+- Runtime
+- Input
+- Value
+- NotImplemented
+- Bug
+- Operations
+- IO
+- NotFound
+- Timeout
+- SSH
+- SSHTimeout
+
+
+"""
+
+
 class JSException(Exception):
     def __init__(self, message, category=None, level=None, context=None):
         super().__init__(message)

@@ -25,14 +25,14 @@
 <pre><code class="python">import time
 from jumpscale.god import j
 
-def time(func):
+
+def timeit(func):
     def wrapper(*args, **kwargs):
         start_time = time.time()
         result = func(*args, **kwargs)
         end_time = time.time()
         diff = end_time - start_time
         j.logger.info(&#34;func {} with args: {}, kwargs: {} took {}&#34;.format(func.__name__, args, kwargs, diff))
-        
         return result
 
     return wrapper</code></pre>
@@ -45,21 +45,20 @@ def time(func):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="jumpscale.tools.timer.timer.time"><code class="name flex">
-<span>def <span class="ident">time</span></span>(<span>func)</span>
+<dt id="jumpscale.tools.timer.timer.timeit"><code class="name flex">
+<span>def <span class="ident">timeit</span></span>(<span>func)</span>
 </code></dt>
 <dd>
 <section class="desc"></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def time(func):
+<pre><code class="python">def timeit(func):
     def wrapper(*args, **kwargs):
         start_time = time.time()
         result = func(*args, **kwargs)
         end_time = time.time()
         diff = end_time - start_time
         j.logger.info(&#34;func {} with args: {}, kwargs: {} took {}&#34;.format(func.__name__, args, kwargs, diff))
-        
         return result
 
     return wrapper</code></pre>
@@ -83,7 +82,7 @@ def time(func):
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="jumpscale.tools.timer.timer.time" href="#jumpscale.tools.timer.timer.time">time</a></code></li>
+<li><code><a title="jumpscale.tools.timer.timer.timeit" href="#jumpscale.tools.timer.timer.timeit">timeit</a></code></li>
 </ul>
 </li>
 </ul>

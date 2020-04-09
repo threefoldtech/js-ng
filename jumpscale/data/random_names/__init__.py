@@ -1,4 +1,14 @@
-""" This is the code of random names   """
+"""This module helps genearting random names, mainly for container names.
+
+```
+JS-NG> j.data.random_names.random_name()                                                            
+'loving_borg'
+
+JS-NG> j.data.random_names.random_name()                                                            
+'quirky_wiles'
+```
+
+"""
 
 from random import choice
 
@@ -168,7 +178,7 @@ right_names = [
 ]
 
 
-def generate_random_name():
+def random_name():
     """ Returns a random name "first name" & "last name """
 
     name = "%s_%s" % (choice(right_names), choice(left_names))

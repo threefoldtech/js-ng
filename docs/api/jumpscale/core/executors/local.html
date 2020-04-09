@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.4" />
 <title>jumpscale.core.executors.local API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="Executor Local allows executing commands within specific env on the local machine. using the executor framework you can retrieve the stdout, stderr, …" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -20,11 +20,27 @@
 <h1 class="title">Module <code>jumpscale.core.executors.local</code></h1>
 </header>
 <section id="section-intro">
+<p>Executor Local allows executing commands within specific env on the local machine. using the executor framework you can retrieve the stdout, stderr, and the return code as well.</p>
+<pre><code>JS-NG&gt; j.core.executors.run_local(&quot;echo $WHOME&quot;, env={'WHOME':'abc'}, ech
+     1 o=True)                                                           
+echo $WHOME
+abc
+&lt;Result cmd='echo $WHOME' exited=0&gt;
+
+JS-NG&gt; j.core.executors.run_local(&quot;uname&quot;, echo=True)                    
+uname
+Linux
+&lt;Result cmd='uname' exited=0&gt;
+
+JS-NG&gt; j.core.executors.run_local(&quot;uname&quot;, echo=False)                   
+Linux
+&lt;Result cmd='uname' exited=0&gt;
+</code></pre>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">import invoke
-
-&#34;&#34;&#34;
+<pre><code class="python">&#34;&#34;&#34;
+Executor Local allows executing commands within specific env on the local machine. using the executor framework you can retrieve the stdout, stderr, and the return code as well.
+```
 JS-NG&gt; j.core.executors.run_local(&#34;echo $WHOME&#34;, env={&#39;WHOME&#39;:&#39;abc&#39;}, ech
      1 o=True)                                                           
 echo $WHOME
@@ -39,8 +55,11 @@ Linux
 JS-NG&gt; j.core.executors.run_local(&#34;uname&#34;, echo=False)                   
 Linux
 &lt;Result cmd=&#39;uname&#39; exited=0&gt;
+```
+
 
 &#34;&#34;&#34;
+import invoke
 
 
 def execute(cmd, **command_ctx):
@@ -166,14 +185,14 @@ def execute(cmd, **command_ctx):
     ## use formatter to format command
     command_ctx = command_ctx or {}
     if &#34;cwd&#34; in command_ctx:
-        if command_ctx[&#39;cwd&#39;]:
+        if command_ctx[&#34;cwd&#34;]:
             cwd = command_ctx[&#34;cwd&#34;]
             del command_ctx[&#34;cwd&#34;]
             c = invoke.Context()
             with c.cd(cwd):
                 res = c.run(cmd, **command_ctx)
                 return res.return_code, res.stdout, res.stderr
-        del command_ctx[&#39;cwd&#39;]
+        del command_ctx[&#34;cwd&#34;]
     res = invoke.run(cmd, **command_ctx)
     return res.return_code, res.stdout, res.stderr</code></pre>
 </details>
@@ -433,14 +452,14 @@ and force, or disable, echoing.
     ## use formatter to format command
     command_ctx = command_ctx or {}
     if &#34;cwd&#34; in command_ctx:
-        if command_ctx[&#39;cwd&#39;]:
+        if command_ctx[&#34;cwd&#34;]:
             cwd = command_ctx[&#34;cwd&#34;]
             del command_ctx[&#34;cwd&#34;]
             c = invoke.Context()
             with c.cd(cwd):
                 res = c.run(cmd, **command_ctx)
                 return res.return_code, res.stdout, res.stderr
-        del command_ctx[&#39;cwd&#39;]
+        del command_ctx[&#34;cwd&#34;]
     res = invoke.run(cmd, **command_ctx)
     return res.return_code, res.stdout, res.stderr</code></pre>
 </details>

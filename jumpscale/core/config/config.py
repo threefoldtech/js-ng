@@ -1,3 +1,12 @@
+"""Config modules is the single entry of configurations across the framework.
+It allows 
+- resolving configurations paths for configuration directory`config_root`, or configuration file path `config_path`
+- rebuildling default configurations or retrieving them (using `get_default_config`)
+- Getting configurations using `get_default_config`
+- Updating configuration using `update_config`
+
+"""
+
 import os
 
 import nacl.utils
@@ -15,6 +24,26 @@ config_path = os.path.join(config_root, "config.toml")
 
 
 def get_default_config():
+    """retrieves default configurations for plain jumpscale
+    
+    Returns:
+        e.g return
+        ```
+        {
+        "debug": True,
+        "ssh_key_path": "",
+        "logging": {"handlers": []},
+        "log_to_redis": False,
+        "log_to_files": True,
+        "log_level": 15,
+        "private_key_path": "",
+        "stores": {
+            "redis": {"hostname": "localhost", "port": 6379},
+            "filesystem": {"path": os.path.expanduser(os.path.join(config_root, "secureconfig"))},
+        },
+        "store": "filesystem",
+       }```
+    """
     return {
         "debug": True,
         "ssh_key_path": "",
@@ -32,11 +61,21 @@ def get_default_config():
 
 
 def get_config():
+    """Gets jumpscale configurations
+    
+    Returns:
+        [dict] - toml loaded config of CONFIG_DIR/config.toml
+    """
     with open(config_path, "r") as f:
         return toml.load(f)
 
 
 def update_config(data):
+    """Update jumpscale config with new data
+    
+    Arguments:
+        data {dict} -- dict to update the config with.
+    """
     with open(config_path, "w") as f:
         toml.dump(data, f)
 
@@ -54,6 +93,7 @@ def migrate_config():
     update_config(current_config)
 
 
+# Create default configurations file on loading.
 if not os.path.exists(config_path):
     os.makedirs(os.path.dirname(config_path), exist_ok=True)
     with open(config_path, "w") as f:

@@ -5,7 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.4" />
 <title>jumpscale.god API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="This module coverts the god object j and its loading process.
+the idea is with hierarchy like this
+```
+project1/
+/rootnamespace (jumpscale)
+…" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -20,19 +25,84 @@
 <h1 class="title">Module <code>jumpscale.god</code></h1>
 </header>
 <section id="section-intro">
+<p>This module coverts the god object j and its loading process.
+the idea is with hierarchy like this</p>
+<pre><code>project1/
+         /rootnamespace (jumpscale)
+            /subnamespace1
+                ... pkg1
+                ... pkg2
+            /subnamespace2
+                ... pkg1
+                ... pkg2
+project2/
+         /rootnamespace (jumpscale)
+            /subnamespace1
+                ... pkg1
+                ... pkg2
+            /subnamespace2
+                ... pkg1
+                ... pkg2
+</code></pre>
+<ul>
+<li>we get all the paths of the <code>rootnamespace</code></li>
+<li>we get all the subnamespaces</li>
+<li>we get all the inner packages and import all of them (lazily) or load them eagerly but just once.</li>
+</ul>
+<p>real example:</p>
+<pre><code>js-ng
+├── jumpscale   &lt;- root namespace
+│   ├── clients  &lt;- subnamespace where people can register on
+│   │   ├── base.py
+│   │   ├── github   &lt;- package in subnamespace
+│   │   │   ├── github.py
+│   │   │   └── __init__.py
+│   │   └── gogs
+│   │       ├── gogs.py
+│   │       └── __init__.py
+│   ├── core
+│   │   ├── config.py
+│   │   ├── exceptions.py
+│   │   └── logging.py
+│   ├── data
+│   │   ├── idgenerator
+│   │   │   ├── idgenerator.py
+│   │   │   └── __init__.py
+│   │   └── serializers
+│   │       ├── __init__.py
+│   │       └── serializers.py
+│   ├── god.py
+│   ├── sals
+│   │   └── fs
+│   │       ├── fs.py
+│   │       └── __init__.py
+│   └── tools
+│       └── keygen
+│           ├── __init__.py
+│           └── keygen.py
+├── README.md
+└── tests
+    └── test_loads_j.py
+js-ext
+├── jumpscale
+│   ├── clients
+│   │   └── gitlab
+│   │       ├── gitlab.py
+│   │       └── __init__.py
+│   ├── sals
+│   │   └── zos
+│   │       ├── __init__.py
+│   │       └── zos.py
+│   └── tools
+├── README.md
+└── tests
+    └── test_success.py
+</code></pre>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">import sys
-import os
-import traceback
-import importlib
-import pkgutil
-import importlib.util
-# import lazy_import
-
-&#34;&#34;&#34;
+<pre><code class="python">&#34;&#34;&#34;This module coverts the god object j and its loading process.
 the idea is with hierarchy like this
-
+```
 project1/
          /rootnamespace (jumpscale)
             /subnamespace1
@@ -49,13 +119,14 @@ project2/
             /subnamespace2
                 ... pkg1
                 ... pkg2
-
+```
 - we get all the paths of the `rootnamespace`
 - we get all the subnamespaces
 - we get all the inner packages and import all of them (lazily) or load them eagerly but just once.
 
 
 real example:
+```
 js-ng
 ├── jumpscale   &lt;- root namespace
 │   ├── clients  &lt;- subnamespace where people can register on
@@ -103,15 +174,27 @@ js-ext
 ├── README.md
 └── tests
     └── test_success.py
-
-
+```
 &#34;&#34;&#34;
+
+
+import sys
+import os
+import traceback
+import importlib
+import pkgutil
+import importlib.util
+
+# import lazy_import
+
 
 __all__ = [&#34;j&#34;]
 
+
 def load():
     import jumpscale
-    loadeddict = {&#39;jumpscale&#39;:{}}
+
+    loadeddict = {&#34;jumpscale&#34;: {}}
     for jsnamespace in jumpscale.__path__:
         for root, dirs, files in os.walk(jsnamespace):
             for d in dirs:
@@ -120,12 +203,11 @@ def load():
                 if os.path.basename(root) == &#34;jumpscale&#34;:
                     continue
 
-                
                 if os.path.dirname(root) != jsnamespace:
                     continue
                 # print(&#34;root: {} d: {}&#34;.format(root, d))
                 rootbase = os.path.basename(root)
-                loadeddict[&#39;jumpscale&#39;].setdefault(rootbase, {})
+                loadeddict[&#34;jumpscale&#34;].setdefault(rootbase, {})
                 pkgname = d
                 importedpkgstr = &#34;jumpscale.{}.{}&#34;.format(rootbase, pkgname)
                 __all__.append(importedpkgstr)
@@ -141,10 +223,10 @@ def load():
                     if hasattr(m, &#34;export_module_as&#34;):
                         # print(&#34;rootbase: &#34;, rootbase, importedpkgstr)
                         # print(m.export_module_as)
-                        loadeddict[&#39;jumpscale&#39;][rootbase][pkgname] = m.export_module_as
+                        loadeddict[&#34;jumpscale&#34;][rootbase][pkgname] = m.export_module_as
                         # loadeddict[importedpkgstr] = m.export_module_as
                     else:
-                        loadeddict[&#39;jumpscale&#39;][rootbase][pkgname] = m
+                        loadeddict[&#34;jumpscale&#34;][rootbase][pkgname] = m
 
     return loadeddict
 
@@ -152,38 +234,41 @@ def load():
 class Group:
     def __init__(self, d):
         self.d = d
-        for k,v in d.items():
+        for k, v in d.items():
             setattr(self, k, v)
+
     def __getattr__(self, a):
         return self.d[a]
-    
+
     def __dir__(self):
         return list(self.d.keys())
+
 
 class J:
     &#34;&#34;&#34;
         Here we simulate god object `j` by delegating the calls to suitable subnamespace
     &#34;&#34;&#34;
+
     def __init__(self):
         self.__loaded = False
         self.__loaded_dict = {}
 
     def __dir__(self):
         self._load()
-        return list(self.__loaded_dict[&#39;jumpscale&#39;].keys()) + [&#39;config&#39;, &#39;exceptions&#39;, &#39;logger&#39;]
+        return list(self.__loaded_dict[&#34;jumpscale&#34;].keys()) + [&#34;config&#34;, &#34;exceptions&#34;, &#34;logger&#34;]
 
     @property
     def logger(self):
-        return self.__loaded_dict[&#39;jumpscale&#39;][&#39;core&#39;][&#39;logging&#39;].logger
-    
+        return self.__loaded_dict[&#34;jumpscale&#34;][&#34;core&#34;][&#34;logging&#34;].logger
+
     @property
     def config(self):
-        return self.__loaded_dict[&#39;jumpscale&#39;][&#39;core&#39;][&#39;config&#39;]
+        return self.__loaded_dict[&#34;jumpscale&#34;][&#34;core&#34;][&#34;config&#34;]
 
     @property
     def exceptions(self):
-        return self.__loaded_dict[&#39;jumpscale&#39;][&#39;core&#39;][&#39;exceptions&#39;]
-    
+        return self.__loaded_dict[&#34;jumpscale&#34;][&#34;core&#34;][&#34;exceptions&#34;]
+
     def reload(self):
         self.__loaded = False
         self.__loaded_dict = {}
@@ -194,10 +279,11 @@ class J:
 
     def __getattr__(self, name):
         self._load()
-        
-        d = self.__loaded_dict[&#39;jumpscale&#39;][name]
+
+        d = self.__loaded_dict[&#34;jumpscale&#34;][name]
         return Group(d)
-       
+
+
 j = J()
 
 # jcode = &#34;&#34;&#34;
@@ -214,7 +300,7 @@ j = J()
 #     @property
 #     def logger(self):
 #         return self.__loaded_dict[&#39;jumpscale&#39;][&#39;core&#39;][&#39;logging&#39;].logger
-    
+
 #     @property
 #     def config(self):
 #         return self.__loaded_dict[&#39;jumpscale&#39;][&#39;core&#39;][&#39;config&#39;]
@@ -222,7 +308,7 @@ j = J()
 #     @property
 #     def exceptions(self):
 #         return self.__loaded_dict[&#39;jumpscale&#39;][&#39;core&#39;][&#39;exceptions&#39;]
-    
+
 #     def reload(self):
 #         self.__loaded = False
 #         self.__loaded_dict = {}
