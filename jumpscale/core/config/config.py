@@ -61,6 +61,10 @@ def get_default_config():
                 "rotation": "5 MB"
             }
         },
+        "alerts": {
+            "enabled": True,
+            "level": 40
+        },
         "ssh_key_path": "",
         "private_key_path": "",
         "stores": {

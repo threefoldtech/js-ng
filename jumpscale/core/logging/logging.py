@@ -83,11 +83,10 @@ class RedisHandler(CustomLogHandler):
 
     def _process_message(self, message):
         record = j.data.serializers.json.loads(message)["record"]
-        appname = j.core.application.appname
-        record_id = self._db.incr(self._rkey_incr % appname)
+        record_id = self._db.incr(self._rkey_incr % self._appname)
         return dict(
             id=record_id,
-            appname=appname,
+            appname=self._appname,
             name=record["name"],
             message=record["message"],
             level=record["level"]["no"],

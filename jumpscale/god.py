@@ -82,6 +82,8 @@ import traceback
 import importlib
 import pkgutil
 import importlib.util
+from jumpscale.core.config import get_config
+
 
 __all__ = ["j"]
 
@@ -186,8 +188,13 @@ class J:
 j = J()
 j._load()
 
+
 # register alerthandler as an error handler
-j.tools.errorhandler.register_handler(j.tools.alerthandler.alert_raise)
+alerts_config = get_config().get("alerts")
+if alerts_config and alerts_config.get("enabled", True):
+    j.tools.errorhandler.register_handler(
+        handler=j.tools.alerthandler.alert_raise, level=alerts_config.get("level", 40)
+    )
 
 # register global error hook
 sys.excepthook = j.tools.errorhandler.excepthook
