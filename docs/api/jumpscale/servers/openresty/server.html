@@ -325,6 +325,19 @@ def startup_cmd(self):
     return field.from_raw(field.default)</code></pre>
 </details>
 </dd>
+<dt id="jumpscale.servers.openresty.server.OpenRestyServer.websites"><code class="name">var <span class="ident">websites</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def getter(self):
+    if hasattr(self, inner_name):
+        return getattr(self, inner_name)
+
+    # accept raw value as default too
+    return field.from_raw(field.default)</code></pre>
+</details>
+</dd>
 </dl>
 <h3>Methods</h3>
 <dl>
@@ -488,7 +501,7 @@ def startup_cmd(self):
 </dd>
 <dt id="jumpscale.servers.openresty.server.Website"><code class="flex name class">
 <span>class <span class="ident">Website</span></span>
-<span>(</span><span>parent=None)</span>
+<span>(</span><span>parent_=None, instance_name_=None, **values)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>A simple attribute-based namespace.</p>
@@ -536,6 +549,19 @@ def startup_cmd(self):
 <h3>Instance variables</h3>
 <dl>
 <dt id="jumpscale.servers.openresty.server.Website.domain"><code class="name">var <span class="ident">domain</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def getter(self):
+    if hasattr(self, inner_name):
+        return getattr(self, inner_name)
+
+    # accept raw value as default too
+    return field.from_raw(field.default)</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.servers.openresty.server.Website.locations"><code class="name">var <span class="ident">locations</span></code></dt>
 <dd>
 <section class="desc"></section>
 <details class="source">
@@ -685,6 +711,7 @@ def path_web(self):
 <li><code><a title="jumpscale.servers.openresty.server.OpenRestyServer.startup_cmd" href="#jumpscale.servers.openresty.server.OpenRestyServer.startup_cmd">startup_cmd</a></code></li>
 <li><code><a title="jumpscale.servers.openresty.server.OpenRestyServer.status" href="#jumpscale.servers.openresty.server.OpenRestyServer.status">status</a></code></li>
 <li><code><a title="jumpscale.servers.openresty.server.OpenRestyServer.stop" href="#jumpscale.servers.openresty.server.OpenRestyServer.stop">stop</a></code></li>
+<li><code><a title="jumpscale.servers.openresty.server.OpenRestyServer.websites" href="#jumpscale.servers.openresty.server.OpenRestyServer.websites">websites</a></code></li>
 </ul>
 </li>
 <li>
@@ -692,6 +719,7 @@ def path_web(self):
 <ul class="two-column">
 <li><code><a title="jumpscale.servers.openresty.server.Website.configure" href="#jumpscale.servers.openresty.server.Website.configure">configure</a></code></li>
 <li><code><a title="jumpscale.servers.openresty.server.Website.domain" href="#jumpscale.servers.openresty.server.Website.domain">domain</a></code></li>
+<li><code><a title="jumpscale.servers.openresty.server.Website.locations" href="#jumpscale.servers.openresty.server.Website.locations">locations</a></code></li>
 <li><code><a title="jumpscale.servers.openresty.server.Website.name" href="#jumpscale.servers.openresty.server.Website.name">name</a></code></li>
 <li><code><a title="jumpscale.servers.openresty.server.Website.path" href="#jumpscale.servers.openresty.server.Website.path">path</a></code></li>
 <li><code><a title="jumpscale.servers.openresty.server.Website.path_cfg" href="#jumpscale.servers.openresty.server.Website.path_cfg">path_cfg</a></code></li>

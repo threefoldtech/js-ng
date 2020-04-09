@@ -124,6 +124,7 @@ In addition to custom options every field can accept and define, they can be use
 No need for `from_raw` to raise an error on e.g. type mismatch, as `validate` will do the validation.
 
 &#34;&#34;&#34;
+import arrow
 import datetime
 import enum
 import ipaddress
@@ -132,7 +133,7 @@ import time
 
 from urllib.parse import urlparse
 
-from .factory import StoredFactory
+from .factory import Factory as BaseFactory
 
 
 class ValidationError(Exception):
@@ -231,13 +232,43 @@ class Typed(Field):
 class Boolean(Typed):
     def __init__(self, default=False, **kwargs):
         &#34;&#34;&#34;
-        Boolean fields to hold a bool value
+        Boolean fields to hold a bool value.
+
+        values can be set using strings or numbers like:
+
+        - &#34;on&#34;, &#34;off&#34;
+        - &#34;yes&#34;, &#34;no&#34;
+        - &#34;true&#34;, &#34;false&#34;
+        - 0, 1
+        - 0, 1+2j
 
         Args:
             default (bool, optional): default value. Defaults to False.
             kwargs: any keyword arguments supported by `Field`
         &#34;&#34;&#34;
         super().__init__(type_=bool, default=default, **kwargs)
+
+    def from_raw(self, value):
+        &#34;&#34;&#34;
+        get bool value from strings and numbers
+
+        Args:
+            value (str or int or float or complex): valie
+
+        Returns:
+            bool: boolean value
+        &#34;&#34;&#34;
+        if isinstance(value, str):
+            value = value.lower().strip()
+            if value in (&#34;yes&#34;, &#34;on&#34;, &#34;true&#34;):
+                return True
+            if value in (&#34;no&#34;, &#34;off&#34;, &#34;false&#34;):
+                return False
+        elif isinstance(value, (int, float, complex)):
+            return bool(value)
+
+        # validate will do the check
+        return value
 
 
 class Integer(Typed):
@@ -246,6 +277,10 @@ class Integer(Typed):
         Intger field, the same as `Typed`, but with a type of `int`
 
         It can have a minimum value, if min is not set, it will ignore it.
+
+        values can be set using strings like:
+
+        - &#34;12&#34;, &#34;1212  &#34;
 
         Args:
             default (int, optional): default value. Defaults to 0.
@@ -261,17 +296,37 @@ class Integer(Typed):
             if value &lt; self.min:
                 raise ValidationError(f&#34;cannot set values less than {self.min}&#34;)
 
+    def from_raw(self, value):
+        if isinstance(value, str):
+            try:
+                value = int(value.strip())
+            except ValueError:
+                pass
+        return value
+
 
 class Float(Typed):
     def __init__(self, default=0.0, **kwargs):
         &#34;&#34;&#34;
         Same as `Integer` field, but with a type of `float`.
 
+        values can be set using strings like:
+
+        - &#34;12.3&#34;, &#34; 1212.23  &#34;
+
         Args:
             default (float, optional): default value. Defaults to 0.0.
             kwargs: any keyword arguments supported by `Field`
         &#34;&#34;&#34;
         super().__init__(type_=float, default=default, min=min, **kwargs)
+
+    def from_raw(self, value):
+        if isinstance(value, str):
+            try:
+                value = float(value.strip())
+            except ValueError:
+                pass
+        return value
 
 
 class String(Typed):
@@ -633,11 +688,93 @@ class IPAddress(Field):
             raise ValidationError(f&#34;{value} is not a valid IP address&#34;)
 
 
-class DateTime(Typed):
+class DateTimeMixin:
+    def get_arrow_obj(self, value):
+        &#34;&#34;&#34;
+        get an arrow object from int, float and str and `datetime.time` objects.
+
+        Args:
+            value (int or float or str): timestamp (utc) or e.g. &#34;1998-01-03&#34;
+
+        Returns:
+            arrow.Arrow: arrow object in utc
+        &#34;&#34;&#34;
+        if isinstance(value, datetime.time):
+            # convert to string, as there&#39;s no direct way i know of
+            # to convert from datetime.time objects to arrow directly
+            value = value.strftime(self.format)
+
+        if isinstance(value, str):
+            return arrow.Arrow.strptime(value, self.format).to(&#34;utc&#34;)
+
+        return arrow.get(value)
+
+    def get_timestamp(self, obj):
+        &#34;&#34;&#34;
+        get a utc timestamp from datetime/date/time objects
+
+
+        Args:
+            obj (datetime.datetime or datetime.date or datetime.time): date/time or datetime object
+
+        Returns:
+            int or float: utc timestamp
+        &#34;&#34;&#34;
+        return arrow.get(obj).to(&#34;utc&#34;).timestamp
+
+    def from_raw(self, value):
+        &#34;&#34;&#34;
+        get a datetime object from a numberic (epoch) or string value
+
+
+        Args:
+            value (str or int or float): value as a number or a string
+
+        Returns:
+            datetime.datetime or datetime.date or datetime.time: datetime or date/time object
+        &#34;&#34;&#34;
+        if isinstance(value, (int, float, str)):
+            try:
+                obj = self.get_arrow_obj(value)
+                if self.type == datetime.datetime:
+                    return obj.datetime
+                elif self.type == datetime.date:
+                    return obj.date()
+                elif self.type == datetime.time:
+                    return obj.time()
+            except (ValueError, arrow.parser.ParserError):
+                # will be caught by validate
+                pass
+        return value
+
+    def to_raw(self, dt_obj):
+        &#34;&#34;&#34;
+        get a utc timestamp from datetime object
+
+        Args:
+            dt_obj (datetime.datetime or datetime.date or datetime.time): datetime object
+
+        Returns:
+            int or float: utc timestamp
+        &#34;&#34;&#34;
+        return self.get_arrow_obj(dt_obj).to(&#34;utc&#34;).timestamp
+
+    def validate(self, value):
+        if isinstance(self.from_raw(value), str):
+            # cannot convert from string, still an invalid format
+            raise ValidationError(f&#34;{value} is not in the format of &#39;{self.format}&#39;&#34;)
+
+        super().validate(value)
+
+
+class DateTime(DateTimeMixin, Typed):
     # maybe add something like auto_now and auto_today for date/time fields
     def __init__(self, default=None, format_=None, **kwargs):
         &#34;&#34;&#34;
-        datetime field, actual value will be converted to datetime (utc) object
+        datetime field, stores datetime.datetime objects
+
+        values can be set using strings in the given `format_` too like &#34;12/1/2020&#34; or a utc timestamp,
+        they will converted to objects.
 
         Args:
             default (datetime): default value. Defaults to None.
@@ -649,42 +786,14 @@ class DateTime(Typed):
             format_ = &#34;%Y-%m-%d %H:%M&#34;
         self.format = format_
 
-    def from_raw(self, value):
-        &#34;&#34;&#34;
-        get a datetime object from a numberic (epoch) or string value
 
-
-        Args:
-            value (str or int or float): value as a number or a string
-
-        Returns:
-            datetime.datetime: `datetime.datetime` object
-        &#34;&#34;&#34;
-        if isinstance(value, (int, float)):
-            return datetime.datetime.utcfromtimestamp(value)
-        elif isinstance(value, str):
-            return datetime.datetime.strptime(value, self.format)
-        return value
-
-    def to_raw(self, dt_obj):
-        &#34;&#34;&#34;
-        get a utc timestamp from datetime object
-
-        Args:
-            dt_obj (datetime.datetime): datetime object
-
-        Returns:
-            float: utc timestamp
-        &#34;&#34;&#34;
-        if isinstance(dt_obj, datetime.date):
-            return dt_obj.replace(tzinfo=datetime.timezone.utc).timestamp()
-        return dt_obj
-
-
-class Date(Typed):
+class Date(DateTimeMixin, Typed):
     def __init__(self, default=None, format_=None, **kwargs):
         &#34;&#34;&#34;
-        date field, actual value will be converted to date object
+        date field, stores datetime.date objectsself.
+
+        values can be set using strings in the given `format_` too like &#34;12/1/2020&#34; or a utc timestamp,
+        they will converted to objects.
 
         Args:
             default (date): default value. Defaults to None.
@@ -696,45 +805,14 @@ class Date(Typed):
             format_ = &#34;%Y-%m-%d&#34;
         self.format = format_
 
-    def from_raw(self, value):
-        &#34;&#34;&#34;
-        get a date object from a numberic (epoch) or string value
 
-
-        Args:
-            value (str or int or float): value as a number or a string
-
-        Returns:
-            datetime.date: `datetime.date` object
-        &#34;&#34;&#34;
-        if isinstance(value, (int, float)):
-            return datetime.date.fromtimestamp(value)
-        elif isinstance(value, str):
-            try:
-                return datetime.datetime.strptime(value, self.format).date()
-            except ValueError:
-                pass
-        return value
-
-    def to_raw(self, d_obj):
-        &#34;&#34;&#34;
-        get a utc timestamp from date object
-
-        Args:
-            d_obj (datetime.date): date object
-
-        Returns:
-            float: timestamp (epoch)
-        &#34;&#34;&#34;
-        if isinstance(d_obj, datetime.date):
-            return time.mktime(d_obj.timetuple())
-        return d_obj
-
-
-class Time(Typed):
+class Time(DateTimeMixin, Typed):
     def __init__(self, default=None, format_=None, **kwargs):
         &#34;&#34;&#34;
-        time field, actual value will be converted to time object
+        time field, stores utc datetime.time objects
+
+        values can be set using strings in the given `format_` too like &#34;12:13&#34; or a utc timestamp,
+        they will converted to objects.
 
         Args:
             default (date): default value. Defaults to None.
@@ -745,49 +823,25 @@ class Time(Typed):
         if not format_:
             format_ = &#34;%H:%M&#34;
         self.format = format_
-        self.mktime_format = &#34;%a %b %d %H:%M:%S %Y&#34;
+
+
+class Factory(Typed):
+    def __init__(self, type_for_factory, stored=True, **kwargs):
+        # value type will be factory
+        super().__init__(type_=BaseFactory, readonly=True, **kwargs)
+        # but we keep the type of any Base class
+        # so, we can init a Factory with it
+        self.type_for_factory = type_for_factory
+        self.stored = stored
+
+    def validate(self, value):
+        super().validate(value)
 
     def from_raw(self, value):
-        &#34;&#34;&#34;
-        get a time object from a numberic or string value
-
-
-        Args:
-            value (str or int or float): value as a number or a string
-
-        Returns:
-            datetime.time: `datetime.time` object
-        &#34;&#34;&#34;
-        if isinstance(value, (int, float)):
-            return datetime.datetime.utcfromtimestamp(value).time()
-        elif isinstance(value, str):
-            try:
-                return datetime.datetime.strptime(value, self.format).time()
-            except ValueError:
-                pass
         return value
 
-    def to_raw(self, t_obj):
-        &#34;&#34;&#34;
-        get a utc timestamp from t_obj object
-
-        Args:
-            t_obj (datetime.time): time object
-
-        Returns:
-            float: timestamp (epoch)
-        &#34;&#34;&#34;
-        if isinstance(t_obj, datetime.time):
-            dt_obj = datetime.datetime(
-                1970, 1, 1, t_obj.hour, t_obj.minute, t_obj.second, int(t_obj.microsecond / 1000)
-            )
-            return dt_obj.replace(tzinfo=datetime.timezone.utc).timestamp()
-        return t_obj
-
-
-# TODO: add duration field
-class Factory(StoredFactory):
-    pass</code></pre>
+    def to_raw(self, value):
+        return None</code></pre>
 </details>
 </section>
 <section>
@@ -804,7 +858,15 @@ class Factory(StoredFactory):
 <span>(</span><span>default=False, **kwargs)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Boolean fields to hold a bool value</p>
+<section class="desc"><p>Boolean fields to hold a bool value.</p>
+<p>values can be set using strings or numbers like:</p>
+<ul>
+<li>"on", "off"</li>
+<li>"yes", "no"</li>
+<li>"true", "false"</li>
+<li>0, 1</li>
+<li>0, 1+2j</li>
+</ul>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>default</code></strong> :&ensp;<code>bool</code>, optional</dt>
@@ -817,24 +879,96 @@ class Factory(StoredFactory):
 <pre><code class="python">class Boolean(Typed):
     def __init__(self, default=False, **kwargs):
         &#34;&#34;&#34;
-        Boolean fields to hold a bool value
+        Boolean fields to hold a bool value.
+
+        values can be set using strings or numbers like:
+
+        - &#34;on&#34;, &#34;off&#34;
+        - &#34;yes&#34;, &#34;no&#34;
+        - &#34;true&#34;, &#34;false&#34;
+        - 0, 1
+        - 0, 1+2j
 
         Args:
             default (bool, optional): default value. Defaults to False.
             kwargs: any keyword arguments supported by `Field`
         &#34;&#34;&#34;
-        super().__init__(type_=bool, default=default, **kwargs)</code></pre>
+        super().__init__(type_=bool, default=default, **kwargs)
+
+    def from_raw(self, value):
+        &#34;&#34;&#34;
+        get bool value from strings and numbers
+
+        Args:
+            value (str or int or float or complex): valie
+
+        Returns:
+            bool: boolean value
+        &#34;&#34;&#34;
+        if isinstance(value, str):
+            value = value.lower().strip()
+            if value in (&#34;yes&#34;, &#34;on&#34;, &#34;true&#34;):
+                return True
+            if value in (&#34;no&#34;, &#34;off&#34;, &#34;false&#34;):
+                return False
+        elif isinstance(value, (int, float, complex)):
+            return bool(value)
+
+        # validate will do the check
+        return value</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></li>
 <li><a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field">Field</a></li>
 </ul>
+<h3>Methods</h3>
+<dl>
+<dt id="jumpscale.core.base.fields.Boolean.from_raw"><code class="name flex">
+<span>def <span class="ident">from_raw</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>get bool value from strings and numbers</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>value</code></strong> :&ensp;<code>str</code> or <code>int</code> or <code>float</code> or <code>complex</code></dt>
+<dd>valie</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>bool</code></strong></dt>
+<dd>boolean value</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def from_raw(self, value):
+    &#34;&#34;&#34;
+    get bool value from strings and numbers
+
+    Args:
+        value (str or int or float or complex): valie
+
+    Returns:
+        bool: boolean value
+    &#34;&#34;&#34;
+    if isinstance(value, str):
+        value = value.lower().strip()
+        if value in (&#34;yes&#34;, &#34;on&#34;, &#34;true&#34;):
+            return True
+        if value in (&#34;no&#34;, &#34;off&#34;, &#34;false&#34;):
+            return False
+    elif isinstance(value, (int, float, complex)):
+        return bool(value)
+
+    # validate will do the check
+    return value</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></b></code>:
 <ul class="hlist">
-<li><code><a title="jumpscale.core.base.fields.Typed.from_raw" href="#jumpscale.core.base.fields.Field.from_raw">from_raw</a></code></li>
 <li><code><a title="jumpscale.core.base.fields.Typed.to_raw" href="#jumpscale.core.base.fields.Field.to_raw">to_raw</a></code></li>
 <li><code><a title="jumpscale.core.base.fields.Typed.validate" href="#jumpscale.core.base.fields.Field.validate">validate</a></code></li>
 </ul>
@@ -846,7 +980,9 @@ class Factory(StoredFactory):
 <span>(</span><span>default=None, format_=None, **kwargs)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>date field, actual value will be converted to date object</p>
+<section class="desc"><p>date field, stores datetime.date objectsself.</p>
+<p>values can be set using strings in the given <code>format_</code> too like "12/1/2020" or a utc timestamp,
+they will converted to objects.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>default</code></strong> :&ensp;<code>date</code></dt>
@@ -858,10 +994,13 @@ class Factory(StoredFactory):
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class Date(Typed):
+<pre><code class="python">class Date(DateTimeMixin, Typed):
     def __init__(self, default=None, format_=None, **kwargs):
         &#34;&#34;&#34;
-        date field, actual value will be converted to date object
+        date field, stores datetime.date objectsself.
+
+        values can be set using strings in the given `format_` too like &#34;12/1/2020&#34; or a utc timestamp,
+        they will converted to objects.
 
         Args:
             default (date): default value. Defaults to None.
@@ -871,119 +1010,24 @@ class Factory(StoredFactory):
         super().__init__(type_=datetime.date, default=default, **kwargs)
         if not format_:
             format_ = &#34;%Y-%m-%d&#34;
-        self.format = format_
-
-    def from_raw(self, value):
-        &#34;&#34;&#34;
-        get a date object from a numberic (epoch) or string value
-
-
-        Args:
-            value (str or int or float): value as a number or a string
-
-        Returns:
-            datetime.date: `datetime.date` object
-        &#34;&#34;&#34;
-        if isinstance(value, (int, float)):
-            return datetime.date.fromtimestamp(value)
-        elif isinstance(value, str):
-            try:
-                return datetime.datetime.strptime(value, self.format).date()
-            except ValueError:
-                pass
-        return value
-
-    def to_raw(self, d_obj):
-        &#34;&#34;&#34;
-        get a utc timestamp from date object
-
-        Args:
-            d_obj (datetime.date): date object
-
-        Returns:
-            float: timestamp (epoch)
-        &#34;&#34;&#34;
-        if isinstance(d_obj, datetime.date):
-            return time.mktime(d_obj.timetuple())
-        return d_obj</code></pre>
+        self.format = format_</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="jumpscale.core.base.fields.DateTimeMixin" href="#jumpscale.core.base.fields.DateTimeMixin">DateTimeMixin</a></li>
 <li><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></li>
 <li><a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field">Field</a></li>
 </ul>
-<h3>Methods</h3>
-<dl>
-<dt id="jumpscale.core.base.fields.Date.from_raw"><code class="name flex">
-<span>def <span class="ident">from_raw</span></span>(<span>self, value)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>get a date object from a numberic (epoch) or string value</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>value</code></strong> :&ensp;<code>str</code> or <code>int</code> or <code>float</code></dt>
-<dd>value as a number or a string</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>datetime.date: <code>datetime.date</code> object</p></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def from_raw(self, value):
-    &#34;&#34;&#34;
-    get a date object from a numberic (epoch) or string value
-
-
-    Args:
-        value (str or int or float): value as a number or a string
-
-    Returns:
-        datetime.date: `datetime.date` object
-    &#34;&#34;&#34;
-    if isinstance(value, (int, float)):
-        return datetime.date.fromtimestamp(value)
-    elif isinstance(value, str):
-        try:
-            return datetime.datetime.strptime(value, self.format).date()
-        except ValueError:
-            pass
-    return value</code></pre>
-</details>
-</dd>
-<dt id="jumpscale.core.base.fields.Date.to_raw"><code class="name flex">
-<span>def <span class="ident">to_raw</span></span>(<span>self, d_obj)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>get a utc timestamp from date object</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>d_obj</code></strong> :&ensp;<code>datetime.date</code></dt>
-<dd>date object</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>float</code></strong></dt>
-<dd>timestamp (epoch)</dd>
-</dl></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def to_raw(self, d_obj):
-    &#34;&#34;&#34;
-    get a utc timestamp from date object
-
-    Args:
-        d_obj (datetime.date): date object
-
-    Returns:
-        float: timestamp (epoch)
-    &#34;&#34;&#34;
-    if isinstance(d_obj, datetime.date):
-        return time.mktime(d_obj.timetuple())
-    return d_obj</code></pre>
-</details>
-</dd>
-</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
+<li><code><b><a title="jumpscale.core.base.fields.DateTimeMixin" href="#jumpscale.core.base.fields.DateTimeMixin">DateTimeMixin</a></b></code>:
+<ul class="hlist">
+<li><code><a title="jumpscale.core.base.fields.DateTimeMixin.from_raw" href="#jumpscale.core.base.fields.DateTimeMixin.from_raw">from_raw</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.DateTimeMixin.get_arrow_obj" href="#jumpscale.core.base.fields.DateTimeMixin.get_arrow_obj">get_arrow_obj</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.DateTimeMixin.get_timestamp" href="#jumpscale.core.base.fields.DateTimeMixin.get_timestamp">get_timestamp</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.DateTimeMixin.to_raw" href="#jumpscale.core.base.fields.DateTimeMixin.to_raw">to_raw</a></code></li>
+</ul>
+</li>
 <li><code><b><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></b></code>:
 <ul class="hlist">
 <li><code><a title="jumpscale.core.base.fields.Typed.validate" href="#jumpscale.core.base.fields.Field.validate">validate</a></code></li>
@@ -996,7 +1040,9 @@ class Factory(StoredFactory):
 <span>(</span><span>default=None, format_=None, **kwargs)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>datetime field, actual value will be converted to datetime (utc) object</p>
+<section class="desc"><p>datetime field, stores datetime.datetime objects</p>
+<p>values can be set using strings in the given <code>format_</code> too like "12/1/2020" or a utc timestamp,
+they will converted to objects.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>default</code></strong> :&ensp;<code>datetime</code></dt>
@@ -1008,11 +1054,14 @@ class Factory(StoredFactory):
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class DateTime(Typed):
+<pre><code class="python">class DateTime(DateTimeMixin, Typed):
     # maybe add something like auto_now and auto_today for date/time fields
     def __init__(self, default=None, format_=None, **kwargs):
         &#34;&#34;&#34;
-        datetime field, actual value will be converted to datetime (utc) object
+        datetime field, stores datetime.datetime objects
+
+        values can be set using strings in the given `format_` too like &#34;12/1/2020&#34; or a utc timestamp,
+        they will converted to objects.
 
         Args:
             default (datetime): default value. Defaults to None.
@@ -1022,7 +1071,72 @@ class Factory(StoredFactory):
         super().__init__(type_=datetime.datetime, default=default, **kwargs)
         if not format_:
             format_ = &#34;%Y-%m-%d %H:%M&#34;
-        self.format = format_
+        self.format = format_</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="jumpscale.core.base.fields.DateTimeMixin" href="#jumpscale.core.base.fields.DateTimeMixin">DateTimeMixin</a></li>
+<li><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></li>
+<li><a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field">Field</a></li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="jumpscale.core.base.fields.DateTimeMixin" href="#jumpscale.core.base.fields.DateTimeMixin">DateTimeMixin</a></b></code>:
+<ul class="hlist">
+<li><code><a title="jumpscale.core.base.fields.DateTimeMixin.from_raw" href="#jumpscale.core.base.fields.DateTimeMixin.from_raw">from_raw</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.DateTimeMixin.get_arrow_obj" href="#jumpscale.core.base.fields.DateTimeMixin.get_arrow_obj">get_arrow_obj</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.DateTimeMixin.get_timestamp" href="#jumpscale.core.base.fields.DateTimeMixin.get_timestamp">get_timestamp</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.DateTimeMixin.to_raw" href="#jumpscale.core.base.fields.DateTimeMixin.to_raw">to_raw</a></code></li>
+</ul>
+</li>
+<li><code><b><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></b></code>:
+<ul class="hlist">
+<li><code><a title="jumpscale.core.base.fields.Typed.validate" href="#jumpscale.core.base.fields.Field.validate">validate</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="jumpscale.core.base.fields.DateTimeMixin"><code class="flex name class">
+<span>class <span class="ident">DateTimeMixin</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class DateTimeMixin:
+    def get_arrow_obj(self, value):
+        &#34;&#34;&#34;
+        get an arrow object from int, float and str and `datetime.time` objects.
+
+        Args:
+            value (int or float or str): timestamp (utc) or e.g. &#34;1998-01-03&#34;
+
+        Returns:
+            arrow.Arrow: arrow object in utc
+        &#34;&#34;&#34;
+        if isinstance(value, datetime.time):
+            # convert to string, as there&#39;s no direct way i know of
+            # to convert from datetime.time objects to arrow directly
+            value = value.strftime(self.format)
+
+        if isinstance(value, str):
+            return arrow.Arrow.strptime(value, self.format).to(&#34;utc&#34;)
+
+        return arrow.get(value)
+
+    def get_timestamp(self, obj):
+        &#34;&#34;&#34;
+        get a utc timestamp from datetime/date/time objects
+
+
+        Args:
+            obj (datetime.datetime or datetime.date or datetime.time): date/time or datetime object
+
+        Returns:
+            int or float: utc timestamp
+        &#34;&#34;&#34;
+        return arrow.get(obj).to(&#34;utc&#34;).timestamp
 
     def from_raw(self, value):
         &#34;&#34;&#34;
@@ -1033,12 +1147,20 @@ class Factory(StoredFactory):
             value (str or int or float): value as a number or a string
 
         Returns:
-            datetime.datetime: `datetime.datetime` object
+            datetime.datetime or datetime.date or datetime.time: datetime or date/time object
         &#34;&#34;&#34;
-        if isinstance(value, (int, float)):
-            return datetime.datetime.utcfromtimestamp(value)
-        elif isinstance(value, str):
-            return datetime.datetime.strptime(value, self.format)
+        if isinstance(value, (int, float, str)):
+            try:
+                obj = self.get_arrow_obj(value)
+                if self.type == datetime.datetime:
+                    return obj.datetime
+                elif self.type == datetime.date:
+                    return obj.date()
+                elif self.type == datetime.time:
+                    return obj.time()
+            except (ValueError, arrow.parser.ParserError):
+                # will be caught by validate
+                pass
         return value
 
     def to_raw(self, dt_obj):
@@ -1046,23 +1168,29 @@ class Factory(StoredFactory):
         get a utc timestamp from datetime object
 
         Args:
-            dt_obj (datetime.datetime): datetime object
+            dt_obj (datetime.datetime or datetime.date or datetime.time): datetime object
 
         Returns:
-            float: utc timestamp
+            int or float: utc timestamp
         &#34;&#34;&#34;
-        if isinstance(dt_obj, datetime.date):
-            return dt_obj.replace(tzinfo=datetime.timezone.utc).timestamp()
-        return dt_obj</code></pre>
+        return self.get_arrow_obj(dt_obj).to(&#34;utc&#34;).timestamp
+
+    def validate(self, value):
+        if isinstance(self.from_raw(value), str):
+            # cannot convert from string, still an invalid format
+            raise ValidationError(f&#34;{value} is not in the format of &#39;{self.format}&#39;&#34;)
+
+        super().validate(value)</code></pre>
 </details>
-<h3>Ancestors</h3>
+<h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></li>
-<li><a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field">Field</a></li>
+<li><a title="jumpscale.core.base.fields.DateTime" href="#jumpscale.core.base.fields.DateTime">DateTime</a></li>
+<li><a title="jumpscale.core.base.fields.Date" href="#jumpscale.core.base.fields.Date">Date</a></li>
+<li><a title="jumpscale.core.base.fields.Time" href="#jumpscale.core.base.fields.Time">Time</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="jumpscale.core.base.fields.DateTime.from_raw"><code class="name flex">
+<dt id="jumpscale.core.base.fields.DateTimeMixin.from_raw"><code class="name flex">
 <span>def <span class="ident">from_raw</span></span>(<span>self, value)</span>
 </code></dt>
 <dd>
@@ -1073,7 +1201,10 @@ class Factory(StoredFactory):
 <dd>value as a number or a string</dd>
 </dl>
 <h2 id="returns">Returns</h2>
-<p>datetime.datetime: <code>datetime.datetime</code> object</p></section>
+<dl>
+<dt><code>datetime.datetime</code> or <code>datetime.date</code> or <code>datetime.time</code>: <code>datetime</code> or <code>date</code>/<code>time</code> <code>object</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def from_raw(self, value):
@@ -1085,29 +1216,106 @@ class Factory(StoredFactory):
         value (str or int or float): value as a number or a string
 
     Returns:
-        datetime.datetime: `datetime.datetime` object
+        datetime.datetime or datetime.date or datetime.time: datetime or date/time object
     &#34;&#34;&#34;
-    if isinstance(value, (int, float)):
-        return datetime.datetime.utcfromtimestamp(value)
-    elif isinstance(value, str):
-        return datetime.datetime.strptime(value, self.format)
+    if isinstance(value, (int, float, str)):
+        try:
+            obj = self.get_arrow_obj(value)
+            if self.type == datetime.datetime:
+                return obj.datetime
+            elif self.type == datetime.date:
+                return obj.date()
+            elif self.type == datetime.time:
+                return obj.time()
+        except (ValueError, arrow.parser.ParserError):
+            # will be caught by validate
+            pass
     return value</code></pre>
 </details>
 </dd>
-<dt id="jumpscale.core.base.fields.DateTime.to_raw"><code class="name flex">
+<dt id="jumpscale.core.base.fields.DateTimeMixin.get_arrow_obj"><code class="name flex">
+<span>def <span class="ident">get_arrow_obj</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>get an arrow object from int, float and str and <code>datetime.time</code> objects.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>value</code></strong> :&ensp;<code>int</code> or <code>float</code> or <code>str</code></dt>
+<dd>timestamp (utc) or e.g. "1998-01-03"</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>arrow.Arrow</code>: <code>arrow</code> <code>object</code> <code>in</code> <code>utc</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_arrow_obj(self, value):
+    &#34;&#34;&#34;
+    get an arrow object from int, float and str and `datetime.time` objects.
+
+    Args:
+        value (int or float or str): timestamp (utc) or e.g. &#34;1998-01-03&#34;
+
+    Returns:
+        arrow.Arrow: arrow object in utc
+    &#34;&#34;&#34;
+    if isinstance(value, datetime.time):
+        # convert to string, as there&#39;s no direct way i know of
+        # to convert from datetime.time objects to arrow directly
+        value = value.strftime(self.format)
+
+    if isinstance(value, str):
+        return arrow.Arrow.strptime(value, self.format).to(&#34;utc&#34;)
+
+    return arrow.get(value)</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.core.base.fields.DateTimeMixin.get_timestamp"><code class="name flex">
+<span>def <span class="ident">get_timestamp</span></span>(<span>self, obj)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>get a utc timestamp from datetime/date/time objects</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>obj</code></strong> :&ensp;<code>datetime.datetime</code> or <code>datetime.date</code> or <code>datetime.time</code></dt>
+<dd>date/time or datetime object</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>int</code> or <code>float</code>: <code>utc</code> <code>timestamp</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_timestamp(self, obj):
+    &#34;&#34;&#34;
+    get a utc timestamp from datetime/date/time objects
+
+
+    Args:
+        obj (datetime.datetime or datetime.date or datetime.time): date/time or datetime object
+
+    Returns:
+        int or float: utc timestamp
+    &#34;&#34;&#34;
+    return arrow.get(obj).to(&#34;utc&#34;).timestamp</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.core.base.fields.DateTimeMixin.to_raw"><code class="name flex">
 <span>def <span class="ident">to_raw</span></span>(<span>self, dt_obj)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>get a utc timestamp from datetime object</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>dt_obj</code></strong> :&ensp;<code>datetime.datetime</code></dt>
+<dt><strong><code>dt_obj</code></strong> :&ensp;<code>datetime.datetime</code> or <code>datetime.date</code> or <code>datetime.time</code></dt>
 <dd>datetime object</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>float</code></strong></dt>
-<dd>utc timestamp</dd>
+<dt><code>int</code> or <code>float</code>: <code>utc</code> <code>timestamp</code></dt>
+<dd>&nbsp;</dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
@@ -1116,25 +1324,30 @@ class Factory(StoredFactory):
     get a utc timestamp from datetime object
 
     Args:
-        dt_obj (datetime.datetime): datetime object
+        dt_obj (datetime.datetime or datetime.date or datetime.time): datetime object
 
     Returns:
-        float: utc timestamp
+        int or float: utc timestamp
     &#34;&#34;&#34;
-    if isinstance(dt_obj, datetime.date):
-        return dt_obj.replace(tzinfo=datetime.timezone.utc).timestamp()
-    return dt_obj</code></pre>
+    return self.get_arrow_obj(dt_obj).to(&#34;utc&#34;).timestamp</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.core.base.fields.DateTimeMixin.validate"><code class="name flex">
+<span>def <span class="ident">validate</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def validate(self, value):
+    if isinstance(self.from_raw(value), str):
+        # cannot convert from string, still an invalid format
+        raise ValidationError(f&#34;{value} is not in the format of &#39;{self.format}&#39;&#34;)
+
+    super().validate(value)</code></pre>
 </details>
 </dd>
 </dl>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></b></code>:
-<ul class="hlist">
-<li><code><a title="jumpscale.core.base.fields.Typed.validate" href="#jumpscale.core.base.fields.Field.validate">validate</a></code></li>
-</ul>
-</li>
-</ul>
 </dd>
 <dt id="jumpscale.core.base.fields.Email"><code class="flex name class">
 <span>class <span class="ident">Email</span></span>
@@ -1378,25 +1591,49 @@ Example:</p>
 </dd>
 <dt id="jumpscale.core.base.fields.Factory"><code class="flex name class">
 <span>class <span class="ident">Factory</span></span>
-<span>(</span><span>type_, parent_name=None)</span>
+<span>(</span><span>type_for_factory, stored=True, **kwargs)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>base field for any type, value mus tof of <code>type_</code></p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>type_</code></strong> :&ensp;<code>type</code></dt>
+<dd>any type (class)</dd>
+<dt><strong><code>kwargs</code></strong></dt>
+<dd>any keyword arguments supported by <a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field"><code>Field</code></a></dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class Factory(StoredFactory):
-    pass</code></pre>
+<pre><code class="python">class Factory(Typed):
+    def __init__(self, type_for_factory, stored=True, **kwargs):
+        # value type will be factory
+        super().__init__(type_=BaseFactory, readonly=True, **kwargs)
+        # but we keep the type of any Base class
+        # so, we can init a Factory with it
+        self.type_for_factory = type_for_factory
+        self.stored = stored
+
+    def validate(self, value):
+        super().validate(value)
+
+    def from_raw(self, value):
+        return value
+
+    def to_raw(self, value):
+        return None</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="jumpscale.core.base.factory.StoredFactory" href="factory.html#jumpscale.core.base.factory.StoredFactory">StoredFactory</a></li>
-<li><a title="jumpscale.core.base.factory.Factory" href="factory.html#jumpscale.core.base.factory.Factory">Factory</a></li>
+<li><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></li>
+<li><a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field">Field</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="jumpscale.core.base.factory.StoredFactory" href="factory.html#jumpscale.core.base.factory.StoredFactory">StoredFactory</a></b></code>:
+<li><code><b><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></b></code>:
 <ul class="hlist">
-<li><code><a title="jumpscale.core.base.factory.StoredFactory.STORE" href="factory.html#jumpscale.core.base.factory.StoredFactory.STORE">STORE</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.Typed.from_raw" href="#jumpscale.core.base.fields.Field.from_raw">from_raw</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.Typed.to_raw" href="#jumpscale.core.base.fields.Field.to_raw">to_raw</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.Typed.validate" href="#jumpscale.core.base.fields.Field.validate">validate</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1603,6 +1840,11 @@ Example:</p>
 </code></dt>
 <dd>
 <section class="desc"><p>Same as <a title="jumpscale.core.base.fields.Integer" href="#jumpscale.core.base.fields.Integer"><code>Integer</code></a> field, but with a type of <code>float</code>.</p>
+<p>values can be set using strings like:</p>
+<ul>
+<li>"12.3", " 1212.23
+"</li>
+</ul>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>default</code></strong> :&ensp;<code>float</code>, optional</dt>
@@ -1617,11 +1859,23 @@ Example:</p>
         &#34;&#34;&#34;
         Same as `Integer` field, but with a type of `float`.
 
+        values can be set using strings like:
+
+        - &#34;12.3&#34;, &#34; 1212.23  &#34;
+
         Args:
             default (float, optional): default value. Defaults to 0.0.
             kwargs: any keyword arguments supported by `Field`
         &#34;&#34;&#34;
-        super().__init__(type_=float, default=default, min=min, **kwargs)</code></pre>
+        super().__init__(type_=float, default=default, min=min, **kwargs)
+
+    def from_raw(self, value):
+        if isinstance(value, str):
+            try:
+                value = float(value.strip())
+            except ValueError:
+                pass
+        return value</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1744,6 +1998,11 @@ including IPv4,IPv6 and network</p>
 <dd>
 <section class="desc"><p>Intger field, the same as <a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed"><code>Typed</code></a>, but with a type of <code>int</code></p>
 <p>It can have a minimum value, if min is not set, it will ignore it.</p>
+<p>values can be set using strings like:</p>
+<ul>
+<li>"12", "1212
+"</li>
+</ul>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>default</code></strong> :&ensp;<code>int</code>, optional</dt>
@@ -1762,6 +2021,10 @@ including IPv4,IPv6 and network</p>
 
         It can have a minimum value, if min is not set, it will ignore it.
 
+        values can be set using strings like:
+
+        - &#34;12&#34;, &#34;1212  &#34;
+
         Args:
             default (int, optional): default value. Defaults to 0.
             min (int, optional): minimum value. Defaults to None.
@@ -1774,7 +2037,15 @@ including IPv4,IPv6 and network</p>
         super().validate(value)
         if self.min is not None:
             if value &lt; self.min:
-                raise ValidationError(f&#34;cannot set values less than {self.min}&#34;)</code></pre>
+                raise ValidationError(f&#34;cannot set values less than {self.min}&#34;)
+
+    def from_raw(self, value):
+        if isinstance(value, str):
+            try:
+                value = int(value.strip())
+            except ValueError:
+                pass
+        return value</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -2458,7 +2729,9 @@ Will just call the field.validate of the given field</p></section>
 <span>(</span><span>default=None, format_=None, **kwargs)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>time field, actual value will be converted to time object</p>
+<section class="desc"><p>time field, stores utc datetime.time objects</p>
+<p>values can be set using strings in the given <code>format_</code> too like "12:13" or a utc timestamp,
+they will converted to objects.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>default</code></strong> :&ensp;<code>date</code></dt>
@@ -2470,10 +2743,13 @@ Will just call the field.validate of the given field</p></section>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class Time(Typed):
+<pre><code class="python">class Time(DateTimeMixin, Typed):
     def __init__(self, default=None, format_=None, **kwargs):
         &#34;&#34;&#34;
-        time field, actual value will be converted to time object
+        time field, stores utc datetime.time objects
+
+        values can be set using strings in the given `format_` too like &#34;12:13&#34; or a utc timestamp,
+        they will converted to objects.
 
         Args:
             default (date): default value. Defaults to None.
@@ -2483,126 +2759,24 @@ Will just call the field.validate of the given field</p></section>
         super().__init__(default=default, type_=datetime.time, **kwargs)
         if not format_:
             format_ = &#34;%H:%M&#34;
-        self.format = format_
-        self.mktime_format = &#34;%a %b %d %H:%M:%S %Y&#34;
-
-    def from_raw(self, value):
-        &#34;&#34;&#34;
-        get a time object from a numberic or string value
-
-
-        Args:
-            value (str or int or float): value as a number or a string
-
-        Returns:
-            datetime.time: `datetime.time` object
-        &#34;&#34;&#34;
-        if isinstance(value, (int, float)):
-            return datetime.datetime.utcfromtimestamp(value).time()
-        elif isinstance(value, str):
-            try:
-                return datetime.datetime.strptime(value, self.format).time()
-            except ValueError:
-                pass
-        return value
-
-    def to_raw(self, t_obj):
-        &#34;&#34;&#34;
-        get a utc timestamp from t_obj object
-
-        Args:
-            t_obj (datetime.time): time object
-
-        Returns:
-            float: timestamp (epoch)
-        &#34;&#34;&#34;
-        if isinstance(t_obj, datetime.time):
-            dt_obj = datetime.datetime(
-                1970, 1, 1, t_obj.hour, t_obj.minute, t_obj.second, int(t_obj.microsecond / 1000)
-            )
-            return dt_obj.replace(tzinfo=datetime.timezone.utc).timestamp()
-        return t_obj</code></pre>
+        self.format = format_</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="jumpscale.core.base.fields.DateTimeMixin" href="#jumpscale.core.base.fields.DateTimeMixin">DateTimeMixin</a></li>
 <li><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></li>
 <li><a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field">Field</a></li>
 </ul>
-<h3>Methods</h3>
-<dl>
-<dt id="jumpscale.core.base.fields.Time.from_raw"><code class="name flex">
-<span>def <span class="ident">from_raw</span></span>(<span>self, value)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>get a time object from a numberic or string value</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>value</code></strong> :&ensp;<code>str</code> or <code>int</code> or <code>float</code></dt>
-<dd>value as a number or a string</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>datetime.time: <code>datetime.time</code> object</p></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def from_raw(self, value):
-    &#34;&#34;&#34;
-    get a time object from a numberic or string value
-
-
-    Args:
-        value (str or int or float): value as a number or a string
-
-    Returns:
-        datetime.time: `datetime.time` object
-    &#34;&#34;&#34;
-    if isinstance(value, (int, float)):
-        return datetime.datetime.utcfromtimestamp(value).time()
-    elif isinstance(value, str):
-        try:
-            return datetime.datetime.strptime(value, self.format).time()
-        except ValueError:
-            pass
-    return value</code></pre>
-</details>
-</dd>
-<dt id="jumpscale.core.base.fields.Time.to_raw"><code class="name flex">
-<span>def <span class="ident">to_raw</span></span>(<span>self, t_obj)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>get a utc timestamp from t_obj object</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>t_obj</code></strong> :&ensp;<code>datetime.time</code></dt>
-<dd>time object</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>float</code></strong></dt>
-<dd>timestamp (epoch)</dd>
-</dl></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def to_raw(self, t_obj):
-    &#34;&#34;&#34;
-    get a utc timestamp from t_obj object
-
-    Args:
-        t_obj (datetime.time): time object
-
-    Returns:
-        float: timestamp (epoch)
-    &#34;&#34;&#34;
-    if isinstance(t_obj, datetime.time):
-        dt_obj = datetime.datetime(
-            1970, 1, 1, t_obj.hour, t_obj.minute, t_obj.second, int(t_obj.microsecond / 1000)
-        )
-        return dt_obj.replace(tzinfo=datetime.timezone.utc).timestamp()
-    return t_obj</code></pre>
-</details>
-</dd>
-</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
+<li><code><b><a title="jumpscale.core.base.fields.DateTimeMixin" href="#jumpscale.core.base.fields.DateTimeMixin">DateTimeMixin</a></b></code>:
+<ul class="hlist">
+<li><code><a title="jumpscale.core.base.fields.DateTimeMixin.from_raw" href="#jumpscale.core.base.fields.DateTimeMixin.from_raw">from_raw</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.DateTimeMixin.get_arrow_obj" href="#jumpscale.core.base.fields.DateTimeMixin.get_arrow_obj">get_arrow_obj</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.DateTimeMixin.get_timestamp" href="#jumpscale.core.base.fields.DateTimeMixin.get_timestamp">get_timestamp</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.DateTimeMixin.to_raw" href="#jumpscale.core.base.fields.DateTimeMixin.to_raw">to_raw</a></code></li>
+</ul>
+</li>
 <li><code><b><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></b></code>:
 <ul class="hlist">
 <li><code><a title="jumpscale.core.base.fields.Typed.validate" href="#jumpscale.core.base.fields.Field.validate">validate</a></code></li>
@@ -2658,6 +2832,7 @@ Will just call the field.validate of the given field</p></section>
 <li><a title="jumpscale.core.base.fields.DateTime" href="#jumpscale.core.base.fields.DateTime">DateTime</a></li>
 <li><a title="jumpscale.core.base.fields.Date" href="#jumpscale.core.base.fields.Date">Date</a></li>
 <li><a title="jumpscale.core.base.fields.Time" href="#jumpscale.core.base.fields.Time">Time</a></li>
+<li><a title="jumpscale.core.base.fields.Factory" href="#jumpscale.core.base.fields.Factory">Factory</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -2796,19 +2971,24 @@ Will just call the field.validate of the given field</p></section>
 <ul>
 <li>
 <h4><code><a title="jumpscale.core.base.fields.Boolean" href="#jumpscale.core.base.fields.Boolean">Boolean</a></code></h4>
-</li>
-<li>
-<h4><code><a title="jumpscale.core.base.fields.Date" href="#jumpscale.core.base.fields.Date">Date</a></code></h4>
 <ul class="">
-<li><code><a title="jumpscale.core.base.fields.Date.from_raw" href="#jumpscale.core.base.fields.Date.from_raw">from_raw</a></code></li>
-<li><code><a title="jumpscale.core.base.fields.Date.to_raw" href="#jumpscale.core.base.fields.Date.to_raw">to_raw</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.Boolean.from_raw" href="#jumpscale.core.base.fields.Boolean.from_raw">from_raw</a></code></li>
 </ul>
 </li>
 <li>
+<h4><code><a title="jumpscale.core.base.fields.Date" href="#jumpscale.core.base.fields.Date">Date</a></code></h4>
+</li>
+<li>
 <h4><code><a title="jumpscale.core.base.fields.DateTime" href="#jumpscale.core.base.fields.DateTime">DateTime</a></code></h4>
+</li>
+<li>
+<h4><code><a title="jumpscale.core.base.fields.DateTimeMixin" href="#jumpscale.core.base.fields.DateTimeMixin">DateTimeMixin</a></code></h4>
 <ul class="">
-<li><code><a title="jumpscale.core.base.fields.DateTime.from_raw" href="#jumpscale.core.base.fields.DateTime.from_raw">from_raw</a></code></li>
-<li><code><a title="jumpscale.core.base.fields.DateTime.to_raw" href="#jumpscale.core.base.fields.DateTime.to_raw">to_raw</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.DateTimeMixin.from_raw" href="#jumpscale.core.base.fields.DateTimeMixin.from_raw">from_raw</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.DateTimeMixin.get_arrow_obj" href="#jumpscale.core.base.fields.DateTimeMixin.get_arrow_obj">get_arrow_obj</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.DateTimeMixin.get_timestamp" href="#jumpscale.core.base.fields.DateTimeMixin.get_timestamp">get_timestamp</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.DateTimeMixin.to_raw" href="#jumpscale.core.base.fields.DateTimeMixin.to_raw">to_raw</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.DateTimeMixin.validate" href="#jumpscale.core.base.fields.DateTimeMixin.validate">validate</a></code></li>
 </ul>
 </li>
 <li>
@@ -2884,10 +3064,6 @@ Will just call the field.validate of the given field</p></section>
 </li>
 <li>
 <h4><code><a title="jumpscale.core.base.fields.Time" href="#jumpscale.core.base.fields.Time">Time</a></code></h4>
-<ul class="">
-<li><code><a title="jumpscale.core.base.fields.Time.from_raw" href="#jumpscale.core.base.fields.Time.from_raw">from_raw</a></code></li>
-<li><code><a title="jumpscale.core.base.fields.Time.to_raw" href="#jumpscale.core.base.fields.Time.to_raw">to_raw</a></code></li>
-</ul>
 </li>
 <li>
 <h4><code><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></code></h4>
