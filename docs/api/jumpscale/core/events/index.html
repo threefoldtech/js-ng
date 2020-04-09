@@ -48,6 +48,8 @@ def handle_event(ev):
 <li><code>events.add_global_listener</code>: for adding a global listener</li>
 <li><code>events.handle_any</code> and <code>events.handle_many</code></li>
 </ul>
+<p>This can be used with base classes too, you just need to define your own custom events.
+For an example, see <code>redis.RedisClient</code></p>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">&#34;&#34;&#34;
@@ -89,6 +91,8 @@ For more control, have a look at:
 - `events.add_global_listener`: for adding a global listener
 - `events.handle_any` and `events.handle_many`
 
+This can be used with base classes too, you just need to define your own custom events.
+For an example, see `redis.RedisClient`
 &#34;&#34;&#34;
 from collections import defaultdict
 from functools import wraps
@@ -103,19 +107,20 @@ class Handler:
         pass
 
 
-listeners = defaultdict(set)
-listeners[Any] = set()
+listeners = defaultdict(list)
+listeners[Any] = []
 
 
 def add_listenter(handler, *event_types):
     if not event_types:
         raise ValueError(&#34;must specify at least 1 event type/class&#34;)
     for event_type in event_types:
-        listeners[event_type].add(handler)
+        if handler not in listeners[event_type]:
+            listeners[event_type].append(handler)
 
 
 def add_global_listener(handler):
-    listeners[Any].add(handler)
+    add_listenter(handler, Any)
 
 
 def handle_many(*event_types):
@@ -156,7 +161,7 @@ def handle(event_type):
 
 def notify(event):
     event_type = event.__class__
-    interested = listeners.get(event_type, set()).union(listeners[Any])
+    interested = listeners.get(event_type, []) + listeners[Any]
 
     for handler in interested:
         if isinstance(handler, Handler):
@@ -180,7 +185,7 @@ def notify(event):
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def add_global_listener(handler):
-    listeners[Any].add(handler)</code></pre>
+    add_listenter(handler, Any)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.core.events.add_listenter"><code class="name flex">
@@ -194,7 +199,8 @@ def notify(event):
     if not event_types:
         raise ValueError(&#34;must specify at least 1 event type/class&#34;)
     for event_type in event_types:
-        listeners[event_type].add(handler)</code></pre>
+        if handler not in listeners[event_type]:
+            listeners[event_type].append(handler)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.core.events.handle"><code class="name flex">
@@ -263,7 +269,7 @@ def notify(event):
 <summary>Source code</summary>
 <pre><code class="python">def notify(event):
     event_type = event.__class__
-    interested = listeners.get(event_type, set()).union(listeners[Any])
+    interested = listeners.get(event_type, []) + listeners[Any]
 
     for handler in interested:
         if isinstance(handler, Handler):
@@ -301,6 +307,10 @@ def notify(event):
     def handle(self, ev):
         pass</code></pre>
 </details>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="jumpscale.clients.redis.redis.RedisClient" href="../../clients/redis/redis.html#jumpscale.clients.redis.redis.RedisClient">RedisClient</a></li>
+</ul>
 <h3>Methods</h3>
 <dl>
 <dt id="jumpscale.core.events.Handler.handle"><code class="name flex">

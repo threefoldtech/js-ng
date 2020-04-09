@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.4" />
 <title>jumpscale.clients.redis.redis API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="Redis client" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -20,20 +20,45 @@
 <h1 class="title">Module <code>jumpscale.clients.redis.redis</code></h1>
 </header>
 <section id="section-intro">
+<p>Redis client</p>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">from jumpscale.clients.base import Client
-from jumpscale.core.base import fields
+<pre><code class="python">&#34;&#34;&#34;
+Redis client
+&#34;&#34;&#34;
+
 from redis import Redis
 
+from jumpscale.core import events
 
-class RedisClient(Client):
+from jumpscale.clients.base import Client
+from jumpscale.core.base import fields
+from jumpscale.core.base.events import AttributeUpdateEvent
+
+
+class ClientAttributeUpdated(AttributeUpdateEvent):
+    pass
+
+
+class RedisClient(events.Handler, Client):
     hostname = fields.String(default=&#34;localhost&#34;)
     port = fields.Integer(default=6379)
 
     def __init__(self):
         self.__client = None
         super().__init__()
+
+        # listen to this event
+        events.add_listenter(self, ClientAttributeUpdated)
+
+    def _attr_updated(self, name, value):
+        # this will allow other people to listen to this event too
+        event = ClientAttributeUpdated(self, name, value)
+        events.notify(event)
+
+    def handle(self, ev):
+        if ev.instance == self:
+            self.__client = None
 
     def __dir__(self):
         return list(self.__dict__.keys()) + dir(self.redis_client)
@@ -58,6 +83,23 @@ class RedisClient(Client):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
+<dt id="jumpscale.clients.redis.redis.ClientAttributeUpdated"><code class="flex name class">
+<span>class <span class="ident">ClientAttributeUpdated</span></span>
+<span>(</span><span>instance, name, new_value)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class ClientAttributeUpdated(AttributeUpdateEvent):
+    pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="jumpscale.core.base.events.AttributeUpdateEvent" href="../../core/base/events.html#jumpscale.core.base.events.AttributeUpdateEvent">AttributeUpdateEvent</a></li>
+<li><a title="jumpscale.core.base.events.InstanceEvent" href="../../core/base/events.html#jumpscale.core.base.events.InstanceEvent">InstanceEvent</a></li>
+</ul>
+</dd>
 <dt id="jumpscale.clients.redis.redis.RedisClient"><code class="flex name class">
 <span>class <span class="ident">RedisClient</span></span>
 </code></dt>
@@ -66,13 +108,25 @@ class RedisClient(Client):
 <p>SimpleNamespace(**kwargs)</p></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class RedisClient(Client):
+<pre><code class="python">class RedisClient(events.Handler, Client):
     hostname = fields.String(default=&#34;localhost&#34;)
     port = fields.Integer(default=6379)
 
     def __init__(self):
         self.__client = None
         super().__init__()
+
+        # listen to this event
+        events.add_listenter(self, ClientAttributeUpdated)
+
+    def _attr_updated(self, name, value):
+        # this will allow other people to listen to this event too
+        event = ClientAttributeUpdated(self, name, value)
+        events.notify(event)
+
+    def handle(self, ev):
+        if ev.instance == self:
+            self.__client = None
 
     def __dir__(self):
         return list(self.__dict__.keys()) + dir(self.redis_client)
@@ -89,6 +143,7 @@ class RedisClient(Client):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="jumpscale.core.events.Handler" href="../../core/events/index.html#jumpscale.core.events.Handler">Handler</a></li>
 <li><a title="jumpscale.clients.base.Client" href="../base.html#jumpscale.clients.base.Client">Client</a></li>
 <li><a title="jumpscale.core.base.meta.Base" href="../../core/base/meta.html#jumpscale.core.base.meta.Base">Base</a></li>
 <li>types.SimpleNamespace</li>
@@ -134,6 +189,21 @@ def redis_client(self):
 </details>
 </dd>
 </dl>
+<h3>Methods</h3>
+<dl>
+<dt id="jumpscale.clients.redis.redis.RedisClient.handle"><code class="name flex">
+<span>def <span class="ident">handle</span></span>(<span>self, ev)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def handle(self, ev):
+    if ev.instance == self:
+        self.__client = None</code></pre>
+</details>
+</dd>
+</dl>
 </dd>
 </dl>
 </section>
@@ -152,8 +222,12 @@ def redis_client(self):
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
+<h4><code><a title="jumpscale.clients.redis.redis.ClientAttributeUpdated" href="#jumpscale.clients.redis.redis.ClientAttributeUpdated">ClientAttributeUpdated</a></code></h4>
+</li>
+<li>
 <h4><code><a title="jumpscale.clients.redis.redis.RedisClient" href="#jumpscale.clients.redis.redis.RedisClient">RedisClient</a></code></h4>
 <ul class="">
+<li><code><a title="jumpscale.clients.redis.redis.RedisClient.handle" href="#jumpscale.clients.redis.redis.RedisClient.handle">handle</a></code></li>
 <li><code><a title="jumpscale.clients.redis.redis.RedisClient.hostname" href="#jumpscale.clients.redis.redis.RedisClient.hostname">hostname</a></code></li>
 <li><code><a title="jumpscale.clients.redis.redis.RedisClient.port" href="#jumpscale.clients.redis.redis.RedisClient.port">port</a></code></li>
 <li><code><a title="jumpscale.clients.redis.redis.RedisClient.redis_client" href="#jumpscale.clients.redis.redis.RedisClient.redis_client">redis_client</a></code></li>
