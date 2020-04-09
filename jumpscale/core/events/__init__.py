@@ -37,6 +37,8 @@ For more control, have a look at:
 - `events.add_global_listener`: for adding a global listener
 - `events.handle_any` and `events.handle_many`
 
+This can be used with base classes too, you just need to define your own custom events.
+For an example, see `redis.RedisClient`
 """
 from collections import defaultdict
 from functools import wraps

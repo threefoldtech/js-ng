@@ -1,3 +1,7 @@
+"""
+Redis client
+"""
+
 from redis import Redis
 
 from jumpscale.core import events
