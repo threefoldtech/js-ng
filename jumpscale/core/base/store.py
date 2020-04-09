@@ -1,3 +1,11 @@
+"""
+store defines the interface for the backend storage, let it be filesystem or redis.
+this module also defines the abstractions needed for Encryption modes and different types of stores.
+
+
+"""
+
+
 import os
 import shutil
 
@@ -42,6 +50,9 @@ class Location:
 
 
 class EncryptionMode(Enum):
+    """Encryption mode used to configure storing mode for full blown stores.
+    """
+
     Encrypt = 0
     Decrypt = 1
 
@@ -73,7 +84,7 @@ class EncryptionMixin:
 
 
 class ConfigStore(ABC):
-    """the interface every config store should implement"""
+    """the interface every config store should implement which is read, write, list_all, delete."""
 
     @abstractmethod
     def read(self, instance_name):
@@ -173,6 +184,11 @@ class EncryptedConfigStore(ConfigStore, EncryptionMixin):
 
 
 class FileSystemStore(EncryptedConfigStore):
+    """Filesystem store is an EncryptedConfigStore
+    It saves the config relative to `config_env.get_store_config("filesystem")`
+
+    """
+
     def __init__(self, type_, parent_name=None):
         super(FileSystemStore, self).__init__(type_, parent_name)
         self.root = self.config_env.get_store_config("filesystem")["path"]
@@ -213,6 +229,10 @@ class FileSystemStore(EncryptedConfigStore):
 
 
 class RedisStore(EncryptedConfigStore):
+    """RedisStore store is an EncryptedConfigStore
+    It saves the data in redis and configuration for redis comes from `config_env.get_store_config("redis")`
+    """
+
     def __init__(self, type_, parent_name=None):
         super().__init__(type_, parent_name)
         redis_config = self.config_env.get_store_config("redis")
@@ -245,4 +265,3 @@ class RedisStore(EncryptedConfigStore):
 
     def delete(self, instance_name):
         return self.redis_client.delete(*self.get_instance_keys(instance_name))
-

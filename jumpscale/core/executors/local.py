@@ -1,6 +1,6 @@
-import invoke
-
 """
+Executor Local allows executing commands within specific env on the local machine. using the executor framework you can retrieve the stdout, stderr, and the return code as well.
+```
 JS-NG> j.core.executors.run_local("echo $WHOME", env={'WHOME':'abc'}, ech
      1 o=True)                                                           
 echo $WHOME
@@ -15,8 +15,11 @@ Linux
 JS-NG> j.core.executors.run_local("uname", echo=False)                   
 Linux
 <Result cmd='uname' exited=0>
+```
+
 
 """
+import invoke
 
 
 def execute(cmd, **command_ctx):
@@ -142,13 +145,13 @@ def execute(cmd, **command_ctx):
     ## use formatter to format command
     command_ctx = command_ctx or {}
     if "cwd" in command_ctx:
-        if command_ctx['cwd']:
+        if command_ctx["cwd"]:
             cwd = command_ctx["cwd"]
             del command_ctx["cwd"]
             c = invoke.Context()
             with c.cd(cwd):
                 res = c.run(cmd, **command_ctx)
                 return res.return_code, res.stdout, res.stderr
-        del command_ctx['cwd']
+        del command_ctx["cwd"]
     res = invoke.run(cmd, **command_ctx)
     return res.return_code, res.stdout, res.stderr

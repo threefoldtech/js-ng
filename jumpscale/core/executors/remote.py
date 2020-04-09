@@ -1,14 +1,17 @@
-import fabric
-
 """
+Executor remote allows executing commands within specific env on the local machine. using the executor framework you can retrieve the stdout, stderr, and the return code as well.
 
-
+```
 JS-NG> with j.core.executors.RemoteExecutor(host="localhost", connect_kwargs={"key_filename":
                                                                               "/home/xmonader/.ssh/id_rsa",}) as c: 
             c.run("hostname")                           
 xmonader-ThinkPad-E580
-JS-NG>  
+JS-NG> 
+``` 
 """
+
+
+import fabric
 
 
 class RemoteExecutor:
@@ -24,7 +27,7 @@ class RemoteExecutor:
     @property
     def connection(self):
         return fabric.Connection(**self._connection_ctx)
-    
+
     @property
     def sftp(self):
         return self.connection.sftp()

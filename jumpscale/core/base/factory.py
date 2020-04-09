@@ -1,5 +1,12 @@
-from functools import partial
+"""
+Hierarchal ConfigurationWe is implemented using Factory
 
+The backend to store configurations
+- can be encrypted or plain
+- Multiple backends (InMemoryStore, FileSystemStore, RedisStore)
+
+"""
+from functools import partial
 from jumpscale.core import config
 
 from .store import FileSystemStore, RedisStore

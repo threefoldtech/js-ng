@@ -1,3 +1,26 @@
+"""This module helps with everything related to hashing strings, bytes with popular algorithms like, md5, sha256, sha384, sha512, blake2
+
+```
+JS-NG> j.data.hash.md5("abc")                                                                       
+'900150983cd24fb0d6963f7d28e17f72'
+
+JS-NG> j.data.hash.sha1("abc")                                                                      
+'a9993e364706816aba3e25717850c26c9cd0d89d'
+
+JS-NG> j.data.hash.sha224("abc")                                                                    
+'23097d223405d8228642a477bda255b32aadbce4bda0b3f7e36c9da7'
+
+JS-NG> j.data.hash.sha512("abc")                                                                    
+'ddaf35a193617abacc417349ae20413112e6fa4e89a97ea20a9eeee64b55d39a2192992a274fc1a836ba3c23a3feebbd454
+d4423643ce80e2a9ac94fa54ca49f'
+
+JS-NG> j.data.hash.blake2s("abc")                                                                   
+'508c5e8c327c14e2e1a72ba34eeb452f37458b209ed63a294d999b4c86675982'
+
+JS-NG>
+```  
+"""
+
 import hashlib
 import os
 
@@ -244,6 +267,7 @@ def shake_256(string, encode="utf-8"):
     return hashlib.shake_256(encode_string(string, encode)).hexdigest(16)
 
 
+# TODO: review
 def hash_alg(name, data, **kwargs):
     """create a hash object
 
@@ -277,6 +301,7 @@ def hash_file(path, hash_type):
         return h
 
 
+# TODO: review and allow ignore files e.g .swp, .. etc
 def hash_directory(root_dir, hash_type):
     """create hash string list for the files in a folder
 
