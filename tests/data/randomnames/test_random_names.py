@@ -1,5 +1,4 @@
 from jumpscale.god import j
-import pytest
 
 # a name is composed of two non-empty parts
 # separated by an underscore.
@@ -8,10 +7,10 @@ import pytest
 
 
 def test_generate_random_name():
-    name1 = j.data.randomnames.generate_random_name()
-    name2 = j.data.randomnames.generate_random_name()
-    name3 = j.data.randomnames.generate_random_name()
-    name4 = j.data.randomnames.generate_random_name()
+    name1 = j.data.random_names.random_name()
+    name2 = j.data.random_names.random_name()
+    name3 = j.data.random_names.random_name()
+    name4 = j.data.random_names.random_name()
     assert well_formed_name(name1)
     assert well_formed_name(name2)
     assert well_formed_name(name3)
