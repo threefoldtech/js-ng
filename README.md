@@ -61,7 +61,7 @@ python3 -m pip install setuptools -U
 
 ## Wiki
 
-We already prepared a docsify [https://js-next.github.io/js-ng/wiki](wiki) website 
+We already prepared a docsify [wiki](https://js-next.github.io/js-ng/wiki) website 
 
 ## Contribution
 
