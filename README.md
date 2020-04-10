@@ -19,6 +19,7 @@ config management/automation framework
 - Documentation
 - Tests
 
+
 ## Development environment
 - install [poetry](https://poetry.eustace.io)
 - clone this repository, then
@@ -27,12 +28,13 @@ config management/automation framework
 ### Accessing the virtualenv
 To access the virtual env `poetry shell`
 
-### Accessing the shell
 
-#### Outside the virtualenv
-open the shell using `poetry run jsng`
+## Interacting with js-ng Environment
+if you are out of the virtualenv shell, make sure to prefix all of your commands with `poetry run`
 
-#### In the virtual env
+
+## Accessing jsng (custom shell)
+
 just type `jsng`.
 
 if you have any problems related to `setuptools`, just try to upgrade it before starting `jsng`.
@@ -40,7 +42,6 @@ if you have any problems related to `setuptools`, just try to upgrade it before 
 ```bash
 python3 -m pip install setuptools -U
 ```
-
 ## Running tests
 - `make tests`
 

@@ -345,7 +345,7 @@ def ptconfig(repl):
 
         yield from filter_completions_on_prefix(completions, prefix)
 
-    repl._completer.__class__.get_completions = custom_get_completions</code></pre>
+    # repl._completer.__class__.get_completions = custom_get_completions</code></pre>
 </details>
 </section>
 <section>
@@ -649,9 +649,7 @@ it will call excepthook after ommitting all this framework's calls from tracebac
                     continue
                 yield completion
 
-        yield from filter_completions_on_prefix(completions, prefix)
-
-    repl._completer.__class__.get_completions = custom_get_completions</code></pre>
+        yield from filter_completions_on_prefix(completions, prefix)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.shell.config.sort_children_key"><code class="name flex">

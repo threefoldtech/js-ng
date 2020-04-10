@@ -6,3 +6,5 @@
 
 ## running
 - `poetry run jsng`
+
+TODO: add images and more info on internals

@@ -10,3 +10,5 @@ jsng = "jumpscale.entry_points.jsng:run"
 jsctl = "jumpscale.entry_points.jsctl:cli"
 
 ```
+
+TODO: add example.

@@ -1,0 +1,1 @@
+Installation is as easy as `pip install js-ng`

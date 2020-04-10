@@ -321,4 +321,4 @@ def ptconfig(repl):
 
         yield from filter_completions_on_prefix(completions, prefix)
 
-    repl._completer.__class__.get_completions = custom_get_completions
+    # repl._completer.__class__.get_completions = custom_get_completions
