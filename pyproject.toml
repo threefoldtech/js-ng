@@ -59,12 +59,13 @@ psutil = "^5.7.0"
 
 [tool.poetry.dev-dependencies]
 ipdb = "^0.12.1"
-black = {version = "^18.3-alpha.0", allows-prereleases = true}
+black = {version = "^18.3-alpha.0", allow-prereleases = true}
 flake8 = "^3.7"
 parameterized = "^0.7.0"
 
 [tool.poetry.scripts]
 jsng = "jumpscale.entry_points.jsng:run"
+usershell = "jumpscale.entry_points.usershell:run"
 jsctl = "jumpscale.entry_points.jsctl:cli"
 jsync = "jumpscale.entry_points.jsync:cli"
 

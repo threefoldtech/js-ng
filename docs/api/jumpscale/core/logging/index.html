@@ -22,7 +22,29 @@
 <section id="section-intro">
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">from .logging import *</code></pre>
+<pre><code class="python">from jumpscale.god import j
+from .logging import Logger, RedisHandler, CustomLogHandler
+
+logger = Logger()
+logger.logger.catch(exception=ValueError)
+
+config = j.core.config.config.get_config().get(&#34;logging&#34;)
+
+if config:
+    # configure redis handler if enabled
+    if config[&#34;redis&#34;][&#34;enabled&#34;] and j.core.db:
+        redis_config = config[&#34;redis&#34;]
+        redis_handler = RedisHandler(
+            max_size=redis_config[&#34;max_size&#34;], dump=redis_config[&#34;dump&#34;], dump_dir=redis_config[&#34;dump_dir&#34;]
+        )
+        logger.add_custom_handler(&#34;redis&#34;, redis_handler, serialize=True, level=redis_config[&#34;level&#34;])
+
+    # configure filesystem handler if enabled
+    if config[&#34;filesystem&#34;][&#34;enabled&#34;]:
+        fs_config = config[&#34;filesystem&#34;]
+        logger.add_handler(sink=fs_config[&#34;log_dir&#34;], level=fs_config[&#34;level&#34;], rotation=fs_config[&#34;rotation&#34;])
+
+export_module_as = logger</code></pre>
 </details>
 </section>
 <section>

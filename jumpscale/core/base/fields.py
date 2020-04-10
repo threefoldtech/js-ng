@@ -53,6 +53,7 @@ In addition to custom options every field can accept and define, they can be use
 No need for `from_raw` to raise an error on e.g. type mismatch, as `validate` will do the validation.
 
 """
+import arrow
 import datetime
 import enum
 import ipaddress
@@ -154,19 +155,49 @@ class Typed(Field):
         super().validate(value)
         if value is not None:
             if not isinstance(value, self.type):
-                raise ValidationError(f"value is not of type {self.type}")
+                raise ValidationError(f"value {value} is not of type {self.type}")
 
 
 class Boolean(Typed):
     def __init__(self, default=False, **kwargs):
         """
-        Boolean fields to hold a bool value
+        Boolean fields to hold a bool value.
+
+        values can be set using strings or numbers like:
+
+        - "on", "off"
+        - "yes", "no"
+        - "true", "false"
+        - 0, 1
+        - 0, 1+2j
 
         Args:
             default (bool, optional): default value. Defaults to False.
             kwargs: any keyword arguments supported by `Field`
         """
         super().__init__(type_=bool, default=default, **kwargs)
+
+    def from_raw(self, value):
+        """
+        get bool value from strings and numbers
+
+        Args:
+            value (str or int or float or complex): valie
+
+        Returns:
+            bool: boolean value
+        """
+        if isinstance(value, str):
+            value = value.lower().strip()
+            if value in ("yes", "on", "true"):
+                return True
+            if value in ("no", "off", "false"):
+                return False
+        elif isinstance(value, (int, float, complex)):
+            return bool(value)
+
+        # validate will do the check
+        return value
 
 
 class Integer(Typed):
@@ -175,6 +206,10 @@ class Integer(Typed):
         Intger field, the same as `Typed`, but with a type of `int`
 
         It can have a minimum value, if min is not set, it will ignore it.
+
+        values can be set using strings like:
+
+        - "12", "1212  "
 
         Args:
             default (int, optional): default value. Defaults to 0.
@@ -190,17 +225,37 @@ class Integer(Typed):
             if value < self.min:
                 raise ValidationError(f"cannot set values less than {self.min}")
 
+    def from_raw(self, value):
+        if isinstance(value, str):
+            try:
+                value = int(value.strip())
+            except ValueError:
+                pass
+        return value
+
 
 class Float(Typed):
     def __init__(self, default=0.0, **kwargs):
         """
         Same as `Integer` field, but with a type of `float`.
 
+        values can be set using strings like:
+
+        - "12.3", " 1212.23  "
+
         Args:
             default (float, optional): default value. Defaults to 0.0.
             kwargs: any keyword arguments supported by `Field`
         """
         super().__init__(type_=float, default=default, min=min, **kwargs)
+
+    def from_raw(self, value):
+        if isinstance(value, str):
+            try:
+                value = float(value.strip())
+            except ValueError:
+                pass
+        return value
 
 
 class String(Typed):
@@ -562,11 +617,93 @@ class IPAddress(Field):
             raise ValidationError(f"{value} is not a valid IP address")
 
 
-class DateTime(Typed):
+class DateTimeMixin:
+    def get_arrow_obj(self, value):
+        """
+        get an arrow object from int, float and str and `datetime.time` objects.
+
+        Args:
+            value (int or float or str): timestamp (utc) or e.g. "1998-01-03"
+
+        Returns:
+            arrow.Arrow: arrow object in utc
+        """
+        if isinstance(value, datetime.time):
+            # convert to string, as there's no direct way i know of
+            # to convert from datetime.time objects to arrow directly
+            value = value.strftime(self.format)
+
+        if isinstance(value, str):
+            return arrow.Arrow.strptime(value, self.format).to("utc")
+
+        return arrow.get(value)
+
+    def get_timestamp(self, obj):
+        """
+        get a utc timestamp from datetime/date/time objects
+
+
+        Args:
+            obj (datetime.datetime or datetime.date or datetime.time): date/time or datetime object
+
+        Returns:
+            int or float: utc timestamp
+        """
+        return arrow.get(obj).to("utc").timestamp
+
+    def from_raw(self, value):
+        """
+        get a datetime object from a numberic (epoch) or string value
+
+
+        Args:
+            value (str or int or float): value as a number or a string
+
+        Returns:
+            datetime.datetime or datetime.date or datetime.time: datetime or date/time object
+        """
+        if isinstance(value, (int, float, str)):
+            try:
+                obj = self.get_arrow_obj(value)
+                if self.type == datetime.datetime:
+                    return obj.datetime
+                elif self.type == datetime.date:
+                    return obj.date()
+                elif self.type == datetime.time:
+                    return obj.time()
+            except (ValueError, arrow.parser.ParserError):
+                # will be caught by validate
+                pass
+        return value
+
+    def to_raw(self, dt_obj):
+        """
+        get a utc timestamp from datetime object
+
+        Args:
+            dt_obj (datetime.datetime or datetime.date or datetime.time): datetime object
+
+        Returns:
+            int or float: utc timestamp
+        """
+        return self.get_arrow_obj(dt_obj).to("utc").timestamp
+
+    def validate(self, value):
+        if isinstance(self.from_raw(value), str):
+            # cannot convert from string, still an invalid format
+            raise ValidationError(f"{value} is not in the format of '{self.format}'")
+
+        super().validate(value)
+
+
+class DateTime(DateTimeMixin, Typed):
     # maybe add something like auto_now and auto_today for date/time fields
     def __init__(self, default=None, format_=None, **kwargs):
         """
-        datetime field, actual value will be converted to datetime (utc) object
+        datetime field, stores datetime.datetime objects
+
+        values can be set using strings in the given `format_` too like "12/1/2020" or a utc timestamp,
+        they will converted to objects.
 
         Args:
             default (datetime): default value. Defaults to None.
@@ -578,42 +715,14 @@ class DateTime(Typed):
             format_ = "%Y-%m-%d %H:%M"
         self.format = format_
 
-    def from_raw(self, value):
-        """
-        get a datetime object from a numberic (epoch) or string value
 
-
-        Args:
-            value (str or int or float): value as a number or a string
-
-        Returns:
-            datetime.datetime: `datetime.datetime` object
-        """
-        if isinstance(value, (int, float)):
-            return datetime.datetime.utcfromtimestamp(value)
-        elif isinstance(value, str):
-            return datetime.datetime.strptime(value, self.format)
-        return value
-
-    def to_raw(self, dt_obj):
-        """
-        get a utc timestamp from datetime object
-
-        Args:
-            dt_obj (datetime.datetime): datetime object
-
-        Returns:
-            float: utc timestamp
-        """
-        if isinstance(dt_obj, datetime.date):
-            return dt_obj.replace(tzinfo=datetime.timezone.utc).timestamp()
-        return dt_obj
-
-
-class Date(Typed):
+class Date(DateTimeMixin, Typed):
     def __init__(self, default=None, format_=None, **kwargs):
         """
-        date field, actual value will be converted to date object
+        date field, stores datetime.date objectsself.
+
+        values can be set using strings in the given `format_` too like "12/1/2020" or a utc timestamp,
+        they will converted to objects.
 
         Args:
             default (date): default value. Defaults to None.
@@ -625,45 +734,14 @@ class Date(Typed):
             format_ = "%Y-%m-%d"
         self.format = format_
 
-    def from_raw(self, value):
-        """
-        get a date object from a numberic (epoch) or string value
 
-
-        Args:
-            value (str or int or float): value as a number or a string
-
-        Returns:
-            datetime.date: `datetime.date` object
-        """
-        if isinstance(value, (int, float)):
-            return datetime.date.fromtimestamp(value)
-        elif isinstance(value, str):
-            try:
-                return datetime.datetime.strptime(value, self.format).date()
-            except ValueError:
-                pass
-        return value
-
-    def to_raw(self, d_obj):
-        """
-        get a utc timestamp from date object
-
-        Args:
-            d_obj (datetime.date): date object
-
-        Returns:
-            float: timestamp (epoch)
-        """
-        if isinstance(d_obj, datetime.date):
-            return time.mktime(d_obj.timetuple())
-        return d_obj
-
-
-class Time(Typed):
+class Time(DateTimeMixin, Typed):
     def __init__(self, default=None, format_=None, **kwargs):
         """
-        time field, actual value will be converted to time object
+        time field, stores utc datetime.time objects
+
+        values can be set using strings in the given `format_` too like "12:13" or a utc timestamp,
+        they will converted to objects.
 
         Args:
             default (date): default value. Defaults to None.
@@ -674,44 +752,6 @@ class Time(Typed):
         if not format_:
             format_ = "%H:%M"
         self.format = format_
-        self.mktime_format = "%a %b %d %H:%M:%S %Y"
-
-    def from_raw(self, value):
-        """
-        get a time object from a numberic or string value
-
-
-        Args:
-            value (str or int or float): value as a number or a string
-
-        Returns:
-            datetime.time: `datetime.time` object
-        """
-        if isinstance(value, (int, float)):
-            return datetime.datetime.utcfromtimestamp(value).time()
-        elif isinstance(value, str):
-            try:
-                return datetime.datetime.strptime(value, self.format).time()
-            except ValueError:
-                pass
-        return value
-
-    def to_raw(self, t_obj):
-        """
-        get a utc timestamp from t_obj object
-
-        Args:
-            t_obj (datetime.time): time object
-
-        Returns:
-            float: timestamp (epoch)
-        """
-        if isinstance(t_obj, datetime.time):
-            dt_obj = datetime.datetime(
-                1970, 1, 1, t_obj.hour, t_obj.minute, t_obj.second, int(t_obj.microsecond / 1000)
-            )
-            return dt_obj.replace(tzinfo=datetime.timezone.utc).timestamp()
-        return t_obj
 
 
 # TODO: add duration field

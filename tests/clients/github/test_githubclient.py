@@ -13,7 +13,7 @@ class GithubClientTest(BaseTests):
     def setUp(self):
         super().setUp()
 
-        self.instance_name = j.data.randomnames.generate_random_name()
+        self.instance_name = j.data.random_names.random_name()
 
         self.username = "tfttesting"
         self.password = "tft_password19"

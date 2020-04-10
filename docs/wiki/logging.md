@@ -32,3 +32,5 @@ from notifiers.logging import NotificationHandler
 handler = NotificationHandler("gmail", defaults=params)
 logger.add(handler, level="ERROR")
 ```
+
+# TODO: add more docs

@@ -5,7 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.4" />
 <title>jumpscale.sals.process API documentation</title>
-<meta name="description" content="TODO Examples for sal process" />
+<meta name="description" content="This module execute process on system and manage them
+for example
+```
+to create a process
+rc, out, err = j.sals.process.execute(&#34;ls&#34;, cwd=&#34;/tmp&#34;, …" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -20,12 +24,45 @@
 <h1 class="title">Module <code>jumpscale.sals.process</code></h1>
 </header>
 <section id="section-intro">
-<h1 id="todo-examples-for-sal-process">TODO Examples for sal process</h1>
+<p>This module execute process on system and manage them
+for example</p>
+<pre><code>#to create a process
+rc, out, err = j.sals.process.execute(&quot;ls&quot;, cwd=&quot;/tmp&quot;, showout=True)
+#this executes ls command on dir &quot;/tmp&quot; showing output from stdout
+#rc -&gt; contains exit status
+#out -&gt; the actual output
+#err -&gt; in case an error happened this var will contains the error msg
+
+j.sals.process.is_active(10022)
+#checks if a process with this pid is active or not
+
+j.sals.process.kill(10022, sig=signal.SIGTERM.value)
+#kill a process with pid 10022 with SIGTERM
+
+j.sals.process.get_pid_by_port(8000)
+#gets pid of the process listenning on port 8000
+</code></pre>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">&#34;&#34;&#34;
-# TODO Examples for sal process
+<pre><code class="python">&#34;&#34;&#34;This module execute process on system and manage them
+for example
+```
+#to create a process
+rc, out, err = j.sals.process.execute(&#34;ls&#34;, cwd=&#34;/tmp&#34;, showout=True)
+#this executes ls command on dir &#34;/tmp&#34; showing output from stdout
+#rc -&gt; contains exit status
+#out -&gt; the actual output
+#err -&gt; in case an error happened this var will contains the error msg
 
+j.sals.process.is_active(10022)
+#checks if a process with this pid is active or not
+
+j.sals.process.kill(10022, sig=signal.SIGTERM.value)
+#kill a process with pid 10022 with SIGTERM
+
+j.sals.process.get_pid_by_port(8000)
+#gets pid of the process listenning on port 8000
+```
 &#34;&#34;&#34;
 
 import os
@@ -571,7 +608,7 @@ def kill_process_by_port(port):
     Arguments:
         port {int} -- port number
     &#34;&#34;&#34;
-    pid = int(pid)
+    port = int(port)
     for pid in get_pid_by_port(port):
         kill(pid)
 
@@ -601,7 +638,7 @@ def get_defunct_processes():
     Returns:
         [list(int)] -- list of processes pids
     &#34;&#34;&#34;
-    rc, out, err = execute(&#34;ps ax&#34;)
+    _, out, _ = execute(&#34;ps ax&#34;)
     llist = []
     for line in out.split(&#34;\n&#34;):
         if line.strip() == &#34;&#34;:
@@ -892,7 +929,7 @@ die {bool} &ndash; die if command failed (default: {False})</p>
     Returns:
         [list(int)] -- list of processes pids
     &#34;&#34;&#34;
-    rc, out, err = execute(&#34;ps ax&#34;)
+    _, out, _ = execute(&#34;ps ax&#34;)
     llist = []
     for line in out.split(&#34;\n&#34;):
         if line.strip() == &#34;&#34;:
@@ -1509,7 +1546,7 @@ two arguments and return a boolean (default: {None})</p></section>
     Arguments:
         port {int} -- port number
     &#34;&#34;&#34;
-    pid = int(pid)
+    port = int(port)
     for pid in get_pid_by_port(port):
         kill(pid)</code></pre>
 </details>
@@ -1593,9 +1630,7 @@ varvalues {list(str)} &ndash; A list of all values for the environment variables
 <nav id="sidebar">
 <h1>Index</h1>
 <div class="toc">
-<ul>
-<li><a href="#todo-examples-for-sal-process">TODO Examples for sal process</a></li>
-</ul>
+<ul></ul>
 </div>
 <ul id="index">
 <li><h3>Super-module</h3>
