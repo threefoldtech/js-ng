@@ -5,7 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.4" />
 <title>jumpscale.clients.docker.docker API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="This module used to manage your conatiners, create ,run, list, delete and exec commands on docker
+for example
+```
+getting docker clinet
+cl = …" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -20,9 +24,39 @@
 <h1 class="title">Module <code>jumpscale.clients.docker.docker</code></h1>
 </header>
 <section id="section-intro">
+<p>This module used to manage your conatiners, create ,run, list, delete and exec commands on docker
+for example </p>
+<pre><code>#getting docker clinet 
+cl = j.clients.docker.get('test') 
+running docker 
+cl.run(&quot;container_name&quot;, &quot;threefoldtech/js-ng&quot;) 
+# listing contaienrs
+cl.list(all=True) # lists all containers include stopped ones
+# getting container
+container = cl.get(&lt;container_id or name&gt;)
+executing commmands 
+cl.exec(&quot;container_id&quot;, &quot;ls /tmp&quot;)
+or container.exec_run(&quot;ls /tmp)
+</code></pre>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">import docker
+<pre><code class="python">&#34;&#34;&#34;This module used to manage your conatiners, create ,run, list, delete and exec commands on docker
+for example 
+```
+#getting docker clinet 
+cl = j.clients.docker.get(&#39;test&#39;) 
+running docker 
+cl.run(&#34;container_name&#34;, &#34;threefoldtech/js-ng&#34;) 
+# listing contaienrs
+cl.list(all=True) # lists all containers include stopped ones
+# getting container
+container = cl.get(&lt;container_id or name&gt;)
+executing commmands 
+cl.exec(&#34;container_id&#34;, &#34;ls /tmp&#34;)
+or container.exec_run(&#34;ls /tmp)
+```
+&#34;&#34;&#34;
+import docker
 from jumpscale.god import j
 from jumpscale.clients.base import Client
 from jumpscale.core.base import fields
@@ -44,12 +78,13 @@ class DockerClient(Client):
                 self.__client = docker.from_env()
         return self.__client
 
-    def create(self, name, image, environment=[], entrypoint=[], volumes=[], detach=True, ports=None, privileged=False, auto_remove=False):
+    def create(self, name, image, command=None, environment=None, entrypoint=None, volumes=None, devices=None, detach=True, ports=None, privileged=False, auto_remove=False, hostname=&#34;js-ng&#34;):
         &#34;&#34;&#34;Creates a docker container without starting it
 
         Args:
             name (str): name of the docker container
             image (str): image of the docker container
+            command (str or list) – The command to run in the container.
             environment (dict or list) – Environment variables to set inside the container, as a dictionary or a list of strings in the format [&#34;SOMEVARIABLE=xxx&#34;].
             entrypoint (str or list) – The entrypoint for the container.
             volumes (dict or list) –
@@ -59,6 +94,9 @@ class DockerClient(Client):
                 example 
                 {&#39;/home/user1/&#39;: {&#39;bind&#39;: &#39;/mnt/vol2&#39;, &#39;mode&#39;: &#39;rw&#39;},
                 &#39;/var/www&#39;: {&#39;bind&#39;: &#39;/mnt/vol1&#39;, &#39;mode&#39;: &#39;ro&#39;}}
+            devices (list) –
+                Expose host devices to the container, as a list of strings in the form &lt;path_on_host&gt;:&lt;path_in_container&gt;:&lt;cgroup_permissions&gt;.
+                For example, /dev/sda:/dev/xvda:rwm allows the container to have read-write access to the host’s /dev/sda via a node named /dev/xvda inside the container.
             detach (bool, optional): detach from container after running it.
             ports The port number, as an integer. For example, 
                 - {&#39;2222/tcp&#39;: 3333} will expose port 2222 inside the container as port 3333 on the host.
@@ -67,17 +105,19 @@ class DockerClient(Client):
                 - A list of integers, if you want to bind multiple host ports to a single container port. For example, {&#39;1111/tcp&#39;: [1234, 4567]}.
             privileged (bool) – Give extended privileges to this container.
             auto_remove (bool) – enable auto-removal of the container on daemon side
+            hostname (str) - hostname to be set on docker container default &#34;js-ng&#34;
         Returns:
             container: container object
         &#34;&#34;&#34;
-        docker = self.client.containers.create(name=name, image=image,environment=environment, entrypoint=entrypoint, volumes=volumes, detach=detach, ports=ports, privileged=privileged, auto_remove=auto_remove)
+        docker = self.client.containers.create(name=name, image=image, command=command, environment=environment, entrypoint=entrypoint, volumes=volumes, devices=devices, detach=detach, ports=ports, privileged=privileged, auto_remove=auto_remove, hostname=hostname)
         return docker
 
-    def run(self, name, image, environment=[], entrypoint=[], volumes=[], detach=True, ports=None, privileged=False, auto_remove=False):
+    def run(self, name, image, command=None, environment=None, entrypoint=None, volumes=None, devices=None, detach=True, ports=None, privileged=False, auto_remove=False, hostname=&#34;js-ng&#34;):
         &#34;&#34;&#34;Runs docker container
         Args:
             name (str): name of the docker container
             image (str): image of the docker container
+            command (str or list) – The command to run in the container.
             environment (dict or list) – Environment variables to set inside the container, as a dictionary or a list of strings in the format [&#34;SOMEVARIABLE=xxx&#34;].
             entrypoint (str or list) – The entrypoint for the container.
             volumes (dict or list) –
@@ -87,6 +127,9 @@ class DockerClient(Client):
                 example 
                 {&#39;/home/user1/&#39;: {&#39;bind&#39;: &#39;/mnt/vol2&#39;, &#39;mode&#39;: &#39;rw&#39;},
                 &#39;/var/www&#39;: {&#39;bind&#39;: &#39;/mnt/vol1&#39;, &#39;mode&#39;: &#39;ro&#39;}}
+            devices (list) –
+                Expose host devices to the container, as a list of strings in the form &lt;path_on_host&gt;:&lt;path_in_container&gt;:&lt;cgroup_permissions&gt;.
+                For example, /dev/sda:/dev/xvda:rwm allows the container to have read-write access to the host’s /dev/sda via a node named /dev/xvda inside the container.
             detach (bool, optional): detach from container after running it.
             ports The port number, as an integer. For example, 
                 - {&#39;2222/tcp&#39;: 3333} will expose port 2222 inside the container as port 3333 on the host.
@@ -95,10 +138,11 @@ class DockerClient(Client):
                 - A list of integers, if you want to bind multiple host ports to a single container port. For example, {&#39;1111/tcp&#39;: [1234, 4567]}.
             privileged (bool) – Give extended privileges to this container.
             auto_remove (bool) – enable auto-removal of the container on daemon side
+            hostname (str) - hostname to be set on docker container default &#34;js-ng&#34;
         Returns:
             container: container object
         &#34;&#34;&#34;
-        docker = self.client.containers.run(name=name, image=image,environment=environment, entrypoint=entrypoint, volumes=volumes, detach=detach, ports=ports, privileged=privileged, auto_remove=auto_remove)
+        docker = self.client.containers.run(name=name, image=image, command=command, environment=environment, entrypoint=entrypoint, volumes=volumes, devices=devices, detach=detach, ports=ports, privileged=privileged, auto_remove=auto_remove, hostname=hostname)
         return docker
 
     def get(self, container_id):
@@ -240,12 +284,13 @@ class DockerClient(Client):
                 self.__client = docker.from_env()
         return self.__client
 
-    def create(self, name, image, environment=[], entrypoint=[], volumes=[], detach=True, ports=None, privileged=False, auto_remove=False):
+    def create(self, name, image, command=None, environment=None, entrypoint=None, volumes=None, devices=None, detach=True, ports=None, privileged=False, auto_remove=False, hostname=&#34;js-ng&#34;):
         &#34;&#34;&#34;Creates a docker container without starting it
 
         Args:
             name (str): name of the docker container
             image (str): image of the docker container
+            command (str or list) – The command to run in the container.
             environment (dict or list) – Environment variables to set inside the container, as a dictionary or a list of strings in the format [&#34;SOMEVARIABLE=xxx&#34;].
             entrypoint (str or list) – The entrypoint for the container.
             volumes (dict or list) –
@@ -255,6 +300,9 @@ class DockerClient(Client):
                 example 
                 {&#39;/home/user1/&#39;: {&#39;bind&#39;: &#39;/mnt/vol2&#39;, &#39;mode&#39;: &#39;rw&#39;},
                 &#39;/var/www&#39;: {&#39;bind&#39;: &#39;/mnt/vol1&#39;, &#39;mode&#39;: &#39;ro&#39;}}
+            devices (list) –
+                Expose host devices to the container, as a list of strings in the form &lt;path_on_host&gt;:&lt;path_in_container&gt;:&lt;cgroup_permissions&gt;.
+                For example, /dev/sda:/dev/xvda:rwm allows the container to have read-write access to the host’s /dev/sda via a node named /dev/xvda inside the container.
             detach (bool, optional): detach from container after running it.
             ports The port number, as an integer. For example, 
                 - {&#39;2222/tcp&#39;: 3333} will expose port 2222 inside the container as port 3333 on the host.
@@ -263,17 +311,19 @@ class DockerClient(Client):
                 - A list of integers, if you want to bind multiple host ports to a single container port. For example, {&#39;1111/tcp&#39;: [1234, 4567]}.
             privileged (bool) – Give extended privileges to this container.
             auto_remove (bool) – enable auto-removal of the container on daemon side
+            hostname (str) - hostname to be set on docker container default &#34;js-ng&#34;
         Returns:
             container: container object
         &#34;&#34;&#34;
-        docker = self.client.containers.create(name=name, image=image,environment=environment, entrypoint=entrypoint, volumes=volumes, detach=detach, ports=ports, privileged=privileged, auto_remove=auto_remove)
+        docker = self.client.containers.create(name=name, image=image, command=command, environment=environment, entrypoint=entrypoint, volumes=volumes, devices=devices, detach=detach, ports=ports, privileged=privileged, auto_remove=auto_remove, hostname=hostname)
         return docker
 
-    def run(self, name, image, environment=[], entrypoint=[], volumes=[], detach=True, ports=None, privileged=False, auto_remove=False):
+    def run(self, name, image, command=None, environment=None, entrypoint=None, volumes=None, devices=None, detach=True, ports=None, privileged=False, auto_remove=False, hostname=&#34;js-ng&#34;):
         &#34;&#34;&#34;Runs docker container
         Args:
             name (str): name of the docker container
             image (str): image of the docker container
+            command (str or list) – The command to run in the container.
             environment (dict or list) – Environment variables to set inside the container, as a dictionary or a list of strings in the format [&#34;SOMEVARIABLE=xxx&#34;].
             entrypoint (str or list) – The entrypoint for the container.
             volumes (dict or list) –
@@ -283,6 +333,9 @@ class DockerClient(Client):
                 example 
                 {&#39;/home/user1/&#39;: {&#39;bind&#39;: &#39;/mnt/vol2&#39;, &#39;mode&#39;: &#39;rw&#39;},
                 &#39;/var/www&#39;: {&#39;bind&#39;: &#39;/mnt/vol1&#39;, &#39;mode&#39;: &#39;ro&#39;}}
+            devices (list) –
+                Expose host devices to the container, as a list of strings in the form &lt;path_on_host&gt;:&lt;path_in_container&gt;:&lt;cgroup_permissions&gt;.
+                For example, /dev/sda:/dev/xvda:rwm allows the container to have read-write access to the host’s /dev/sda via a node named /dev/xvda inside the container.
             detach (bool, optional): detach from container after running it.
             ports The port number, as an integer. For example, 
                 - {&#39;2222/tcp&#39;: 3333} will expose port 2222 inside the container as port 3333 on the host.
@@ -291,10 +344,11 @@ class DockerClient(Client):
                 - A list of integers, if you want to bind multiple host ports to a single container port. For example, {&#39;1111/tcp&#39;: [1234, 4567]}.
             privileged (bool) – Give extended privileges to this container.
             auto_remove (bool) – enable auto-removal of the container on daemon side
+            hostname (str) - hostname to be set on docker container default &#34;js-ng&#34;
         Returns:
             container: container object
         &#34;&#34;&#34;
-        docker = self.client.containers.run(name=name, image=image,environment=environment, entrypoint=entrypoint, volumes=volumes, detach=detach, ports=ports, privileged=privileged, auto_remove=auto_remove)
+        docker = self.client.containers.run(name=name, image=image, command=command, environment=environment, entrypoint=entrypoint, volumes=volumes, devices=devices, detach=detach, ports=ports, privileged=privileged, auto_remove=auto_remove, hostname=hostname)
         return docker
 
     def get(self, container_id):
@@ -442,7 +496,7 @@ def client(self):
 <h3>Methods</h3>
 <dl>
 <dt id="jumpscale.clients.docker.docker.DockerClient.create"><code class="name flex">
-<span>def <span class="ident">create</span></span>(<span>self, name, image, environment=[], entrypoint=[], volumes=[], detach=True, ports=None, privileged=False, auto_remove=False)</span>
+<span>def <span class="ident">create</span></span>(<span>self, name, image, command=None, environment=None, entrypoint=None, volumes=None, devices=None, detach=True, ports=None, privileged=False, auto_remove=False, hostname=&#39;js-ng&#39;)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Creates a docker container without starting it</p>
@@ -452,6 +506,7 @@ def client(self):
 <dd>name of the docker container</dd>
 <dt><strong><code>image</code></strong> :&ensp;<code>str</code></dt>
 <dd>image of the docker container</dd>
+<dt>command (str or list) – The command to run in the container.</dt>
 <dt>environment (dict or list) – Environment variables to set inside the container, as a dictionary or a list of strings in the format ["SOMEVARIABLE=xxx"].</dt>
 <dt>entrypoint (str or list) – The entrypoint for the container.</dt>
 <dt>volumes (dict or list) –</dt>
@@ -461,6 +516,9 @@ def client(self):
 <dt>example</dt>
 <dt>{'/home/user1/': {'bind': '/mnt/vol2', 'mode': 'rw'},</dt>
 <dt>'/var/www': {'bind': '/mnt/vol1', 'mode': 'ro'}}</dt>
+<dt>devices (list) –</dt>
+<dt>Expose host devices to the container, as a list of strings in the form <path_on_host>:<path_in_container>:<cgroup_permissions>.</dt>
+<dt>For example, /dev/sda:/dev/xvda:rwm allows the container to have read-write access to the host’s /dev/sda via a node named /dev/xvda inside the container.</dt>
 <dt><strong><code>detach</code></strong> :&ensp;<code>bool</code>, optional</dt>
 <dd>detach from container after running it.</dd>
 </dl>
@@ -470,7 +528,8 @@ def client(self):
 - A tuple of (address, port) if you want to specify the host interface. For example, {'1111/tcp': ('127.0.0.1', 1111)}.
 - A list of integers, if you want to bind multiple host ports to a single container port. For example, {'1111/tcp': [1234, 4567]}.
 privileged (bool) – Give extended privileges to this container.
-auto_remove (bool) – enable auto-removal of the container on daemon side</p>
+auto_remove (bool) – enable auto-removal of the container on daemon side
+hostname (str) - hostname to be set on docker container default "js-ng"</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>container</code></strong></dt>
@@ -478,12 +537,13 @@ auto_remove (bool) – enable auto-removal of the container on daemon side</p>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def create(self, name, image, environment=[], entrypoint=[], volumes=[], detach=True, ports=None, privileged=False, auto_remove=False):
+<pre><code class="python">def create(self, name, image, command=None, environment=None, entrypoint=None, volumes=None, devices=None, detach=True, ports=None, privileged=False, auto_remove=False, hostname=&#34;js-ng&#34;):
     &#34;&#34;&#34;Creates a docker container without starting it
 
     Args:
         name (str): name of the docker container
         image (str): image of the docker container
+        command (str or list) – The command to run in the container.
         environment (dict or list) – Environment variables to set inside the container, as a dictionary or a list of strings in the format [&#34;SOMEVARIABLE=xxx&#34;].
         entrypoint (str or list) – The entrypoint for the container.
         volumes (dict or list) –
@@ -493,6 +553,9 @@ auto_remove (bool) – enable auto-removal of the container on daemon side</p>
             example 
             {&#39;/home/user1/&#39;: {&#39;bind&#39;: &#39;/mnt/vol2&#39;, &#39;mode&#39;: &#39;rw&#39;},
             &#39;/var/www&#39;: {&#39;bind&#39;: &#39;/mnt/vol1&#39;, &#39;mode&#39;: &#39;ro&#39;}}
+        devices (list) –
+            Expose host devices to the container, as a list of strings in the form &lt;path_on_host&gt;:&lt;path_in_container&gt;:&lt;cgroup_permissions&gt;.
+            For example, /dev/sda:/dev/xvda:rwm allows the container to have read-write access to the host’s /dev/sda via a node named /dev/xvda inside the container.
         detach (bool, optional): detach from container after running it.
         ports The port number, as an integer. For example, 
             - {&#39;2222/tcp&#39;: 3333} will expose port 2222 inside the container as port 3333 on the host.
@@ -501,10 +564,11 @@ auto_remove (bool) – enable auto-removal of the container on daemon side</p>
             - A list of integers, if you want to bind multiple host ports to a single container port. For example, {&#39;1111/tcp&#39;: [1234, 4567]}.
         privileged (bool) – Give extended privileges to this container.
         auto_remove (bool) – enable auto-removal of the container on daemon side
+        hostname (str) - hostname to be set on docker container default &#34;js-ng&#34;
     Returns:
         container: container object
     &#34;&#34;&#34;
-    docker = self.client.containers.create(name=name, image=image,environment=environment, entrypoint=entrypoint, volumes=volumes, detach=detach, ports=ports, privileged=privileged, auto_remove=auto_remove)
+    docker = self.client.containers.create(name=name, image=image, command=command, environment=environment, entrypoint=entrypoint, volumes=volumes, devices=devices, detach=detach, ports=ports, privileged=privileged, auto_remove=auto_remove, hostname=hostname)
     return docker</code></pre>
 </details>
 </dd>
@@ -734,7 +798,7 @@ A bytestring containing response data otherwise.</p>
 </details>
 </dd>
 <dt id="jumpscale.clients.docker.docker.DockerClient.run"><code class="name flex">
-<span>def <span class="ident">run</span></span>(<span>self, name, image, environment=[], entrypoint=[], volumes=[], detach=True, ports=None, privileged=False, auto_remove=False)</span>
+<span>def <span class="ident">run</span></span>(<span>self, name, image, command=None, environment=None, entrypoint=None, volumes=None, devices=None, detach=True, ports=None, privileged=False, auto_remove=False, hostname=&#39;js-ng&#39;)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Runs docker container</p>
@@ -744,6 +808,7 @@ A bytestring containing response data otherwise.</p>
 <dd>name of the docker container</dd>
 <dt><strong><code>image</code></strong> :&ensp;<code>str</code></dt>
 <dd>image of the docker container</dd>
+<dt>command (str or list) – The command to run in the container.</dt>
 <dt>environment (dict or list) – Environment variables to set inside the container, as a dictionary or a list of strings in the format ["SOMEVARIABLE=xxx"].</dt>
 <dt>entrypoint (str or list) – The entrypoint for the container.</dt>
 <dt>volumes (dict or list) –</dt>
@@ -753,6 +818,9 @@ A bytestring containing response data otherwise.</p>
 <dt>example</dt>
 <dt>{'/home/user1/': {'bind': '/mnt/vol2', 'mode': 'rw'},</dt>
 <dt>'/var/www': {'bind': '/mnt/vol1', 'mode': 'ro'}}</dt>
+<dt>devices (list) –</dt>
+<dt>Expose host devices to the container, as a list of strings in the form <path_on_host>:<path_in_container>:<cgroup_permissions>.</dt>
+<dt>For example, /dev/sda:/dev/xvda:rwm allows the container to have read-write access to the host’s /dev/sda via a node named /dev/xvda inside the container.</dt>
 <dt><strong><code>detach</code></strong> :&ensp;<code>bool</code>, optional</dt>
 <dd>detach from container after running it.</dd>
 </dl>
@@ -762,7 +830,8 @@ A bytestring containing response data otherwise.</p>
 - A tuple of (address, port) if you want to specify the host interface. For example, {'1111/tcp': ('127.0.0.1', 1111)}.
 - A list of integers, if you want to bind multiple host ports to a single container port. For example, {'1111/tcp': [1234, 4567]}.
 privileged (bool) – Give extended privileges to this container.
-auto_remove (bool) – enable auto-removal of the container on daemon side</p>
+auto_remove (bool) – enable auto-removal of the container on daemon side
+hostname (str) - hostname to be set on docker container default "js-ng"</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>container</code></strong></dt>
@@ -770,11 +839,12 @@ auto_remove (bool) – enable auto-removal of the container on daemon side</p>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def run(self, name, image, environment=[], entrypoint=[], volumes=[], detach=True, ports=None, privileged=False, auto_remove=False):
+<pre><code class="python">def run(self, name, image, command=None, environment=None, entrypoint=None, volumes=None, devices=None, detach=True, ports=None, privileged=False, auto_remove=False, hostname=&#34;js-ng&#34;):
     &#34;&#34;&#34;Runs docker container
     Args:
         name (str): name of the docker container
         image (str): image of the docker container
+        command (str or list) – The command to run in the container.
         environment (dict or list) – Environment variables to set inside the container, as a dictionary or a list of strings in the format [&#34;SOMEVARIABLE=xxx&#34;].
         entrypoint (str or list) – The entrypoint for the container.
         volumes (dict or list) –
@@ -784,6 +854,9 @@ auto_remove (bool) – enable auto-removal of the container on daemon side</p>
             example 
             {&#39;/home/user1/&#39;: {&#39;bind&#39;: &#39;/mnt/vol2&#39;, &#39;mode&#39;: &#39;rw&#39;},
             &#39;/var/www&#39;: {&#39;bind&#39;: &#39;/mnt/vol1&#39;, &#39;mode&#39;: &#39;ro&#39;}}
+        devices (list) –
+            Expose host devices to the container, as a list of strings in the form &lt;path_on_host&gt;:&lt;path_in_container&gt;:&lt;cgroup_permissions&gt;.
+            For example, /dev/sda:/dev/xvda:rwm allows the container to have read-write access to the host’s /dev/sda via a node named /dev/xvda inside the container.
         detach (bool, optional): detach from container after running it.
         ports The port number, as an integer. For example, 
             - {&#39;2222/tcp&#39;: 3333} will expose port 2222 inside the container as port 3333 on the host.
@@ -792,10 +865,11 @@ auto_remove (bool) – enable auto-removal of the container on daemon side</p>
             - A list of integers, if you want to bind multiple host ports to a single container port. For example, {&#39;1111/tcp&#39;: [1234, 4567]}.
         privileged (bool) – Give extended privileges to this container.
         auto_remove (bool) – enable auto-removal of the container on daemon side
+        hostname (str) - hostname to be set on docker container default &#34;js-ng&#34;
     Returns:
         container: container object
     &#34;&#34;&#34;
-    docker = self.client.containers.run(name=name, image=image,environment=environment, entrypoint=entrypoint, volumes=volumes, detach=detach, ports=ports, privileged=privileged, auto_remove=auto_remove)
+    docker = self.client.containers.run(name=name, image=image, command=command, environment=environment, entrypoint=entrypoint, volumes=volumes, devices=devices, detach=detach, ports=ports, privileged=privileged, auto_remove=auto_remove, hostname=hostname)
     return docker</code></pre>
 </details>
 </dd>

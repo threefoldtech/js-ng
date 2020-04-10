@@ -98,8 +98,43 @@ def get_completions(self, document, complete_event):
 
     obj = eval_code(parent, self.get_locals(), self.get_globals())
     if obj:
+
         members = sorted(dir(obj), key=sort_children_key)
         yield from colored_completions(members, "ansigray")
+    # code was on kosmos-improve to support multi colors in the completion
+    #    import types
+
+    #     methods_list = []
+    #     props_list = []
+    #     rest_list = []
+
+    #     attrnames = dir(obj)
+    #     classattrnames = dir(obj.__class_)
+
+    #     for aname in attrnames:
+    #         attr = getattr(obj, aname)
+    #         if isinstance(attr, types.MethodType) or isinstance(attr, types.FunctionType):
+    #             methods_list.append(aname)
+    #         elif aname in dir(obj.__class__) and isinstance(attr):
+    #             props_list.append(aname)
+    #         else:
+    #             rest_list.append(aname)
+
+    #     from functools import partial
+
+    #     def filter_items(collection, prefix):
+    #         for el in collection:
+    #             if el.startswith(prefix):
+    #                 yield el
+
+    #     filter_props = partial(filter_items, props_list)
+    #     filter_methods = partial(filter_items, methods_list)
+    #     filter_rest = partial(filter_items, rest_list)
+
+    #     members = sorted(dir(obj), key=sort_children_key)
+    #     yield from colored_completions(filter_props, "ansigreen")
+    #     yield from colored_completions(filter_methods, "ansiblue")
+    #     yield from colored_completions(filter_rest, "ansigray")
 
 
 def sort_children_key(name):
