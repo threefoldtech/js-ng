@@ -59,6 +59,9 @@ python3 -m pip install setuptools -U
 
 [browsable](https://js-next.github.io/js-ng/api/jumpscale/) at [https://js-next.github.io/js-ng/api/jumpscale/](https://js-next.github.io/js-ng/api/jumpscale/)
 
+## Wiki
+
+We already prepared a docsify [https://js-next.github.io/js-ng/wiki](wiki) website 
 
 ## Contribution
 
