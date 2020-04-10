@@ -76,18 +76,16 @@ js-ext
 """
 
 
-import sys
-import os
-import traceback
+import collections
 import importlib
-import pkgutil
 import importlib.util
+import os
+import pkgutil
+import sys
+import traceback
 from types import SimpleNamespace
 
 __all__ = ["j"]
-
-import collections
-from copy import deepcopy
 
 
 def namespaceify(mapping):
