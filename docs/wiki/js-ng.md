@@ -57,4 +57,16 @@ python3 -m pip install setuptools -U
 
 ## API Docs
 
-[browsable](https://js-next.github.io/js-ng/api/jumpscale/) at https://js-next.github.io/js-ng/api/jumpscale/
+[browsable](https://js-next.github.io/js-ng/api/jumpscale/) at [https://js-next.github.io/js-ng/api/jumpscale/](https://js-next.github.io/js-ng/api/jumpscale/)
+
+
+## Contribution
+
+### Pre-commit
+We use pre-commit to enforce certain coding style and checks while contributing to js-ng repository. Please make sure to install
+
+#### Installation
+It's as easy as `python3 -m pip install pre-commit`
+
+#### Installing pre-commit hooks in the repository
+Execute `pre-commit install`

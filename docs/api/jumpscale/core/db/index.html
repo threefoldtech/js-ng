@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.4" />
-<title>jumpscale.core API documentation</title>
+<title>jumpscale.core.db API documentation</title>
 <meta name="description" content="" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
@@ -17,52 +17,87 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Namespace <code>jumpscale.core</code></h1>
+<h1 class="title">Module <code>jumpscale.core.db</code></h1>
 </header>
 <section id="section-intro">
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">from jumpscale.god import j
+from redis.exceptions import ConnectionError
+
+
+class DefaultRedisDB:
+    def __init__(self):
+        self._db = None
+
+    @property
+    def db(self):
+        if not self._db:
+            try:
+                self._db = j.clients.redis.get(&#34;main&#34;)
+                self._db.ping()
+            except ConnectionError:
+                # TODO log
+                return None
+        return self._db
+
+
+export_module_as = DefaultRedisDB().db</code></pre>
+</details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt><code class="name"><a title="jumpscale.core.application" href="application/index.html">jumpscale.core.application</a></code></dt>
+<dt id="jumpscale.core.db.DefaultRedisDB"><code class="flex name class">
+<span>class <span class="ident">DefaultRedisDB</span></span>
+</code></dt>
 <dd>
 <section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="jumpscale.core.base" href="base/index.html">jumpscale.core.base</a></code></dt>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class DefaultRedisDB:
+    def __init__(self):
+        self._db = None
+
+    @property
+    def db(self):
+        if not self._db:
+            try:
+                self._db = j.clients.redis.get(&#34;main&#34;)
+                self._db.ping()
+            except ConnectionError:
+                # TODO log
+                return None
+        return self._db</code></pre>
+</details>
+<h3>Instance variables</h3>
+<dl>
+<dt id="jumpscale.core.db.DefaultRedisDB.db"><code class="name">var <span class="ident">db</span></code></dt>
 <dd>
 <section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="jumpscale.core.config" href="config/index.html">jumpscale.core.config</a></code></dt>
-<dd>
-<section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="jumpscale.core.db" href="db/index.html">jumpscale.core.db</a></code></dt>
-<dd>
-<section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="jumpscale.core.dirs" href="dirs/index.html">jumpscale.core.dirs</a></code></dt>
-<dd>
-<section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="jumpscale.core.exceptions" href="exceptions/index.html">jumpscale.core.exceptions</a></code></dt>
-<dd>
-<section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="jumpscale.core.executors" href="executors/index.html">jumpscale.core.executors</a></code></dt>
-<dd>
-<section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="jumpscale.core.logging" href="logging/index.html">jumpscale.core.logging</a></code></dt>
-<dd>
-<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def db(self):
+    if not self._db:
+        try:
+            self._db = j.clients.redis.get(&#34;main&#34;)
+            self._db.ping()
+        except ConnectionError:
+            # TODO log
+            return None
+    return self._db</code></pre>
+</details>
 </dd>
 </dl>
-</section>
-<section>
-</section>
-<section>
-</section>
-<section>
+</dd>
+</dl>
 </section>
 </article>
 <nav id="sidebar">
@@ -73,19 +108,17 @@
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="jumpscale" href="../index.html">jumpscale</a></code></li>
+<li><code><a title="jumpscale.core" href="../index.html">jumpscale.core</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
+<li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
-<li><code><a title="jumpscale.core.application" href="application/index.html">jumpscale.core.application</a></code></li>
-<li><code><a title="jumpscale.core.base" href="base/index.html">jumpscale.core.base</a></code></li>
-<li><code><a title="jumpscale.core.config" href="config/index.html">jumpscale.core.config</a></code></li>
-<li><code><a title="jumpscale.core.db" href="db/index.html">jumpscale.core.db</a></code></li>
-<li><code><a title="jumpscale.core.dirs" href="dirs/index.html">jumpscale.core.dirs</a></code></li>
-<li><code><a title="jumpscale.core.exceptions" href="exceptions/index.html">jumpscale.core.exceptions</a></code></li>
-<li><code><a title="jumpscale.core.executors" href="executors/index.html">jumpscale.core.executors</a></code></li>
-<li><code><a title="jumpscale.core.logging" href="logging/index.html">jumpscale.core.logging</a></code></li>
+<li>
+<h4><code><a title="jumpscale.core.db.DefaultRedisDB" href="#jumpscale.core.db.DefaultRedisDB">DefaultRedisDB</a></code></h4>
+<ul class="">
+<li><code><a title="jumpscale.core.db.DefaultRedisDB.db" href="#jumpscale.core.db.DefaultRedisDB.db">db</a></code></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

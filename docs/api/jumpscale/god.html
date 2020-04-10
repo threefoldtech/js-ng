@@ -181,6 +181,7 @@ js-ext
 import collections
 import importlib
 import importlib.util
+from jumpscale.core.config import get_config
 import os
 import pkgutil
 import sys
@@ -203,7 +204,7 @@ def loadjsmodules():
 
     loadeddict = {&#34;jumpscale&#34;: {}}
     for jsnamespace in jumpscale.__path__:
-        for root, dirs, files in os.walk(jsnamespace):
+        for root, dirs, _ in os.walk(jsnamespace):
             for d in dirs:
                 if d == &#34;__pycache__&#34;:
                     continue
@@ -257,6 +258,10 @@ class J:
         return self.__loaded_simplenamespace.jumpscale.core.logging.logger
 
     @property
+    def application(self):
+        return self.__loaded_simplenamespace.jumpscale.core.application
+
+    @property
     def config(self):
         return self.__loaded_simplenamespace.jumpscale.core.config
 
@@ -279,7 +284,19 @@ class J:
         return getattr(self.__loaded_simplenamespace.jumpscale, name)
 
 
-j = J()</code></pre>
+j = J()
+j._load()
+
+
+# register alerthandler as an error handler
+alerts_config = get_config().get(&#34;alerts&#34;)
+if alerts_config and alerts_config.get(&#34;enabled&#34;, True):
+    j.tools.errorhandler.register_handler(
+        handler=j.tools.alerthandler.alert_raise, level=alerts_config.get(&#34;level&#34;, 40)
+    )
+
+# register global error hook
+sys.excepthook = j.tools.errorhandler.excepthook</code></pre>
 </details>
 </section>
 <section>

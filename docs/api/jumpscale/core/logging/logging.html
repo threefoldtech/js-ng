@@ -22,39 +22,180 @@
 <section id="section-intro">
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">import sys
-import os
-from loguru import logger
-from jumpscale.core.config import get_config, update_config
+<pre><code class="python">import math
+import loguru
+import msgpack
 
-logs_dir = os.path.expanduser(os.path.join(&#34;~/.config&#34;, &#34;jumpscale&#34;, &#34;logs&#34;))
+from abc import ABC, abstractmethod
 
-# TODO suitable logging format.
-DEFAULT_LOGGING_CONFIG = {
-    &#34;handlers&#34;: [
-        # {&#34;sink&#34;: &#34;sys.stdout&#34;, &#34;format&#34;: &#34;{time} - {message}&#34;, &#34;colorize&#34;:True, &#34;enqueue&#34;:True},
-        {&#34;sink&#34;: os.path.join(logs_dir, &#34;file_jumpscale.log&#34;), &#34;serialize&#34;: True, &#34;enqueue&#34;: True}
-    ]
-}
-
-js_config = get_config()
-if not &#34;logging&#34; in js_config or js_config[&#34;logging&#34;][&#34;handlers&#34;] == [{}]:
-    # FIXME: doesn&#39;t work as expected..
-    js_config[&#34;logging&#34;] = DEFAULT_LOGGING_CONFIG
-    update_config(js_config)
+from jumpscale.god import j
 
 
-js_config = get_config()
-assert js_config[&#34;logging&#34;] and js_config[&#34;logging&#34;][&#34;handlers&#34;] != [{}]
-# js_config = get_jumpscale_config()
-# loguruconfig = js_config.get(&#34;logging&#34;)
-logging_config = js_config[&#34;logging&#34;]
+class CustomLogHandler(ABC):
+    &#34;&#34;&#34;the interface every cutom log handler should implement&#34;&#34;&#34;
 
-# QUESTION: how to pass sink sys.stdout in json config?
-# logging_config[&#34;handlers&#34;].append(
-#     {&#34;sink&#34;: sys.stdout, &#34;format&#34;: &#34;{time} - {message}&#34;, &#34;colorize&#34;: True, &#34;enqueue&#34;: True}
-# )
-# logger.configure(**logging_config)</code></pre>
+    @abstractmethod
+    def _handle(self, message, **kwargs):
+        pass
+
+
+class Logger:
+    def __init__(self):
+        &#34;&#34;&#34;Logger init method
+        &#34;&#34;&#34;
+        self.logger = loguru.logger
+
+    def add_handler(self, *args, **kwargs):
+        &#34;&#34;&#34;Add handler to the logger
+        takes the same parameters of loguru.logger.add
+        &#34;&#34;&#34;
+        self.logger.add(*args, **kwargs)
+
+    def add_custom_handler(self, name: str, handler: CustomLogHandler, *args, **kwargs):
+        &#34;&#34;&#34;Add custom log handler
+        
+        Arguments:
+            handler {CustomLogHandler} -- handler function
+        &#34;&#34;&#34;
+        setattr(self, name, handler)
+        self.logger.add(handler._handle, **kwargs)
+
+
+class RedisHandler(CustomLogHandler):
+    def __init__(self, max_size: int = 1000, dump: bool = True, dump_dir: str = None):
+        self._max_size = max_size
+        self._dump = dump
+        self._dump_dir = dump_dir or &#34;/tmp&#34;
+        self._rkey = &#34;logs:%s:records&#34;
+        self._rkey_incr = &#34;logs:%s:incr&#34;
+        self.__db = None
+
+        if self._dump_dir:
+            j.sals.fs.mkdirs(self._dump_dir)
+
+    @property
+    def _appname(self):
+        return j.core.application.appname
+
+    @property
+    def _db(self):
+        if self.__db is None:
+            self.__db = j.core.db
+        return self.__db
+
+    @property
+    def max_size(self):
+        return self._max_size
+
+    @property
+    def dump(self):
+        return self._dump
+
+    @property
+    def dump_dir(self):
+        return self._dump_dir
+
+    def _map_identifier(self, identifier):
+        part = math.ceil(identifier / self.max_size) * self.max_size
+        index = (identifier % self.max_size) - 1
+        return part, index
+
+    def _dump_records(self, path):
+        j.sals.fs.mkdir(j.sals.fs.parent(path))
+        records = self._db.lrange(self._rkey % self._appname, 0, self.max_size - 1)
+        j.sals.fs.write_bytes(path, msgpack.dumps(records))
+
+    def _process_message(self, message):
+        record = j.data.serializers.json.loads(message)[&#34;record&#34;]
+        record_id = self._db.incr(self._rkey_incr % self._appname)
+        return dict(
+            id=record_id,
+            appname=self._appname,
+            name=record[&#34;name&#34;],
+            message=record[&#34;message&#34;],
+            level=record[&#34;level&#34;][&#34;no&#34;],
+            linenr=record[&#34;line&#34;],
+            processid=record[&#34;process&#34;][&#34;id&#34;],
+            context=record[&#34;function&#34;],
+            exception=record[&#34;exception&#34;],
+            epoch=record[&#34;time&#34;][&#34;timestamp&#34;],
+        )
+
+    def _clean_up(self):
+        self._db.ltrim(self._rkey % self._appname, self.max_size, -1)
+
+    def _handle(self, message: str, **kwargs):
+        &#34;&#34;&#34;Logging handler
+        
+        Arguments:
+            message {str} -- message string
+        &#34;&#34;&#34;
+        if not self._db:
+            return
+
+        rkey = self._rkey % self._appname
+        record = self._process_message(message)
+        self._db.rpush(rkey, j.data.serializers.json.dumps(record))
+
+        if self._db.llen(rkey) &gt; self.max_size:
+            if self.dump:
+                part, _ = self._map_identifier(record[&#34;id&#34;] - 1)
+                path = j.sals.fs.join_paths(self.dump_dir, self._appname, &#34;%s.msgpack&#34; % part)
+                self._dump_records(path)
+
+            self._clean_up()
+
+    def records_count(self, appname: str = &#34;&#34;) -&gt; int:
+        &#34;&#34;&#34;Gets total number of the records of the app
+        
+        Arguments:
+            appname {str} -- app name
+        
+        Returns:
+            init -- total number of the records
+        &#34;&#34;&#34;
+        appname = appname or self._appname
+        return int(self._db.get(self._rkey_incr % appname))
+
+    def record_get(self, identifier: int, appname: str = &#34;&#34;) -&gt; dict:
+        &#34;&#34;&#34;Get app log record by its identifier
+        
+        Arguments:
+            identifier {int} -- record identifier
+            appname {str} -- app name
+        
+        Returns:
+            dict -- requested log record
+        &#34;&#34;&#34;
+        appname = appname or self._appname
+        count = self.records_count(appname)
+        part, index = self._map_identifier(identifier)
+
+        if identifier &gt; count:
+            return
+
+        if part &gt; count - self.max_size:
+            record = self._db.lindex(self._rkey % appname, index)
+            return j.data.serializers.json.loads(record)
+
+        if self.dump:
+            path = j.sals.fs.join_paths(self.dump_dir, appname, &#34;%s.msgpack&#34; % part)
+            if j.sals.fs.exists(path):
+                records = msgpack.loads(j.sals.fs.read_bytes(path))
+                if records and len(records) &gt; index:
+                    return j.data.serializers.json.loads(records[index])
+
+    def remove_all_records(self, appname: str):
+        &#34;&#34;&#34;Delete all app&#39;s log records
+        
+        Arguments:
+            appname {str} -- app name
+        &#34;&#34;&#34;
+        self._db.delete(self._rkey % appname, self._rkey_incr % appname)
+        path = j.sals.fs.join_paths(self.dump_dir, appname)
+
+        if self.dump:
+            j.sals.fs.rmtree(path)</code></pre>
 </details>
 </section>
 <section>
@@ -64,6 +205,378 @@ logging_config = js_config[&#34;logging&#34;]
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="jumpscale.core.logging.logging.CustomLogHandler"><code class="flex name class">
+<span>class <span class="ident">CustomLogHandler</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>the interface every cutom log handler should implement</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class CustomLogHandler(ABC):
+    &#34;&#34;&#34;the interface every cutom log handler should implement&#34;&#34;&#34;
+
+    @abstractmethod
+    def _handle(self, message, **kwargs):
+        pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>abc.ABC</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="jumpscale.core.logging.logging.RedisHandler" href="#jumpscale.core.logging.logging.RedisHandler">RedisHandler</a></li>
+</ul>
+</dd>
+<dt id="jumpscale.core.logging.logging.Logger"><code class="flex name class">
+<span>class <span class="ident">Logger</span></span>
+</code></dt>
+<dd>
+<section class="desc"><p>Logger init method</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class Logger:
+    def __init__(self):
+        &#34;&#34;&#34;Logger init method
+        &#34;&#34;&#34;
+        self.logger = loguru.logger
+
+    def add_handler(self, *args, **kwargs):
+        &#34;&#34;&#34;Add handler to the logger
+        takes the same parameters of loguru.logger.add
+        &#34;&#34;&#34;
+        self.logger.add(*args, **kwargs)
+
+    def add_custom_handler(self, name: str, handler: CustomLogHandler, *args, **kwargs):
+        &#34;&#34;&#34;Add custom log handler
+        
+        Arguments:
+            handler {CustomLogHandler} -- handler function
+        &#34;&#34;&#34;
+        setattr(self, name, handler)
+        self.logger.add(handler._handle, **kwargs)</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="jumpscale.core.logging.logging.Logger.add_custom_handler"><code class="name flex">
+<span>def <span class="ident">add_custom_handler</span></span>(<span>self, name, handler, *args, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Add custom log handler</p>
+<h2 id="arguments">Arguments</h2>
+<p>handler {CustomLogHandler} &ndash; handler function</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def add_custom_handler(self, name: str, handler: CustomLogHandler, *args, **kwargs):
+    &#34;&#34;&#34;Add custom log handler
+    
+    Arguments:
+        handler {CustomLogHandler} -- handler function
+    &#34;&#34;&#34;
+    setattr(self, name, handler)
+    self.logger.add(handler._handle, **kwargs)</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.core.logging.logging.Logger.add_handler"><code class="name flex">
+<span>def <span class="ident">add_handler</span></span>(<span>self, *args, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Add handler to the logger
+takes the same parameters of loguru.logger.add</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def add_handler(self, *args, **kwargs):
+    &#34;&#34;&#34;Add handler to the logger
+    takes the same parameters of loguru.logger.add
+    &#34;&#34;&#34;
+    self.logger.add(*args, **kwargs)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="jumpscale.core.logging.logging.RedisHandler"><code class="flex name class">
+<span>class <span class="ident">RedisHandler</span></span>
+<span>(</span><span>max_size=1000, dump=True, dump_dir=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>the interface every cutom log handler should implement</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class RedisHandler(CustomLogHandler):
+    def __init__(self, max_size: int = 1000, dump: bool = True, dump_dir: str = None):
+        self._max_size = max_size
+        self._dump = dump
+        self._dump_dir = dump_dir or &#34;/tmp&#34;
+        self._rkey = &#34;logs:%s:records&#34;
+        self._rkey_incr = &#34;logs:%s:incr&#34;
+        self.__db = None
+
+        if self._dump_dir:
+            j.sals.fs.mkdirs(self._dump_dir)
+
+    @property
+    def _appname(self):
+        return j.core.application.appname
+
+    @property
+    def _db(self):
+        if self.__db is None:
+            self.__db = j.core.db
+        return self.__db
+
+    @property
+    def max_size(self):
+        return self._max_size
+
+    @property
+    def dump(self):
+        return self._dump
+
+    @property
+    def dump_dir(self):
+        return self._dump_dir
+
+    def _map_identifier(self, identifier):
+        part = math.ceil(identifier / self.max_size) * self.max_size
+        index = (identifier % self.max_size) - 1
+        return part, index
+
+    def _dump_records(self, path):
+        j.sals.fs.mkdir(j.sals.fs.parent(path))
+        records = self._db.lrange(self._rkey % self._appname, 0, self.max_size - 1)
+        j.sals.fs.write_bytes(path, msgpack.dumps(records))
+
+    def _process_message(self, message):
+        record = j.data.serializers.json.loads(message)[&#34;record&#34;]
+        record_id = self._db.incr(self._rkey_incr % self._appname)
+        return dict(
+            id=record_id,
+            appname=self._appname,
+            name=record[&#34;name&#34;],
+            message=record[&#34;message&#34;],
+            level=record[&#34;level&#34;][&#34;no&#34;],
+            linenr=record[&#34;line&#34;],
+            processid=record[&#34;process&#34;][&#34;id&#34;],
+            context=record[&#34;function&#34;],
+            exception=record[&#34;exception&#34;],
+            epoch=record[&#34;time&#34;][&#34;timestamp&#34;],
+        )
+
+    def _clean_up(self):
+        self._db.ltrim(self._rkey % self._appname, self.max_size, -1)
+
+    def _handle(self, message: str, **kwargs):
+        &#34;&#34;&#34;Logging handler
+        
+        Arguments:
+            message {str} -- message string
+        &#34;&#34;&#34;
+        if not self._db:
+            return
+
+        rkey = self._rkey % self._appname
+        record = self._process_message(message)
+        self._db.rpush(rkey, j.data.serializers.json.dumps(record))
+
+        if self._db.llen(rkey) &gt; self.max_size:
+            if self.dump:
+                part, _ = self._map_identifier(record[&#34;id&#34;] - 1)
+                path = j.sals.fs.join_paths(self.dump_dir, self._appname, &#34;%s.msgpack&#34; % part)
+                self._dump_records(path)
+
+            self._clean_up()
+
+    def records_count(self, appname: str = &#34;&#34;) -&gt; int:
+        &#34;&#34;&#34;Gets total number of the records of the app
+        
+        Arguments:
+            appname {str} -- app name
+        
+        Returns:
+            init -- total number of the records
+        &#34;&#34;&#34;
+        appname = appname or self._appname
+        return int(self._db.get(self._rkey_incr % appname))
+
+    def record_get(self, identifier: int, appname: str = &#34;&#34;) -&gt; dict:
+        &#34;&#34;&#34;Get app log record by its identifier
+        
+        Arguments:
+            identifier {int} -- record identifier
+            appname {str} -- app name
+        
+        Returns:
+            dict -- requested log record
+        &#34;&#34;&#34;
+        appname = appname or self._appname
+        count = self.records_count(appname)
+        part, index = self._map_identifier(identifier)
+
+        if identifier &gt; count:
+            return
+
+        if part &gt; count - self.max_size:
+            record = self._db.lindex(self._rkey % appname, index)
+            return j.data.serializers.json.loads(record)
+
+        if self.dump:
+            path = j.sals.fs.join_paths(self.dump_dir, appname, &#34;%s.msgpack&#34; % part)
+            if j.sals.fs.exists(path):
+                records = msgpack.loads(j.sals.fs.read_bytes(path))
+                if records and len(records) &gt; index:
+                    return j.data.serializers.json.loads(records[index])
+
+    def remove_all_records(self, appname: str):
+        &#34;&#34;&#34;Delete all app&#39;s log records
+        
+        Arguments:
+            appname {str} -- app name
+        &#34;&#34;&#34;
+        self._db.delete(self._rkey % appname, self._rkey_incr % appname)
+        path = j.sals.fs.join_paths(self.dump_dir, appname)
+
+        if self.dump:
+            j.sals.fs.rmtree(path)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="jumpscale.core.logging.logging.CustomLogHandler" href="#jumpscale.core.logging.logging.CustomLogHandler">CustomLogHandler</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="jumpscale.core.logging.logging.RedisHandler.dump"><code class="name">var <span class="ident">dump</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def dump(self):
+    return self._dump</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.core.logging.logging.RedisHandler.dump_dir"><code class="name">var <span class="ident">dump_dir</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def dump_dir(self):
+    return self._dump_dir</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.core.logging.logging.RedisHandler.max_size"><code class="name">var <span class="ident">max_size</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def max_size(self):
+    return self._max_size</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="jumpscale.core.logging.logging.RedisHandler.record_get"><code class="name flex">
+<span>def <span class="ident">record_get</span></span>(<span>self, identifier, appname=&#39;&#39;)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Get app log record by its identifier</p>
+<h2 id="arguments">Arguments</h2>
+<p>identifier {int} &ndash; record identifier
+appname {str} &ndash; app name</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>dict</code> &ndash; <code>requested</code> <code>log</code> <code>record</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def record_get(self, identifier: int, appname: str = &#34;&#34;) -&gt; dict:
+    &#34;&#34;&#34;Get app log record by its identifier
+    
+    Arguments:
+        identifier {int} -- record identifier
+        appname {str} -- app name
+    
+    Returns:
+        dict -- requested log record
+    &#34;&#34;&#34;
+    appname = appname or self._appname
+    count = self.records_count(appname)
+    part, index = self._map_identifier(identifier)
+
+    if identifier &gt; count:
+        return
+
+    if part &gt; count - self.max_size:
+        record = self._db.lindex(self._rkey % appname, index)
+        return j.data.serializers.json.loads(record)
+
+    if self.dump:
+        path = j.sals.fs.join_paths(self.dump_dir, appname, &#34;%s.msgpack&#34; % part)
+        if j.sals.fs.exists(path):
+            records = msgpack.loads(j.sals.fs.read_bytes(path))
+            if records and len(records) &gt; index:
+                return j.data.serializers.json.loads(records[index])</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.core.logging.logging.RedisHandler.records_count"><code class="name flex">
+<span>def <span class="ident">records_count</span></span>(<span>self, appname=&#39;&#39;)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Gets total number of the records of the app</p>
+<h2 id="arguments">Arguments</h2>
+<p>appname {str} &ndash; app name</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>init</code> &ndash; <code>total</code> <code>number</code> of <code>the</code> <code>records</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def records_count(self, appname: str = &#34;&#34;) -&gt; int:
+    &#34;&#34;&#34;Gets total number of the records of the app
+    
+    Arguments:
+        appname {str} -- app name
+    
+    Returns:
+        init -- total number of the records
+    &#34;&#34;&#34;
+    appname = appname or self._appname
+    return int(self._db.get(self._rkey_incr % appname))</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.core.logging.logging.RedisHandler.remove_all_records"><code class="name flex">
+<span>def <span class="ident">remove_all_records</span></span>(<span>self, appname)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Delete all app's log records</p>
+<h2 id="arguments">Arguments</h2>
+<p>appname {str} &ndash; app name</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def remove_all_records(self, appname: str):
+    &#34;&#34;&#34;Delete all app&#39;s log records
+    
+    Arguments:
+        appname {str} -- app name
+    &#34;&#34;&#34;
+    self._db.delete(self._rkey % appname, self._rkey_incr % appname)
+    path = j.sals.fs.join_paths(self.dump_dir, appname)
+
+    if self.dump:
+        j.sals.fs.rmtree(path)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
 </section>
 </article>
 <nav id="sidebar">
@@ -75,6 +588,31 @@ logging_config = js_config[&#34;logging&#34;]
 <li><h3>Super-module</h3>
 <ul>
 <li><code><a title="jumpscale.core.logging" href="index.html">jumpscale.core.logging</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="jumpscale.core.logging.logging.CustomLogHandler" href="#jumpscale.core.logging.logging.CustomLogHandler">CustomLogHandler</a></code></h4>
+</li>
+<li>
+<h4><code><a title="jumpscale.core.logging.logging.Logger" href="#jumpscale.core.logging.logging.Logger">Logger</a></code></h4>
+<ul class="">
+<li><code><a title="jumpscale.core.logging.logging.Logger.add_custom_handler" href="#jumpscale.core.logging.logging.Logger.add_custom_handler">add_custom_handler</a></code></li>
+<li><code><a title="jumpscale.core.logging.logging.Logger.add_handler" href="#jumpscale.core.logging.logging.Logger.add_handler">add_handler</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="jumpscale.core.logging.logging.RedisHandler" href="#jumpscale.core.logging.logging.RedisHandler">RedisHandler</a></code></h4>
+<ul class="two-column">
+<li><code><a title="jumpscale.core.logging.logging.RedisHandler.dump" href="#jumpscale.core.logging.logging.RedisHandler.dump">dump</a></code></li>
+<li><code><a title="jumpscale.core.logging.logging.RedisHandler.dump_dir" href="#jumpscale.core.logging.logging.RedisHandler.dump_dir">dump_dir</a></code></li>
+<li><code><a title="jumpscale.core.logging.logging.RedisHandler.max_size" href="#jumpscale.core.logging.logging.RedisHandler.max_size">max_size</a></code></li>
+<li><code><a title="jumpscale.core.logging.logging.RedisHandler.record_get" href="#jumpscale.core.logging.logging.RedisHandler.record_get">record_get</a></code></li>
+<li><code><a title="jumpscale.core.logging.logging.RedisHandler.records_count" href="#jumpscale.core.logging.logging.RedisHandler.records_count">records_count</a></code></li>
+<li><code><a title="jumpscale.core.logging.logging.RedisHandler.remove_all_records" href="#jumpscale.core.logging.logging.RedisHandler.remove_all_records">remove_all_records</a></code></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
