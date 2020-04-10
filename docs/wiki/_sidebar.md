@@ -1,6 +1,6 @@
 * [Home](/)
 * [JS-NG](./js-ng.md)
-* [Specs](README.md)
+* [Specs](specs.md)
     * [Poetry](poetry.md)
     * [God object and namespaces](god_object_namespaces_concepts.md)
     * [Loader](loader.md)
