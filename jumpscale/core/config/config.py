@@ -1,5 +1,5 @@
 """Config modules is the single entry of configurations across the framework.
-It allows 
+It allows
 - resolving configurations paths for configuration directory`config_root`, or configuration file path `config_path`
 - rebuildling default configurations or retrieving them (using `get_default_config`)
 - Getting configurations using `get_default_config`
@@ -25,7 +25,7 @@ config_path = os.path.join(config_root, "config.toml")
 
 def get_default_config():
     """retrieves default configurations for plain jumpscale
-    
+
     Returns:
         e.g return
         ```
@@ -52,19 +52,16 @@ def get_default_config():
                 "level": 15,
                 "max_size": 1000,
                 "dump": True,
-                "dump_dir": os.path.join(config_root, 'logs/redis'),
+                "dump_dir": os.path.join(config_root, "logs/redis"),
             },
             "filesystem": {
                 "enabled": True,
                 "level": 15,
-                "log_dir": os.path.join(config_root, 'logs/fs/log.txt'),
-                "rotation": "5 MB"
-            }
+                "log_dir": os.path.join(config_root, "logs/fs/log.txt"),
+                "rotation": "5 MB",
+            },
         },
-        "alerts": {
-            "enabled": True,
-            "level": 40
-        },
+        "alerts": {"enabled": True, "level": 40},
         "ssh_key_path": "",
         "private_key_path": "",
         "stores": {
@@ -77,7 +74,7 @@ def get_default_config():
 
 def get_config():
     """Gets jumpscale configurations
-    
+
     Returns:
         [dict] - toml loaded config of CONFIG_DIR/config.toml
     """
@@ -87,7 +84,7 @@ def get_config():
 
 def update_config(data):
     """Update jumpscale config with new data
-    
+
     Arguments:
         data {dict} -- dict to update the config with.
     """
@@ -96,15 +93,19 @@ def update_config(data):
 
 
 def migrate_config():
-    """add missing top level keys to current config from default"""
+    """add missing keys to current config from default"""
 
     default_config = get_default_config()
     current_config = get_config()
 
-    for key, value in default_config.items():
-        if key not in current_config:
-            current_config[key] = value
+    def copy_missing(default, current):
+        for key, value in default.items():
+            if key not in current:
+                current[key] = value
+            elif isinstance(value, dict):
+                copy_missing(value, current[key])
 
+    copy_missing(default_config, current_config)
     update_config(current_config)
 
 
