@@ -115,11 +115,10 @@ def loadjsmodules():
                 rootbase = os.path.basename(root)
                 loadeddict["jumpscale"].setdefault(rootbase, {})
                 pkgname = d
-                if "noload" in pkgname:
+                if "noload" in pkgname or pkgname.startswith("."):
                     continue
                 importedpkgstr = "jumpscale.{}.{}".format(rootbase, pkgname)
                 __all__.append(importedpkgstr)
-                # print("import: ", importedpkgstr)
                 # globals()[importedpkgstr] = lazy_import.lazy_module(importedpkgstr)
                 try:
                     m = importlib.import_module(importedpkgstr)
