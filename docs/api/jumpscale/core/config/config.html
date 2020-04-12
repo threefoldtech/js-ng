@@ -31,7 +31,7 @@ It allows
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">&#34;&#34;&#34;Config modules is the single entry of configurations across the framework.
-It allows 
+It allows
 - resolving configurations paths for configuration directory`config_root`, or configuration file path `config_path`
 - rebuildling default configurations or retrieving them (using `get_default_config`)
 - Getting configurations using `get_default_config`
@@ -57,7 +57,7 @@ config_path = os.path.join(config_root, &#34;config.toml&#34;)
 
 def get_default_config():
     &#34;&#34;&#34;retrieves default configurations for plain jumpscale
-    
+
     Returns:
         e.g return
         ```
@@ -84,19 +84,16 @@ def get_default_config():
                 &#34;level&#34;: 15,
                 &#34;max_size&#34;: 1000,
                 &#34;dump&#34;: True,
-                &#34;dump_dir&#34;: os.path.join(config_root, &#39;logs/redis&#39;),
+                &#34;dump_dir&#34;: os.path.join(config_root, &#34;logs/redis&#34;),
             },
             &#34;filesystem&#34;: {
                 &#34;enabled&#34;: True,
                 &#34;level&#34;: 15,
-                &#34;log_dir&#34;: os.path.join(config_root, &#39;logs/fs/log.txt&#39;),
-                &#34;rotation&#34;: &#34;5 MB&#34;
-            }
+                &#34;log_dir&#34;: os.path.join(config_root, &#34;logs/fs/log.txt&#34;),
+                &#34;rotation&#34;: &#34;5 MB&#34;,
+            },
         },
-        &#34;alerts&#34;: {
-            &#34;enabled&#34;: True,
-            &#34;level&#34;: 40
-        },
+        &#34;alerts&#34;: {&#34;enabled&#34;: True, &#34;level&#34;: 40},
         &#34;ssh_key_path&#34;: &#34;&#34;,
         &#34;private_key_path&#34;: &#34;&#34;,
         &#34;stores&#34;: {
@@ -109,7 +106,7 @@ def get_default_config():
 
 def get_config():
     &#34;&#34;&#34;Gets jumpscale configurations
-    
+
     Returns:
         [dict] - toml loaded config of CONFIG_DIR/config.toml
     &#34;&#34;&#34;
@@ -119,7 +116,7 @@ def get_config():
 
 def update_config(data):
     &#34;&#34;&#34;Update jumpscale config with new data
-    
+
     Arguments:
         data {dict} -- dict to update the config with.
     &#34;&#34;&#34;
@@ -128,15 +125,19 @@ def update_config(data):
 
 
 def migrate_config():
-    &#34;&#34;&#34;add missing top level keys to current config from default&#34;&#34;&#34;
+    &#34;&#34;&#34;add missing keys to current config from default&#34;&#34;&#34;
 
     default_config = get_default_config()
     current_config = get_config()
 
-    for key, value in default_config.items():
-        if key not in current_config:
-            current_config[key] = value
+    def copy_missing(default, current):
+        for key, value in default.items():
+            if key not in current:
+                current[key] = value
+            elif isinstance(value, dict):
+                copy_missing(value, current[key])
 
+    copy_missing(default_config, current_config)
     update_config(current_config)
 
 
@@ -212,7 +213,7 @@ migrate_config()</code></pre>
 <summary>Source code</summary>
 <pre><code class="python">def get_config():
     &#34;&#34;&#34;Gets jumpscale configurations
-    
+
     Returns:
         [dict] - toml loaded config of CONFIG_DIR/config.toml
     &#34;&#34;&#34;
@@ -245,7 +246,7 @@ migrate_config()</code></pre>
 <summary>Source code</summary>
 <pre><code class="python">def get_default_config():
     &#34;&#34;&#34;retrieves default configurations for plain jumpscale
-    
+
     Returns:
         e.g return
         ```
@@ -272,19 +273,16 @@ migrate_config()</code></pre>
                 &#34;level&#34;: 15,
                 &#34;max_size&#34;: 1000,
                 &#34;dump&#34;: True,
-                &#34;dump_dir&#34;: os.path.join(config_root, &#39;logs/redis&#39;),
+                &#34;dump_dir&#34;: os.path.join(config_root, &#34;logs/redis&#34;),
             },
             &#34;filesystem&#34;: {
                 &#34;enabled&#34;: True,
                 &#34;level&#34;: 15,
-                &#34;log_dir&#34;: os.path.join(config_root, &#39;logs/fs/log.txt&#39;),
-                &#34;rotation&#34;: &#34;5 MB&#34;
-            }
+                &#34;log_dir&#34;: os.path.join(config_root, &#34;logs/fs/log.txt&#34;),
+                &#34;rotation&#34;: &#34;5 MB&#34;,
+            },
         },
-        &#34;alerts&#34;: {
-            &#34;enabled&#34;: True,
-            &#34;level&#34;: 40
-        },
+        &#34;alerts&#34;: {&#34;enabled&#34;: True, &#34;level&#34;: 40},
         &#34;ssh_key_path&#34;: &#34;&#34;,
         &#34;private_key_path&#34;: &#34;&#34;,
         &#34;stores&#34;: {
@@ -306,7 +304,7 @@ migrate_config()</code></pre>
 <summary>Source code</summary>
 <pre><code class="python">def update_config(data):
     &#34;&#34;&#34;Update jumpscale config with new data
-    
+
     Arguments:
         data {dict} -- dict to update the config with.
     &#34;&#34;&#34;
