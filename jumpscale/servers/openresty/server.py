@@ -1,7 +1,13 @@
 from jumpscale.god import j
+from enum import Enum
 from jumpscale.core.base import Base, fields
 from .location import Location
 from .utils import render_config_template, DIR_PATH
+
+
+class Status(Enum):
+    INIT = "init"
+    INSTALLED = "installed"
 
 
 class Website(Base):
@@ -40,29 +46,46 @@ class Website(Base):
 
 class OpenRestyServer(Base):
     name = fields.String(default="default")
-    status = fields.String(default="init")
+    status = fields.Enum(Status)
     websites = fields.Factory(Website)
 
     def __init__(self):
         super().__init__()
         self._cmd = None
-        self.path_web = j.sals.fs.join_paths(j.core.dirs.VARDIR, "web", self.name)
-        self.path_cfg_dir = j.sals.fs.join_paths(j.core.dirs.CFGDIR, "nginx", self.name)
-        self.path_cfg = j.sals.fs.join_paths(self.path_cfg_dir, "nginx.conf")
-        self.logs_dir = j.sals.fs.join_paths(j.core.dirs.LOGDIR, "openresty", self.name)
+        self._path_web = None
+        self._path_cfg_dir = None
+        self._logs_dir = None
 
-        j.sals.fs.mkdirs(self.path_web)
-        j.sals.fs.mkdirs(j.sals.fs.join_paths(self.path_web, "static"))
-        j.sals.fs.mkdirs(self.path_cfg_dir)
-        j.sals.fs.mkdirs(self.logs_dir)
-
-        # clean old websites config
-        self.cleanup()
         self.executor = "tmux"  # only tmux for now
 
-        self.configure()
+    @property
+    def path_web(self):
+        if not self._path_web:
+            self._path_web = j.sals.fs.join_paths(j.core.dirs.VARDIR, "web", self.name)
+            j.sals.fs.mkdirs(j.sals.fs.join_paths(self._path_web, "static"))
+        return self._path_web
+
+    @property
+    def path_cfg_dir(self):
+        if not self._path_cfg_dir:
+            self._path_cfg_dir = j.sals.fs.join_paths(j.core.dirs.CFGDIR, "nginx", self.name)
+            j.sals.fs.mkdirs(self._path_cfg_dir)
+        return self._path_cfg_dir
+
+    @property
+    def path_cfg(self):
+        return j.sals.fs.join_paths(self.path_cfg_dir, "nginx.conf")
+
+    @property
+    def logs_dir(self):
+        if not self._logs_dir:
+            self._logs_dir = j.sals.fs.join_paths(j.core.dirs.LOGDIR, "openresty", self.name)
+            j.sals.fs.mkdirs(self._logs_dir)
+        return self._logs_dir
 
     def configure(self):
+        # clean old websites config
+        self.cleanup()
         """configures main nginx conf
         """
         # self.install() This is commented for now until the repo and necessary deps are handled
@@ -115,7 +138,7 @@ class OpenRestyServer(Base):
             j.sals.fs.symlink(
                 f"{weblibs_path}/static", f"{self.path_web}/static/weblibs", overwrite=True,
             )
-            self.status = "installed"
+            self.status = Status.INSTALLED
 
             self.save()
 
