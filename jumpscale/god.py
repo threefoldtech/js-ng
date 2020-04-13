@@ -76,25 +76,33 @@ js-ext
 """
 
 
-import sys
-import os
-import traceback
+import collections
 import importlib
-import pkgutil
 import importlib.util
-
-# import lazy_import
-
+from jumpscale.core.config import get_config
+import os
+import pkgutil
+import sys
+import traceback
+from types import SimpleNamespace
 
 __all__ = ["j"]
 
 
-def load():
+def namespaceify(mapping):
+    if isinstance(mapping, collections.Mapping) and not isinstance(mapping, SimpleNamespace):
+        for key, value in mapping.items():
+            mapping[key] = namespaceify(value)
+        return SimpleNamespace(**mapping)
+    return mapping
+
+
+def loadjsmodules():
     import jumpscale
 
     loadeddict = {"jumpscale": {}}
     for jsnamespace in jumpscale.__path__:
-        for root, dirs, files in os.walk(jsnamespace):
+        for root, dirs, _ in os.walk(jsnamespace):
             for d in dirs:
                 if d == "__pycache__":
                     continue
@@ -107,9 +115,10 @@ def load():
                 rootbase = os.path.basename(root)
                 loadeddict["jumpscale"].setdefault(rootbase, {})
                 pkgname = d
+                if "noload" in pkgname or pkgname.startswith("."):
+                    continue
                 importedpkgstr = "jumpscale.{}.{}".format(rootbase, pkgname)
                 __all__.append(importedpkgstr)
-                # print("import: ", importedpkgstr)
                 # globals()[importedpkgstr] = lazy_import.lazy_module(importedpkgstr)
                 try:
                     m = importlib.import_module(importedpkgstr)
@@ -126,20 +135,7 @@ def load():
                     else:
                         loadeddict["jumpscale"][rootbase][pkgname] = m
 
-    return loadeddict
-
-
-class Group:
-    def __init__(self, d):
-        self.d = d
-        for k, v in d.items():
-            setattr(self, k, v)
-
-    def __getattr__(self, a):
-        return self.d[a]
-
-    def __dir__(self):
-        return list(self.d.keys())
+    return namespaceify(loadeddict)
 
 
 class J:
@@ -149,89 +145,52 @@ class J:
 
     def __init__(self):
         self.__loaded = False
-        self.__loaded_dict = {}
 
     def __dir__(self):
         self._load()
-        return list(self.__loaded_dict["jumpscale"].keys()) + ["config", "exceptions", "logger"]
+        return list(self.__loaded_simplenamespace.jumpscale.__dict__.keys()) + ["config", "exceptions", "logger"]
 
     @property
     def logger(self):
-        return self.__loaded_dict["jumpscale"]["core"]["logging"].logger
+        return self.__loaded_simplenamespace.jumpscale.core.logging.logger
+
+    @property
+    def application(self):
+        return self.__loaded_simplenamespace.jumpscale.core.application
 
     @property
     def config(self):
-        return self.__loaded_dict["jumpscale"]["core"]["config"]
+        return self.__loaded_simplenamespace.jumpscale.core.config
 
     @property
     def exceptions(self):
-        return self.__loaded_dict["jumpscale"]["core"]["exceptions"]
+        return self.__loaded_simplenamespace.jumpscale.core.exceptions
 
     def reload(self):
         self.__loaded = False
-        self.__loaded_dict = {}
+        self.__loaded_simplenamespace = None
+        self._load()
 
     def _load(self):
         if not self.__loaded:
-            self.__loaded_dict = load()
+            self.__loaded_simplenamespace = namespaceify(loadjsmodules())
 
     def __getattr__(self, name):
         self._load()
 
-        d = self.__loaded_dict["jumpscale"][name]
-        return Group(d)
+        return getattr(self.__loaded_simplenamespace.jumpscale, name)
 
 
 j = J()
+j._load()
 
-# jcode = """
-# class J_codegen:
 
-#     def __init__(self):
-#         self.__loaded = False
-#         self.__loaded_dict = {}
+# register alerthandler as an error handler
+alerts_config = get_config().get("alerts")
+if alerts_config and alerts_config.get("enabled", True):
+    j.tools.errorhandler.register_handler(
+        handler=j.tools.alerthandler.alert_raise, level=alerts_config.get("level", 40)
+    )
 
-#     # def __dir__(self):
-#     #     self._load()
-#     #     return list(self.__loaded_dict['jumpscale'].keys()) + ['config', 'exceptions', 'logger']
-
-#     @property
-#     def logger(self):
-#         return self.__loaded_dict['jumpscale']['core']['logging'].logger
-
-#     @property
-#     def config(self):
-#         return self.__loaded_dict['jumpscale']['core']['config']
-
-#     @property
-#     def exceptions(self):
-#         return self.__loaded_dict['jumpscale']['core']['exceptions']
-
-#     def reload(self):
-#         self.__loaded = False
-#         self.__loaded_dict = {}
-
-#     def _load(self):
-#         if not self.__loaded:
-#             self.__loaded_dict = load()
-
-#     {% for group, _ in groups.items() %}
-#     @property
-#     def {{group}}(self):
-#         self._load()
-
-#         return Group(self.__loaded_dict['jumpscale']['{{group}}'])
-
-#     {% endfor %}
-
-# """
-
-# def get_j_class():
-#    import jinja2
-#     jtemplate = jinja2.Template(jcode)
-#     return jtemplate.render(groups=load()['jumpscale'])
-
-# jclass = get_j_class()
-# print(jclass)
-# exec(jclass)
-# j = J_codegen()
+# register global error hook
+sys.excepthook = j.tools.errorhandler.excepthook

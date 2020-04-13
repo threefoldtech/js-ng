@@ -45,7 +45,7 @@ class Location(Base):
             if not self.path_location.endswith("/"):
                 self.path_location += "/"
 
-        if self.location_type == "proxy":
-            j.sals.process.execute("moonc .", cwd=self.path_location)
+        # if self.location_type == "proxy":  Uncomment when dependencies are handled
+        #     j.sals.process.execute("moonc .", cwd=self.path_location)
 
         self.write_config(self.config)

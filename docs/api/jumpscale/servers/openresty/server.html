@@ -23,9 +23,15 @@
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">from jumpscale.god import j
+from enum import Enum
 from jumpscale.core.base import Base, fields
 from .location import Location
 from .utils import render_config_template, DIR_PATH
+
+
+class Status(Enum):
+    INIT = &#34;init&#34;
+    INSTALLED = &#34;installed&#34;
 
 
 class Website(Base):
@@ -64,29 +70,46 @@ class Website(Base):
 
 class OpenRestyServer(Base):
     name = fields.String(default=&#34;default&#34;)
-    status = fields.String(default=&#34;init&#34;)
+    status = fields.Enum(Status)
     websites = fields.Factory(Website)
 
     def __init__(self):
         super().__init__()
         self._cmd = None
-        self.path_web = j.sals.fs.join_paths(j.core.dirs.VARDIR, &#34;web&#34;, self.name)
-        self.path_cfg_dir = j.sals.fs.join_paths(j.core.dirs.CFGDIR, &#34;nginx&#34;, self.name)
-        self.path_cfg = j.sals.fs.join_paths(self.path_cfg_dir, &#34;nginx.conf&#34;)
-        self.logs_dir = j.sals.fs.join_paths(j.core.dirs.LOGDIR, &#34;openresty&#34;, self.name)
+        self._path_web = None
+        self._path_cfg_dir = None
+        self._logs_dir = None
 
-        j.sals.fs.mkdirs(self.path_web)
-        j.sals.fs.mkdirs(j.sals.fs.join_paths(self.path_web, &#34;static&#34;))
-        j.sals.fs.mkdirs(self.path_cfg_dir)
-        j.sals.fs.mkdirs(self.logs_dir)
-
-        # clean old websites config
-        self.cleanup()
         self.executor = &#34;tmux&#34;  # only tmux for now
 
-        self.configure()
+    @property
+    def path_web(self):
+        if not self._path_web:
+            self._path_web = j.sals.fs.join_paths(j.core.dirs.VARDIR, &#34;web&#34;, self.name)
+            j.sals.fs.mkdirs(j.sals.fs.join_paths(self._path_web, &#34;static&#34;))
+        return self._path_web
+
+    @property
+    def path_cfg_dir(self):
+        if not self._path_cfg_dir:
+            self._path_cfg_dir = j.sals.fs.join_paths(j.core.dirs.CFGDIR, &#34;nginx&#34;, self.name)
+            j.sals.fs.mkdirs(self._path_cfg_dir)
+        return self._path_cfg_dir
+
+    @property
+    def path_cfg(self):
+        return j.sals.fs.join_paths(self.path_cfg_dir, &#34;nginx.conf&#34;)
+
+    @property
+    def logs_dir(self):
+        if not self._logs_dir:
+            self._logs_dir = j.sals.fs.join_paths(j.core.dirs.LOGDIR, &#34;openresty&#34;, self.name)
+            j.sals.fs.mkdirs(self._logs_dir)
+        return self._logs_dir
 
     def configure(self):
+        # clean old websites config
+        self.cleanup()
         &#34;&#34;&#34;configures main nginx conf
         &#34;&#34;&#34;
         # self.install() This is commented for now until the repo and necessary deps are handled
@@ -139,7 +162,7 @@ class OpenRestyServer(Base):
             j.sals.fs.symlink(
                 f&#34;{weblibs_path}/static&#34;, f&#34;{self.path_web}/static/weblibs&#34;, overwrite=True,
             )
-            self.status = &#34;installed&#34;
+            self.status = Status.INSTALLED
 
             self.save()
 
@@ -183,29 +206,46 @@ class OpenRestyServer(Base):
 <summary>Source code</summary>
 <pre><code class="python">class OpenRestyServer(Base):
     name = fields.String(default=&#34;default&#34;)
-    status = fields.String(default=&#34;init&#34;)
+    status = fields.Enum(Status)
     websites = fields.Factory(Website)
 
     def __init__(self):
         super().__init__()
         self._cmd = None
-        self.path_web = j.sals.fs.join_paths(j.core.dirs.VARDIR, &#34;web&#34;, self.name)
-        self.path_cfg_dir = j.sals.fs.join_paths(j.core.dirs.CFGDIR, &#34;nginx&#34;, self.name)
-        self.path_cfg = j.sals.fs.join_paths(self.path_cfg_dir, &#34;nginx.conf&#34;)
-        self.logs_dir = j.sals.fs.join_paths(j.core.dirs.LOGDIR, &#34;openresty&#34;, self.name)
+        self._path_web = None
+        self._path_cfg_dir = None
+        self._logs_dir = None
 
-        j.sals.fs.mkdirs(self.path_web)
-        j.sals.fs.mkdirs(j.sals.fs.join_paths(self.path_web, &#34;static&#34;))
-        j.sals.fs.mkdirs(self.path_cfg_dir)
-        j.sals.fs.mkdirs(self.logs_dir)
-
-        # clean old websites config
-        self.cleanup()
         self.executor = &#34;tmux&#34;  # only tmux for now
 
-        self.configure()
+    @property
+    def path_web(self):
+        if not self._path_web:
+            self._path_web = j.sals.fs.join_paths(j.core.dirs.VARDIR, &#34;web&#34;, self.name)
+            j.sals.fs.mkdirs(j.sals.fs.join_paths(self._path_web, &#34;static&#34;))
+        return self._path_web
+
+    @property
+    def path_cfg_dir(self):
+        if not self._path_cfg_dir:
+            self._path_cfg_dir = j.sals.fs.join_paths(j.core.dirs.CFGDIR, &#34;nginx&#34;, self.name)
+            j.sals.fs.mkdirs(self._path_cfg_dir)
+        return self._path_cfg_dir
+
+    @property
+    def path_cfg(self):
+        return j.sals.fs.join_paths(self.path_cfg_dir, &#34;nginx.conf&#34;)
+
+    @property
+    def logs_dir(self):
+        if not self._logs_dir:
+            self._logs_dir = j.sals.fs.join_paths(j.core.dirs.LOGDIR, &#34;openresty&#34;, self.name)
+            j.sals.fs.mkdirs(self._logs_dir)
+        return self._logs_dir
 
     def configure(self):
+        # clean old websites config
+        self.cleanup()
         &#34;&#34;&#34;configures main nginx conf
         &#34;&#34;&#34;
         # self.install() This is commented for now until the repo and necessary deps are handled
@@ -258,7 +298,7 @@ class OpenRestyServer(Base):
             j.sals.fs.symlink(
                 f&#34;{weblibs_path}/static&#34;, f&#34;{self.path_web}/static/weblibs&#34;, overwrite=True,
             )
-            self.status = &#34;installed&#34;
+            self.status = Status.INSTALLED
 
             self.save()
 
@@ -289,6 +329,19 @@ class OpenRestyServer(Base):
 </ul>
 <h3>Instance variables</h3>
 <dl>
+<dt id="jumpscale.servers.openresty.server.OpenRestyServer.logs_dir"><code class="name">var <span class="ident">logs_dir</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def logs_dir(self):
+    if not self._logs_dir:
+        self._logs_dir = j.sals.fs.join_paths(j.core.dirs.LOGDIR, &#34;openresty&#34;, self.name)
+        j.sals.fs.mkdirs(self._logs_dir)
+    return self._logs_dir</code></pre>
+</details>
+</dd>
 <dt id="jumpscale.servers.openresty.server.OpenRestyServer.name"><code class="name">var <span class="ident">name</span></code></dt>
 <dd>
 <section class="desc"></section>
@@ -300,6 +353,42 @@ class OpenRestyServer(Base):
 
     # accept raw value as default too
     return field.from_raw(field.default)</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.servers.openresty.server.OpenRestyServer.path_cfg"><code class="name">var <span class="ident">path_cfg</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def path_cfg(self):
+    return j.sals.fs.join_paths(self.path_cfg_dir, &#34;nginx.conf&#34;)</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.servers.openresty.server.OpenRestyServer.path_cfg_dir"><code class="name">var <span class="ident">path_cfg_dir</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def path_cfg_dir(self):
+    if not self._path_cfg_dir:
+        self._path_cfg_dir = j.sals.fs.join_paths(j.core.dirs.CFGDIR, &#34;nginx&#34;, self.name)
+        j.sals.fs.mkdirs(self._path_cfg_dir)
+    return self._path_cfg_dir</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.servers.openresty.server.OpenRestyServer.path_web"><code class="name">var <span class="ident">path_web</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def path_web(self):
+    if not self._path_web:
+        self._path_web = j.sals.fs.join_paths(j.core.dirs.VARDIR, &#34;web&#34;, self.name)
+        j.sals.fs.mkdirs(j.sals.fs.join_paths(self._path_web, &#34;static&#34;))
+    return self._path_web</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.servers.openresty.server.OpenRestyServer.startup_cmd"><code class="name">var <span class="ident">startup_cmd</span></code></dt>
@@ -356,10 +445,12 @@ def startup_cmd(self):
 <span>def <span class="ident">configure</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>configures main nginx conf</p></section>
+<section class="desc"></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def configure(self):
+    # clean old websites config
+    self.cleanup()
     &#34;&#34;&#34;configures main nginx conf
     &#34;&#34;&#34;
     # self.install() This is commented for now until the repo and necessary deps are handled
@@ -447,7 +538,7 @@ def startup_cmd(self):
         j.sals.fs.symlink(
             f&#34;{weblibs_path}/static&#34;, f&#34;{self.path_web}/static/weblibs&#34;, overwrite=True,
         )
-        self.status = &#34;installed&#34;
+        self.status = Status.INSTALLED
 
         self.save()</code></pre>
 </details>
@@ -496,6 +587,34 @@ def startup_cmd(self):
 <pre><code class="python">def stop(self):
     pass</code></pre>
 </details>
+</dd>
+</dl>
+</dd>
+<dt id="jumpscale.servers.openresty.server.Status"><code class="flex name class">
+<span>class <span class="ident">Status</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>An enumeration.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class Status(Enum):
+    INIT = &#34;init&#34;
+    INSTALLED = &#34;installed&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>enum.Enum</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="jumpscale.servers.openresty.server.Status.INIT"><code class="name">var <span class="ident">INIT</span></code></dt>
+<dd>
+<section class="desc"></section>
+</dd>
+<dt id="jumpscale.servers.openresty.server.Status.INSTALLED"><code class="name">var <span class="ident">INSTALLED</span></code></dt>
+<dd>
+<section class="desc"></section>
 </dd>
 </dl>
 </dd>
@@ -705,13 +824,24 @@ def path_web(self):
 <li><code><a title="jumpscale.servers.openresty.server.OpenRestyServer.get_from_port" href="#jumpscale.servers.openresty.server.OpenRestyServer.get_from_port">get_from_port</a></code></li>
 <li><code><a title="jumpscale.servers.openresty.server.OpenRestyServer.install" href="#jumpscale.servers.openresty.server.OpenRestyServer.install">install</a></code></li>
 <li><code><a title="jumpscale.servers.openresty.server.OpenRestyServer.is_running" href="#jumpscale.servers.openresty.server.OpenRestyServer.is_running">is_running</a></code></li>
+<li><code><a title="jumpscale.servers.openresty.server.OpenRestyServer.logs_dir" href="#jumpscale.servers.openresty.server.OpenRestyServer.logs_dir">logs_dir</a></code></li>
 <li><code><a title="jumpscale.servers.openresty.server.OpenRestyServer.name" href="#jumpscale.servers.openresty.server.OpenRestyServer.name">name</a></code></li>
+<li><code><a title="jumpscale.servers.openresty.server.OpenRestyServer.path_cfg" href="#jumpscale.servers.openresty.server.OpenRestyServer.path_cfg">path_cfg</a></code></li>
+<li><code><a title="jumpscale.servers.openresty.server.OpenRestyServer.path_cfg_dir" href="#jumpscale.servers.openresty.server.OpenRestyServer.path_cfg_dir">path_cfg_dir</a></code></li>
+<li><code><a title="jumpscale.servers.openresty.server.OpenRestyServer.path_web" href="#jumpscale.servers.openresty.server.OpenRestyServer.path_web">path_web</a></code></li>
 <li><code><a title="jumpscale.servers.openresty.server.OpenRestyServer.reload" href="#jumpscale.servers.openresty.server.OpenRestyServer.reload">reload</a></code></li>
 <li><code><a title="jumpscale.servers.openresty.server.OpenRestyServer.start" href="#jumpscale.servers.openresty.server.OpenRestyServer.start">start</a></code></li>
 <li><code><a title="jumpscale.servers.openresty.server.OpenRestyServer.startup_cmd" href="#jumpscale.servers.openresty.server.OpenRestyServer.startup_cmd">startup_cmd</a></code></li>
 <li><code><a title="jumpscale.servers.openresty.server.OpenRestyServer.status" href="#jumpscale.servers.openresty.server.OpenRestyServer.status">status</a></code></li>
 <li><code><a title="jumpscale.servers.openresty.server.OpenRestyServer.stop" href="#jumpscale.servers.openresty.server.OpenRestyServer.stop">stop</a></code></li>
 <li><code><a title="jumpscale.servers.openresty.server.OpenRestyServer.websites" href="#jumpscale.servers.openresty.server.OpenRestyServer.websites">websites</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="jumpscale.servers.openresty.server.Status" href="#jumpscale.servers.openresty.server.Status">Status</a></code></h4>
+<ul class="">
+<li><code><a title="jumpscale.servers.openresty.server.Status.INIT" href="#jumpscale.servers.openresty.server.Status.INIT">INIT</a></code></li>
+<li><code><a title="jumpscale.servers.openresty.server.Status.INSTALLED" href="#jumpscale.servers.openresty.server.Status.INSTALLED">INSTALLED</a></code></li>
 </ul>
 </li>
 <li>

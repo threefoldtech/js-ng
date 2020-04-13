@@ -226,7 +226,7 @@ class Typed(Field):
         super().validate(value)
         if value is not None:
             if not isinstance(value, self.type):
-                raise ValidationError(f&#34;value is not of type {self.type}&#34;)
+                raise ValidationError(f&#34;value {value} is not of type {self.type}&#34;)
 
 
 class Boolean(Typed):
@@ -2815,7 +2815,7 @@ they will converted to objects.</p>
         super().validate(value)
         if value is not None:
             if not isinstance(value, self.type):
-                raise ValidationError(f&#34;value is not of type {self.type}&#34;)</code></pre>
+                raise ValidationError(f&#34;value {value} is not of type {self.type}&#34;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">

@@ -38,7 +38,7 @@ from functools import partial
 from jumpscale.core import config, events
 
 from .events import InstanceCreateEvent, InstanceDeleteEvent
-from .store import FileSystemStore, RedisStore
+from .store import Location, FileSystemStore, RedisStore
 
 STORES = {&#34;filesystem&#34;: FileSystemStore, &#34;redis&#34;: RedisStore}
 
@@ -48,14 +48,28 @@ class DuplicateError(Exception):
 
 
 class Factory:
-    def __init__(self, type_, parent_=None):
+    def __init__(self, type_, name_=None, parent_instance_=None, parent_factory_=None):
+        self.__name = name_
+        self.__parent_instance = parent_instance_
+        self.__parent_factory = parent_factory_
+
         self.type = type_
-        self.__parent = parent_
         self.count = 0
 
     @property
-    def parent(self):
-        return self.__parent
+    def parent_instance(self):
+        return self.__parent_instance
+
+    @property
+    def name(self):
+        return self.__name
+
+    @property
+    def parent_factory(self):
+        return self.__parent_factory
+
+    def _set_parent_factory(self, factory):
+        self.__parent_factory = factory
 
     def new(self, name, *args, **kwargs):
         if not name.isidentifier():
@@ -65,7 +79,9 @@ class Factory:
             raise DuplicateError(f&#34;instance with name {name} already exists&#34;)
 
         instance = self.type(*args, **kwargs)
-        instance.set_parent(self.parent)
+        instance._set_instance_name(name)
+        # parent instance of this factory is a parent to all of its instances
+        instance._set_parent(self.parent_instance)
         setattr(self, name, instance)
 
         self.count += 1
@@ -105,22 +121,50 @@ class Factory:
 class StoredFactory(Factory):
     STORE = STORES[config.get_config()[&#34;store&#34;]]
 
-    def __init__(self, type_, parent_=None, parent_name=None):
-        super().__init__(type_, parent_=parent_)
-        self._set_parent_name(parent_name)
-        if not parent_name:
+    def __init__(self, type_, name_=None, parent_instance_=None, parent_factory_=None):
+        super().__init__(type_, name_=name_, parent_instance_=parent_instance_, parent_factory_=parent_factory_)
+
+        if not parent_instance_:
             self._load()
 
-    def _set_parent_name(self, name):
-        self.__parent_name = name
+    @property
+    def parent_location(self):
+        if not self.parent_factory:
+            raise ValueError(&#34;cannot get parent location if parent factory is not set&#34;)
+        return self.parent_factory.location
 
     @property
-    def parent_name(self):
-        return self.__parent_name
+    def location(self):
+        &#34;&#34;&#34;
+        get a unique location for this factory
+
+        Returns:
+            Location: location object
+        &#34;&#34;&#34;
+        name_list = []
+
+        # first, get the location of parent factory if any
+        if self.parent_factory:
+            name_list += self.parent_location.name_list
+
+        # if we have a parent instance, then this location should be unique
+        # for this instance
+        if self.parent_instance:
+            name_list.append(self.parent_instance.instance_name)
+
+        # if this factory have a name, append it too
+        if self.name:
+            name_list.append(self.name)
+
+        # then we append the location of the type
+        type_location = Location.from_type(self.type)
+        name_list += type_location.name_list
+
+        return Location(*name_list)
 
     @property
     def store(self):
-        return self.STORE(self.type, self.__parent_name)
+        return self.STORE(self.location)
 
     def _validate_and_save_instance(self, name, instance):
         instance.validate()
@@ -157,9 +201,6 @@ class StoredFactory(Factory):
         self._try_save_instance(name)
         factory._on_update(new_count)
 
-    def _get_sub_factory_location_name(self, parent_name, factory_name):
-        return &#34;.&#34;.join([self.store.location.name, parent_name, factory_name])
-
     def _setup_data_handlers(self, name, instance):
         &#34;&#34;&#34;setup data update and save handlers for a given instance
 
@@ -182,9 +223,9 @@ class StoredFactory(Factory):
     def _setup_sub_factories(self, name, instance):
         # factories
         # TODO: better use events for factory updates
-        for prop_name, factory in instance._get_factories().items():
-            factory._set_parent_name(self._get_sub_factory_location_name(name, prop_name))
+        for factory in instance._get_factories().values():
             factory._updated = partial(self._instance_sub_factory_updated, name, factory)
+            factory._set_parent_factory(self)
             factory._load()
 
     def new(self, name, *args, **kwargs):
@@ -239,21 +280,35 @@ class StoredFactory(Factory):
 </dd>
 <dt id="jumpscale.core.base.factory.Factory"><code class="flex name class">
 <span>class <span class="ident">Factory</span></span>
-<span>(</span><span>type_, parent_=None)</span>
+<span>(</span><span>type_, name_=None, parent_instance_=None, parent_factory_=None)</span>
 </code></dt>
 <dd>
 <section class="desc"></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class Factory:
-    def __init__(self, type_, parent_=None):
+    def __init__(self, type_, name_=None, parent_instance_=None, parent_factory_=None):
+        self.__name = name_
+        self.__parent_instance = parent_instance_
+        self.__parent_factory = parent_factory_
+
         self.type = type_
-        self.__parent = parent_
         self.count = 0
 
     @property
-    def parent(self):
-        return self.__parent
+    def parent_instance(self):
+        return self.__parent_instance
+
+    @property
+    def name(self):
+        return self.__name
+
+    @property
+    def parent_factory(self):
+        return self.__parent_factory
+
+    def _set_parent_factory(self, factory):
+        self.__parent_factory = factory
 
     def new(self, name, *args, **kwargs):
         if not name.isidentifier():
@@ -263,7 +318,9 @@ class StoredFactory(Factory):
             raise DuplicateError(f&#34;instance with name {name} already exists&#34;)
 
         instance = self.type(*args, **kwargs)
-        instance.set_parent(self.parent)
+        instance._set_instance_name(name)
+        # parent instance of this factory is a parent to all of its instances
+        instance._set_parent(self.parent_instance)
         setattr(self, name, instance)
 
         self.count += 1
@@ -305,14 +362,34 @@ class StoredFactory(Factory):
 </ul>
 <h3>Instance variables</h3>
 <dl>
-<dt id="jumpscale.core.base.factory.Factory.parent"><code class="name">var <span class="ident">parent</span></code></dt>
+<dt id="jumpscale.core.base.factory.Factory.name"><code class="name">var <span class="ident">name</span></code></dt>
 <dd>
 <section class="desc"></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">@property
-def parent(self):
-    return self.__parent</code></pre>
+def name(self):
+    return self.__name</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.core.base.factory.Factory.parent_factory"><code class="name">var <span class="ident">parent_factory</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def parent_factory(self):
+    return self.__parent_factory</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.core.base.factory.Factory.parent_instance"><code class="name">var <span class="ident">parent_instance</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def parent_instance(self):
+    return self.__parent_instance</code></pre>
 </details>
 </dd>
 </dl>
@@ -386,7 +463,9 @@ def parent(self):
         raise DuplicateError(f&#34;instance with name {name} already exists&#34;)
 
     instance = self.type(*args, **kwargs)
-    instance.set_parent(self.parent)
+    instance._set_instance_name(name)
+    # parent instance of this factory is a parent to all of its instances
+    instance._set_parent(self.parent_instance)
     setattr(self, name, instance)
 
     self.count += 1
@@ -398,7 +477,7 @@ def parent(self):
 </dd>
 <dt id="jumpscale.core.base.factory.StoredFactory"><code class="flex name class">
 <span>class <span class="ident">StoredFactory</span></span>
-<span>(</span><span>type_, parent_=None, parent_name=None)</span>
+<span>(</span><span>type_, name_=None, parent_instance_=None, parent_factory_=None)</span>
 </code></dt>
 <dd>
 <section class="desc"></section>
@@ -407,22 +486,50 @@ def parent(self):
 <pre><code class="python">class StoredFactory(Factory):
     STORE = STORES[config.get_config()[&#34;store&#34;]]
 
-    def __init__(self, type_, parent_=None, parent_name=None):
-        super().__init__(type_, parent_=parent_)
-        self._set_parent_name(parent_name)
-        if not parent_name:
+    def __init__(self, type_, name_=None, parent_instance_=None, parent_factory_=None):
+        super().__init__(type_, name_=name_, parent_instance_=parent_instance_, parent_factory_=parent_factory_)
+
+        if not parent_instance_:
             self._load()
 
-    def _set_parent_name(self, name):
-        self.__parent_name = name
+    @property
+    def parent_location(self):
+        if not self.parent_factory:
+            raise ValueError(&#34;cannot get parent location if parent factory is not set&#34;)
+        return self.parent_factory.location
 
     @property
-    def parent_name(self):
-        return self.__parent_name
+    def location(self):
+        &#34;&#34;&#34;
+        get a unique location for this factory
+
+        Returns:
+            Location: location object
+        &#34;&#34;&#34;
+        name_list = []
+
+        # first, get the location of parent factory if any
+        if self.parent_factory:
+            name_list += self.parent_location.name_list
+
+        # if we have a parent instance, then this location should be unique
+        # for this instance
+        if self.parent_instance:
+            name_list.append(self.parent_instance.instance_name)
+
+        # if this factory have a name, append it too
+        if self.name:
+            name_list.append(self.name)
+
+        # then we append the location of the type
+        type_location = Location.from_type(self.type)
+        name_list += type_location.name_list
+
+        return Location(*name_list)
 
     @property
     def store(self):
-        return self.STORE(self.type, self.__parent_name)
+        return self.STORE(self.location)
 
     def _validate_and_save_instance(self, name, instance):
         instance.validate()
@@ -459,9 +566,6 @@ def parent(self):
         self._try_save_instance(name)
         factory._on_update(new_count)
 
-    def _get_sub_factory_location_name(self, parent_name, factory_name):
-        return &#34;.&#34;.join([self.store.location.name, parent_name, factory_name])
-
     def _setup_data_handlers(self, name, instance):
         &#34;&#34;&#34;setup data update and save handlers for a given instance
 
@@ -484,9 +588,9 @@ def parent(self):
     def _setup_sub_factories(self, name, instance):
         # factories
         # TODO: better use events for factory updates
-        for prop_name, factory in instance._get_factories().items():
-            factory._set_parent_name(self._get_sub_factory_location_name(name, prop_name))
+        for factory in instance._get_factories().values():
             factory._updated = partial(self._instance_sub_factory_updated, name, factory)
+            factory._set_parent_factory(self)
             factory._load()
 
     def new(self, name, *args, **kwargs):
@@ -526,14 +630,56 @@ It saves the config relative to <code>config_env.get_store_config("filesystem")<
 </dl>
 <h3>Instance variables</h3>
 <dl>
-<dt id="jumpscale.core.base.factory.StoredFactory.parent_name"><code class="name">var <span class="ident">parent_name</span></code></dt>
+<dt id="jumpscale.core.base.factory.StoredFactory.location"><code class="name">var <span class="ident">location</span></code></dt>
+<dd>
+<section class="desc"><p>get a unique location for this factory</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>Location</code></strong></dt>
+<dd>location object</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def location(self):
+    &#34;&#34;&#34;
+    get a unique location for this factory
+
+    Returns:
+        Location: location object
+    &#34;&#34;&#34;
+    name_list = []
+
+    # first, get the location of parent factory if any
+    if self.parent_factory:
+        name_list += self.parent_location.name_list
+
+    # if we have a parent instance, then this location should be unique
+    # for this instance
+    if self.parent_instance:
+        name_list.append(self.parent_instance.instance_name)
+
+    # if this factory have a name, append it too
+    if self.name:
+        name_list.append(self.name)
+
+    # then we append the location of the type
+    type_location = Location.from_type(self.type)
+    name_list += type_location.name_list
+
+    return Location(*name_list)</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.core.base.factory.StoredFactory.parent_location"><code class="name">var <span class="ident">parent_location</span></code></dt>
 <dd>
 <section class="desc"></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">@property
-def parent_name(self):
-    return self.__parent_name</code></pre>
+def parent_location(self):
+    if not self.parent_factory:
+        raise ValueError(&#34;cannot get parent location if parent factory is not set&#34;)
+    return self.parent_factory.location</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.core.base.factory.StoredFactory.store"><code class="name">var <span class="ident">store</span></code></dt>
@@ -543,7 +689,7 @@ def parent_name(self):
 <summary>Source code</summary>
 <pre><code class="python">@property
 def store(self):
-    return self.STORE(self.type, self.__parent_name)</code></pre>
+    return self.STORE(self.location)</code></pre>
 </details>
 </dd>
 </dl>
@@ -614,8 +760,10 @@ def store(self):
 <li><code><a title="jumpscale.core.base.factory.Factory.find" href="#jumpscale.core.base.factory.Factory.find">find</a></code></li>
 <li><code><a title="jumpscale.core.base.factory.Factory.get" href="#jumpscale.core.base.factory.Factory.get">get</a></code></li>
 <li><code><a title="jumpscale.core.base.factory.Factory.list_all" href="#jumpscale.core.base.factory.Factory.list_all">list_all</a></code></li>
+<li><code><a title="jumpscale.core.base.factory.Factory.name" href="#jumpscale.core.base.factory.Factory.name">name</a></code></li>
 <li><code><a title="jumpscale.core.base.factory.Factory.new" href="#jumpscale.core.base.factory.Factory.new">new</a></code></li>
-<li><code><a title="jumpscale.core.base.factory.Factory.parent" href="#jumpscale.core.base.factory.Factory.parent">parent</a></code></li>
+<li><code><a title="jumpscale.core.base.factory.Factory.parent_factory" href="#jumpscale.core.base.factory.Factory.parent_factory">parent_factory</a></code></li>
+<li><code><a title="jumpscale.core.base.factory.Factory.parent_instance" href="#jumpscale.core.base.factory.Factory.parent_instance">parent_instance</a></code></li>
 </ul>
 </li>
 <li>
@@ -624,8 +772,9 @@ def store(self):
 <li><code><a title="jumpscale.core.base.factory.StoredFactory.STORE" href="#jumpscale.core.base.factory.StoredFactory.STORE">STORE</a></code></li>
 <li><code><a title="jumpscale.core.base.factory.StoredFactory.delete" href="#jumpscale.core.base.factory.StoredFactory.delete">delete</a></code></li>
 <li><code><a title="jumpscale.core.base.factory.StoredFactory.list_all" href="#jumpscale.core.base.factory.StoredFactory.list_all">list_all</a></code></li>
+<li><code><a title="jumpscale.core.base.factory.StoredFactory.location" href="#jumpscale.core.base.factory.StoredFactory.location">location</a></code></li>
 <li><code><a title="jumpscale.core.base.factory.StoredFactory.new" href="#jumpscale.core.base.factory.StoredFactory.new">new</a></code></li>
-<li><code><a title="jumpscale.core.base.factory.StoredFactory.parent_name" href="#jumpscale.core.base.factory.StoredFactory.parent_name">parent_name</a></code></li>
+<li><code><a title="jumpscale.core.base.factory.StoredFactory.parent_location" href="#jumpscale.core.base.factory.StoredFactory.parent_location">parent_location</a></code></li>
 <li><code><a title="jumpscale.core.base.factory.StoredFactory.store" href="#jumpscale.core.base.factory.StoredFactory.store">store</a></code></li>
 </ul>
 </li>

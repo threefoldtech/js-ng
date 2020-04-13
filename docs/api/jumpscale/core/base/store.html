@@ -52,28 +52,34 @@ class InvalidPrivateKey(Exception):
 
 
 class Location:
-    &#34;&#34;&#34;dot-separated auto-location for any type
+    &#34;&#34;&#34;
+    dot-separated auto-location for any type
 
     for example, if we have a class in jumpscale/clients/redis/&lt;type&gt;
     location name will be jumpscale.clients.redis.&lt;type&gt;
-
-    it can have a parent of any name
     &#34;&#34;&#34;
 
-    def __init__(self, type_, parent_name):
-        self.type = type_
-
-        self.path_list = [self.type.__module__, self.type.__name__]
-        if parent_name:
-            self.path_list = [parent_name] + self.path_list
+    def __init__(self, *name_list):
+        self.name_list = list(name_list)
 
     @property
     def name(self):
-        return &#34;.&#34;.join(self.path_list)
+        return &#34;.&#34;.join(self.name_list)
 
     @property
     def path(self):
         return os.path.join(*self.name.split(&#34;.&#34;))
+
+    @classmethod
+    def from_type(cls, type_):
+        return cls(type_.__module__, type_.__name__)
+
+    def __str__(self):
+        args = &#34;&#39;, &#39;&#34;.join(self.name_list)
+        cls_name = self.__class__.__name__
+        return f&#34;{cls_name}(&#39;{args}&#39;)&#34;
+
+    __repr__ = __str__
 
 
 class EncryptionMode(Enum):
@@ -133,10 +139,8 @@ class ConfigStore(ABC):
 class EncryptedConfigStore(ConfigStore, EncryptionMixin):
     &#34;&#34;&#34;secure config storage base&#34;&#34;&#34;
 
-    # TODO: encrypt/decrypt by section (config key)
-
-    def __init__(self, type_, parent_name=None):
-        self.type = type_
+    def __init__(self, location):
+        self.location = location
         self.config_env = Environment()
         self.priv_key = base64.decode(self.config_env.get_private_key())
         self.nacl = NACL(private_key=self.priv_key)
@@ -144,15 +148,6 @@ class EncryptedConfigStore(ConfigStore, EncryptionMixin):
 
         if not self.priv_key:
             raise InvalidPrivateKey
-
-        self.parent_name = parent_name
-
-    def get_type_location(self, type_, parent_name):
-        return Location(type_, parent_name)
-
-    @property
-    def location(self):
-        return self.get_type_location(self.type, self.parent_name)
 
     def _encrypt_value(self, value):
         return base64.encode(self.encrypt(value)).decode(&#34;ascii&#34;)
@@ -216,8 +211,8 @@ class FileSystemStore(EncryptedConfigStore):
 
     &#34;&#34;&#34;
 
-    def __init__(self, type_, parent_name=None):
-        super(FileSystemStore, self).__init__(type_, parent_name)
+    def __init__(self, location):
+        super(FileSystemStore, self).__init__(location)
         self.root = self.config_env.get_store_config(&#34;filesystem&#34;)[&#34;path&#34;]
 
     @property
@@ -260,8 +255,8 @@ class RedisStore(EncryptedConfigStore):
     It saves the data in redis and configuration for redis comes from `config_env.get_store_config(&#34;redis&#34;)`
     &#34;&#34;&#34;
 
-    def __init__(self, type_, parent_name=None):
-        super().__init__(type_, parent_name)
+    def __init__(self, location):
+        super().__init__(location)
         redis_config = self.config_env.get_store_config(&#34;redis&#34;)
         self.redis_client = redis.Redis(redis_config[&#34;hostname&#34;], redis_config[&#34;port&#34;])
 
@@ -271,7 +266,7 @@ class RedisStore(EncryptedConfigStore):
     def read(self, instance_name):
         return self.redis_client.get(self.get_key(instance_name))
 
-    def get_type_keys(self):
+    def get_location_keys(self):
         return self.redis_client.keys(f&#34;{self.location.name}.*&#34;)
 
     def get_instance_keys(self, instance_name):
@@ -280,7 +275,7 @@ class RedisStore(EncryptedConfigStore):
     def list_all(self):
         names = []
 
-        keys = self.get_type_keys()
+        keys = self.get_location_keys()
         for key in keys:
             name = key.decode().replace(self.location.name, &#34;&#34;).lstrip(&#34;.&#34;)
             if &#34;.&#34; not in name:
@@ -392,7 +387,7 @@ def write(self, instance_name, data):
 </dd>
 <dt id="jumpscale.core.base.store.EncryptedConfigStore"><code class="flex name class">
 <span>class <span class="ident">EncryptedConfigStore</span></span>
-<span>(</span><span>type_, parent_name=None)</span>
+<span>(</span><span>location)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>secure config storage base</p></section>
@@ -401,10 +396,8 @@ def write(self, instance_name, data):
 <pre><code class="python">class EncryptedConfigStore(ConfigStore, EncryptionMixin):
     &#34;&#34;&#34;secure config storage base&#34;&#34;&#34;
 
-    # TODO: encrypt/decrypt by section (config key)
-
-    def __init__(self, type_, parent_name=None):
-        self.type = type_
+    def __init__(self, location):
+        self.location = location
         self.config_env = Environment()
         self.priv_key = base64.decode(self.config_env.get_private_key())
         self.nacl = NACL(private_key=self.priv_key)
@@ -412,15 +405,6 @@ def write(self, instance_name, data):
 
         if not self.priv_key:
             raise InvalidPrivateKey
-
-        self.parent_name = parent_name
-
-    def get_type_location(self, type_, parent_name):
-        return Location(type_, parent_name)
-
-    @property
-    def location(self):
-        return self.get_type_location(self.type, self.parent_name)
 
     def _encrypt_value(self, value):
         return base64.encode(self.encrypt(value)).decode(&#34;ascii&#34;)
@@ -488,19 +472,6 @@ def write(self, instance_name, data):
 <li><a title="jumpscale.core.base.store.FileSystemStore" href="#jumpscale.core.base.store.FileSystemStore">FileSystemStore</a></li>
 <li><a title="jumpscale.core.base.store.RedisStore" href="#jumpscale.core.base.store.RedisStore">RedisStore</a></li>
 </ul>
-<h3>Instance variables</h3>
-<dl>
-<dt id="jumpscale.core.base.store.EncryptedConfigStore.location"><code class="name">var <span class="ident">location</span></code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">@property
-def location(self):
-    return self.get_type_location(self.type, self.parent_name)</code></pre>
-</details>
-</dd>
-</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="jumpscale.core.base.store.EncryptedConfigStore.get"><code class="name flex">
@@ -542,17 +513,6 @@ def location(self):
 <summary>Source code</summary>
 <pre><code class="python">def get_all(self):
     return {name: self.get(name) for name in self.list_all()}</code></pre>
-</details>
-</dd>
-<dt id="jumpscale.core.base.store.EncryptedConfigStore.get_type_location"><code class="name flex">
-<span>def <span class="ident">get_type_location</span></span>(<span>self, type_, parent_name)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def get_type_location(self, type_, parent_name):
-    return Location(type_, parent_name)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.core.base.store.EncryptedConfigStore.save"><code class="name flex">
@@ -733,7 +693,7 @@ def location(self):
 </dd>
 <dt id="jumpscale.core.base.store.FileSystemStore"><code class="flex name class">
 <span>class <span class="ident">FileSystemStore</span></span>
-<span>(</span><span>type_, parent_name=None)</span>
+<span>(</span><span>location)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Filesystem store is an EncryptedConfigStore
@@ -746,8 +706,8 @@ It saves the config relative to <code>config_env.get_store_config("filesystem")<
 
     &#34;&#34;&#34;
 
-    def __init__(self, type_, parent_name=None):
-        super(FileSystemStore, self).__init__(type_, parent_name)
+    def __init__(self, location):
+        super(FileSystemStore, self).__init__(location)
         self.root = self.config_env.get_store_config(&#34;filesystem&#34;)[&#34;path&#34;]
 
     @property
@@ -924,39 +884,59 @@ def config_root(self):
 </dd>
 <dt id="jumpscale.core.base.store.Location"><code class="flex name class">
 <span>class <span class="ident">Location</span></span>
-<span>(</span><span>type_, parent_name)</span>
+<span>(</span><span>*name_list)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>dot-separated auto-location for any type</p>
 <p>for example, if we have a class in jumpscale/clients/redis/<type>
-location name will be jumpscale.clients.redis.<type></p>
-<p>it can have a parent of any name</p></section>
+location name will be jumpscale.clients.redis.<type></p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class Location:
-    &#34;&#34;&#34;dot-separated auto-location for any type
+    &#34;&#34;&#34;
+    dot-separated auto-location for any type
 
     for example, if we have a class in jumpscale/clients/redis/&lt;type&gt;
     location name will be jumpscale.clients.redis.&lt;type&gt;
-
-    it can have a parent of any name
     &#34;&#34;&#34;
 
-    def __init__(self, type_, parent_name):
-        self.type = type_
-
-        self.path_list = [self.type.__module__, self.type.__name__]
-        if parent_name:
-            self.path_list = [parent_name] + self.path_list
+    def __init__(self, *name_list):
+        self.name_list = list(name_list)
 
     @property
     def name(self):
-        return &#34;.&#34;.join(self.path_list)
+        return &#34;.&#34;.join(self.name_list)
 
     @property
     def path(self):
-        return os.path.join(*self.name.split(&#34;.&#34;))</code></pre>
+        return os.path.join(*self.name.split(&#34;.&#34;))
+
+    @classmethod
+    def from_type(cls, type_):
+        return cls(type_.__module__, type_.__name__)
+
+    def __str__(self):
+        args = &#34;&#39;, &#39;&#34;.join(self.name_list)
+        cls_name = self.__class__.__name__
+        return f&#34;{cls_name}(&#39;{args}&#39;)&#34;
+
+    __repr__ = __str__</code></pre>
 </details>
+<h3>Static methods</h3>
+<dl>
+<dt id="jumpscale.core.base.store.Location.from_type"><code class="name flex">
+<span>def <span class="ident">from_type</span></span>(<span>type_)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@classmethod
+def from_type(cls, type_):
+    return cls(type_.__module__, type_.__name__)</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Instance variables</h3>
 <dl>
 <dt id="jumpscale.core.base.store.Location.name"><code class="name">var <span class="ident">name</span></code></dt>
@@ -966,7 +946,7 @@ location name will be jumpscale.clients.redis.<type></p>
 <summary>Source code</summary>
 <pre><code class="python">@property
 def name(self):
-    return &#34;.&#34;.join(self.path_list)</code></pre>
+    return &#34;.&#34;.join(self.name_list)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.core.base.store.Location.path"><code class="name">var <span class="ident">path</span></code></dt>
@@ -983,7 +963,7 @@ def path(self):
 </dd>
 <dt id="jumpscale.core.base.store.RedisStore"><code class="flex name class">
 <span>class <span class="ident">RedisStore</span></span>
-<span>(</span><span>type_, parent_name=None)</span>
+<span>(</span><span>location)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>RedisStore store is an EncryptedConfigStore
@@ -995,8 +975,8 @@ It saves the data in redis and configuration for redis comes from <code>config_e
     It saves the data in redis and configuration for redis comes from `config_env.get_store_config(&#34;redis&#34;)`
     &#34;&#34;&#34;
 
-    def __init__(self, type_, parent_name=None):
-        super().__init__(type_, parent_name)
+    def __init__(self, location):
+        super().__init__(location)
         redis_config = self.config_env.get_store_config(&#34;redis&#34;)
         self.redis_client = redis.Redis(redis_config[&#34;hostname&#34;], redis_config[&#34;port&#34;])
 
@@ -1006,7 +986,7 @@ It saves the data in redis and configuration for redis comes from <code>config_e
     def read(self, instance_name):
         return self.redis_client.get(self.get_key(instance_name))
 
-    def get_type_keys(self):
+    def get_location_keys(self):
         return self.redis_client.keys(f&#34;{self.location.name}.*&#34;)
 
     def get_instance_keys(self, instance_name):
@@ -1015,7 +995,7 @@ It saves the data in redis and configuration for redis comes from <code>config_e
     def list_all(self):
         names = []
 
-        keys = self.get_type_keys()
+        keys = self.get_location_keys()
         for key in keys:
             name = key.decode().replace(self.location.name, &#34;&#34;).lstrip(&#34;.&#34;)
             if &#34;.&#34; not in name:
@@ -1070,14 +1050,14 @@ It saves the data in redis and configuration for redis comes from <code>config_e
     return &#34;.&#34;.join([self.location.name, instance_name])</code></pre>
 </details>
 </dd>
-<dt id="jumpscale.core.base.store.RedisStore.get_type_keys"><code class="name flex">
-<span>def <span class="ident">get_type_keys</span></span>(<span>self)</span>
+<dt id="jumpscale.core.base.store.RedisStore.get_location_keys"><code class="name flex">
+<span>def <span class="ident">get_location_keys</span></span>(<span>self)</span>
 </code></dt>
 <dd>
 <section class="desc"></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def get_type_keys(self):
+<pre><code class="python">def get_location_keys(self):
     return self.redis_client.keys(f&#34;{self.location.name}.*&#34;)</code></pre>
 </details>
 </dd>
@@ -1091,7 +1071,7 @@ It saves the data in redis and configuration for redis comes from <code>config_e
 <pre><code class="python">def list_all(self):
     names = []
 
-    keys = self.get_type_keys()
+    keys = self.get_location_keys()
     for key in keys:
         name = key.decode().replace(self.location.name, &#34;&#34;).lstrip(&#34;.&#34;)
         if &#34;.&#34; not in name:
@@ -1164,8 +1144,6 @@ It saves the data in redis and configuration for redis comes from <code>config_e
 <ul class="">
 <li><code><a title="jumpscale.core.base.store.EncryptedConfigStore.get" href="#jumpscale.core.base.store.EncryptedConfigStore.get">get</a></code></li>
 <li><code><a title="jumpscale.core.base.store.EncryptedConfigStore.get_all" href="#jumpscale.core.base.store.EncryptedConfigStore.get_all">get_all</a></code></li>
-<li><code><a title="jumpscale.core.base.store.EncryptedConfigStore.get_type_location" href="#jumpscale.core.base.store.EncryptedConfigStore.get_type_location">get_type_location</a></code></li>
-<li><code><a title="jumpscale.core.base.store.EncryptedConfigStore.location" href="#jumpscale.core.base.store.EncryptedConfigStore.location">location</a></code></li>
 <li><code><a title="jumpscale.core.base.store.EncryptedConfigStore.save" href="#jumpscale.core.base.store.EncryptedConfigStore.save">save</a></code></li>
 </ul>
 </li>
@@ -1202,6 +1180,7 @@ It saves the data in redis and configuration for redis comes from <code>config_e
 <li>
 <h4><code><a title="jumpscale.core.base.store.Location" href="#jumpscale.core.base.store.Location">Location</a></code></h4>
 <ul class="">
+<li><code><a title="jumpscale.core.base.store.Location.from_type" href="#jumpscale.core.base.store.Location.from_type">from_type</a></code></li>
 <li><code><a title="jumpscale.core.base.store.Location.name" href="#jumpscale.core.base.store.Location.name">name</a></code></li>
 <li><code><a title="jumpscale.core.base.store.Location.path" href="#jumpscale.core.base.store.Location.path">path</a></code></li>
 </ul>
@@ -1212,7 +1191,7 @@ It saves the data in redis and configuration for redis comes from <code>config_e
 <li><code><a title="jumpscale.core.base.store.RedisStore.delete" href="#jumpscale.core.base.store.RedisStore.delete">delete</a></code></li>
 <li><code><a title="jumpscale.core.base.store.RedisStore.get_instance_keys" href="#jumpscale.core.base.store.RedisStore.get_instance_keys">get_instance_keys</a></code></li>
 <li><code><a title="jumpscale.core.base.store.RedisStore.get_key" href="#jumpscale.core.base.store.RedisStore.get_key">get_key</a></code></li>
-<li><code><a title="jumpscale.core.base.store.RedisStore.get_type_keys" href="#jumpscale.core.base.store.RedisStore.get_type_keys">get_type_keys</a></code></li>
+<li><code><a title="jumpscale.core.base.store.RedisStore.get_location_keys" href="#jumpscale.core.base.store.RedisStore.get_location_keys">get_location_keys</a></code></li>
 <li><code><a title="jumpscale.core.base.store.RedisStore.list_all" href="#jumpscale.core.base.store.RedisStore.list_all">list_all</a></code></li>
 <li><code><a title="jumpscale.core.base.store.RedisStore.read" href="#jumpscale.core.base.store.RedisStore.read">read</a></code></li>
 <li><code><a title="jumpscale.core.base.store.RedisStore.write" href="#jumpscale.core.base.store.RedisStore.write">write</a></code></li>

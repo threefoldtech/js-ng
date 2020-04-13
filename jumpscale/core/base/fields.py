@@ -155,7 +155,7 @@ class Typed(Field):
         super().validate(value)
         if value is not None:
             if not isinstance(value, self.type):
-                raise ValidationError(f"value is not of type {self.type}")
+                raise ValidationError(f"value {value} is not of type {self.type}")
 
 
 class Boolean(Typed):

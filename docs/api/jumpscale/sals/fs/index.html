@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.4" />
 <title>jumpscale.sals.fs API documentation</title>
-<meta name="description" content="TODO docs for fs." />
+<meta name="description" content="This module is providing everything needed for decent filesystem management …" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -20,11 +20,148 @@
 <h1 class="title">Module <code>jumpscale.sals.fs</code></h1>
 </header>
 <section id="section-intro">
-<h1 id="todo-docs-for-fs">TODO docs for fs.</h1>
+<p>This module is providing everything needed for decent filesystem management</p>
+<pre><code>        j.sals.fs.cwd()  -&gt; '/home/rafy'
+        j.sals.fs.is_dir(path= '/home/rafy')  -&gt; True
+        j.sals.fs.is_file(path= '/home/rafy')  -&gt; False
+        j.sals.fs.is_absolute('/home/rafy/')  -&gt; True
+        j.sals.fs.is_empty_dir(&quot;/home/rafy/empty_dir&quot;)  -&gt; True
+        j.sals.fs.mkdirs(&quot;/home/rafy/testing_make_dir/test1/test2&quot;,exist_ok=False)
+        j.sals.fs.mkdirs(&quot;/home/rafy/testing_make_dir/test1/test2&quot;,exist_ok=True)
+        j.sals.fs.is_ascii_file(path=&quot;/home/rafy/testfile&quot;)  -&gt; True
+        j.sals.fs.stem(&quot;/tmp/tmp-5383p1GOmMOOwvfi.tpl&quot;)  -&gt; 'tmp-5383p1GOmMOOwvfi'
+        j.sals.fs.parent(&quot;/home/rafy/testing_make_dir/test1&quot;)  -&gt; '/home/rafy/testing_make_dir'
+        j.sals.fs.parents(&quot;/tmp/home/ahmed/myfile.py&quot;) -&gt;
+    [PosixPath('/tmp/home/ahmed'),
+    PosixPath('/tmp/home'),
+    PosixPath('/tmp'),
+    PosixPath('/')]
+</code></pre>
+<pre><code>&gt; j.sals.fs.exists(&quot;/home/rafy/testing_make_dir/test1&quot;)
+True
+&gt; j.sals.fs.rename(&quot;/home/rafy/testing_make_dir&quot;,&quot;/home/rafy/testing_dir&quot;)
+&gt; j.sals.fs.expanduser(&quot;~/work&quot;)
+'/home/xmonader/work'
+&gt; j.sals.fs.unlink(&quot;/home/rafy/testfile3&quot;)
+&gt; j.sals.fs.read_text(&quot;/home/rafy/testing_text.txt&quot;)
+'hello world
+'
+&gt; j.sals.fs.read_bytes(&quot;/home/rafy/testing_text.txt&quot;)
+b'hello world
+'
+&gt; j.sals.fs.write_text(path=&quot;/home/rafy/testing_text.txt&quot;,data=&quot;hello world&quot;)
+11
+&gt; j.sals.fs.write_bytes(path=&quot;/home/rafy/testing_text.txt&quot;,data=b&quot;hello world&quot;)
+11
+&gt; j.sals.fs.touch(&quot;/home/rafy/testing_touch&quot;)
+&gt; j.sals.fs.get_temp_filename(dir=&quot;/home/rafy/&quot;)
+'/home/rafy/tmp6x7w71ml'
+&gt; j.sals.fs.get_temp_dirname(dir=&quot;/home/rafy&quot;)
+'/home/rafy/tmpntm2ptqy'
+&gt; j.sals.fs.join_paths(&quot;home&quot;,&quot;rafy&quot;)
+'home/rafy'
+&gt; j.sals.fs.rm_emptry_dir(&quot;/home/rafy/empty_dir&quot;)
+&gt; j.sals.fs.copy_file(src=&quot;/home/rafy/testing_text.txt&quot;,dst=&quot;/home/rafy/Documents/testing_text.txt&quot;)
+&gt; j.sals.fs.symlink(src=&quot;/home/rafy/testing_text.txt&quot;,dst=&quot;/home/rafy/link_test&quot;)
+&gt; j.sals.fs.change_dir(&quot;/home/rafy/Documents&quot;)
+'/home/rafy/Documents'
+&gt; j.sals.fs.chmod(&quot;/home/rafy/testing_dir&quot;,777)
+&gt; j.sals.fs.stat(&quot;/home/rafy/test_dir/test&quot;)
+os.stat_result(st_mode=33204, st_ino=795348, st_dev=2049, st_nlink=1, st_uid=1000, st_gid=1000, st_size=0, st_atime=1586445434, st_mtime=1586445434, st_ctime=1586445434)
+&gt; j.sals.fs.lstat(&quot;/home/rafy/testing_link&quot;)
+os.stat_result(st_mode=41471, st_ino=7081257, st_dev=2049, st_nlink=1, st_uid=1000, st_gid=1000, st_size=16, st_atime=1586445737, st_mtime=1586445734, st_ctime=1586445734)
+&gt; j.sals.fs.resolve(&quot;&quot;)
+PosixPath('/home/rafy/Documents')
+&gt; j.sals.fs.resolve(&quot;./testing_text.txt&quot;)
+PosixPath('/home/rafy/Documents/testing_text.txt')
+&gt; '/home/ahmed/myfile.py'
+`.py` if include_dot else `py`
+
+</code></pre>
+<p>And very fancy walkers</p>
+<pre><code>        for el in walk('/tmp', filter_fun=j.sals.fs.is_file) : ..
+        for el in walk('/tmp', filter_fun=j.sals.fs.is_dir) : ..
+        for el in walk('/tmp', filter_fun= lambda x: len(x)&gt;4 and (j.sals.fs.is_file(x) or j.sals.fs.is_dir(x)) ) : ..
+        for el in walk('/tmp', filter=j.sals.fs.is_file) : ..
+        for el in walk('/tmp', filter=j.sals.fs.is_dir) : ..
+        for el in walk('/tmp', filter= lambda x: len(x)&gt;4 and (j.sals.fs.is_file(x) or j.sals.fs.is_dir(x)) ) : ..
+        for el in walk_files('/tmp') : ..
+        for el in walk_dirs('/tmp') : ..
+</code></pre>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">&#34;&#34;&#34;
-#TODO docs for fs.
+<pre><code class="python">&#34;&#34;&#34;This module is providing everything needed for decent filesystem management
+
+```
+        j.sals.fs.cwd()  -&gt; &#39;/home/rafy&#39;
+        j.sals.fs.is_dir(path= &#39;/home/rafy&#39;)  -&gt; True
+        j.sals.fs.is_file(path= &#39;/home/rafy&#39;)  -&gt; False
+        j.sals.fs.is_absolute(&#39;/home/rafy/&#39;)  -&gt; True
+        j.sals.fs.is_empty_dir(&#34;/home/rafy/empty_dir&#34;)  -&gt; True
+        j.sals.fs.mkdirs(&#34;/home/rafy/testing_make_dir/test1/test2&#34;,exist_ok=False)
+        j.sals.fs.mkdirs(&#34;/home/rafy/testing_make_dir/test1/test2&#34;,exist_ok=True)
+        j.sals.fs.is_ascii_file(path=&#34;/home/rafy/testfile&#34;)  -&gt; True
+        j.sals.fs.stem(&#34;/tmp/tmp-5383p1GOmMOOwvfi.tpl&#34;)  -&gt; &#39;tmp-5383p1GOmMOOwvfi&#39;
+        j.sals.fs.parent(&#34;/home/rafy/testing_make_dir/test1&#34;)  -&gt; &#39;/home/rafy/testing_make_dir&#39;
+        j.sals.fs.parents(&#34;/tmp/home/ahmed/myfile.py&#34;) -&gt;
+    [PosixPath(&#39;/tmp/home/ahmed&#39;),
+    PosixPath(&#39;/tmp/home&#39;),
+    PosixPath(&#39;/tmp&#39;),
+    PosixPath(&#39;/&#39;)]
+```
+
+
+```
+&gt; j.sals.fs.exists(&#34;/home/rafy/testing_make_dir/test1&#34;)
+True
+&gt; j.sals.fs.rename(&#34;/home/rafy/testing_make_dir&#34;,&#34;/home/rafy/testing_dir&#34;)
+&gt; j.sals.fs.expanduser(&#34;~/work&#34;)
+&#39;/home/xmonader/work&#39;
+&gt; j.sals.fs.unlink(&#34;/home/rafy/testfile3&#34;)
+&gt; j.sals.fs.read_text(&#34;/home/rafy/testing_text.txt&#34;)
+&#39;hello world\n&#39;
+&gt; j.sals.fs.read_bytes(&#34;/home/rafy/testing_text.txt&#34;)
+b&#39;hello world\n&#39;
+&gt; j.sals.fs.write_text(path=&#34;/home/rafy/testing_text.txt&#34;,data=&#34;hello world&#34;)
+11
+&gt; j.sals.fs.write_bytes(path=&#34;/home/rafy/testing_text.txt&#34;,data=b&#34;hello world&#34;)
+11
+&gt; j.sals.fs.touch(&#34;/home/rafy/testing_touch&#34;)
+&gt; j.sals.fs.get_temp_filename(dir=&#34;/home/rafy/&#34;)
+&#39;/home/rafy/tmp6x7w71ml&#39;
+&gt; j.sals.fs.get_temp_dirname(dir=&#34;/home/rafy&#34;)
+&#39;/home/rafy/tmpntm2ptqy&#39;
+&gt; j.sals.fs.join_paths(&#34;home&#34;,&#34;rafy&#34;)
+&#39;home/rafy&#39;
+&gt; j.sals.fs.rm_emptry_dir(&#34;/home/rafy/empty_dir&#34;)
+&gt; j.sals.fs.copy_file(src=&#34;/home/rafy/testing_text.txt&#34;,dst=&#34;/home/rafy/Documents/testing_text.txt&#34;)
+&gt; j.sals.fs.symlink(src=&#34;/home/rafy/testing_text.txt&#34;,dst=&#34;/home/rafy/link_test&#34;)
+&gt; j.sals.fs.change_dir(&#34;/home/rafy/Documents&#34;)
+&#39;/home/rafy/Documents&#39;
+&gt; j.sals.fs.chmod(&#34;/home/rafy/testing_dir&#34;,777)
+&gt; j.sals.fs.stat(&#34;/home/rafy/test_dir/test&#34;)
+os.stat_result(st_mode=33204, st_ino=795348, st_dev=2049, st_nlink=1, st_uid=1000, st_gid=1000, st_size=0, st_atime=1586445434, st_mtime=1586445434, st_ctime=1586445434)
+&gt; j.sals.fs.lstat(&#34;/home/rafy/testing_link&#34;)
+os.stat_result(st_mode=41471, st_ino=7081257, st_dev=2049, st_nlink=1, st_uid=1000, st_gid=1000, st_size=16, st_atime=1586445737, st_mtime=1586445734, st_ctime=1586445734)
+&gt; j.sals.fs.resolve(&#34;&#34;)
+PosixPath(&#39;/home/rafy/Documents&#39;)
+&gt; j.sals.fs.resolve(&#34;./testing_text.txt&#34;)
+PosixPath(&#39;/home/rafy/Documents/testing_text.txt&#39;)
+&gt; &#39;/home/ahmed/myfile.py&#39;
+`.py` if include_dot else `py`
+
+```
+And very fancy walkers
+```
+        for el in walk(&#39;/tmp&#39;, filter_fun=j.sals.fs.is_file) : ..
+        for el in walk(&#39;/tmp&#39;, filter_fun=j.sals.fs.is_dir) : ..
+        for el in walk(&#39;/tmp&#39;, filter_fun= lambda x: len(x)&gt;4 and (j.sals.fs.is_file(x) or j.sals.fs.is_dir(x)) ) : ..
+        for el in walk(&#39;/tmp&#39;, filter=j.sals.fs.is_file) : ..
+        for el in walk(&#39;/tmp&#39;, filter=j.sals.fs.is_dir) : ..
+        for el in walk(&#39;/tmp&#39;, filter= lambda x: len(x)&gt;4 and (j.sals.fs.is_file(x) or j.sals.fs.is_dir(x)) ) : ..
+        for el in walk_files(&#39;/tmp&#39;) : ..
+        for el in walk_dirs(&#39;/tmp&#39;) : ..
+```
 
 &#34;&#34;&#34;
 
@@ -52,32 +189,48 @@ expanduser = os.path.expanduser
 realpath = os.path.realpath
 
 
-def home():
+def home() -&gt; str:
+    &#34;&#34;&#34;Return the home directory
+    e.g
+        j.sals.fs.home()  -&gt; &#39;/home/rafy&#39;
+
+    Returns:
+        str: home directory.
+    &#34;&#34;&#34;
     return str(pathlib.Path.home())
 
 
-def cwd():
+def cwd() -&gt; str:
     &#34;&#34;&#34;Return current working directory.
+    e.g
+        j.sals.fs.cwd()  -&gt; &#39;/home/rafy&#39;
+
 
     Returns:
-        str: current directory.
+        str: current directory
     &#34;&#34;&#34;
     return str(pathlib.Path.cwd())
 
 
 def is_dir(path: str) -&gt; bool:
     &#34;&#34;&#34;Checks if path is a dir
+    e.g
+        j.sals.fs.is_dir(path= &#39;/home/rafy&#39;)  -&gt; True
+        j.sals.fs.is_dir(path= &#39;/home/rafy/file.txt&#39;)  -&gt; False
 
-    :param path: path to check
-    :type path: str
-    :return: True if is dir else False
-    :rtype: bool
+    Args:
+        path (str): path to check if is directory
+    Returns:
+        bool: True if is dir and False otherwise
     &#34;&#34;&#34;
     return pathlib.Path(path).is_dir()
 
 
 def is_file(path: str) -&gt; bool:
     &#34;&#34;&#34;Checks if path is a file
+    e.g
+        j.sals.fs.is_file(path= &#39;/home/rafy&#39;)  -&gt; False
+        j.sals.fs.is_file(path= &#39;/home/rafy/file.txt&#39;)  -&gt; True
 
     Args:
         path (str): path to check if is file
@@ -90,6 +243,9 @@ def is_file(path: str) -&gt; bool:
 
 def is_symlink(path: str) -&gt; bool:
     &#34;&#34;&#34;Checks if path symlink
+    e.g
+        j.sals.fs.is_symlink(&#39;/home/rafy/testfile3&#39;)  -&gt; True
+        j.sals.fs.is_symlink(&#39;/home/rafy/testfile2&#39;)  -&gt; False
 
     Args:
         path (str): path to check if symlink
@@ -102,6 +258,12 @@ def is_symlink(path: str) -&gt; bool:
 
 def is_absolute(path: str) -&gt; bool:
     &#34;&#34;&#34;Checks if path is absolute
+    e.g
+        j.sals.fs.is_absolute(&#39;/home/rafy/&#39;)  -&gt; True
+        j.sals.fs.is_absolute(&#39;~/rafy/&#39;)  -&gt; False
+
+    Args:
+        path (str): path to check if it is absolute
 
     Returns:
         bool: True if absolute
@@ -110,16 +272,23 @@ def is_absolute(path: str) -&gt; bool:
 
 
 def is_mount(path: str) -&gt; bool:
+    # TODO add example here
     &#34;&#34;&#34;Checks if path is mount
+
+    Args:
+        path (str): path to check if it is mounded or not
 
     Returns:
         bool: True if mount
     &#34;&#34;&#34;
+
     return pathlib.Path(path).is_mount()
 
 
 def is_ascii_file(path: str, checksize=4096) -&gt; bool:
     &#34;&#34;&#34;Checks if file `path` is ascii
+    e.g
+         j.sals.fs.is_ascii_file(path=&#34;/home/rafy/testfile&#34;)  -&gt; True
 
     Args:
         path (str): file path
@@ -139,6 +308,9 @@ def is_ascii_file(path: str, checksize=4096) -&gt; bool:
 
 def is_empty_dir(path: str) -&gt; bool:
     &#34;&#34;&#34;Checks if path is emptry directory
+    e.g
+        j.sals.fs.is_empty_dir(&#34;/home/rafy/empty_dir&#34;)  -&gt; True
+        j.sals.fs.is_empty_dir(&#34;/home/rafy&#34;)  -&gt; False
 
     Args:
         path (str): path to check if empty directory
@@ -179,22 +351,23 @@ def is_broken_link(path: str, clean=False) -&gt; bool:
 def stem(path: str) -&gt; str:
     &#34;&#34;&#34;returns the stem of a path (path without parent directory and without extension)
     e.g
-        In [2]: t = j.sals.fs.stem(&#34;/tmp/tmp-5383p1GOmMOOwvfi.tpl&#34;)
-
-        In [3]: t
-        Out[3]: &#39;tmp-5383p1GOmMOOwvfi&#39;
+        j.sals.fs.stem(&#34;/tmp/tmp-5383p1GOmMOOwvfi.tpl&#34;)  -&gt; &#39;tmp-5383p1GOmMOOwvfi&#39;
 
     Args:
         path (str): path we want to get its stem
 
     Returns:
-        [type]: [description]
+        str: path without parent directory and without extension
     &#34;&#34;&#34;
     return pathlib.Path(path).stem
 
 
 def mkdir(path: str, exist_ok=True):
     &#34;&#34;&#34;Makes directory at path
+    e.g
+        j.sals.fs.mkdir(&#34;/home/rafy/testing_make_dir&#34;)
+        j.sals.fs.mkdir(&#34;/home/rafy/testing_make_dir&#34;,exist_ok=True)
+        j.sals.fs.mkdir(&#34;/home/rafy/testing_make_dir&#34;,exist_ok=False) -&gt; File exists: &#39;/home/rafy/testing_make_dir&#39; (raise exception as the file exist and  exist_ok flag is false)
 
     Args:
         path (str): path to create dir at
@@ -208,6 +381,10 @@ def mkdir(path: str, exist_ok=True):
 
 def mkdirs(path: str, exist_ok=True):
     &#34;&#34;&#34;Creates dir as well as all non exisitng parents in the path
+    e.g
+        j.sals.fs.mkdirs(&#34;/home/rafy/testing_make_dir/test1/test2&#34;,exist_ok=False)
+        j.sals.fs.mkdirs(&#34;/home/rafy/testing_make_dir/test1/test2&#34;,exist_ok=True)
+        j.sals.fs.mkdirs(&#34;/home/rafy/testing_make_dir/test1/test2&#34;,exist_ok=False)  -&gt; File exists: &#39;/home/rafy/testing_make_dir/test1/test2&#39;(raise exception as the file exist and  exist_ok flag is false)
 
     Args:
         path (str): path to create dir at
@@ -218,6 +395,8 @@ def mkdirs(path: str, exist_ok=True):
 
 def parent(path: str) -&gt; str:
     &#34;&#34;&#34;Get path&#39;s parent
+    e.g
+        j.sals.fs.parent(&#34;/home/rafy/testing_make_dir/test1&#34;)  -&gt; &#39;/home/rafy/testing_make_dir&#39;
 
     Args:
         path (str): path to get its parent
@@ -232,7 +411,7 @@ def parents(path: str) -&gt; List[str]:
     &#34;&#34;&#34;Get parents list
 
     e.g
-    &gt;&gt;&gt; j.sals.fs.parents(&#34;/tmp/home/ahmed/myfile.py&#34;)
+        j.sals.fs.parents(&#34;/tmp/home/ahmed/myfile.py&#34;) -&gt;
     [PosixPath(&#39;/tmp/home/ahmed&#39;),
     PosixPath(&#39;/tmp/home&#39;),
     PosixPath(&#39;/tmp&#39;),
@@ -251,7 +430,7 @@ def parents(path: str) -&gt; List[str]:
 def path_parts(path: str) -&gt; List[str]:
     &#34;&#34;&#34;Convert path to a list of parts
     e.g
-     &#39;/tmp/tmp-5383p1GOmMOOwvfi.tpl&#39; -&gt;  (&#39;/&#39;, &#39;tmp&#39;, &#39;tmp-5383p1GOmMOOwvfi.tpl&#39;)
+        &#39;/tmp/tmp-5383p1GOmMOOwvfi.tpl&#39; -&gt;  (&#39;/&#39;, &#39;tmp&#39;, &#39;tmp-5383p1GOmMOOwvfi.tpl&#39;)
     Args:
         path (str): path to convert to parts
 
@@ -263,6 +442,9 @@ def path_parts(path: str) -&gt; List[str]:
 
 def exists(path: str) -&gt; bool:
     &#34;&#34;&#34;Checks if path exists
+    e.g
+        j.sals.fs.exists(&#34;/home/rafy/testing_make_dir/test1&#34;)  -&gt; True
+        j.sals.fs.exists(&#34;/home/rafy/testing_make_dir/fasdljd&#34;)  -&gt; False
 
     Args:
         path (str): path to check for existence
@@ -275,6 +457,8 @@ def exists(path: str) -&gt; bool:
 
 def rename(path1: str, path2: str):
     &#34;&#34;&#34;Rename path1 to path2
+    e.g
+        j.sals.fs.rename(&#34;/home/rafy/testing_make_dir&#34;,&#34;/home/rafy/testing_dir&#34;)
 
     Args:
         path1 (str): source path
@@ -299,17 +483,18 @@ def expanduser(path: str) -&gt; str:
 
 def unlink(path: str):
     &#34;&#34;&#34;unlink path
-
+    e.g
+        j.sals.fs.unlink(&#34;/home/rafy/testfile3&#34;)
     Args:
         path (str): path to unlink
-
-
     &#34;&#34;&#34;
     return pathlib.Path(path).unlink()
 
 
 def read_text(path: str) -&gt; str:
     &#34;&#34;&#34;read ascii content at `path`
+    e.g
+        j.sals.fs.read_text(&#34;/home/rafy/testing_text.txt&#34;)  -&gt; &#39;hello world\n&#39;
 
     Args:
         path (str): ascii file path
@@ -325,6 +510,8 @@ read_ascii = read_file = read_text
 
 def read_bytes(path: str) -&gt; bytes:
     &#34;&#34;&#34;read binary content at `path`
+    e.g
+        j.sals.fs.read_bytes(&#34;/home/rafy/testing_text.txt&#34;)  -&gt; b&#39;hello world\n&#39;
 
     Args:
         path (str): binary file path
@@ -340,12 +527,16 @@ read_binary = read_file_binary = read_bytes
 
 def write_text(path: str, data: str, encoding=None):
     &#34;&#34;&#34;write text `data` to path `path` with encoding
+    e.g
+        j.sals.fs.write_text(path=&#34;/home/rafy/testing_text.txt&#34;,data=&#34;hello world&#34;)  -&gt; 11
 
     Args:
         path (str): path to write to
         data (str): ascii content
         encoding ([type], optional): encoding. Defaults to None.
 
+    Returns:
+        int: Return the decoded contents of the pointed-to file as a string
 
     &#34;&#34;&#34;
     return pathlib.Path(path).write_text(data, encoding)
@@ -356,11 +547,15 @@ write_ascii = write_file = write_text
 
 def write_bytes(path: str, data: bytes):
     &#34;&#34;&#34;write binary `data` to path `path`
+    e.g
+        j.sals.fs.write_bytes(path=&#34;/home/rafy/testing_text.txt&#34;,data=b&#34;hello world&#34;)  -&gt; 11
 
     Args:
         path (str): path to write to
         data (bytes): binary content
 
+    Returns:
+        int: Return the binary contents of the pointed-to file as a bytes object
     &#34;&#34;&#34;
     return pathlib.Path(path).write_bytes(data)
 
@@ -370,6 +565,8 @@ write_binary = write_file_binary = write_bytes
 
 def touch(path: str):
     &#34;&#34;&#34;create file
+    e.g
+        j.sals.fs.touch(&#34;/home/rafy/testing_touch&#34;)
 
     Args:
         path (str): path to create file
@@ -380,6 +577,8 @@ def touch(path: str):
 
 def get_temp_filename(mode=&#34;w+b&#34;, buffering=-1, encoding=None, newline=None, suffix=None, prefix=None, dir=None) -&gt; str:
     &#34;&#34;&#34;Get temp filename
+    e.g
+        j.sals.fs.get_temp_filename(dir=&#34;/home/rafy/&#34;)  -&gt; &#39;/home/rafy/tmp6x7w71ml&#39;
 
     Args:
         mode (str, optional): [description]. Defaults to &#34;w+b&#34;.
@@ -398,6 +597,8 @@ def get_temp_filename(mode=&#34;w+b&#34;, buffering=-1, encoding=None, newline=N
 
 def get_temp_dirname(suffix=None, prefix=None, dir=None) -&gt; str:
     &#34;&#34;&#34;Get temp directory name
+    e.g
+        j.sals.fs.get_temp_dirname(dir=&#34;/home/rafy&#34;)  -&gt; &#39;/home/rafy/tmpntm2ptqy&#39;
 
     Args:
         suffix ([type], optional): ending suffix. Defaults to None.
@@ -420,6 +621,8 @@ get_temp_dir = tempfile.gettempdir
 
 def parts_to_path(parts: List[str]) -&gt; str:
     &#34;&#34;&#34;Convert list of path parts into a path string
+    e.g
+        j.sals.fs.parts_to_path([&#34;home&#34;,&#34;rafy&#34;])  -&gt; &#39;home/rafy&#39;
 
     Args:
         parts (List[str]): path parts
@@ -433,12 +636,27 @@ def parts_to_path(parts: List[str]) -&gt; str:
     return str(path)
 
 
-def join_paths(*paths):
+def join_paths(*paths) -&gt; str:
+    &#34;&#34;&#34;
+    Convert tuple of path parts into a path string
+    e.g
+        j.sals.fs.join_paths(&#34;home&#34;,&#34;rafy&#34;)  -&gt; &#39;home/rafy&#39;
+
+    Args:
+        parts (tuple): path parts (path parts comma seprated and they will be used as a tuple)
+
+    Returns:
+        str: joined path parts
+
+    &#34;&#34;&#34;
+
     return parts_to_path(paths)
 
 
 def rm_emptry_dir(path: str):
-    &#34;&#34;&#34;Remove empty directory
+    &#34;&#34;&#34;Remove empty directory if the directory is not empty it will throw exception (Directory not empty)
+    e.g
+        j.sals.fs.rm_emptry_dir(&#34;/home/rafy/empty_dir&#34;)
 
     Args:
         path (str): path to remove.
@@ -485,6 +703,8 @@ def copy_file(src: str, dst: str, times=False, perms=False):
         This is shutil.copyfile plus bits of shutil.copymode and
         shutil.copystat&#39;s implementation.
         shutil.copy and shutil.copy2 are not supported but are easy to do.
+    e.g
+        j.sals.fs.copy_file(src=&#34;/home/rafy/testing_text.txt&#34;,dst=&#34;/home/rafy/Documents/testing_text.txt&#34;)
 
     Args:
         src (str): source path
@@ -498,6 +718,8 @@ def copy_file(src: str, dst: str, times=False, perms=False):
 
 def symlink(src: str, dst: str, overwrite=False):
     &#34;&#34;&#34;Create a symbolic link.
+    e.g
+        j.sals.fs.symlink(src=&#34;/home/rafy/testing_text.txt&#34;,dst=&#34;/home/rafy/link_test&#34;)
 
     Args:
         src (str): Source of link
@@ -516,6 +738,8 @@ chdir = os.chdir
 
 def change_dir(path: str) -&gt; str:
     &#34;&#34;&#34;Change current working directory to `path`
+    e.g
+         j.sals.fs.change_dir(&#34;/home/rafy/Documents&#34;)  -&gt; &#39;/home/rafy/Documents&#39;
 
     Args:
         path (str): path to switch current working directory to
@@ -529,6 +753,8 @@ def change_dir(path: str) -&gt; str:
 
 def chmod(path: str, mode):
     &#34;&#34;&#34;change file mode for path to mode
+    e.g
+        j.sals.fs.chmod(&#34;/home/rafy/testing_dir&#34;,777)
 
     Args:
         path (str): path
@@ -551,7 +777,8 @@ def lchmod(path: str, mode):
 
 def stat(path: str):
     &#34;&#34;&#34;Gets stat of path `path`
-
+    e.g
+        j.sals.fs.stat(&#34;/home/rafy/test_dir/test&#34;)  -&gt; os.stat_result(st_mode=33204, st_ino=795348, st_dev=2049, st_nlink=1, st_uid=1000, st_gid=1000, st_size=0, st_atime=1586445434, st_mtime=1586445434, st_ctime=1586445434)
     Args:
         path (str): path to get its stat
 
@@ -564,6 +791,8 @@ def stat(path: str):
 
 def lstat(path: str):
     &#34;&#34;&#34;Gets stat of path `path` (handles links)
+    e.g
+         j.sals.fs.lstat(&#34;/home/rafy/testing_link&#34;)  -&gt; os.stat_result(st_mode=41471, st_ino=7081257, st_dev=2049, st_nlink=1, st_uid=1000, st_gid=1000, st_size=16, st_atime=1586445737, st_mtime=1586445734, st_ctime=1586445734)
 
     Args:
         path (str): path to get its stat
@@ -577,6 +806,9 @@ def lstat(path: str):
 
 def resolve(path: str) -&gt; str:
     &#34;&#34;&#34;resolve `.` and `..` in path
+    e.g
+        j.sals.fs.resolve(&#34;&#34;)  -&gt; PosixPath(&#39;/home/rafy/Documents&#39;)
+        j.sals.fs.resolve(&#34;./testing_text.txt&#34;)  -&gt; PosixPath(&#39;/home/rafy/Documents/testing_text.txt&#39;)
 
     Args:
         path (str): path with optionally `.` and `..`
@@ -589,7 +821,8 @@ def resolve(path: str) -&gt; str:
 
 def extension(path: str, include_dot=True):
     &#34;&#34;&#34;Gets the extension of path
-    &#39;/home/ahmed/myfile.py&#39; -&gt; `.py` if include_dot else `py`
+    e.g
+        &#39;/home/ahmed/myfile.py&#39; -&gt; `.py` if include_dot else `py`
 
     Args:
         path (str): [description]
@@ -729,7 +962,10 @@ def walk_dirs(path, recursive=True):
 <span>def <span class="ident">change_dir</span></span>(<span>path)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Change current working directory to <code>path</code></p>
+<section class="desc"><p>Change current working directory to <code>path</code>
+e.g
+j.sals.fs.change_dir("/home/rafy/Documents")
+-&gt; '/home/rafy/Documents'</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
@@ -744,6 +980,8 @@ def walk_dirs(path, recursive=True):
 <summary>Source code</summary>
 <pre><code class="python">def change_dir(path: str) -&gt; str:
     &#34;&#34;&#34;Change current working directory to `path`
+    e.g
+         j.sals.fs.change_dir(&#34;/home/rafy/Documents&#34;)  -&gt; &#39;/home/rafy/Documents&#39;
 
     Args:
         path (str): path to switch current working directory to
@@ -770,7 +1008,9 @@ def walk_dirs(path, recursive=True):
 <span>def <span class="ident">chmod</span></span>(<span>path, mode)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>change file mode for path to mode</p>
+<section class="desc"><p>change file mode for path to mode
+e.g
+j.sals.fs.chmod("/home/rafy/testing_dir",777)</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
@@ -782,6 +1022,8 @@ def walk_dirs(path, recursive=True):
 <summary>Source code</summary>
 <pre><code class="python">def chmod(path: str, mode):
     &#34;&#34;&#34;change file mode for path to mode
+    e.g
+        j.sals.fs.chmod(&#34;/home/rafy/testing_dir&#34;,777)
 
     Args:
         path (str): path
@@ -813,7 +1055,9 @@ platform does not have the ability to set the permission or times,
 ignore it.
 This is shutil.copyfile plus bits of shutil.copymode and
 shutil.copystat's implementation.
-shutil.copy and shutil.copy2 are not supported but are easy to do.</p>
+shutil.copy and shutil.copy2 are not supported but are easy to do.
+e.g
+j.sals.fs.copy_file(src="/home/rafy/testing_text.txt",dst="/home/rafy/Documents/testing_text.txt")</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>src</code></strong> :&ensp;<code>str</code></dt>
@@ -832,6 +1076,8 @@ shutil.copy and shutil.copy2 are not supported but are easy to do.</p>
         This is shutil.copyfile plus bits of shutil.copymode and
         shutil.copystat&#39;s implementation.
         shutil.copy and shutil.copy2 are not supported but are easy to do.
+    e.g
+        j.sals.fs.copy_file(src=&#34;/home/rafy/testing_text.txt&#34;,dst=&#34;/home/rafy/Documents/testing_text.txt&#34;)
 
     Args:
         src (str): source path
@@ -882,19 +1128,25 @@ shutil.copy and shutil.copy2 are not supported but are easy to do.</p>
 <span>def <span class="ident">cwd</span></span>(<span>)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Return current working directory.</p>
+<section class="desc"><p>Return current working directory.
+e.g
+j.sals.fs.cwd()
+-&gt; '/home/rafy' </p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>str</code></strong></dt>
-<dd>current directory.</dd>
+<dd>current directory</dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def cwd():
+<pre><code class="python">def cwd() -&gt; str:
     &#34;&#34;&#34;Return current working directory.
+    e.g
+        j.sals.fs.cwd()  -&gt; &#39;/home/rafy&#39;
+
 
     Returns:
-        str: current directory.
+        str: current directory
     &#34;&#34;&#34;
     return str(pathlib.Path.cwd())</code></pre>
 </details>
@@ -914,7 +1166,12 @@ shutil.copy and shutil.copy2 are not supported but are easy to do.</p>
 <span>def <span class="ident">exists</span></span>(<span>path)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Checks if path exists</p>
+<section class="desc"><p>Checks if path exists
+e.g
+j.sals.fs.exists("/home/rafy/testing_make_dir/test1")
+-&gt; True
+j.sals.fs.exists("/home/rafy/testing_make_dir/fasdljd")
+-&gt; False</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
@@ -929,6 +1186,9 @@ shutil.copy and shutil.copy2 are not supported but are easy to do.</p>
 <summary>Source code</summary>
 <pre><code class="python">def exists(path: str) -&gt; bool:
     &#34;&#34;&#34;Checks if path exists
+    e.g
+        j.sals.fs.exists(&#34;/home/rafy/testing_make_dir/test1&#34;)  -&gt; True
+        j.sals.fs.exists(&#34;/home/rafy/testing_make_dir/fasdljd&#34;)  -&gt; False
 
     Args:
         path (str): path to check for existence
@@ -976,6 +1236,7 @@ j.sals.fs.expanduser("~/work") -&gt; '/home/xmonader/work'</p>
 </code></dt>
 <dd>
 <section class="desc"><p>Gets the extension of path
+e.g
 '/home/ahmed/myfile.py' -&gt; <code>.py</code> if include_dot else <code>py</code></p>
 <h2 id="args">Args</h2>
 <dl>
@@ -993,7 +1254,8 @@ j.sals.fs.expanduser("~/work") -&gt; '/home/xmonader/work'</p>
 <summary>Source code</summary>
 <pre><code class="python">def extension(path: str, include_dot=True):
     &#34;&#34;&#34;Gets the extension of path
-    &#39;/home/ahmed/myfile.py&#39; -&gt; `.py` if include_dot else `py`
+    e.g
+        &#39;/home/ahmed/myfile.py&#39; -&gt; `.py` if include_dot else `py`
 
     Args:
         path (str): [description]
@@ -1018,6 +1280,7 @@ j.sals.fs.expanduser("~/work") -&gt; '/home/xmonader/work'</p>
 </code></dt>
 <dd>
 <section class="desc"><p>Gets the extension of path
+e.g
 '/home/ahmed/myfile.py' -&gt; <code>.py</code> if include_dot else <code>py</code></p>
 <h2 id="args">Args</h2>
 <dl>
@@ -1035,7 +1298,8 @@ j.sals.fs.expanduser("~/work") -&gt; '/home/xmonader/work'</p>
 <summary>Source code</summary>
 <pre><code class="python">def extension(path: str, include_dot=True):
     &#34;&#34;&#34;Gets the extension of path
-    &#39;/home/ahmed/myfile.py&#39; -&gt; `.py` if include_dot else `py`
+    e.g
+        &#39;/home/ahmed/myfile.py&#39; -&gt; `.py` if include_dot else `py`
 
     Args:
         path (str): [description]
@@ -1059,7 +1323,10 @@ j.sals.fs.expanduser("~/work") -&gt; '/home/xmonader/work'</p>
 <span>def <span class="ident">get_temp_dirname</span></span>(<span>suffix=None, prefix=None, dir=None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Get temp directory name</p>
+<section class="desc"><p>Get temp directory name
+e.g
+j.sals.fs.get_temp_dirname(dir="/home/rafy")
+-&gt; '/home/rafy/tmpntm2ptqy'</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>suffix</code></strong> :&ensp;[<code>type</code>], optional</dt>
@@ -1078,6 +1345,8 @@ j.sals.fs.expanduser("~/work") -&gt; '/home/xmonader/work'</p>
 <summary>Source code</summary>
 <pre><code class="python">def get_temp_dirname(suffix=None, prefix=None, dir=None) -&gt; str:
     &#34;&#34;&#34;Get temp directory name
+    e.g
+        j.sals.fs.get_temp_dirname(dir=&#34;/home/rafy&#34;)  -&gt; &#39;/home/rafy/tmpntm2ptqy&#39;
 
     Args:
         suffix ([type], optional): ending suffix. Defaults to None.
@@ -1095,7 +1364,10 @@ j.sals.fs.expanduser("~/work") -&gt; '/home/xmonader/work'</p>
 <span>def <span class="ident">get_temp_filename</span></span>(<span>mode=&#39;w+b&#39;, buffering=-1, encoding=None, newline=None, suffix=None, prefix=None, dir=None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Get temp filename</p>
+<section class="desc"><p>Get temp filename
+e.g
+j.sals.fs.get_temp_filename(dir="/home/rafy/")
+-&gt; '/home/rafy/tmp6x7w71ml'</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>mode</code></strong> :&ensp;<code>str</code>, optional</dt>
@@ -1119,6 +1391,8 @@ j.sals.fs.expanduser("~/work") -&gt; '/home/xmonader/work'</p>
 <summary>Source code</summary>
 <pre><code class="python">def get_temp_filename(mode=&#34;w+b&#34;, buffering=-1, encoding=None, newline=None, suffix=None, prefix=None, dir=None) -&gt; str:
     &#34;&#34;&#34;Get temp filename
+    e.g
+        j.sals.fs.get_temp_filename(dir=&#34;/home/rafy/&#34;)  -&gt; &#39;/home/rafy/tmp6x7w71ml&#39;
 
     Args:
         mode (str, optional): [description]. Defaults to &#34;w+b&#34;.
@@ -1139,10 +1413,25 @@ j.sals.fs.expanduser("~/work") -&gt; '/home/xmonader/work'</p>
 <span>def <span class="ident">home</span></span>(<span>)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>Return the home directory
+e.g
+j.sals.fs.home()
+-&gt; '/home/rafy'</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>str</code></strong></dt>
+<dd>home directory.</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def home():
+<pre><code class="python">def home() -&gt; str:
+    &#34;&#34;&#34;Return the home directory
+    e.g
+        j.sals.fs.home()  -&gt; &#39;/home/rafy&#39;
+
+    Returns:
+        str: home directory.
+    &#34;&#34;&#34;
     return str(pathlib.Path.home())</code></pre>
 </details>
 </dd>
@@ -1150,7 +1439,17 @@ j.sals.fs.expanduser("~/work") -&gt; '/home/xmonader/work'</p>
 <span>def <span class="ident">is_absolute</span></span>(<span>path)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Checks if path is absolute</p>
+<section class="desc"><p>Checks if path is absolute
+e.g
+j.sals.fs.is_absolute('/home/rafy/')
+-&gt; True
+j.sals.fs.is_absolute('~/rafy/')
+-&gt; False</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
+<dd>path to check if it is absolute </dd>
+</dl>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>bool</code></strong></dt>
@@ -1160,6 +1459,12 @@ j.sals.fs.expanduser("~/work") -&gt; '/home/xmonader/work'</p>
 <summary>Source code</summary>
 <pre><code class="python">def is_absolute(path: str) -&gt; bool:
     &#34;&#34;&#34;Checks if path is absolute
+    e.g
+        j.sals.fs.is_absolute(&#39;/home/rafy/&#39;)  -&gt; True
+        j.sals.fs.is_absolute(&#39;~/rafy/&#39;)  -&gt; False
+
+    Args:
+        path (str): path to check if it is absolute
 
     Returns:
         bool: True if absolute
@@ -1171,7 +1476,10 @@ j.sals.fs.expanduser("~/work") -&gt; '/home/xmonader/work'</p>
 <span>def <span class="ident">is_ascii_file</span></span>(<span>path, checksize=4096)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Checks if file <code>path</code> is ascii</p>
+<section class="desc"><p>Checks if file <code>path</code> is ascii
+e.g
+j.sals.fs.is_ascii_file(path="/home/rafy/testfile")
+-&gt; True</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
@@ -1188,6 +1496,8 @@ j.sals.fs.expanduser("~/work") -&gt; '/home/xmonader/work'</p>
 <summary>Source code</summary>
 <pre><code class="python">def is_ascii_file(path: str, checksize=4096) -&gt; bool:
     &#34;&#34;&#34;Checks if file `path` is ascii
+    e.g
+         j.sals.fs.is_ascii_file(path=&#34;/home/rafy/testfile&#34;)  -&gt; True
 
     Args:
         path (str): file path
@@ -1259,20 +1569,34 @@ j.sals.fs.expanduser("~/work") -&gt; '/home/xmonader/work'</p>
 <span>def <span class="ident">is_dir</span></span>(<span>path)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Checks if path is a dir</p>
-<p>:param path: path to check
-:type path: str
-:return: True if is dir else False
-:rtype: bool</p></section>
+<section class="desc"><p>Checks if path is a dir
+e.g
+j.sals.fs.is_dir(path= '/home/rafy')
+-&gt; True
+j.sals.fs.is_dir(path= '/home/rafy/file.txt')
+-&gt; False</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
+<dd>path to check if is directory</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>bool</code></strong></dt>
+<dd>True if is dir and False otherwise</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def is_dir(path: str) -&gt; bool:
     &#34;&#34;&#34;Checks if path is a dir
+    e.g
+        j.sals.fs.is_dir(path= &#39;/home/rafy&#39;)  -&gt; True
+        j.sals.fs.is_dir(path= &#39;/home/rafy/file.txt&#39;)  -&gt; False
 
-    :param path: path to check
-    :type path: str
-    :return: True if is dir else False
-    :rtype: bool
+    Args:
+        path (str): path to check if is directory
+    Returns:
+        bool: True if is dir and False otherwise
     &#34;&#34;&#34;
     return pathlib.Path(path).is_dir()</code></pre>
 </details>
@@ -1281,7 +1605,12 @@ j.sals.fs.expanduser("~/work") -&gt; '/home/xmonader/work'</p>
 <span>def <span class="ident">is_empty_dir</span></span>(<span>path)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Checks if path is emptry directory</p>
+<section class="desc"><p>Checks if path is emptry directory
+e.g
+j.sals.fs.is_empty_dir("/home/rafy/empty_dir")
+-&gt; True
+j.sals.fs.is_empty_dir("/home/rafy")
+-&gt; False</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
@@ -1296,6 +1625,9 @@ j.sals.fs.expanduser("~/work") -&gt; '/home/xmonader/work'</p>
 <summary>Source code</summary>
 <pre><code class="python">def is_empty_dir(path: str) -&gt; bool:
     &#34;&#34;&#34;Checks if path is emptry directory
+    e.g
+        j.sals.fs.is_empty_dir(&#34;/home/rafy/empty_dir&#34;)  -&gt; True
+        j.sals.fs.is_empty_dir(&#34;/home/rafy&#34;)  -&gt; False
 
     Args:
         path (str): path to check if empty directory
@@ -1318,7 +1650,12 @@ j.sals.fs.expanduser("~/work") -&gt; '/home/xmonader/work'</p>
 <span>def <span class="ident">is_file</span></span>(<span>path)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Checks if path is a file</p>
+<section class="desc"><p>Checks if path is a file
+e.g
+j.sals.fs.is_file(path= '/home/rafy')
+-&gt; False
+j.sals.fs.is_file(path= '/home/rafy/file.txt')
+-&gt; True</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
@@ -1333,6 +1670,9 @@ j.sals.fs.expanduser("~/work") -&gt; '/home/xmonader/work'</p>
 <summary>Source code</summary>
 <pre><code class="python">def is_file(path: str) -&gt; bool:
     &#34;&#34;&#34;Checks if path is a file
+    e.g
+        j.sals.fs.is_file(path= &#39;/home/rafy&#39;)  -&gt; False
+        j.sals.fs.is_file(path= &#39;/home/rafy/file.txt&#39;)  -&gt; True
 
     Args:
         path (str): path to check if is file
@@ -1348,6 +1688,11 @@ j.sals.fs.expanduser("~/work") -&gt; '/home/xmonader/work'</p>
 </code></dt>
 <dd>
 <section class="desc"><p>Checks if path is mount</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
+<dd>path to check if it is mounded or not</dd>
+</dl>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>bool</code></strong></dt>
@@ -1356,11 +1701,16 @@ j.sals.fs.expanduser("~/work") -&gt; '/home/xmonader/work'</p>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def is_mount(path: str) -&gt; bool:
+    # TODO add example here
     &#34;&#34;&#34;Checks if path is mount
+
+    Args:
+        path (str): path to check if it is mounded or not
 
     Returns:
         bool: True if mount
     &#34;&#34;&#34;
+
     return pathlib.Path(path).is_mount()</code></pre>
 </details>
 </dd>
@@ -1368,7 +1718,12 @@ j.sals.fs.expanduser("~/work") -&gt; '/home/xmonader/work'</p>
 <span>def <span class="ident">is_symlink</span></span>(<span>path)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Checks if path symlink</p>
+<section class="desc"><p>Checks if path symlink
+e.g
+j.sals.fs.is_symlink('/home/rafy/testfile3')
+-&gt; True
+j.sals.fs.is_symlink('/home/rafy/testfile2')
+-&gt; False</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
@@ -1383,6 +1738,9 @@ j.sals.fs.expanduser("~/work") -&gt; '/home/xmonader/work'</p>
 <summary>Source code</summary>
 <pre><code class="python">def is_symlink(path: str) -&gt; bool:
     &#34;&#34;&#34;Checks if path symlink
+    e.g
+        j.sals.fs.is_symlink(&#39;/home/rafy/testfile3&#39;)  -&gt; True
+        j.sals.fs.is_symlink(&#39;/home/rafy/testfile2&#39;)  -&gt; False
 
     Args:
         path (str): path to check if symlink
@@ -1397,10 +1755,36 @@ j.sals.fs.expanduser("~/work") -&gt; '/home/xmonader/work'</p>
 <span>def <span class="ident">join_paths</span></span>(<span>*paths)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>Convert tuple of path parts into a path string
+e.g
+j.sals.fs.join_paths("home","rafy")
+-&gt; 'home/rafy' </p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>parts</code></strong> :&ensp;<code>tuple</code></dt>
+<dd>path parts (path parts comma seprated and they will be used as a tuple)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>str</code></strong></dt>
+<dd>joined path parts</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def join_paths(*paths):
+<pre><code class="python">def join_paths(*paths) -&gt; str:
+    &#34;&#34;&#34;
+    Convert tuple of path parts into a path string
+    e.g
+        j.sals.fs.join_paths(&#34;home&#34;,&#34;rafy&#34;)  -&gt; &#39;home/rafy&#39;
+
+    Args:
+        parts (tuple): path parts (path parts comma seprated and they will be used as a tuple)
+
+    Returns:
+        str: joined path parts
+
+    &#34;&#34;&#34;
+
     return parts_to_path(paths)</code></pre>
 </details>
 </dd>
@@ -1433,7 +1817,10 @@ j.sals.fs.expanduser("~/work") -&gt; '/home/xmonader/work'</p>
 <span>def <span class="ident">lstat</span></span>(<span>path)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Gets stat of path <code>path</code> (handles links)</p>
+<section class="desc"><p>Gets stat of path <code>path</code> (handles links)
+e.g
+j.sals.fs.lstat("/home/rafy/testing_link")
+-&gt; os.stat_result(st_mode=41471, st_ino=7081257, st_dev=2049, st_nlink=1, st_uid=1000, st_gid=1000, st_size=16, st_atime=1586445737, st_mtime=1586445734, st_ctime=1586445734)</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
@@ -1448,6 +1835,8 @@ j.sals.fs.expanduser("~/work") -&gt; '/home/xmonader/work'</p>
 <summary>Source code</summary>
 <pre><code class="python">def lstat(path: str):
     &#34;&#34;&#34;Gets stat of path `path` (handles links)
+    e.g
+         j.sals.fs.lstat(&#34;/home/rafy/testing_link&#34;)  -&gt; os.stat_result(st_mode=41471, st_ino=7081257, st_dev=2049, st_nlink=1, st_uid=1000, st_gid=1000, st_size=16, st_atime=1586445737, st_mtime=1586445734, st_ctime=1586445734)
 
     Args:
         path (str): path to get its stat
@@ -1463,7 +1852,12 @@ j.sals.fs.expanduser("~/work") -&gt; '/home/xmonader/work'</p>
 <span>def <span class="ident">mkdir</span></span>(<span>path, exist_ok=True)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Makes directory at path</p>
+<section class="desc"><p>Makes directory at path
+e.g
+j.sals.fs.mkdir("/home/rafy/testing_make_dir")
+j.sals.fs.mkdir("/home/rafy/testing_make_dir",exist_ok=True)
+j.sals.fs.mkdir("/home/rafy/testing_make_dir",exist_ok=False) -&gt; File exists: '/home/rafy/testing_make_dir' (raise exception as the file exist and
+exist_ok flag is false)</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
@@ -1476,6 +1870,10 @@ j.sals.fs.expanduser("~/work") -&gt; '/home/xmonader/work'</p>
 <summary>Source code</summary>
 <pre><code class="python">def mkdir(path: str, exist_ok=True):
     &#34;&#34;&#34;Makes directory at path
+    e.g
+        j.sals.fs.mkdir(&#34;/home/rafy/testing_make_dir&#34;)
+        j.sals.fs.mkdir(&#34;/home/rafy/testing_make_dir&#34;,exist_ok=True)
+        j.sals.fs.mkdir(&#34;/home/rafy/testing_make_dir&#34;,exist_ok=False) -&gt; File exists: &#39;/home/rafy/testing_make_dir&#39; (raise exception as the file exist and  exist_ok flag is false)
 
     Args:
         path (str): path to create dir at
@@ -1491,7 +1889,13 @@ j.sals.fs.expanduser("~/work") -&gt; '/home/xmonader/work'</p>
 <span>def <span class="ident">mkdirs</span></span>(<span>path, exist_ok=True)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Creates dir as well as all non exisitng parents in the path</p>
+<section class="desc"><p>Creates dir as well as all non exisitng parents in the path
+e.g
+j.sals.fs.mkdirs("/home/rafy/testing_make_dir/test1/test2",exist_ok=False)
+j.sals.fs.mkdirs("/home/rafy/testing_make_dir/test1/test2",exist_ok=True)
+j.sals.fs.mkdirs("/home/rafy/testing_make_dir/test1/test2",exist_ok=False)
+-&gt; File exists: '/home/rafy/testing_make_dir/test1/test2'(raise exception as the file exist and
+exist_ok flag is false)</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
@@ -1503,6 +1907,10 @@ j.sals.fs.expanduser("~/work") -&gt; '/home/xmonader/work'</p>
 <summary>Source code</summary>
 <pre><code class="python">def mkdirs(path: str, exist_ok=True):
     &#34;&#34;&#34;Creates dir as well as all non exisitng parents in the path
+    e.g
+        j.sals.fs.mkdirs(&#34;/home/rafy/testing_make_dir/test1/test2&#34;,exist_ok=False)
+        j.sals.fs.mkdirs(&#34;/home/rafy/testing_make_dir/test1/test2&#34;,exist_ok=True)
+        j.sals.fs.mkdirs(&#34;/home/rafy/testing_make_dir/test1/test2&#34;,exist_ok=False)  -&gt; File exists: &#39;/home/rafy/testing_make_dir/test1/test2&#39;(raise exception as the file exist and  exist_ok flag is false)
 
     Args:
         path (str): path to create dir at
@@ -1515,7 +1923,10 @@ j.sals.fs.expanduser("~/work") -&gt; '/home/xmonader/work'</p>
 <span>def <span class="ident">parent</span></span>(<span>path)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Get path's parent</p>
+<section class="desc"><p>Get path's parent
+e.g
+j.sals.fs.parent("/home/rafy/testing_make_dir/test1")
+-&gt; '/home/rafy/testing_make_dir'</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
@@ -1530,6 +1941,8 @@ j.sals.fs.expanduser("~/work") -&gt; '/home/xmonader/work'</p>
 <summary>Source code</summary>
 <pre><code class="python">def parent(path: str) -&gt; str:
     &#34;&#34;&#34;Get path&#39;s parent
+    e.g
+        j.sals.fs.parent(&#34;/home/rafy/testing_make_dir/test1&#34;)  -&gt; &#39;/home/rafy/testing_make_dir&#39;
 
     Args:
         path (str): path to get its parent
@@ -1545,11 +1958,10 @@ j.sals.fs.expanduser("~/work") -&gt; '/home/xmonader/work'</p>
 </code></dt>
 <dd>
 <section class="desc"><p>Get parents list</p>
-<p>e.g</p>
-<pre><code>&gt;&gt;&gt; j.sals.fs.parents("/tmp/home/ahmed/myfile.py")
+<p>e.g
+j.sals.fs.parents("/tmp/home/ahmed/myfile.py") -&gt;
 [PosixPath('/tmp/home/ahmed'),
-</code></pre>
-<p>PosixPath('/tmp/home'),
+PosixPath('/tmp/home'),
 PosixPath('/tmp'),
 PosixPath('/')]</p>
 <h2 id="args">Args</h2>
@@ -1568,7 +1980,7 @@ PosixPath('/')]</p>
     &#34;&#34;&#34;Get parents list
 
     e.g
-    &gt;&gt;&gt; j.sals.fs.parents(&#34;/tmp/home/ahmed/myfile.py&#34;)
+        j.sals.fs.parents(&#34;/tmp/home/ahmed/myfile.py&#34;) -&gt;
     [PosixPath(&#39;/tmp/home/ahmed&#39;),
     PosixPath(&#39;/tmp/home&#39;),
     PosixPath(&#39;/tmp&#39;),
@@ -1588,7 +2000,10 @@ PosixPath('/')]</p>
 <span>def <span class="ident">parts_to_path</span></span>(<span>parts)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Convert list of path parts into a path string</p>
+<section class="desc"><p>Convert list of path parts into a path string
+e.g
+j.sals.fs.parts_to_path(["home","rafy"])
+-&gt; 'home/rafy'</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>parts</code></strong> :&ensp;<code>List</code>[<code>str</code>]</dt>
@@ -1603,6 +2018,8 @@ PosixPath('/')]</p>
 <summary>Source code</summary>
 <pre><code class="python">def parts_to_path(parts: List[str]) -&gt; str:
     &#34;&#34;&#34;Convert list of path parts into a path string
+    e.g
+        j.sals.fs.parts_to_path([&#34;home&#34;,&#34;rafy&#34;])  -&gt; &#39;home/rafy&#39;
 
     Args:
         parts (List[str]): path parts
@@ -1636,7 +2053,7 @@ e.g
 <pre><code class="python">def path_parts(path: str) -&gt; List[str]:
     &#34;&#34;&#34;Convert path to a list of parts
     e.g
-     &#39;/tmp/tmp-5383p1GOmMOOwvfi.tpl&#39; -&gt;  (&#39;/&#39;, &#39;tmp&#39;, &#39;tmp-5383p1GOmMOOwvfi.tpl&#39;)
+        &#39;/tmp/tmp-5383p1GOmMOOwvfi.tpl&#39; -&gt;  (&#39;/&#39;, &#39;tmp&#39;, &#39;tmp-5383p1GOmMOOwvfi.tpl&#39;)
     Args:
         path (str): path to convert to parts
 
@@ -1650,21 +2067,23 @@ e.g
 <span>def <span class="ident">read_ascii</span></span>(<span>path)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>read ascii content at <code>path</code></p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
-<dd>ascii file path</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>str</code></strong></dt>
-<dd>ascii content in path</dd>
-</dl></section>
+<section class="desc"><p>read ascii content at <code>path</code>
+e.g
+j.sals.fs.read_text("/home/rafy/testing_text.txt")
+-&gt; 'hello world
+'</p>
+<pre><code>Args:
+    path (str): ascii file path
+
+Returns:
+    str: ascii content in path
+</code></pre></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def read_text(path: str) -&gt; str:
     &#34;&#34;&#34;read ascii content at `path`
+    e.g
+        j.sals.fs.read_text(&#34;/home/rafy/testing_text.txt&#34;)  -&gt; &#39;hello world\n&#39;
 
     Args:
         path (str): ascii file path
@@ -1679,21 +2098,23 @@ e.g
 <span>def <span class="ident">read_binary</span></span>(<span>path)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>read binary content at <code>path</code></p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
-<dd>binary file path</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>bytes</code></strong></dt>
-<dd>binary content in path</dd>
-</dl></section>
+<section class="desc"><p>read binary content at <code>path</code>
+e.g
+j.sals.fs.read_bytes("/home/rafy/testing_text.txt")
+-&gt; b'hello world
+'</p>
+<pre><code>Args:
+    path (str): binary file path
+
+Returns:
+    bytes: binary content in path
+</code></pre></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def read_bytes(path: str) -&gt; bytes:
     &#34;&#34;&#34;read binary content at `path`
+    e.g
+        j.sals.fs.read_bytes(&#34;/home/rafy/testing_text.txt&#34;)  -&gt; b&#39;hello world\n&#39;
 
     Args:
         path (str): binary file path
@@ -1708,21 +2129,23 @@ e.g
 <span>def <span class="ident">read_bytes</span></span>(<span>path)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>read binary content at <code>path</code></p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
-<dd>binary file path</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>bytes</code></strong></dt>
-<dd>binary content in path</dd>
-</dl></section>
+<section class="desc"><p>read binary content at <code>path</code>
+e.g
+j.sals.fs.read_bytes("/home/rafy/testing_text.txt")
+-&gt; b'hello world
+'</p>
+<pre><code>Args:
+    path (str): binary file path
+
+Returns:
+    bytes: binary content in path
+</code></pre></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def read_bytes(path: str) -&gt; bytes:
     &#34;&#34;&#34;read binary content at `path`
+    e.g
+        j.sals.fs.read_bytes(&#34;/home/rafy/testing_text.txt&#34;)  -&gt; b&#39;hello world\n&#39;
 
     Args:
         path (str): binary file path
@@ -1737,21 +2160,23 @@ e.g
 <span>def <span class="ident">read_file</span></span>(<span>path)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>read ascii content at <code>path</code></p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
-<dd>ascii file path</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>str</code></strong></dt>
-<dd>ascii content in path</dd>
-</dl></section>
+<section class="desc"><p>read ascii content at <code>path</code>
+e.g
+j.sals.fs.read_text("/home/rafy/testing_text.txt")
+-&gt; 'hello world
+'</p>
+<pre><code>Args:
+    path (str): ascii file path
+
+Returns:
+    str: ascii content in path
+</code></pre></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def read_text(path: str) -&gt; str:
     &#34;&#34;&#34;read ascii content at `path`
+    e.g
+        j.sals.fs.read_text(&#34;/home/rafy/testing_text.txt&#34;)  -&gt; &#39;hello world\n&#39;
 
     Args:
         path (str): ascii file path
@@ -1766,21 +2191,23 @@ e.g
 <span>def <span class="ident">read_file_binary</span></span>(<span>path)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>read binary content at <code>path</code></p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
-<dd>binary file path</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>bytes</code></strong></dt>
-<dd>binary content in path</dd>
-</dl></section>
+<section class="desc"><p>read binary content at <code>path</code>
+e.g
+j.sals.fs.read_bytes("/home/rafy/testing_text.txt")
+-&gt; b'hello world
+'</p>
+<pre><code>Args:
+    path (str): binary file path
+
+Returns:
+    bytes: binary content in path
+</code></pre></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def read_bytes(path: str) -&gt; bytes:
     &#34;&#34;&#34;read binary content at `path`
+    e.g
+        j.sals.fs.read_bytes(&#34;/home/rafy/testing_text.txt&#34;)  -&gt; b&#39;hello world\n&#39;
 
     Args:
         path (str): binary file path
@@ -1806,21 +2233,23 @@ e.g
 <span>def <span class="ident">read_text</span></span>(<span>path)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>read ascii content at <code>path</code></p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
-<dd>ascii file path</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>str</code></strong></dt>
-<dd>ascii content in path</dd>
-</dl></section>
+<section class="desc"><p>read ascii content at <code>path</code>
+e.g
+j.sals.fs.read_text("/home/rafy/testing_text.txt")
+-&gt; 'hello world
+'</p>
+<pre><code>Args:
+    path (str): ascii file path
+
+Returns:
+    str: ascii content in path
+</code></pre></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def read_text(path: str) -&gt; str:
     &#34;&#34;&#34;read ascii content at `path`
+    e.g
+        j.sals.fs.read_text(&#34;/home/rafy/testing_text.txt&#34;)  -&gt; &#39;hello world\n&#39;
 
     Args:
         path (str): ascii file path
@@ -1846,7 +2275,9 @@ e.g
 <span>def <span class="ident">rename</span></span>(<span>path1, path2)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Rename path1 to path2</p>
+<section class="desc"><p>Rename path1 to path2
+e.g
+j.sals.fs.rename("/home/rafy/testing_make_dir","/home/rafy/testing_dir") </p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>path1</code></strong> :&ensp;<code>str</code></dt>
@@ -1858,6 +2289,8 @@ e.g
 <summary>Source code</summary>
 <pre><code class="python">def rename(path1: str, path2: str):
     &#34;&#34;&#34;Rename path1 to path2
+    e.g
+        j.sals.fs.rename(&#34;/home/rafy/testing_make_dir&#34;,&#34;/home/rafy/testing_dir&#34;)
 
     Args:
         path1 (str): source path
@@ -1882,7 +2315,12 @@ e.g
 <span>def <span class="ident">resolve</span></span>(<span>path)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>resolve <code>.</code> and <code>..</code> in path</p>
+<section class="desc"><p>resolve <code>.</code> and <code>..</code> in path
+e.g
+j.sals.fs.resolve("")
+-&gt; PosixPath('/home/rafy/Documents')
+j.sals.fs.resolve("./testing_text.txt")
+-&gt; PosixPath('/home/rafy/Documents/testing_text.txt')</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
@@ -1897,6 +2335,9 @@ e.g
 <summary>Source code</summary>
 <pre><code class="python">def resolve(path: str) -&gt; str:
     &#34;&#34;&#34;resolve `.` and `..` in path
+    e.g
+        j.sals.fs.resolve(&#34;&#34;)  -&gt; PosixPath(&#39;/home/rafy/Documents&#39;)
+        j.sals.fs.resolve(&#34;./testing_text.txt&#34;)  -&gt; PosixPath(&#39;/home/rafy/Documents/testing_text.txt&#39;)
 
     Args:
         path (str): path with optionally `.` and `..`
@@ -1911,7 +2352,10 @@ e.g
 <span>def <span class="ident">rm_emptry_dir</span></span>(<span>path)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Remove empty directory</p>
+<section class="desc"><p>Remove empty directory if the directory is not empty it will throw exception (Directory not empty)
+e.g
+j.sals.fs.rm_emptry_dir("/home/rafy/empty_dir")
+</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
@@ -1920,7 +2364,9 @@ e.g
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def rm_emptry_dir(path: str):
-    &#34;&#34;&#34;Remove empty directory
+    &#34;&#34;&#34;Remove empty directory if the directory is not empty it will throw exception (Directory not empty)
+    e.g
+        j.sals.fs.rm_emptry_dir(&#34;/home/rafy/empty_dir&#34;)
 
     Args:
         path (str): path to remove.
@@ -1957,7 +2403,10 @@ e.g
 <span>def <span class="ident">stat</span></span>(<span>path)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Gets stat of path <code>path</code></p>
+<section class="desc"><p>Gets stat of path <code>path</code>
+e.g
+j.sals.fs.stat("/home/rafy/test_dir/test")
+-&gt; os.stat_result(st_mode=33204, st_ino=795348, st_dev=2049, st_nlink=1, st_uid=1000, st_gid=1000, st_size=0, st_atime=1586445434, st_mtime=1586445434, st_ctime=1586445434)</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
@@ -1972,7 +2421,8 @@ e.g
 <summary>Source code</summary>
 <pre><code class="python">def stat(path: str):
     &#34;&#34;&#34;Gets stat of path `path`
-
+    e.g
+        j.sals.fs.stat(&#34;/home/rafy/test_dir/test&#34;)  -&gt; os.stat_result(st_mode=33204, st_ino=795348, st_dev=2049, st_nlink=1, st_uid=1000, st_gid=1000, st_size=0, st_atime=1586445434, st_mtime=1586445434, st_ctime=1586445434)
     Args:
         path (str): path to get its stat
 
@@ -1989,31 +2439,30 @@ e.g
 <dd>
 <section class="desc"><p>returns the stem of a path (path without parent directory and without extension)
 e.g
-In [2]: t = j.sals.fs.stem("/tmp/tmp-5383p1GOmMOOwvfi.tpl")</p>
-<pre><code>In [3]: t
-Out[3]: 'tmp-5383p1GOmMOOwvfi'
-</code></pre>
+j.sals.fs.stem("/tmp/tmp-5383p1GOmMOOwvfi.tpl")
+-&gt; 'tmp-5383p1GOmMOOwvfi'</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
 <dd>path we want to get its stem</dd>
 </dl>
-<h2 id="returns">Returns</h2></section>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>str</code></strong></dt>
+<dd>path without parent directory and without extension</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def stem(path: str) -&gt; str:
     &#34;&#34;&#34;returns the stem of a path (path without parent directory and without extension)
     e.g
-        In [2]: t = j.sals.fs.stem(&#34;/tmp/tmp-5383p1GOmMOOwvfi.tpl&#34;)
-
-        In [3]: t
-        Out[3]: &#39;tmp-5383p1GOmMOOwvfi&#39;
+        j.sals.fs.stem(&#34;/tmp/tmp-5383p1GOmMOOwvfi.tpl&#34;)  -&gt; &#39;tmp-5383p1GOmMOOwvfi&#39;
 
     Args:
         path (str): path we want to get its stem
 
     Returns:
-        [type]: [description]
+        str: path without parent directory and without extension
     &#34;&#34;&#34;
     return pathlib.Path(path).stem</code></pre>
 </details>
@@ -2022,7 +2471,9 @@ Out[3]: 'tmp-5383p1GOmMOOwvfi'
 <span>def <span class="ident">symlink</span></span>(<span>src, dst, overwrite=False)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Create a symbolic link.</p>
+<section class="desc"><p>Create a symbolic link.
+e.g
+j.sals.fs.symlink(src="/home/rafy/testing_text.txt",dst="/home/rafy/link_test")</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>src</code></strong> :&ensp;<code>str</code></dt>
@@ -2036,6 +2487,8 @@ Out[3]: 'tmp-5383p1GOmMOOwvfi'
 <summary>Source code</summary>
 <pre><code class="python">def symlink(src: str, dst: str, overwrite=False):
     &#34;&#34;&#34;Create a symbolic link.
+    e.g
+        j.sals.fs.symlink(src=&#34;/home/rafy/testing_text.txt&#34;,dst=&#34;/home/rafy/link_test&#34;)
 
     Args:
         src (str): Source of link
@@ -2052,7 +2505,9 @@ Out[3]: 'tmp-5383p1GOmMOOwvfi'
 <span>def <span class="ident">touch</span></span>(<span>path)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>create file</p>
+<section class="desc"><p>create file
+e.g
+j.sals.fs.touch("/home/rafy/testing_touch")</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
@@ -2062,6 +2517,8 @@ Out[3]: 'tmp-5383p1GOmMOOwvfi'
 <summary>Source code</summary>
 <pre><code class="python">def touch(path: str):
     &#34;&#34;&#34;create file
+    e.g
+        j.sals.fs.touch(&#34;/home/rafy/testing_touch&#34;)
 
     Args:
         path (str): path to create file
@@ -2074,7 +2531,9 @@ Out[3]: 'tmp-5383p1GOmMOOwvfi'
 <span>def <span class="ident">unlink</span></span>(<span>path)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>unlink path</p>
+<section class="desc"><p>unlink path
+e.g
+j.sals.fs.unlink("/home/rafy/testfile3")</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
@@ -2084,11 +2543,10 @@ Out[3]: 'tmp-5383p1GOmMOOwvfi'
 <summary>Source code</summary>
 <pre><code class="python">def unlink(path: str):
     &#34;&#34;&#34;unlink path
-
+    e.g
+        j.sals.fs.unlink(&#34;/home/rafy/testfile3&#34;)
     Args:
         path (str): path to unlink
-
-
     &#34;&#34;&#34;
     return pathlib.Path(path).unlink()</code></pre>
 </details>
@@ -2250,7 +2708,10 @@ for el in walk('/tmp', filter= lambda x: len(x)&gt;4 and (j.sals.fs.is_file(x) o
 <span>def <span class="ident">write_ascii</span></span>(<span>path, data, encoding=None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>write text <code>data</code> to path <code>path</code> with encoding</p>
+<section class="desc"><p>write text <code>data</code> to path <code>path</code> with encoding
+e.g
+j.sals.fs.write_text(path="/home/rafy/testing_text.txt",data="hello world")
+-&gt; 11</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
@@ -2259,17 +2720,26 @@ for el in walk('/tmp', filter= lambda x: len(x)&gt;4 and (j.sals.fs.is_file(x) o
 <dd>ascii content</dd>
 <dt><strong><code>encoding</code></strong> :&ensp;[<code>type</code>], optional</dt>
 <dd>encoding. Defaults to None.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>int</code></strong></dt>
+<dd>Return the decoded contents of the pointed-to file as a string</dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def write_text(path: str, data: str, encoding=None):
     &#34;&#34;&#34;write text `data` to path `path` with encoding
+    e.g
+        j.sals.fs.write_text(path=&#34;/home/rafy/testing_text.txt&#34;,data=&#34;hello world&#34;)  -&gt; 11
 
     Args:
         path (str): path to write to
         data (str): ascii content
         encoding ([type], optional): encoding. Defaults to None.
 
+    Returns:
+        int: Return the decoded contents of the pointed-to file as a string
 
     &#34;&#34;&#34;
     return pathlib.Path(path).write_text(data, encoding)</code></pre>
@@ -2279,23 +2749,35 @@ for el in walk('/tmp', filter= lambda x: len(x)&gt;4 and (j.sals.fs.is_file(x) o
 <span>def <span class="ident">write_binary</span></span>(<span>path, data)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>write binary <code>data</code> to path <code>path</code></p>
+<section class="desc"><p>write binary <code>data</code> to path <code>path</code>
+e.g
+j.sals.fs.write_bytes(path="/home/rafy/testing_text.txt",data=b"hello world")
+-&gt; 11</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
 <dd>path to write to</dd>
 <dt><strong><code>data</code></strong> :&ensp;<code>bytes</code></dt>
 <dd>binary content</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>int</code></strong></dt>
+<dd>Return the binary contents of the pointed-to file as a bytes object</dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def write_bytes(path: str, data: bytes):
     &#34;&#34;&#34;write binary `data` to path `path`
+    e.g
+        j.sals.fs.write_bytes(path=&#34;/home/rafy/testing_text.txt&#34;,data=b&#34;hello world&#34;)  -&gt; 11
 
     Args:
         path (str): path to write to
         data (bytes): binary content
 
+    Returns:
+        int: Return the binary contents of the pointed-to file as a bytes object
     &#34;&#34;&#34;
     return pathlib.Path(path).write_bytes(data)</code></pre>
 </details>
@@ -2304,23 +2786,35 @@ for el in walk('/tmp', filter= lambda x: len(x)&gt;4 and (j.sals.fs.is_file(x) o
 <span>def <span class="ident">write_bytes</span></span>(<span>path, data)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>write binary <code>data</code> to path <code>path</code></p>
+<section class="desc"><p>write binary <code>data</code> to path <code>path</code>
+e.g
+j.sals.fs.write_bytes(path="/home/rafy/testing_text.txt",data=b"hello world")
+-&gt; 11</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
 <dd>path to write to</dd>
 <dt><strong><code>data</code></strong> :&ensp;<code>bytes</code></dt>
 <dd>binary content</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>int</code></strong></dt>
+<dd>Return the binary contents of the pointed-to file as a bytes object</dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def write_bytes(path: str, data: bytes):
     &#34;&#34;&#34;write binary `data` to path `path`
+    e.g
+        j.sals.fs.write_bytes(path=&#34;/home/rafy/testing_text.txt&#34;,data=b&#34;hello world&#34;)  -&gt; 11
 
     Args:
         path (str): path to write to
         data (bytes): binary content
 
+    Returns:
+        int: Return the binary contents of the pointed-to file as a bytes object
     &#34;&#34;&#34;
     return pathlib.Path(path).write_bytes(data)</code></pre>
 </details>
@@ -2329,7 +2823,10 @@ for el in walk('/tmp', filter= lambda x: len(x)&gt;4 and (j.sals.fs.is_file(x) o
 <span>def <span class="ident">write_file</span></span>(<span>path, data, encoding=None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>write text <code>data</code> to path <code>path</code> with encoding</p>
+<section class="desc"><p>write text <code>data</code> to path <code>path</code> with encoding
+e.g
+j.sals.fs.write_text(path="/home/rafy/testing_text.txt",data="hello world")
+-&gt; 11</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
@@ -2338,17 +2835,26 @@ for el in walk('/tmp', filter= lambda x: len(x)&gt;4 and (j.sals.fs.is_file(x) o
 <dd>ascii content</dd>
 <dt><strong><code>encoding</code></strong> :&ensp;[<code>type</code>], optional</dt>
 <dd>encoding. Defaults to None.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>int</code></strong></dt>
+<dd>Return the decoded contents of the pointed-to file as a string</dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def write_text(path: str, data: str, encoding=None):
     &#34;&#34;&#34;write text `data` to path `path` with encoding
+    e.g
+        j.sals.fs.write_text(path=&#34;/home/rafy/testing_text.txt&#34;,data=&#34;hello world&#34;)  -&gt; 11
 
     Args:
         path (str): path to write to
         data (str): ascii content
         encoding ([type], optional): encoding. Defaults to None.
 
+    Returns:
+        int: Return the decoded contents of the pointed-to file as a string
 
     &#34;&#34;&#34;
     return pathlib.Path(path).write_text(data, encoding)</code></pre>
@@ -2358,23 +2864,35 @@ for el in walk('/tmp', filter= lambda x: len(x)&gt;4 and (j.sals.fs.is_file(x) o
 <span>def <span class="ident">write_file_binary</span></span>(<span>path, data)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>write binary <code>data</code> to path <code>path</code></p>
+<section class="desc"><p>write binary <code>data</code> to path <code>path</code>
+e.g
+j.sals.fs.write_bytes(path="/home/rafy/testing_text.txt",data=b"hello world")
+-&gt; 11</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
 <dd>path to write to</dd>
 <dt><strong><code>data</code></strong> :&ensp;<code>bytes</code></dt>
 <dd>binary content</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>int</code></strong></dt>
+<dd>Return the binary contents of the pointed-to file as a bytes object</dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def write_bytes(path: str, data: bytes):
     &#34;&#34;&#34;write binary `data` to path `path`
+    e.g
+        j.sals.fs.write_bytes(path=&#34;/home/rafy/testing_text.txt&#34;,data=b&#34;hello world&#34;)  -&gt; 11
 
     Args:
         path (str): path to write to
         data (bytes): binary content
 
+    Returns:
+        int: Return the binary contents of the pointed-to file as a bytes object
     &#34;&#34;&#34;
     return pathlib.Path(path).write_bytes(data)</code></pre>
 </details>
@@ -2383,7 +2901,10 @@ for el in walk('/tmp', filter= lambda x: len(x)&gt;4 and (j.sals.fs.is_file(x) o
 <span>def <span class="ident">write_text</span></span>(<span>path, data, encoding=None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>write text <code>data</code> to path <code>path</code> with encoding</p>
+<section class="desc"><p>write text <code>data</code> to path <code>path</code> with encoding
+e.g
+j.sals.fs.write_text(path="/home/rafy/testing_text.txt",data="hello world")
+-&gt; 11</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
@@ -2392,17 +2913,26 @@ for el in walk('/tmp', filter= lambda x: len(x)&gt;4 and (j.sals.fs.is_file(x) o
 <dd>ascii content</dd>
 <dt><strong><code>encoding</code></strong> :&ensp;[<code>type</code>], optional</dt>
 <dd>encoding. Defaults to None.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>int</code></strong></dt>
+<dd>Return the decoded contents of the pointed-to file as a string</dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def write_text(path: str, data: str, encoding=None):
     &#34;&#34;&#34;write text `data` to path `path` with encoding
+    e.g
+        j.sals.fs.write_text(path=&#34;/home/rafy/testing_text.txt&#34;,data=&#34;hello world&#34;)  -&gt; 11
 
     Args:
         path (str): path to write to
         data (str): ascii content
         encoding ([type], optional): encoding. Defaults to None.
 
+    Returns:
+        int: Return the decoded contents of the pointed-to file as a string
 
     &#34;&#34;&#34;
     return pathlib.Path(path).write_text(data, encoding)</code></pre>
@@ -2416,9 +2946,7 @@ for el in walk('/tmp', filter= lambda x: len(x)&gt;4 and (j.sals.fs.is_file(x) o
 <nav id="sidebar">
 <h1>Index</h1>
 <div class="toc">
-<ul>
-<li><a href="#todo-docs-for-fs">TODO docs for fs.</a></li>
-</ul>
+<ul></ul>
 </div>
 <ul id="index">
 <li><h3>Super-module</h3>

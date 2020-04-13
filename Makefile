@@ -1,4 +1,4 @@
-.PHONY: tests docs
+.PHONY: tests docs api_docs docs-serve
 
 tests:
 	pytest tests -s
@@ -6,5 +6,10 @@ tests:
 coverage:
 	pytest tests -s --cov=jumpscale
 
-docs:
+api_docs:
 	pdoc3 jumpscale --html --output-dir docs/api --force
+
+docs: api_docs
+
+docs-serve:
+	python3 -m http.server -d docs
