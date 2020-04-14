@@ -1,9 +1,12 @@
+"""
+only test non-stored factories
+"""
 import datetime
 import unittest
 
 
 # TODO: move fields to fields or types module
-from jumpscale.core.base import Base, Factory, DuplicateError, fields
+from jumpscale.core.base import Base, DuplicateError, fields
 
 
 class Address(Base):
@@ -17,11 +20,15 @@ class Address(Base):
 
 class Wallet(Base):
     ID = fields.Integer()
-    addresses = Factory(Address)
+    addresses = fields.Factory(Address, stored=False)
+
+
+class RichWallet(Wallet):
+    amount = fields.Integer(default=10000000)
 
 
 class Client(Base):
-    wallets = Factory(Wallet)
+    wallets = fields.Factory(RichWallet, stored=False)
 
 
 class Student(Base):
@@ -34,7 +41,7 @@ class Student(Base):
 
 
 class StudentClient(Base):
-    students = Factory(Student)
+    students = fields.Factory(Student, stored=False)
 
 
 class TestBaseFactory(unittest.TestCase):
@@ -42,6 +49,7 @@ class TestBaseFactory(unittest.TestCase):
         cl = Client()
         w = cl.wallets.get("aa")
         self.assertEqual(cl.wallets.count, 1)
+        self.assertEqual(w.amount, 10000000)
 
         addr1 = w.addresses.new("mine")
         addr1.x = 456

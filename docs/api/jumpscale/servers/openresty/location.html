@@ -69,8 +69,8 @@ class Location(Base):
             if not self.path_location.endswith(&#34;/&#34;):
                 self.path_location += &#34;/&#34;
 
-        if self.location_type == &#34;proxy&#34;:
-            j.sals.process.execute(&#34;moonc .&#34;, cwd=self.path_location)
+        # if self.location_type == &#34;proxy&#34;:  Uncomment when dependencies are handled
+        #     j.sals.process.execute(&#34;moonc .&#34;, cwd=self.path_location)
 
         self.write_config(self.config)</code></pre>
 </details>
@@ -86,7 +86,7 @@ class Location(Base):
 <dl>
 <dt id="jumpscale.servers.openresty.location.Location"><code class="flex name class">
 <span>class <span class="ident">Location</span></span>
-<span>(</span><span>parent=None)</span>
+<span>(</span><span>parent_=None, instance_name_=None, **values)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>A simple attribute-based namespace.</p>
@@ -135,8 +135,8 @@ class Location(Base):
             if not self.path_location.endswith(&#34;/&#34;):
                 self.path_location += &#34;/&#34;
 
-        if self.location_type == &#34;proxy&#34;:
-            j.sals.process.execute(&#34;moonc .&#34;, cwd=self.path_location)
+        # if self.location_type == &#34;proxy&#34;:  Uncomment when dependencies are handled
+        #     j.sals.process.execute(&#34;moonc .&#34;, cwd=self.path_location)
 
         self.write_config(self.config)</code></pre>
 </details>
@@ -378,8 +378,8 @@ def path_web(self):
         if not self.path_location.endswith(&#34;/&#34;):
             self.path_location += &#34;/&#34;
 
-    if self.location_type == &#34;proxy&#34;:
-        j.sals.process.execute(&#34;moonc .&#34;, cwd=self.path_location)
+    # if self.location_type == &#34;proxy&#34;:  Uncomment when dependencies are handled
+    #     j.sals.process.execute(&#34;moonc .&#34;, cwd=self.path_location)
 
     self.write_config(self.config)</code></pre>
 </details>

@@ -1,8 +1,10 @@
-from collections import namedtuple
 from types import SimpleNamespace
 
-from .factory import Factory, DuplicateError
-from .fields import Field, List, Object, Secret, ValidationError
+from jumpscale.core import events
+
+from . import fields
+from .factory import Factory, StoredFactory, DuplicateError
+from .events import AttributeUpdateEvent
 
 
 def get_field_property(name, field):
@@ -16,107 +18,104 @@ def get_field_property(name, field):
         return field.from_raw(field.default)
 
     def setter(self, value):
+        if field.readonly:
+            raise fields.ValidationError(f"'{name}' is a read only attribute")
+
         # accept if this is a raw value too
         value = field.from_raw(value)
 
         # validate
         field.validate(value)
 
+        # set parent
+        if isinstance(field, fields.Object):
+            value.parent = self
+
         # se attribute
         setattr(self, inner_name, value)
-        self._data_updated(name, value)
+        self._attr_updated(name, value)
 
     return property(fget=getter, fset=setter)
-
-
-def new_get_factory_info_method(factory_info):
-    def _get_factory_info(self):
-        return factory_info
-
-    return _get_factory_info
-
-
-def new_get_fields_method(fields):
-    def _get_fields(self):
-        return fields
-
-    return _get_fields
-
-
-FactoryInfo = namedtuple("FactoryInfo", ["name", "type", "factory"])
-
-
-# TODO: split fields meta and factoreis meta (more clean) or create a generic one  (with different type handlers for fields and factories)
 
 
 class BaseMeta(type):
     def __new__(cls, name, based, attrs):
         """
-        this will return a new class with fields,factories as property (function descriptors)
+        get a new class with all fields set in _fields, including base/super class fields too.
 
         Args:
             name (str): class name
-            based (tuple): super class types
+            based (tuple): super class types (classes)
             attrs (dict): current attributes
 
         Returns:
             any: a new class
         """
-        factories = []
-        fields = {}
-        new_attrs = {}
+        cls_fields = {}
+        super_fields = {}
 
+        for super_cls in based:
+            if hasattr(super_cls, "_fields"):
+                super_fields.update(super_cls._fields)
+
+        # update current attrs with super class fields
+        attrs.update(super_fields)
+
+        new_attrs = {}
         for key in attrs:
             obj = attrs[key]
-            if isinstance(obj, Factory):
-                factory = type(obj)
-                factories.append(FactoryInfo(key, obj.type, factory))
-            elif isinstance(obj, Field):
-                fields[key] = obj
+            if isinstance(obj, fields.Field):
+                cls_fields[key] = obj
                 new_attrs[key] = get_field_property(key, obj)
             else:
                 new_attrs[key] = obj
 
         new_class = super(BaseMeta, cls).__new__(cls, name, based, new_attrs)
-        new_class._get_fields = new_get_fields_method(fields)
-        new_class._get_factory_info = new_get_factory_info_method(factories)
+        new_class._fields = cls_fields
         return new_class
 
 
 class Base(SimpleNamespace, metaclass=BaseMeta):
-    def _get_fields(self):
-        return {}
+    def __init__(self, parent_=None, instance_name_=None, **values):
+        self.__parent = parent_
+        self.__instance_name = instance_name_
 
-    def _get_factory_info(self):
-        return []
-
-    def _get_embedded_objects(self):
-        return [getattr(self, name) for name, field in self._get_fields().items() if isinstance(field, Object)]
-
-    def __init__(self, parent=None):
-        self.parent = parent
+        self._factories = {}
 
         for name, field in self._get_fields().items():
-            # accept raw as a default value
-            setattr(self, f"__{name}", field.from_raw(field.default))
+            if isinstance(field, fields.Factory):
+                if field.stored:
+                    value = StoredFactory(field.type_for_factory, name_=name, parent_instance_=self)
+                else:
+                    value = Factory(field.type_for_factory, name_=name, parent_instance_=self)
 
-        for info in self._get_factory_info():
-            setattr(self, info.name, info.factory(info.type))
+                self._factories[name] = value
+            else:
+                value = values.get(name, field.from_raw(field.default))
+
+            # accept raw as a default value
+            # and set inner value
+            setattr(self, f"__{name}", value)
+
+    def _get_fields(self):
+        return self._fields
 
     def _get_factories(self):
-        return {info.name: getattr(self, info.name) for info in self._get_factory_info()}
+        return self._factories
 
-    def validate(self):
-        for name, field in self._get_fields().items():
-            field.validate(getattr(self, name))
+    def _get_embedded_objects(self):
+        return [getattr(self, name) for name, field in self._get_fields().items() if isinstance(field, fields.Object)]
 
     def _get_data(self):
         data = {}
 
         for name, field in self._get_fields().items():
+            if isinstance(field, fields.Factory):
+                # skip for factories for now
+                continue
             value = getattr(self, name)
             raw_value = field.to_raw(value)
-            if isinstance(field, Secret):
+            if isinstance(field, fields.Secret):
                 data[f"__{name}"] = raw_value
             else:
                 data[name] = raw_value
@@ -128,13 +127,29 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
             if name in new_data:
                 try:
                     setattr(self, f"__{name}", field.from_raw(new_data[name]))
-                except (ValidationError, ValueError):
+                except (fields.ValidationError, ValueError):
                     # should at least log validation and value errors
                     # this can happen in case of e.g. fields type change
                     pass
 
-    def _data_updated(self, name, value):
-        pass
+    def _attr_updated(self, name, value):
+        event = AttributeUpdateEvent(self, name, value)
+        events.notify(event)
 
-    def _on_data_update(self, name, value):
-        pass
+    def validate(self):
+        for name, field in self._get_fields().items():
+            field.validate(getattr(self, name))
+
+    @property
+    def parent(self):
+        return self.__parent
+
+    def _set_parent(self, parent):
+        self.__parent = parent
+
+    @property
+    def instance_name(self):
+        return self.__instance_name
+
+    def _set_instance_name(self, name):
+        self.__instance_name = name

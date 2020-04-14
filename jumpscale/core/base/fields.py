@@ -62,7 +62,7 @@ import time
 
 from urllib.parse import urlparse
 
-from .factory import StoredFactory
+from .factory import Factory as BaseFactory
 
 
 class ValidationError(Exception):
@@ -754,6 +754,20 @@ class Time(DateTimeMixin, Typed):
         self.format = format_
 
 
-# TODO: add duration field
-class Factory(StoredFactory):
-    pass
+class Factory(Typed):
+    def __init__(self, type_for_factory, stored=True, **kwargs):
+        # value type will be factory
+        super().__init__(type_=BaseFactory, readonly=True, **kwargs)
+        # but we keep the type of any Base class
+        # so, we can init a Factory with it
+        self.type_for_factory = type_for_factory
+        self.stored = stored
+
+    def validate(self, value):
+        super().validate(value)
+
+    def from_raw(self, value):
+        return value
+
+    def to_raw(self, value):
+        return None

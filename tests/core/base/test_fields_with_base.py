@@ -11,9 +11,11 @@ class Permission(Base):
 
 
 class User(Base):
+    id = fields.Integer()
     emails = fields.List(fields.String())
     permissions = fields.List(fields.Object(Permission))
     custom_config = fields.Typed(dict)
+    rating = fields.Float()
 
 
 class Colors(enum.Enum):
@@ -27,6 +29,22 @@ class Car(Base):
 
 
 class TestBaseWithFields(unittest.TestCase):
+    def test_integer_field(self):
+        user = User()
+        user.id = "111"
+        self.assertEqual(user.id, 111)
+
+        with self.assertRaises(ValidationError):
+            user.id = "xxx"
+
+    def test_float_field(self):
+        user = User()
+        user.rating = "11.2"
+        self.assertEqual(user.rating, 11.2)
+
+        with self.assertRaises(ValidationError):
+            user.rating = "xxx"
+
     def test_list_field(self):
         user = User()
         self.assertEqual(user.emails, [])

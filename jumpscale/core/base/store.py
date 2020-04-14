@@ -25,28 +25,34 @@ class InvalidPrivateKey(Exception):
 
 
 class Location:
-    """dot-separated auto-location for any type
+    """
+    dot-separated auto-location for any type
 
     for example, if we have a class in jumpscale/clients/redis/<type>
     location name will be jumpscale.clients.redis.<type>
-
-    it can have a parent of any name
     """
 
-    def __init__(self, type_, parent_name):
-        self.type = type_
-
-        self.path_list = [self.type.__module__, self.type.__name__]
-        if parent_name:
-            self.path_list = [parent_name] + self.path_list
+    def __init__(self, *name_list):
+        self.name_list = list(name_list)
 
     @property
     def name(self):
-        return ".".join(self.path_list)
+        return ".".join(self.name_list)
 
     @property
     def path(self):
         return os.path.join(*self.name.split("."))
+
+    @classmethod
+    def from_type(cls, type_):
+        return cls(type_.__module__, type_.__name__)
+
+    def __str__(self):
+        args = "', '".join(self.name_list)
+        cls_name = self.__class__.__name__
+        return f"{cls_name}('{args}')"
+
+    __repr__ = __str__
 
 
 class EncryptionMode(Enum):
@@ -106,10 +112,8 @@ class ConfigStore(ABC):
 class EncryptedConfigStore(ConfigStore, EncryptionMixin):
     """secure config storage base"""
 
-    # TODO: encrypt/decrypt by section (config key)
-
-    def __init__(self, type_, parent_name=None):
-        self.type = type_
+    def __init__(self, location):
+        self.location = location
         self.config_env = Environment()
         self.priv_key = base64.decode(self.config_env.get_private_key())
         self.nacl = NACL(private_key=self.priv_key)
@@ -117,15 +121,6 @@ class EncryptedConfigStore(ConfigStore, EncryptionMixin):
 
         if not self.priv_key:
             raise InvalidPrivateKey
-
-        self.parent_name = parent_name
-
-    def get_type_location(self, type_, parent_name):
-        return Location(type_, parent_name)
-
-    @property
-    def location(self):
-        return self.get_type_location(self.type, self.parent_name)
 
     def _encrypt_value(self, value):
         return base64.encode(self.encrypt(value)).decode("ascii")
@@ -189,8 +184,8 @@ class FileSystemStore(EncryptedConfigStore):
 
     """
 
-    def __init__(self, type_, parent_name=None):
-        super(FileSystemStore, self).__init__(type_, parent_name)
+    def __init__(self, location):
+        super(FileSystemStore, self).__init__(location)
         self.root = self.config_env.get_store_config("filesystem")["path"]
 
     @property
@@ -233,8 +228,8 @@ class RedisStore(EncryptedConfigStore):
     It saves the data in redis and configuration for redis comes from `config_env.get_store_config("redis")`
     """
 
-    def __init__(self, type_, parent_name=None):
-        super().__init__(type_, parent_name)
+    def __init__(self, location):
+        super().__init__(location)
         redis_config = self.config_env.get_store_config("redis")
         self.redis_client = redis.Redis(redis_config["hostname"], redis_config["port"])
 
@@ -244,7 +239,7 @@ class RedisStore(EncryptedConfigStore):
     def read(self, instance_name):
         return self.redis_client.get(self.get_key(instance_name))
 
-    def get_type_keys(self):
+    def get_location_keys(self):
         return self.redis_client.keys(f"{self.location.name}.*")
 
     def get_instance_keys(self, instance_name):
@@ -253,7 +248,7 @@ class RedisStore(EncryptedConfigStore):
     def list_all(self):
         names = []
 
-        keys = self.get_type_keys()
+        keys = self.get_location_keys()
         for key in keys:
             name = key.decode().replace(self.location.name, "").lstrip(".")
             if "." not in name:

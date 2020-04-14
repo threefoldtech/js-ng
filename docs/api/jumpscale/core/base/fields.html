@@ -133,7 +133,7 @@ import time
 
 from urllib.parse import urlparse
 
-from .factory import StoredFactory
+from .factory import Factory as BaseFactory
 
 
 class ValidationError(Exception):
@@ -825,9 +825,23 @@ class Time(DateTimeMixin, Typed):
         self.format = format_
 
 
-# TODO: add duration field
-class Factory(StoredFactory):
-    pass</code></pre>
+class Factory(Typed):
+    def __init__(self, type_for_factory, stored=True, **kwargs):
+        # value type will be factory
+        super().__init__(type_=BaseFactory, readonly=True, **kwargs)
+        # but we keep the type of any Base class
+        # so, we can init a Factory with it
+        self.type_for_factory = type_for_factory
+        self.stored = stored
+
+    def validate(self, value):
+        super().validate(value)
+
+    def from_raw(self, value):
+        return value
+
+    def to_raw(self, value):
+        return None</code></pre>
 </details>
 </section>
 <section>
@@ -1577,25 +1591,49 @@ Example:</p>
 </dd>
 <dt id="jumpscale.core.base.fields.Factory"><code class="flex name class">
 <span>class <span class="ident">Factory</span></span>
-<span>(</span><span>type_, parent_name=None)</span>
+<span>(</span><span>type_for_factory, stored=True, **kwargs)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>base field for any type, value mus tof of <code>type_</code></p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>type_</code></strong> :&ensp;<code>type</code></dt>
+<dd>any type (class)</dd>
+<dt><strong><code>kwargs</code></strong></dt>
+<dd>any keyword arguments supported by <a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field"><code>Field</code></a></dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class Factory(StoredFactory):
-    pass</code></pre>
+<pre><code class="python">class Factory(Typed):
+    def __init__(self, type_for_factory, stored=True, **kwargs):
+        # value type will be factory
+        super().__init__(type_=BaseFactory, readonly=True, **kwargs)
+        # but we keep the type of any Base class
+        # so, we can init a Factory with it
+        self.type_for_factory = type_for_factory
+        self.stored = stored
+
+    def validate(self, value):
+        super().validate(value)
+
+    def from_raw(self, value):
+        return value
+
+    def to_raw(self, value):
+        return None</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="jumpscale.core.base.factory.StoredFactory" href="factory.html#jumpscale.core.base.factory.StoredFactory">StoredFactory</a></li>
-<li><a title="jumpscale.core.base.factory.Factory" href="factory.html#jumpscale.core.base.factory.Factory">Factory</a></li>
+<li><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></li>
+<li><a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field">Field</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="jumpscale.core.base.factory.StoredFactory" href="factory.html#jumpscale.core.base.factory.StoredFactory">StoredFactory</a></b></code>:
+<li><code><b><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></b></code>:
 <ul class="hlist">
-<li><code><a title="jumpscale.core.base.factory.StoredFactory.STORE" href="factory.html#jumpscale.core.base.factory.StoredFactory.STORE">STORE</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.Typed.from_raw" href="#jumpscale.core.base.fields.Field.from_raw">from_raw</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.Typed.to_raw" href="#jumpscale.core.base.fields.Field.to_raw">to_raw</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.Typed.validate" href="#jumpscale.core.base.fields.Field.validate">validate</a></code></li>
 </ul>
 </li>
 </ul>
@@ -2794,6 +2832,7 @@ they will converted to objects.</p>
 <li><a title="jumpscale.core.base.fields.DateTime" href="#jumpscale.core.base.fields.DateTime">DateTime</a></li>
 <li><a title="jumpscale.core.base.fields.Date" href="#jumpscale.core.base.fields.Date">Date</a></li>
 <li><a title="jumpscale.core.base.fields.Time" href="#jumpscale.core.base.fields.Time">Time</a></li>
+<li><a title="jumpscale.core.base.fields.Factory" href="#jumpscale.core.base.fields.Factory">Factory</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">

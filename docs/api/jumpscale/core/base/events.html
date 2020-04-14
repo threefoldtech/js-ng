@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.4" />
-<title>jumpscale.core API documentation</title>
+<title>jumpscale.core.base.events API documentation</title>
 <meta name="description" content="" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
@@ -17,56 +17,119 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Namespace <code>jumpscale.core</code></h1>
+<h1 class="title">Module <code>jumpscale.core.base.events</code></h1>
 </header>
 <section id="section-intro">
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class InstanceEvent:
+    def __init__(self, name, instance=None):
+        self.name = name
+        self.instance = instance
+
+
+class AttributeUpdateEvent(InstanceEvent):
+    def __init__(self, instance, name, new_value):
+        super().__init__(name, instance)
+        self.new_value = new_value
+
+
+class InstanceCreateEvent(InstanceEvent):
+    def __init__(self, name, instance):
+        super().__init__(instance)
+        self.name = name
+
+
+class InstanceDeleteEvent(InstanceEvent):
+    pass</code></pre>
+</details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt><code class="name"><a title="jumpscale.core.application" href="application/index.html">jumpscale.core.application</a></code></dt>
+<dt id="jumpscale.core.base.events.AttributeUpdateEvent"><code class="flex name class">
+<span>class <span class="ident">AttributeUpdateEvent</span></span>
+<span>(</span><span>instance, name, new_value)</span>
+</code></dt>
 <dd>
 <section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class AttributeUpdateEvent(InstanceEvent):
+    def __init__(self, instance, name, new_value):
+        super().__init__(name, instance)
+        self.new_value = new_value</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="jumpscale.core.base.events.InstanceEvent" href="#jumpscale.core.base.events.InstanceEvent">InstanceEvent</a></li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="jumpscale.clients.redis.redis.ClientAttributeUpdated" href="../../clients/redis/redis.html#jumpscale.clients.redis.redis.ClientAttributeUpdated">ClientAttributeUpdated</a></li>
+</ul>
 </dd>
-<dt><code class="name"><a title="jumpscale.core.base" href="base/index.html">jumpscale.core.base</a></code></dt>
+<dt id="jumpscale.core.base.events.InstanceCreateEvent"><code class="flex name class">
+<span>class <span class="ident">InstanceCreateEvent</span></span>
+<span>(</span><span>name, instance)</span>
+</code></dt>
 <dd>
 <section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class InstanceCreateEvent(InstanceEvent):
+    def __init__(self, name, instance):
+        super().__init__(instance)
+        self.name = name</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="jumpscale.core.base.events.InstanceEvent" href="#jumpscale.core.base.events.InstanceEvent">InstanceEvent</a></li>
+</ul>
 </dd>
-<dt><code class="name"><a title="jumpscale.core.config" href="config/index.html">jumpscale.core.config</a></code></dt>
+<dt id="jumpscale.core.base.events.InstanceDeleteEvent"><code class="flex name class">
+<span>class <span class="ident">InstanceDeleteEvent</span></span>
+<span>(</span><span>name, instance=None)</span>
+</code></dt>
 <dd>
 <section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class InstanceDeleteEvent(InstanceEvent):
+    pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="jumpscale.core.base.events.InstanceEvent" href="#jumpscale.core.base.events.InstanceEvent">InstanceEvent</a></li>
+</ul>
 </dd>
-<dt><code class="name"><a title="jumpscale.core.db" href="db/index.html">jumpscale.core.db</a></code></dt>
+<dt id="jumpscale.core.base.events.InstanceEvent"><code class="flex name class">
+<span>class <span class="ident">InstanceEvent</span></span>
+<span>(</span><span>name, instance=None)</span>
+</code></dt>
 <dd>
 <section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="jumpscale.core.dirs" href="dirs/index.html">jumpscale.core.dirs</a></code></dt>
-<dd>
-<section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="jumpscale.core.events" href="events/index.html">jumpscale.core.events</a></code></dt>
-<dd>
-<section class="desc"><p>This module is for event handling, where any component can listen to certain event notifications …</p></section>
-</dd>
-<dt><code class="name"><a title="jumpscale.core.exceptions" href="exceptions/index.html">jumpscale.core.exceptions</a></code></dt>
-<dd>
-<section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="jumpscale.core.executors" href="executors/index.html">jumpscale.core.executors</a></code></dt>
-<dd>
-<section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="jumpscale.core.logging" href="logging/index.html">jumpscale.core.logging</a></code></dt>
-<dd>
-<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class InstanceEvent:
+    def __init__(self, name, instance=None):
+        self.name = name
+        self.instance = instance</code></pre>
+</details>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="jumpscale.core.base.events.AttributeUpdateEvent" href="#jumpscale.core.base.events.AttributeUpdateEvent">AttributeUpdateEvent</a></li>
+<li><a title="jumpscale.core.base.events.InstanceCreateEvent" href="#jumpscale.core.base.events.InstanceCreateEvent">InstanceCreateEvent</a></li>
+<li><a title="jumpscale.core.base.events.InstanceDeleteEvent" href="#jumpscale.core.base.events.InstanceDeleteEvent">InstanceDeleteEvent</a></li>
+</ul>
 </dd>
 </dl>
-</section>
-<section>
-</section>
-<section>
-</section>
-<section>
 </section>
 </article>
 <nav id="sidebar">
@@ -77,20 +140,23 @@
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="jumpscale" href="../index.html">jumpscale</a></code></li>
+<li><code><a title="jumpscale.core.base" href="index.html">jumpscale.core.base</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
+<li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
-<li><code><a title="jumpscale.core.application" href="application/index.html">jumpscale.core.application</a></code></li>
-<li><code><a title="jumpscale.core.base" href="base/index.html">jumpscale.core.base</a></code></li>
-<li><code><a title="jumpscale.core.config" href="config/index.html">jumpscale.core.config</a></code></li>
-<li><code><a title="jumpscale.core.db" href="db/index.html">jumpscale.core.db</a></code></li>
-<li><code><a title="jumpscale.core.dirs" href="dirs/index.html">jumpscale.core.dirs</a></code></li>
-<li><code><a title="jumpscale.core.events" href="events/index.html">jumpscale.core.events</a></code></li>
-<li><code><a title="jumpscale.core.exceptions" href="exceptions/index.html">jumpscale.core.exceptions</a></code></li>
-<li><code><a title="jumpscale.core.executors" href="executors/index.html">jumpscale.core.executors</a></code></li>
-<li><code><a title="jumpscale.core.logging" href="logging/index.html">jumpscale.core.logging</a></code></li>
+<li>
+<h4><code><a title="jumpscale.core.base.events.AttributeUpdateEvent" href="#jumpscale.core.base.events.AttributeUpdateEvent">AttributeUpdateEvent</a></code></h4>
+</li>
+<li>
+<h4><code><a title="jumpscale.core.base.events.InstanceCreateEvent" href="#jumpscale.core.base.events.InstanceCreateEvent">InstanceCreateEvent</a></code></h4>
+</li>
+<li>
+<h4><code><a title="jumpscale.core.base.events.InstanceDeleteEvent" href="#jumpscale.core.base.events.InstanceDeleteEvent">InstanceDeleteEvent</a></code></h4>
+</li>
+<li>
+<h4><code><a title="jumpscale.core.base.events.InstanceEvent" href="#jumpscale.core.base.events.InstanceEvent">InstanceEvent</a></code></h4>
+</li>
 </ul>
 </li>
 </ul>
