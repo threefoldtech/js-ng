@@ -43,9 +43,10 @@ Note that, these configuration is not yet stored or saved, you need to use a [st
 
 ## Stored factory
 
-The backend to store configurations of `Base` types,
-- can be encrypted or plain (fields.Secret)
-- Multiple backends (FileSystemStore, RedisStore)
+The backend to store configurations of `Base` types where can create, list and delete instances.
+
+- Support encryption via secret fields (`fields.Secret`)
+- Multiple storage backends (FileSystemStore, RedisStore)
 
 Example:
 
