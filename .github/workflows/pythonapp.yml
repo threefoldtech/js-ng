@@ -14,13 +14,14 @@ jobs:
     
     runs-on: ubuntu-latest
     steps:
-    - name: Install jsng
-      run: |
-        sudo apt-get update
-        sudo apt-get install git python3-pip python3-venv python3-setuptools -y
-        sudo pip3 install poetry 
-        poetry update && poetry install
+      - uses: actions/checkout@master
+      - name: Install jsng
+        run: |
+          sudo apt-get update
+          sudo apt-get install git python3-pip python3-venv python3-setuptools -y
+          sudo pip3 install poetry 
+          poetry update && poetry install
         
-    - name: Run tests
-      run: |
-        make tests
+      - name: Run tests
+        run: |
+          make tests
