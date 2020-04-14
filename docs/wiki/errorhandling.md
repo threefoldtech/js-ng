@@ -46,13 +46,15 @@ This an example of how the Error Dict looks like
 
 ```python
 {
-    "level": "<error level>",
-    "message": "<error message>"
-    "category": "exception",
+    "appname": "application name",
+    "level":  "severity level",
+    "message": "error message",
+    "timestamp": "timestamp of the error",
+    "category": "error category",
+    "data": "optional dict to hold data",
     "traceback": {
-        "text": "traceback string",
-        "timestamp": "<error timestamp>",
-        "process_id": "<the process id>",
+        "raw": "traceback text",
+        "process_id": "the process id"
         "stacktrace": [
             {
                 "filename": "<file name>",
@@ -62,7 +64,6 @@ This an example of how the Error Dict looks like
                 "code": "<line code>"
             }
         ]
-    }
 },
 ```
 
