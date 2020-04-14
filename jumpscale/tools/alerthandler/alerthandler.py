@@ -1,4 +1,5 @@
 from jumpscale.god import j
+from redis import Redis
 
 
 def _get_identifier(appname, message, public_message, category, alert_type):
@@ -18,6 +19,7 @@ class Alert:
         self.status = None
         self.first_occurrence = None
         self.last_occurrence = None
+        self.data = None
         self.event = []
         self.tracebacks = []
 
@@ -45,13 +47,16 @@ class AlertsHandler:
         self._rkey = "alerts"
         self._rkey_id = "alerts:id"
         self._rkey_incr = "alerts:id:incr"
-        self.__db = None
+        self._db = None
+
+    def __dir__(self):
+        return ("get", "find", "alert_raise", "count", "reset", "delete", "delete_all")
 
     @property
-    def _db(self):
-        if self.__db is None:
-            self.__db = j.core.db
-        return self.__db
+    def db(self):
+        if self._db is None:
+            self._db = j.core.db
+        return self._db
 
     def get(self, alert_id: int = None, identifier: str = None, die: bool = True) -> Alert:
         """Get alert by its id or identifier
@@ -71,9 +76,9 @@ class AlertsHandler:
         if not (alert_id or identifier):
             raise j.core.exceptions.Value("Either alert id or alert identifier are required")
 
-        alert_id = alert_id or self._db.hget(self._rkey_id, identifier)
+        alert_id = alert_id or self.db.hget(self._rkey_id, identifier)
         if alert_id:
-            alert = self._db.hget(self._rkey, alert_id)
+            alert = self.db.hget(self._rkey, alert_id)
             if alert:
                 return Alert.loads(alert)
         if die:
@@ -107,7 +112,7 @@ class AlertsHandler:
         message = message.strip().lower()
 
         alerts = []
-        items = self._db.hscan_iter(self._rkey)
+        items = self.db.hscan_iter(self._rkey)
 
         for item in items:
             alert = Alert.loads(item[1])
@@ -139,11 +144,14 @@ class AlertsHandler:
 
     def alert_raise(
         self,
-        message: str,
+        appname,
+        message,
         public_message: str = "",
         category: str = "",
         alert_type: str = "event_system",
         level: int = 40,
+        data: dict = None,
+        timestamp: float = None,
         traceback: dict = None,
     ) -> Alert:
 
@@ -162,7 +170,6 @@ class AlertsHandler:
         Returns:
             Alert -- alert object
         """
-        appname = j.core.application.appname
         identifier = _get_identifier(appname, message, public_message, category, alert_type)
         alert = self.get(identifier=identifier, die=False) or Alert()
 
@@ -173,7 +180,7 @@ class AlertsHandler:
                 alert.status = "reopened"
         else:
             alert.status = "new"
-            alert.first_occurrence = j.data.time.now().timestamp
+            alert.first_occurrence = timestamp or j.data.time.now().timestamp
 
         alert.appname = appname
         alert.category = category
@@ -182,15 +189,14 @@ class AlertsHandler:
         alert.level = level
         alert.type = alert_type
         alert.count += 1
-        alert.last_occurrence = j.data.time.now().timestamp
+        alert.last_occurrence = timestamp or j.data.time.now().timestamp
 
         if traceback:
             if len(alert.tracebacks) > 5:
                 alert.tracebacks.pop(0)
 
         alert.tracebacks.append(traceback)
-        self.save(alert)
-
+        self._save(alert)
         return alert
 
     def count(self) -> int:
@@ -199,19 +205,19 @@ class AlertsHandler:
         Returns:
             int -- total number of alerts
         """
-        return self._db.hlen(self._rkey)
+        return self.db.hlen(self._rkey)
 
-    def save(self, alert: Alert):
+    def _save(self, alert: Alert):
         """Saves alert object in db
         
         Arguments:
             alert {Alert} -- alert object
         """
         if not alert.id:
-            alert.id = self._db.incr(self._rkey_incr)
+            alert.id = self.db.incr(self._rkey_incr)
 
-        self._db.hset(self._rkey, alert.id, alert.dumps())
-        self._db.hset(self._rkey_id, alert.identifier, alert.id)
+        self.db.hset(self._rkey, alert.id, alert.dumps())
+        self.db.hset(self._rkey_id, alert.identifier, alert.id)
 
     def delete(self, alert_id: int = None, identifier: str = None):
         """Delete alert by its id or identifier
@@ -226,17 +232,17 @@ class AlertsHandler:
         if not (alert_id or identifier):
             raise j.core.exceptions.Value("Either alert id or alert identifier are required")
 
-        alert_id = alert_id or self._db.hget(self._rkey_id, identifier)
+        alert_id = alert_id or self.db.hget(self._rkey_id, identifier)
         if alert_id:
-            self._db.hdel(self._rkey, alert_id)
+            self.db.hdel(self._rkey, alert_id)
 
     def delete_all(self):
         """Deletes all alerts
         """
-        self._db.delete(self._rkey, self._rkey_id)
+        self.db.delete(self._rkey, self._rkey_id)
 
     def reset(self):
         """Delete all alerts and reset the db
         """
         self.delete_all()
-        self._db.delete(self._rkey_incr)
+        self.db.delete(self._rkey_incr)

@@ -13,8 +13,8 @@ class Application:
 
     def start(self, appname):
         self.appname = appname
-        j.core.logging.logger.info("Application {} is started, process id: {}", self.appname, self.process_id)
+        j.logger.info("Application {} is started, process id: {}", self.appname, self.process_id)
 
     def stop(self):
-        j.core.logging.logger.info("Application {} is stopped", self.appname)
+        j.logger.info("Application {} is stopped", self.appname)
         self.appname = DEFAULT_APP_NAME
