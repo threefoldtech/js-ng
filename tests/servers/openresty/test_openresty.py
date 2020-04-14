@@ -1,12 +1,9 @@
 import unittest
 
-# from tests.base_tests import BaseTests
 from jumpscale.god import j
-from unittest import skip
-from parameterized import parameterized
 
 
-class TestOPenResty(unittest.TestCase):
+class TestOpenResty(unittest.TestCase):
     def setUp(self):
         self.instance_name = j.data.random_names.random_name()
         self.server = j.servers.openresty.new(self.instance_name)
