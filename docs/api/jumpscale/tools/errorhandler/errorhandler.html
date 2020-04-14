@@ -58,37 +58,41 @@ class ErrorHandler:
             frame = frame.tb_next
         return stacktrace
 
-    def _handle_exception(self, ttype, tvalue, tb, level=40, die=False, stdout=True, category=&#34;&#34;):
-        process = j.sals.process.get_my_process()
+    def _handle_exception(self, ttype, tvalue, tb, level=40, die=False, log=True, category=&#34;&#34;, data=None):
         timestamp = j.data.time.now().timestamp
         stacktrace = self._construct_stacktrace(tb)
         message = self._format_lines(traceback.format_exception_only(ttype, tvalue))
         traceback_text = self._format_lines(traceback.format_exception(ttype, tvalue, tb))
 
-        error_dict = {
+        err_dict = {
+            &#34;appname&#34;: j.application.appname,
             &#34;level&#34;: level,
             &#34;message&#34;: message,
+            &#34;timestamp&#34;: timestamp,
             &#34;category&#34;: category or &#34;exception&#34;,
-            &#34;traceback&#34;: {
-                &#34;text&#34;: traceback_text,
-                &#34;timestamp&#34;: timestamp,
-                &#34;process_id&#34;: process.pid,
-                &#34;stacktrace&#34;: stacktrace,
-            },
+            &#34;data&#34;: data,
+            &#34;traceback&#34;: {&#34;raw&#34;: traceback_text, &#34;stacktrace&#34;: stacktrace, &#34;process_id&#34;: j.application.process_id},
         }
 
-        if stdout:
-            j.logger.error(message)
+        if log:
+            exception = (ttype, tvalue, tb)
+            j.logger.exception(message=message, category=category, data=data, level=level, exception=exception)
 
         for handler_func, handler_level in self.handlers:
             if level &gt;= handler_level:
-                handler_func(**error_dict)
+                handler_func(**err_dict)
 
         if die:
             sys.exit(1)
 
     def handle_exception(
-        self, exception: Exception, level: int = 40, die: bool = False, stdout: bool = True, category: str = &#34;&#34;
+        self,
+        exception: Exception,
+        level: int = 40,
+        die: bool = False,
+        log: bool = True,
+        category: str = &#34;&#34;,
+        data: dict = None,
     ):
         &#34;&#34;&#34;Hndler exception
         
@@ -98,11 +102,11 @@ class ErrorHandler:
         Keyword Arguments:
             level {int} -- exception level (default: {40})
             die {bool} -- optional flag to exit after handling the exception (default: {True})
-            stdout {bool} -- option flag to log the exception in the stdout (default: {True})
+            log {bool} -- option flag to log the exception (default: {True})
             category {str} -- category (default: {&#34;&#34;})
         &#34;&#34;&#34;
         ttype, _, tb = sys.exc_info()
-        self._handle_exception(ttype, exception, tb, die=die, stdout=stdout, category=category)
+        self._handle_exception(ttype, exception, tb, die=die, log=log, category=category, data=data)
 
     def register_handler(self, handler: callable, level: int = 40):
         &#34;&#34;&#34;Register new error handler
@@ -166,37 +170,41 @@ class ErrorHandler:
             frame = frame.tb_next
         return stacktrace
 
-    def _handle_exception(self, ttype, tvalue, tb, level=40, die=False, stdout=True, category=&#34;&#34;):
-        process = j.sals.process.get_my_process()
+    def _handle_exception(self, ttype, tvalue, tb, level=40, die=False, log=True, category=&#34;&#34;, data=None):
         timestamp = j.data.time.now().timestamp
         stacktrace = self._construct_stacktrace(tb)
         message = self._format_lines(traceback.format_exception_only(ttype, tvalue))
         traceback_text = self._format_lines(traceback.format_exception(ttype, tvalue, tb))
 
-        error_dict = {
+        err_dict = {
+            &#34;appname&#34;: j.application.appname,
             &#34;level&#34;: level,
             &#34;message&#34;: message,
+            &#34;timestamp&#34;: timestamp,
             &#34;category&#34;: category or &#34;exception&#34;,
-            &#34;traceback&#34;: {
-                &#34;text&#34;: traceback_text,
-                &#34;timestamp&#34;: timestamp,
-                &#34;process_id&#34;: process.pid,
-                &#34;stacktrace&#34;: stacktrace,
-            },
+            &#34;data&#34;: data,
+            &#34;traceback&#34;: {&#34;raw&#34;: traceback_text, &#34;stacktrace&#34;: stacktrace, &#34;process_id&#34;: j.application.process_id},
         }
 
-        if stdout:
-            j.logger.error(message)
+        if log:
+            exception = (ttype, tvalue, tb)
+            j.logger.exception(message=message, category=category, data=data, level=level, exception=exception)
 
         for handler_func, handler_level in self.handlers:
             if level &gt;= handler_level:
-                handler_func(**error_dict)
+                handler_func(**err_dict)
 
         if die:
             sys.exit(1)
 
     def handle_exception(
-        self, exception: Exception, level: int = 40, die: bool = False, stdout: bool = True, category: str = &#34;&#34;
+        self,
+        exception: Exception,
+        level: int = 40,
+        die: bool = False,
+        log: bool = True,
+        category: str = &#34;&#34;,
+        data: dict = None,
     ):
         &#34;&#34;&#34;Hndler exception
         
@@ -206,11 +214,11 @@ class ErrorHandler:
         Keyword Arguments:
             level {int} -- exception level (default: {40})
             die {bool} -- optional flag to exit after handling the exception (default: {True})
-            stdout {bool} -- option flag to log the exception in the stdout (default: {True})
+            log {bool} -- option flag to log the exception (default: {True})
             category {str} -- category (default: {&#34;&#34;})
         &#34;&#34;&#34;
         ttype, _, tb = sys.exc_info()
-        self._handle_exception(ttype, exception, tb, die=die, stdout=stdout, category=category)
+        self._handle_exception(ttype, exception, tb, die=die, log=log, category=category, data=data)
 
     def register_handler(self, handler: callable, level: int = 40):
         &#34;&#34;&#34;Register new error handler
@@ -243,7 +251,7 @@ class ErrorHandler:
 </details>
 </dd>
 <dt id="jumpscale.tools.errorhandler.errorhandler.ErrorHandler.handle_exception"><code class="name flex">
-<span>def <span class="ident">handle_exception</span></span>(<span>self, exception, level=40, die=False, stdout=True, category=&#39;&#39;)</span>
+<span>def <span class="ident">handle_exception</span></span>(<span>self, exception, level=40, die=False, log=True, category=&#39;&#39;, data=None)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Hndler exception</p>
@@ -252,12 +260,18 @@ class ErrorHandler:
 Keyword Arguments:
 level {int} &ndash; exception level (default: {40})
 die {bool} &ndash; optional flag to exit after handling the exception (default: {True})
-stdout {bool} &ndash; option flag to log the exception in the stdout (default: {True})
+log {bool} &ndash; option flag to log the exception (default: {True})
 category {str} &ndash; category (default: {""})</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def handle_exception(
-    self, exception: Exception, level: int = 40, die: bool = False, stdout: bool = True, category: str = &#34;&#34;
+    self,
+    exception: Exception,
+    level: int = 40,
+    die: bool = False,
+    log: bool = True,
+    category: str = &#34;&#34;,
+    data: dict = None,
 ):
     &#34;&#34;&#34;Hndler exception
     
@@ -267,11 +281,11 @@ category {str} &ndash; category (default: {""})</p></section>
     Keyword Arguments:
         level {int} -- exception level (default: {40})
         die {bool} -- optional flag to exit after handling the exception (default: {True})
-        stdout {bool} -- option flag to log the exception in the stdout (default: {True})
+        log {bool} -- option flag to log the exception (default: {True})
         category {str} -- category (default: {&#34;&#34;})
     &#34;&#34;&#34;
     ttype, _, tb = sys.exc_info()
-    self._handle_exception(ttype, exception, tb, die=die, stdout=stdout, category=category)</code></pre>
+    self._handle_exception(ttype, exception, tb, die=die, log=log, category=category, data=data)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.tools.errorhandler.errorhandler.ErrorHandler.register_handler"><code class="name flex">

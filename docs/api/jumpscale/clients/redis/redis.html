@@ -43,6 +43,7 @@ class RedisClientAttributeUpdated(AttributeUpdateEvent):
 class RedisClient(Client):
     hostname = fields.String(default=&#34;localhost&#34;)
     port = fields.Integer(default=6379)
+    password = fields.Secret()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -63,7 +64,11 @@ class RedisClient(Client):
     @property
     def redis_client(self):
         if not self.__client:
-            self.__client = Redis(self.hostname, self.port)
+            if self.password:
+                self.__client = Redis(self.hostname, self.port, password=self.password)
+            else:
+                self.__client = Redis(self.hostname, self.port)
+
         return self.__client
 
     def __getattr__(self, k):
@@ -92,6 +97,7 @@ class RedisClient(Client):
 <pre><code class="python">class RedisClient(Client):
     hostname = fields.String(default=&#34;localhost&#34;)
     port = fields.Integer(default=6379)
+    password = fields.Secret()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -112,7 +118,11 @@ class RedisClient(Client):
     @property
     def redis_client(self):
         if not self.__client:
-            self.__client = Redis(self.hostname, self.port)
+            if self.password:
+                self.__client = Redis(self.hostname, self.port, password=self.password)
+            else:
+                self.__client = Redis(self.hostname, self.port)
+
         return self.__client
 
     def __getattr__(self, k):
@@ -128,6 +138,19 @@ class RedisClient(Client):
 <h3>Instance variables</h3>
 <dl>
 <dt id="jumpscale.clients.redis.redis.RedisClient.hostname"><code class="name">var <span class="ident">hostname</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def getter(self):
+    if hasattr(self, inner_name):
+        return getattr(self, inner_name)
+
+    # accept raw value as default too
+    return field.from_raw(field.default)</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.clients.redis.redis.RedisClient.password"><code class="name">var <span class="ident">password</span></code></dt>
 <dd>
 <section class="desc"></section>
 <details class="source">
@@ -161,7 +184,11 @@ class RedisClient(Client):
 <pre><code class="python">@property
 def redis_client(self):
     if not self.__client:
-        self.__client = Redis(self.hostname, self.port)
+        if self.password:
+            self.__client = Redis(self.hostname, self.port, password=self.password)
+        else:
+            self.__client = Redis(self.hostname, self.port)
+
     return self.__client</code></pre>
 </details>
 </dd>
@@ -204,6 +231,7 @@ def redis_client(self):
 <h4><code><a title="jumpscale.clients.redis.redis.RedisClient" href="#jumpscale.clients.redis.redis.RedisClient">RedisClient</a></code></h4>
 <ul class="">
 <li><code><a title="jumpscale.clients.redis.redis.RedisClient.hostname" href="#jumpscale.clients.redis.redis.RedisClient.hostname">hostname</a></code></li>
+<li><code><a title="jumpscale.clients.redis.redis.RedisClient.password" href="#jumpscale.clients.redis.redis.RedisClient.password">password</a></code></li>
 <li><code><a title="jumpscale.clients.redis.redis.RedisClient.port" href="#jumpscale.clients.redis.redis.RedisClient.port">port</a></code></li>
 <li><code><a title="jumpscale.clients.redis.redis.RedisClient.redis_client" href="#jumpscale.clients.redis.redis.RedisClient.redis_client">redis_client</a></code></li>
 </ul>
