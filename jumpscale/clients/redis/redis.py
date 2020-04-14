@@ -11,29 +11,26 @@ from jumpscale.core.base import fields
 from jumpscale.core.base.events import AttributeUpdateEvent
 
 
-class ClientAttributeUpdated(AttributeUpdateEvent):
+class RedisClientAttributeUpdated(AttributeUpdateEvent):
     pass
 
 
-class RedisClient(events.Handler, Client):
+class RedisClient(Client):
     hostname = fields.String(default="localhost")
     port = fields.Integer(default=6379)
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.__client = None
-        super().__init__()
-
-        # listen to this event
-        events.add_listenter(self, ClientAttributeUpdated)
 
     def _attr_updated(self, name, value):
+        super()._attr_updated(name, value)
         # this will allow other people to listen to this event too
-        event = ClientAttributeUpdated(self, name, value)
+        event = RedisClientAttributeUpdated(self, name, value)
         events.notify(event)
 
-    def handle(self, ev):
-        if ev.instance == self:
-            self.__client = None
+        # reset client
+        self.__client = None
 
     def __dir__(self):
         return list(self.__dict__.keys()) + dir(self.redis_client)

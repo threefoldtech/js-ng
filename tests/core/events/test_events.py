@@ -74,7 +74,8 @@ class TestEvents(unittest.TestCase):
         class TestHandler(events.Handler):
             def handle(self, ev):
                 notified[ev.__class__].append(self)
-                print("logging from an event handler object, ", ev.msg())
+                if isinstance(ev, (UserHungryEvent, UserThirstyEvent)):
+                    print("logging from an event handler object, ", ev.msg())
 
         handler = TestHandler()
         events.add_listenter(handler, UserHungryEvent)
