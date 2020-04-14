@@ -2,7 +2,7 @@ from digitalocean import Droplet
 from digitalocean.baseapi import BaseAPI, Error, GET, POST, DELETE, PUT
 
 
-class Project(BaseAPI):
+class ProjectManagement(BaseAPI):
     """Project management
 
     Attributes accepted at creation time:
@@ -41,7 +41,7 @@ class Project(BaseAPI):
         self.created_at = None
 
         # This will load also the values passed
-        super(Project, self).__init__(*args, **kwargs)
+        super(ProjectManagement, self).__init__(*args, **kwargs)
 
     @classmethod
     def get_object(cls, api_token, project_id):

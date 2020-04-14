@@ -1,8 +1,19 @@
+"""This module is used to manage your digital ocean account, create droplet,list all the droplets, destroy droplets, create project, list all the projects and delete project
+# prerequisites
+    ## you must have a sshkey client  and loaded with you public key 
+'''python
+ssh = j.clients.sshkey.get(name= "test")
+ssh.private_key_path = "/home/rafy/.ssh/id_rsa" 
+ssh.load_from_file_system()
+'''
+    ## 
+"""
 from jumpscale.god import j
 from jumpscale.clients.base import Client
 from jumpscale.core.base import fields
-from .project import Project
+from .project import ProjectManagement
 import digitalocean
+from jumpscale.core.base import StoredFactory
 
 
 class VM:
@@ -10,11 +21,44 @@ class VM:
     do_id = fields.String()
 
 
+class ProjectFactory(StoredFactory):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def projects_list_in_digital_ocean(self):
+        return ProjectManagement.list(self.parent.client)
+
+    def projects_list(self):
+        projects = self.list_all()
+        if not projects:
+            for project in self.projects_list_in_digital_ocean():
+                # self._projects.append(project)
+                self.new(project.name)
+        return self.list_all()
+
+        print("List from Remote")
+
+
+class Project(Client):
+    project_name = fields.String()
+    # __init__()
+    def create_project(self):
+        print("project created")
+
+    # def project_list(self):
+    #     print("project list ")
+
+
+# class Droplet
+
+
 class DigitalOcean(Client):
     name = fields.String()
     token_ = fields.String()
-    project_name = fields.String()
+    # project_name = fields.String()
     vms = fields.List(fields.Object(VM))
+    projects = ProjectFactory(Project)
+    # listing_project
 
     def __init__(self):
         super().__init__()
@@ -23,7 +67,7 @@ class DigitalOcean(Client):
 
     def reset(self):
         self._droplets = []
-        self._projects = []
+        self._projects = []  # list_all
         self._digitalocean_images = None
         self._digitalocean_sizes = None
         self._digitalocean_regions = None
@@ -287,20 +331,20 @@ class DigitalOcean(Client):
 
         return project.list_droplets()
 
-    def _projects_list(self):
-        return Project.list(self.client)
+    # def _projects_list(self):
+    #     return ProjectManagement.list(self.client)
 
-    @property
-    def projects(self):
-        """property to return all the cached projects
+    # @property
+    # def projects(self):
+    #     """property to return all the cached projects
 
-        :return: list of project
-        :rtype: [Project]
-        """
-        if not self._projects:
-            for project in self._projects_list():
-                self._projects.append(project)
-        return self._projects
+    #     :return: list of project
+    #     :rtype: [Project]
+    #     """
+    #     if not self._projects:
+    #         for project in self._projects_list():
+    #             self._projects.append(project)
+    #     return self._projects
 
     def _project_get(self, name):
         for project in self.projects:
@@ -327,7 +371,7 @@ class DigitalOcean(Client):
         if self._project_get(name):
             raise j.exceptions.Value("A project with the same name already exists")
 
-        project = Project(
+        project = ProjectManagement(
             token=self.token_,
             name=name,
             purpose=purpose,
