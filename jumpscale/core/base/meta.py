@@ -84,11 +84,7 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
 
         for name, field in self._get_fields().items():
             if isinstance(field, fields.Factory):
-                if field.stored:
-                    value = StoredFactory(field.type_for_factory, name_=name, parent_instance_=self)
-                else:
-                    value = Factory(field.type_for_factory, name_=name, parent_instance_=self)
-
+                value = field.factory_type(field.type, name_=name, parent_instance_=self)
                 self._factories[name] = value
             else:
                 value = values.get(name, field.from_raw(field.default))

@@ -62,7 +62,7 @@ import time
 
 from urllib.parse import urlparse
 
-from .factory import Factory as BaseFactory
+from .factory import Factory as BaseFactory, StoredFactory
 
 
 class ValidationError(Exception):
@@ -754,17 +754,60 @@ class Time(DateTimeMixin, Typed):
         self.format = format_
 
 
-class Factory(Typed):
-    def __init__(self, type_for_factory, stored=True, **kwargs):
+class Factory(Field):
+    def __init__(self, type_, factory_type=None, stored=True, **kwargs):
+        """
+        A factory field for any `Base` type, also, you can specify your factory type/class
+
+        Example:
+
+        ```python
+        class User(Base):
+            name = fields.String()
+
+        class Server(Base):
+            users = fields.Factory(Base)
+        ```
+
+        Another example with a custom factory class:
+
+        ```python
+        class User(Base):
+            name = fields.String()
+
+        class UserFactory(StoredFactory):
+
+            def list_from_remote(self):
+                # list users from remote storage
+                # ...
+
+        class Server(Base):
+            users = fields.Factory(Base, factory_type=UserFactory)
+        ```
+
+        Args:
+            type_ (Base): any base type to be used by the factory
+            factory_type (`BaseFactory`, optional): factory class/type. Defaults to None.
+            stored (bool, optional): if it's stored or not, will be used if `factory_type` is not set. Defaults to True.
+        """
         # value type will be factory
-        super().__init__(type_=BaseFactory, readonly=True, **kwargs)
+        super().__init__(readonly=True, **kwargs)
         # but we keep the type of any Base class
         # so, we can init a Factory with it
-        self.type_for_factory = type_for_factory
+        self.type = type_
         self.stored = stored
+        if factory_type:
+            self.factory_type = factory_type
+        else:
+            if stored:
+                self.factory_type = StoredFactory
+            else:
+                self.factory_type = BaseFactory
 
     def validate(self, value):
         super().validate(value)
+        if not isinstance(value, self.factory_type):
+            raise ValidationError(f"factory type is not {self.factory_type}")
 
     def from_raw(self, value):
         return value
