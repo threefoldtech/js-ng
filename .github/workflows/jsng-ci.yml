@@ -36,11 +36,11 @@ jobs:
           poetry_version: 1.0.5
           args: run python -m pytest tests -s
 
-          - name: Run covarage tests
-          uses: abatilo/actions-poetry@v1.5.0
-          with:
-            python_version: 3.6
-            poetry_version: 1.0.5
-            args: run python -m pytest tests -s --cov=jumpscale
+      - name: Run covarage tests
+        uses: abatilo/actions-poetry@v1.5.0
+        with:
+          python_version: 3.6
+          poetry_version: 1.0.5
+          args: run python -m pytest tests -s --cov=jumpscale
 
 
