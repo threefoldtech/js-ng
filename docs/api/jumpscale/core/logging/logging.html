@@ -25,6 +25,7 @@
 <pre><code class="python">import math
 import loguru
 import msgpack
+import json
 
 from abc import ABC, abstractmethod
 
@@ -49,10 +50,20 @@ class LogHandler(ABC):
 
 
 class Logger:
-    def __init__(self):
+    def __init__(self, appname: str = &#34;init&#34;):
         &#34;&#34;&#34;Logger init method
         &#34;&#34;&#34;
-        self._logger = loguru.logger
+        self._logger = loguru.logger.bind(appname=appname)
+        self._appname = appname
+
+    @property
+    def appname(self):
+        return self._appname
+
+    @appname.setter
+    def appname(self, appname):
+        self._appname = appname
+        self._logger = self._logger.bind(appname=appname)
 
     def add_handler(self, *args, **kwargs):
         &#34;&#34;&#34;Add handler to the logger
@@ -70,7 +81,7 @@ class Logger:
         self._logger.add(handler._handle, **kwargs)
 
     def _log(self, level, message, *args, category, data, exception=None):
-        self._logger.opt(exception=exception).bind(category=category, data=data).log(level, message, *args)
+        self._logger.opt(depth=2, exception=exception).bind(category=category, data=data).log(level, message, *args)
 
     def debug(self, message, *args, category: str = &#34;&#34;, data: dict = None):
         &#34;&#34;&#34;Log debug message
@@ -144,17 +155,18 @@ class RedisLogHandler(LogHandler):
         index = (identifier % self.max_size) - 1
         return part, index
 
-    def _dump_records(self, path):
+    def _dump_records(self, appname, path):
         j.sals.fs.mkdir(j.sals.fs.parent(path))
-        records = self._db.lrange(self._rkey % self._appname, 0, self.max_size - 1)
+        records = self._db.lrange(self._rkey % appname, 0, self.max_size - 1)
         j.sals.fs.write_bytes(path, msgpack.dumps(records))
 
     def _process_message(self, message):
-        record = j.data.serializers.json.loads(message)[&#34;record&#34;]
-        record_id = self._db.incr(self._rkey_incr % self._appname)
+        record = json.loads(message)[&#34;record&#34;]
+        appname = record[&#34;extra&#34;][&#34;appname&#34;]
+        record_id = self._db.incr(self._rkey_incr % appname)
         return dict(
             id=record_id,
-            appname=self._appname,
+            appname=appname,
             message=record[&#34;message&#34;],
             level=record[&#34;level&#34;][&#34;no&#34;],
             linenr=record[&#34;line&#34;],
@@ -167,8 +179,8 @@ class RedisLogHandler(LogHandler):
             data=record[&#34;extra&#34;].get(&#34;data&#34;, {}),
         )
 
-    def _clean_up(self):
-        self._db.ltrim(self._rkey % self._appname, self.max_size, -1)
+    def _clean_up(self, appname):
+        self._db.ltrim(self._rkey % appname, self.max_size, -1)
 
     def _handle(self, message: str, **kwargs):
         &#34;&#34;&#34;Logging handler
@@ -179,19 +191,21 @@ class RedisLogHandler(LogHandler):
         if not self._db:
             return
 
-        rkey = self._rkey % self._appname
         record = self._process_message(message)
-        self._db.rpush(rkey, j.data.serializers.json.dumps(record))
+        appname = record[&#34;appname&#34;]
+
+        rkey = self._rkey % appname
+        self._db.rpush(rkey, json.dumps(record))
 
         if self._db.llen(rkey) &gt; self.max_size:
             if self.dump:
                 part, _ = self._map_identifier(record[&#34;id&#34;] - 1)
-                path = j.sals.fs.join_paths(self.dump_dir, self._appname, &#34;%s.msgpack&#34; % part)
-                self._dump_records(path)
+                path = j.sals.fs.join_paths(self.dump_dir, appname, &#34;%s.msgpack&#34; % part)
+                self._dump_records(appname, path)
 
-            self._clean_up()
+            self._clean_up(appname)
 
-    def records_count(self, appname: str = &#34;&#34;) -&gt; int:
+    def records_count(self, appname: str = &#34;init&#34;) -&gt; int:
         &#34;&#34;&#34;Gets total number of the records of the app
         
         Arguments:
@@ -200,10 +214,12 @@ class RedisLogHandler(LogHandler):
         Returns:
             init -- total number of the records
         &#34;&#34;&#34;
-        appname = appname or self._appname
-        return int(self._db.get(self._rkey_incr % appname))
+        count = self._db.get(self._rkey_incr % appname)
+        if count:
+            return int(count)
+        return 0
 
-    def record_get(self, identifier: int, appname: str = &#34;&#34;) -&gt; dict:
+    def record_get(self, identifier: int, appname: str = &#34;init&#34;) -&gt; dict:
         &#34;&#34;&#34;Get app log record by its identifier
         
         Arguments:
@@ -213,7 +229,6 @@ class RedisLogHandler(LogHandler):
         Returns:
             dict -- requested log record
         &#34;&#34;&#34;
-        appname = appname or self._appname
         count = self.records_count(appname)
         part, index = self._map_identifier(identifier)
 
@@ -222,14 +237,14 @@ class RedisLogHandler(LogHandler):
 
         if part &gt; count - self.max_size:
             record = self._db.lindex(self._rkey % appname, index)
-            return j.data.serializers.json.loads(record)
+            return json.loads(record)
 
         if self.dump:
             path = j.sals.fs.join_paths(self.dump_dir, appname, &#34;%s.msgpack&#34; % part)
             if j.sals.fs.exists(path):
                 records = msgpack.loads(j.sals.fs.read_bytes(path))
                 if records and len(records) &gt; index:
-                    return j.data.serializers.json.loads(records[index])
+                    return json.loads(records[index])
 
     def remove_all_records(self, appname: str):
         &#34;&#34;&#34;Delete all app&#39;s log records
@@ -243,7 +258,7 @@ class RedisLogHandler(LogHandler):
         if self.dump:
             j.sals.fs.rmtree(path)
 
-    def tail(self, appname: str = &#34;&#34;, limit: int = None) -&gt; iter:
+    def tail(self, appname: str = &#34;init&#34;, limit: int = None) -&gt; iter:
         &#34;&#34;&#34;Tail records
         
         Keyword Arguments:
@@ -253,10 +268,12 @@ class RedisLogHandler(LogHandler):
         Yields:
             iter -- iterator of the requested logs
         &#34;&#34;&#34;
-        appname = appname or self._appname
+        if limit:
+            limit = limit - 1
+         
         records = self._db.lrange(self._rkey % appname, 0, limit or -1)
         for record in records:
-            yield j.data.serializers.json.loads(record)</code></pre>
+            yield json.loads(record)</code></pre>
 </details>
 </section>
 <section>
@@ -294,16 +311,27 @@ class RedisLogHandler(LogHandler):
 </dd>
 <dt id="jumpscale.core.logging.logging.Logger"><code class="flex name class">
 <span>class <span class="ident">Logger</span></span>
+<span>(</span><span>appname='init')</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Logger init method</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class Logger:
-    def __init__(self):
+    def __init__(self, appname: str = &#34;init&#34;):
         &#34;&#34;&#34;Logger init method
         &#34;&#34;&#34;
-        self._logger = loguru.logger
+        self._logger = loguru.logger.bind(appname=appname)
+        self._appname = appname
+
+    @property
+    def appname(self):
+        return self._appname
+
+    @appname.setter
+    def appname(self, appname):
+        self._appname = appname
+        self._logger = self._logger.bind(appname=appname)
 
     def add_handler(self, *args, **kwargs):
         &#34;&#34;&#34;Add handler to the logger
@@ -321,7 +349,7 @@ class RedisLogHandler(LogHandler):
         self._logger.add(handler._handle, **kwargs)
 
     def _log(self, level, message, *args, category, data, exception=None):
-        self._logger.opt(exception=exception).bind(category=category, data=data).log(level, message, *args)
+        self._logger.opt(depth=2, exception=exception).bind(category=category, data=data).log(level, message, *args)
 
     def debug(self, message, *args, category: str = &#34;&#34;, data: dict = None):
         &#34;&#34;&#34;Log debug message
@@ -355,6 +383,19 @@ class RedisLogHandler(LogHandler):
         &#34;&#34;&#34;
         self._log(LEVELS.get(level, 40), message, *args, category=category, data=data, exception=exception)</code></pre>
 </details>
+<h3>Instance variables</h3>
+<dl>
+<dt id="jumpscale.core.logging.logging.Logger.appname"><code class="name">var <span class="ident">appname</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def appname(self):
+    return self._appname</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="jumpscale.core.logging.logging.Logger.add_custom_handler"><code class="name flex">
@@ -520,17 +561,18 @@ takes the same parameters of loguru.logger.add</p></section>
         index = (identifier % self.max_size) - 1
         return part, index
 
-    def _dump_records(self, path):
+    def _dump_records(self, appname, path):
         j.sals.fs.mkdir(j.sals.fs.parent(path))
-        records = self._db.lrange(self._rkey % self._appname, 0, self.max_size - 1)
+        records = self._db.lrange(self._rkey % appname, 0, self.max_size - 1)
         j.sals.fs.write_bytes(path, msgpack.dumps(records))
 
     def _process_message(self, message):
-        record = j.data.serializers.json.loads(message)[&#34;record&#34;]
-        record_id = self._db.incr(self._rkey_incr % self._appname)
+        record = json.loads(message)[&#34;record&#34;]
+        appname = record[&#34;extra&#34;][&#34;appname&#34;]
+        record_id = self._db.incr(self._rkey_incr % appname)
         return dict(
             id=record_id,
-            appname=self._appname,
+            appname=appname,
             message=record[&#34;message&#34;],
             level=record[&#34;level&#34;][&#34;no&#34;],
             linenr=record[&#34;line&#34;],
@@ -543,8 +585,8 @@ takes the same parameters of loguru.logger.add</p></section>
             data=record[&#34;extra&#34;].get(&#34;data&#34;, {}),
         )
 
-    def _clean_up(self):
-        self._db.ltrim(self._rkey % self._appname, self.max_size, -1)
+    def _clean_up(self, appname):
+        self._db.ltrim(self._rkey % appname, self.max_size, -1)
 
     def _handle(self, message: str, **kwargs):
         &#34;&#34;&#34;Logging handler
@@ -555,19 +597,21 @@ takes the same parameters of loguru.logger.add</p></section>
         if not self._db:
             return
 
-        rkey = self._rkey % self._appname
         record = self._process_message(message)
-        self._db.rpush(rkey, j.data.serializers.json.dumps(record))
+        appname = record[&#34;appname&#34;]
+
+        rkey = self._rkey % appname
+        self._db.rpush(rkey, json.dumps(record))
 
         if self._db.llen(rkey) &gt; self.max_size:
             if self.dump:
                 part, _ = self._map_identifier(record[&#34;id&#34;] - 1)
-                path = j.sals.fs.join_paths(self.dump_dir, self._appname, &#34;%s.msgpack&#34; % part)
-                self._dump_records(path)
+                path = j.sals.fs.join_paths(self.dump_dir, appname, &#34;%s.msgpack&#34; % part)
+                self._dump_records(appname, path)
 
-            self._clean_up()
+            self._clean_up(appname)
 
-    def records_count(self, appname: str = &#34;&#34;) -&gt; int:
+    def records_count(self, appname: str = &#34;init&#34;) -&gt; int:
         &#34;&#34;&#34;Gets total number of the records of the app
         
         Arguments:
@@ -576,10 +620,12 @@ takes the same parameters of loguru.logger.add</p></section>
         Returns:
             init -- total number of the records
         &#34;&#34;&#34;
-        appname = appname or self._appname
-        return int(self._db.get(self._rkey_incr % appname))
+        count = self._db.get(self._rkey_incr % appname)
+        if count:
+            return int(count)
+        return 0
 
-    def record_get(self, identifier: int, appname: str = &#34;&#34;) -&gt; dict:
+    def record_get(self, identifier: int, appname: str = &#34;init&#34;) -&gt; dict:
         &#34;&#34;&#34;Get app log record by its identifier
         
         Arguments:
@@ -589,7 +635,6 @@ takes the same parameters of loguru.logger.add</p></section>
         Returns:
             dict -- requested log record
         &#34;&#34;&#34;
-        appname = appname or self._appname
         count = self.records_count(appname)
         part, index = self._map_identifier(identifier)
 
@@ -598,14 +643,14 @@ takes the same parameters of loguru.logger.add</p></section>
 
         if part &gt; count - self.max_size:
             record = self._db.lindex(self._rkey % appname, index)
-            return j.data.serializers.json.loads(record)
+            return json.loads(record)
 
         if self.dump:
             path = j.sals.fs.join_paths(self.dump_dir, appname, &#34;%s.msgpack&#34; % part)
             if j.sals.fs.exists(path):
                 records = msgpack.loads(j.sals.fs.read_bytes(path))
                 if records and len(records) &gt; index:
-                    return j.data.serializers.json.loads(records[index])
+                    return json.loads(records[index])
 
     def remove_all_records(self, appname: str):
         &#34;&#34;&#34;Delete all app&#39;s log records
@@ -619,7 +664,7 @@ takes the same parameters of loguru.logger.add</p></section>
         if self.dump:
             j.sals.fs.rmtree(path)
 
-    def tail(self, appname: str = &#34;&#34;, limit: int = None) -&gt; iter:
+    def tail(self, appname: str = &#34;init&#34;, limit: int = None) -&gt; iter:
         &#34;&#34;&#34;Tail records
         
         Keyword Arguments:
@@ -629,10 +674,12 @@ takes the same parameters of loguru.logger.add</p></section>
         Yields:
             iter -- iterator of the requested logs
         &#34;&#34;&#34;
-        appname = appname or self._appname
+        if limit:
+            limit = limit - 1
+         
         records = self._db.lrange(self._rkey % appname, 0, limit or -1)
         for record in records:
-            yield j.data.serializers.json.loads(record)</code></pre>
+            yield json.loads(record)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -675,7 +722,7 @@ def max_size(self):
 <h3>Methods</h3>
 <dl>
 <dt id="jumpscale.core.logging.logging.RedisLogHandler.record_get"><code class="name flex">
-<span>def <span class="ident">record_get</span></span>(<span>self, identifier, appname=&#39;&#39;)</span>
+<span>def <span class="ident">record_get</span></span>(<span>self, identifier, appname=&#39;init&#39;)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Get app log record by its identifier</p>
@@ -689,7 +736,7 @@ appname {str} &ndash; app name</p>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def record_get(self, identifier: int, appname: str = &#34;&#34;) -&gt; dict:
+<pre><code class="python">def record_get(self, identifier: int, appname: str = &#34;init&#34;) -&gt; dict:
     &#34;&#34;&#34;Get app log record by its identifier
     
     Arguments:
@@ -699,7 +746,6 @@ appname {str} &ndash; app name</p>
     Returns:
         dict -- requested log record
     &#34;&#34;&#34;
-    appname = appname or self._appname
     count = self.records_count(appname)
     part, index = self._map_identifier(identifier)
 
@@ -708,18 +754,18 @@ appname {str} &ndash; app name</p>
 
     if part &gt; count - self.max_size:
         record = self._db.lindex(self._rkey % appname, index)
-        return j.data.serializers.json.loads(record)
+        return json.loads(record)
 
     if self.dump:
         path = j.sals.fs.join_paths(self.dump_dir, appname, &#34;%s.msgpack&#34; % part)
         if j.sals.fs.exists(path):
             records = msgpack.loads(j.sals.fs.read_bytes(path))
             if records and len(records) &gt; index:
-                return j.data.serializers.json.loads(records[index])</code></pre>
+                return json.loads(records[index])</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.core.logging.logging.RedisLogHandler.records_count"><code class="name flex">
-<span>def <span class="ident">records_count</span></span>(<span>self, appname=&#39;&#39;)</span>
+<span>def <span class="ident">records_count</span></span>(<span>self, appname=&#39;init&#39;)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Gets total number of the records of the app</p>
@@ -732,7 +778,7 @@ appname {str} &ndash; app name</p>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def records_count(self, appname: str = &#34;&#34;) -&gt; int:
+<pre><code class="python">def records_count(self, appname: str = &#34;init&#34;) -&gt; int:
     &#34;&#34;&#34;Gets total number of the records of the app
     
     Arguments:
@@ -741,8 +787,10 @@ appname {str} &ndash; app name</p>
     Returns:
         init -- total number of the records
     &#34;&#34;&#34;
-    appname = appname or self._appname
-    return int(self._db.get(self._rkey_incr % appname))</code></pre>
+    count = self._db.get(self._rkey_incr % appname)
+    if count:
+        return int(count)
+    return 0</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.core.logging.logging.RedisLogHandler.remove_all_records"><code class="name flex">
@@ -768,7 +816,7 @@ appname {str} &ndash; app name</p>
 </details>
 </dd>
 <dt id="jumpscale.core.logging.logging.RedisLogHandler.tail"><code class="name flex">
-<span>def <span class="ident">tail</span></span>(<span>self, appname=&#39;&#39;, limit=None)</span>
+<span>def <span class="ident">tail</span></span>(<span>self, appname=&#39;init&#39;, limit=None)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Tail records</p>
@@ -782,7 +830,7 @@ limit (int) &ndash; max number of record to be returned (default: {None})</p>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def tail(self, appname: str = &#34;&#34;, limit: int = None) -&gt; iter:
+<pre><code class="python">def tail(self, appname: str = &#34;init&#34;, limit: int = None) -&gt; iter:
     &#34;&#34;&#34;Tail records
     
     Keyword Arguments:
@@ -792,10 +840,12 @@ limit (int) &ndash; max number of record to be returned (default: {None})</p>
     Yields:
         iter -- iterator of the requested logs
     &#34;&#34;&#34;
-    appname = appname or self._appname
+    if limit:
+        limit = limit - 1
+     
     records = self._db.lrange(self._rkey % appname, 0, limit or -1)
     for record in records:
-        yield j.data.serializers.json.loads(record)</code></pre>
+        yield json.loads(record)</code></pre>
 </details>
 </dd>
 </dl>
@@ -824,6 +874,7 @@ limit (int) &ndash; max number of record to be returned (default: {None})</p>
 <ul class="two-column">
 <li><code><a title="jumpscale.core.logging.logging.Logger.add_custom_handler" href="#jumpscale.core.logging.logging.Logger.add_custom_handler">add_custom_handler</a></code></li>
 <li><code><a title="jumpscale.core.logging.logging.Logger.add_handler" href="#jumpscale.core.logging.logging.Logger.add_handler">add_handler</a></code></li>
+<li><code><a title="jumpscale.core.logging.logging.Logger.appname" href="#jumpscale.core.logging.logging.Logger.appname">appname</a></code></li>
 <li><code><a title="jumpscale.core.logging.logging.Logger.critical" href="#jumpscale.core.logging.logging.Logger.critical">critical</a></code></li>
 <li><code><a title="jumpscale.core.logging.logging.Logger.debug" href="#jumpscale.core.logging.logging.Logger.debug">debug</a></code></li>
 <li><code><a title="jumpscale.core.logging.logging.Logger.error" href="#jumpscale.core.logging.logging.Logger.error">error</a></code></li>
