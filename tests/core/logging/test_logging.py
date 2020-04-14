@@ -14,11 +14,11 @@ class TestLogging(unittest.TestCase):
         j.logger.redis.remove_all_records(j.application.appname)
 
     def test01_redis_handler(self):
-        test_records_count = j.logger.redis.max_size * 3
+        test_records_count = j.logger.redis.max_size * 2
 
         for i in range(test_records_count):
             test_value = i + 1
-            j.logger.info("message {}", test_value, category=str(test_value), data={"key":test_value})
+            j.logger.info("message {}", test_value, category=str(test_value), data={"key": test_value})
 
         records_count = j.logger.redis.records_count(j.application.appname)
         self.assertEqual(records_count, test_records_count)

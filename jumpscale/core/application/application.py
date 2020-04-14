@@ -13,6 +13,7 @@ class Application:
 
     def start(self, appname):
         self.appname = appname
+        j.logger.appname = appname
         j.logger.info("Application {} is started, process id: {}", self.appname, self.process_id)
 
     def stop(self):

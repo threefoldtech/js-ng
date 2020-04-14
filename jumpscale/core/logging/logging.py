@@ -1,6 +1,7 @@
 import math
 import loguru
 import msgpack
+import json
 
 from abc import ABC, abstractmethod
 
@@ -25,10 +26,20 @@ class LogHandler(ABC):
 
 
 class Logger:
-    def __init__(self):
+    def __init__(self, appname: str = "init"):
         """Logger init method
         """
-        self._logger = loguru.logger
+        self._logger = loguru.logger.bind(appname=appname)
+        self._appname = appname
+
+    @property
+    def appname(self):
+        return self._appname
+
+    @appname.setter
+    def appname(self, appname):
+        self._appname = appname
+        self._logger = self._logger.bind(appname=appname)
 
     def add_handler(self, *args, **kwargs):
         """Add handler to the logger
@@ -46,7 +57,7 @@ class Logger:
         self._logger.add(handler._handle, **kwargs)
 
     def _log(self, level, message, *args, category, data, exception=None):
-        self._logger.opt(exception=exception).bind(category=category, data=data).log(level, message, *args)
+        self._logger.opt(depth=2, exception=exception).bind(category=category, data=data).log(level, message, *args)
 
     def debug(self, message, *args, category: str = "", data: dict = None):
         """Log debug message
@@ -120,17 +131,18 @@ class RedisLogHandler(LogHandler):
         index = (identifier % self.max_size) - 1
         return part, index
 
-    def _dump_records(self, path):
+    def _dump_records(self, appname, path):
         j.sals.fs.mkdir(j.sals.fs.parent(path))
-        records = self._db.lrange(self._rkey % self._appname, 0, self.max_size - 1)
+        records = self._db.lrange(self._rkey % appname, 0, self.max_size - 1)
         j.sals.fs.write_bytes(path, msgpack.dumps(records))
 
     def _process_message(self, message):
-        record = j.data.serializers.json.loads(message)["record"]
-        record_id = self._db.incr(self._rkey_incr % self._appname)
+        record = json.loads(message)["record"]
+        appname = record["extra"]["appname"]
+        record_id = self._db.incr(self._rkey_incr % appname)
         return dict(
             id=record_id,
-            appname=self._appname,
+            appname=appname,
             message=record["message"],
             level=record["level"]["no"],
             linenr=record["line"],
@@ -143,8 +155,8 @@ class RedisLogHandler(LogHandler):
             data=record["extra"].get("data", {}),
         )
 
-    def _clean_up(self):
-        self._db.ltrim(self._rkey % self._appname, self.max_size, -1)
+    def _clean_up(self, appname):
+        self._db.ltrim(self._rkey % appname, self.max_size, -1)
 
     def _handle(self, message: str, **kwargs):
         """Logging handler
@@ -155,19 +167,21 @@ class RedisLogHandler(LogHandler):
         if not self._db:
             return
 
-        rkey = self._rkey % self._appname
         record = self._process_message(message)
-        self._db.rpush(rkey, j.data.serializers.json.dumps(record))
+        appname = record["appname"]
+
+        rkey = self._rkey % appname
+        self._db.rpush(rkey, json.dumps(record))
 
         if self._db.llen(rkey) > self.max_size:
             if self.dump:
                 part, _ = self._map_identifier(record["id"] - 1)
-                path = j.sals.fs.join_paths(self.dump_dir, self._appname, "%s.msgpack" % part)
-                self._dump_records(path)
+                path = j.sals.fs.join_paths(self.dump_dir, appname, "%s.msgpack" % part)
+                self._dump_records(appname, path)
 
-            self._clean_up()
+            self._clean_up(appname)
 
-    def records_count(self, appname: str = "") -> int:
+    def records_count(self, appname: str = "init") -> int:
         """Gets total number of the records of the app
         
         Arguments:
@@ -176,10 +190,12 @@ class RedisLogHandler(LogHandler):
         Returns:
             init -- total number of the records
         """
-        appname = appname or self._appname
-        return int(self._db.get(self._rkey_incr % appname))
+        count = self._db.get(self._rkey_incr % appname)
+        if count:
+            return int(count)
+        return 0
 
-    def record_get(self, identifier: int, appname: str = "") -> dict:
+    def record_get(self, identifier: int, appname: str = "init") -> dict:
         """Get app log record by its identifier
         
         Arguments:
@@ -189,7 +205,6 @@ class RedisLogHandler(LogHandler):
         Returns:
             dict -- requested log record
         """
-        appname = appname or self._appname
         count = self.records_count(appname)
         part, index = self._map_identifier(identifier)
 
@@ -198,14 +213,14 @@ class RedisLogHandler(LogHandler):
 
         if part > count - self.max_size:
             record = self._db.lindex(self._rkey % appname, index)
-            return j.data.serializers.json.loads(record)
+            return json.loads(record)
 
         if self.dump:
             path = j.sals.fs.join_paths(self.dump_dir, appname, "%s.msgpack" % part)
             if j.sals.fs.exists(path):
                 records = msgpack.loads(j.sals.fs.read_bytes(path))
                 if records and len(records) > index:
-                    return j.data.serializers.json.loads(records[index])
+                    return json.loads(records[index])
 
     def remove_all_records(self, appname: str):
         """Delete all app's log records
@@ -219,7 +234,7 @@ class RedisLogHandler(LogHandler):
         if self.dump:
             j.sals.fs.rmtree(path)
 
-    def tail(self, appname: str = "", limit: int = None) -> iter:
+    def tail(self, appname: str = "init", limit: int = None) -> iter:
         """Tail records
         
         Keyword Arguments:
@@ -229,7 +244,9 @@ class RedisLogHandler(LogHandler):
         Yields:
             iter -- iterator of the requested logs
         """
-        appname = appname or self._appname
+        if limit:
+            limit = limit - 1
+         
         records = self._db.lrange(self._rkey % appname, 0, limit or -1)
         for record in records:
-            yield j.data.serializers.json.loads(record)
+            yield json.loads(record)
