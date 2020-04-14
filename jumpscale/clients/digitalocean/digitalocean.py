@@ -21,27 +21,53 @@ class VM:
     do_id = fields.String()
 
 
+def convert_to_valid_identifier(name):
+    return "_" + name.replace(" ", "_")
+
+
 class ProjectFactory(StoredFactory):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def projects_list_in_digital_ocean(self):
-        return ProjectManagement.list(self.parent.client)
+    def new(self, name, *args, **kwargs):
+        valid_name = convert_to_valid_identifier(name)
+        instance = super().new(valid_name, *args, **kwargs)
+        instance.name = name
+        return instance
 
-    def projects_list(self):
+    def list_project_in_digital_ocean(self):
+        """
+        Returns list of projects on Digital Ocean
+        """
+        return ProjectManagement.list(self.parent_instance.client)
+
+    def list_all_projects(self):
+        """
+        Returns list of projects, if there is not projects created it will return
+        the projects created on Digital Ocean 
+        """
         projects = self.list_all()
         if not projects:
-            for project in self.projects_list_in_digital_ocean():
-                # self._projects.append(project)
+            for project in self.list_project_in_digital_ocean():
+                # project_temp = self.new("_" + project.name.replace(" ", "_"))
+                # project_temp.project_name = project.name
                 self.new(project.name)
         return self.list_all()
 
-        print("List from Remote")
+    # def _project_get(self, name):
+    #     for project in self.projects:
+    #         if project.name.lower() == name.lower():
+    #             return project
+    #     return None
+
+    # def get(self, name):
+    #     for project in self.list_all_projects():
+    #         project.project_name
 
 
 class Project(Client):
-    project_name = fields.String()
-    # __init__()
+    name = fields.String()
+
     def create_project(self):
         print("project created")
 
@@ -57,7 +83,8 @@ class DigitalOcean(Client):
     token_ = fields.String()
     # project_name = fields.String()
     vms = fields.List(fields.Object(VM))
-    projects = ProjectFactory(Project)
+    # projects = ProjectFactory(Project)
+    projects = fields.Factory(Project, factory_type=ProjectFactory)
     # listing_project
 
     def __init__(self):
@@ -346,11 +373,11 @@ class DigitalOcean(Client):
     #             self._projects.append(project)
     #     return self._projects
 
-    def _project_get(self, name):
-        for project in self.projects:
-            if project.name.lower() == name.lower():
-                return project
-        return None
+    # def _project_get(self, name):
+    #     for project in self.projects:
+    #         if project.name.lower() == name.lower():
+    #             return project
+    #     return None
 
     def project_create(self, name, purpose, description="", environment="", is_default=False):
         """Create a digital ocean project
