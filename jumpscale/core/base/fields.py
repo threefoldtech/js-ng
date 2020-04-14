@@ -766,7 +766,7 @@ class Factory(Field):
             name = fields.String()
 
         class Server(Base):
-            users = fields.Factory(Base)
+            users = fields.Factory(User)
         ```
 
         Another example with a custom factory class:
@@ -782,7 +782,7 @@ class Factory(Field):
                 # ...
 
         class Server(Base):
-            users = fields.Factory(Base, factory_type=UserFactory)
+            users = fields.Factory(User, factory_type=UserFactory)
         ```
 
         Args:

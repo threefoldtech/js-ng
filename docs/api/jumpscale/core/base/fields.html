@@ -133,7 +133,7 @@ import time
 
 from urllib.parse import urlparse
 
-from .factory import Factory as BaseFactory
+from .factory import Factory as BaseFactory, StoredFactory
 
 
 class ValidationError(Exception):
@@ -825,17 +825,60 @@ class Time(DateTimeMixin, Typed):
         self.format = format_
 
 
-class Factory(Typed):
-    def __init__(self, type_for_factory, stored=True, **kwargs):
+class Factory(Field):
+    def __init__(self, type_, factory_type=None, stored=True, **kwargs):
+        &#34;&#34;&#34;
+        A factory field for any `Base` type, also, you can specify your factory type/class
+
+        Example:
+
+        ```python
+        class User(Base):
+            name = fields.String()
+
+        class Server(Base):
+            users = fields.Factory(User)
+        ```
+
+        Another example with a custom factory class:
+
+        ```python
+        class User(Base):
+            name = fields.String()
+
+        class UserFactory(StoredFactory):
+
+            def list_from_remote(self):
+                # list users from remote storage
+                # ...
+
+        class Server(Base):
+            users = fields.Factory(User, factory_type=UserFactory)
+        ```
+
+        Args:
+            type_ (Base): any base type to be used by the factory
+            factory_type (`BaseFactory`, optional): factory class/type. Defaults to None.
+            stored (bool, optional): if it&#39;s stored or not, will be used if `factory_type` is not set. Defaults to True.
+        &#34;&#34;&#34;
         # value type will be factory
-        super().__init__(type_=BaseFactory, readonly=True, **kwargs)
+        super().__init__(readonly=True, **kwargs)
         # but we keep the type of any Base class
         # so, we can init a Factory with it
-        self.type_for_factory = type_for_factory
+        self.type = type_
         self.stored = stored
+        if factory_type:
+            self.factory_type = factory_type
+        else:
+            if stored:
+                self.factory_type = StoredFactory
+            else:
+                self.factory_type = BaseFactory
 
     def validate(self, value):
         super().validate(value)
+        if not isinstance(value, self.factory_type):
+            raise ValidationError(f&#34;factory type is not {self.factory_type}&#34;)
 
     def from_raw(self, value):
         return value
@@ -1591,30 +1634,94 @@ Example:</p>
 </dd>
 <dt id="jumpscale.core.base.fields.Factory"><code class="flex name class">
 <span>class <span class="ident">Factory</span></span>
-<span>(</span><span>type_for_factory, stored=True, **kwargs)</span>
+<span>(</span><span>type_, factory_type=None, stored=True, **kwargs)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>base field for any type, value mus tof of <code>type_</code></p>
+<section class="desc"><p>A factory field for any <code>Base</code> type, also, you can specify your factory type/class</p>
+<p>Example:</p>
+<pre><code class="python">class User(Base):
+    name = fields.String()
+
+class Server(Base):
+    users = fields.Factory(User)
+</code></pre>
+<p>Another example with a custom factory class:</p>
+<pre><code class="python">class User(Base):
+    name = fields.String()
+
+class UserFactory(StoredFactory):
+
+    def list_from_remote(self):
+        # list users from remote storage
+        # ...
+
+class Server(Base):
+    users = fields.Factory(User, factory_type=UserFactory)
+</code></pre>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>type_</code></strong> :&ensp;<code>type</code></dt>
-<dd>any type (class)</dd>
-<dt><strong><code>kwargs</code></strong></dt>
-<dd>any keyword arguments supported by <a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field"><code>Field</code></a></dd>
+<dt><strong><code>type_</code></strong> :&ensp;<code>Base</code></dt>
+<dd>any base type to be used by the factory</dd>
+<dt>factory_type (<code>BaseFactory</code>, optional): factory class/type. Defaults to None.</dt>
+<dt><strong><code>stored</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>if it's stored or not, will be used if <code>factory_type</code> is not set. Defaults to True.</dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class Factory(Typed):
-    def __init__(self, type_for_factory, stored=True, **kwargs):
+<pre><code class="python">class Factory(Field):
+    def __init__(self, type_, factory_type=None, stored=True, **kwargs):
+        &#34;&#34;&#34;
+        A factory field for any `Base` type, also, you can specify your factory type/class
+
+        Example:
+
+        ```python
+        class User(Base):
+            name = fields.String()
+
+        class Server(Base):
+            users = fields.Factory(User)
+        ```
+
+        Another example with a custom factory class:
+
+        ```python
+        class User(Base):
+            name = fields.String()
+
+        class UserFactory(StoredFactory):
+
+            def list_from_remote(self):
+                # list users from remote storage
+                # ...
+
+        class Server(Base):
+            users = fields.Factory(User, factory_type=UserFactory)
+        ```
+
+        Args:
+            type_ (Base): any base type to be used by the factory
+            factory_type (`BaseFactory`, optional): factory class/type. Defaults to None.
+            stored (bool, optional): if it&#39;s stored or not, will be used if `factory_type` is not set. Defaults to True.
+        &#34;&#34;&#34;
         # value type will be factory
-        super().__init__(type_=BaseFactory, readonly=True, **kwargs)
+        super().__init__(readonly=True, **kwargs)
         # but we keep the type of any Base class
         # so, we can init a Factory with it
-        self.type_for_factory = type_for_factory
+        self.type = type_
         self.stored = stored
+        if factory_type:
+            self.factory_type = factory_type
+        else:
+            if stored:
+                self.factory_type = StoredFactory
+            else:
+                self.factory_type = BaseFactory
 
     def validate(self, value):
         super().validate(value)
+        if not isinstance(value, self.factory_type):
+            raise ValidationError(f&#34;factory type is not {self.factory_type}&#34;)
 
     def from_raw(self, value):
         return value
@@ -1624,16 +1731,15 @@ Example:</p>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></li>
 <li><a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field">Field</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></b></code>:
+<li><code><b><a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field">Field</a></b></code>:
 <ul class="hlist">
-<li><code><a title="jumpscale.core.base.fields.Typed.from_raw" href="#jumpscale.core.base.fields.Field.from_raw">from_raw</a></code></li>
-<li><code><a title="jumpscale.core.base.fields.Typed.to_raw" href="#jumpscale.core.base.fields.Field.to_raw">to_raw</a></code></li>
-<li><code><a title="jumpscale.core.base.fields.Typed.validate" href="#jumpscale.core.base.fields.Field.validate">validate</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.Field.from_raw" href="#jumpscale.core.base.fields.Field.from_raw">from_raw</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.Field.to_raw" href="#jumpscale.core.base.fields.Field.to_raw">to_raw</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.Field.validate" href="#jumpscale.core.base.fields.Field.validate">validate</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1735,6 +1841,7 @@ Example:</p>
 <li><a title="jumpscale.core.base.fields.URL" href="#jumpscale.core.base.fields.URL">URL</a></li>
 <li><a title="jumpscale.core.base.fields.Tel" href="#jumpscale.core.base.fields.Tel">Tel</a></li>
 <li><a title="jumpscale.core.base.fields.IPAddress" href="#jumpscale.core.base.fields.IPAddress">IPAddress</a></li>
+<li><a title="jumpscale.core.base.fields.Factory" href="#jumpscale.core.base.fields.Factory">Factory</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -2832,7 +2939,6 @@ they will converted to objects.</p>
 <li><a title="jumpscale.core.base.fields.DateTime" href="#jumpscale.core.base.fields.DateTime">DateTime</a></li>
 <li><a title="jumpscale.core.base.fields.Date" href="#jumpscale.core.base.fields.Date">Date</a></li>
 <li><a title="jumpscale.core.base.fields.Time" href="#jumpscale.core.base.fields.Time">Time</a></li>
-<li><a title="jumpscale.core.base.fields.Factory" href="#jumpscale.core.base.fields.Factory">Factory</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">

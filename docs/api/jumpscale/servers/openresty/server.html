@@ -36,7 +36,6 @@ class Status(Enum):
 
 class Website(Base):
 
-    name = fields.String()
     port = fields.Integer(default=80)
     ssl = fields.Boolean()
     domain = fields.String()
@@ -49,7 +48,7 @@ class Website(Base):
 
     @property
     def path_cfg(self):
-        return f&#34;{self.path_cfg_dir}/{self.name}.http.conf&#34;
+        return f&#34;{self.path_cfg_dir}/{self.instance_name}.http.conf&#34;
 
     @property
     def path_web(self):
@@ -69,7 +68,6 @@ class Website(Base):
 
 
 class OpenRestyServer(Base):
-    name = fields.String(default=&#34;default&#34;)
     status = fields.Enum(Status)
     websites = fields.Factory(Website)
 
@@ -85,14 +83,14 @@ class OpenRestyServer(Base):
     @property
     def path_web(self):
         if not self._path_web:
-            self._path_web = j.sals.fs.join_paths(j.core.dirs.VARDIR, &#34;web&#34;, self.name)
+            self._path_web = j.sals.fs.join_paths(j.core.dirs.VARDIR, &#34;web&#34;, self.instance_name)
             j.sals.fs.mkdirs(j.sals.fs.join_paths(self._path_web, &#34;static&#34;))
         return self._path_web
 
     @property
     def path_cfg_dir(self):
         if not self._path_cfg_dir:
-            self._path_cfg_dir = j.sals.fs.join_paths(j.core.dirs.CFGDIR, &#34;nginx&#34;, self.name)
+            self._path_cfg_dir = j.sals.fs.join_paths(j.core.dirs.CFGDIR, &#34;nginx&#34;, self.instance_name)
             j.sals.fs.mkdirs(self._path_cfg_dir)
         return self._path_cfg_dir
 
@@ -103,7 +101,7 @@ class OpenRestyServer(Base):
     @property
     def logs_dir(self):
         if not self._logs_dir:
-            self._logs_dir = j.sals.fs.join_paths(j.core.dirs.LOGDIR, &#34;openresty&#34;, self.name)
+            self._logs_dir = j.sals.fs.join_paths(j.core.dirs.LOGDIR, &#34;openresty&#34;, self.instance_name)
             j.sals.fs.mkdirs(self._logs_dir)
         return self._logs_dir
 
@@ -129,7 +127,7 @@ class OpenRestyServer(Base):
         Returns:
             Website: A new or an old website instance with the needed port
         &#34;&#34;&#34;
-        website_name = f&#34;{self.name}_website_{port}&#34;
+        website_name = f&#34;{self.instance_name}_website_{port}&#34;
 
         website = self.websites.find(website_name)
         if website:
@@ -205,7 +203,6 @@ class OpenRestyServer(Base):
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class OpenRestyServer(Base):
-    name = fields.String(default=&#34;default&#34;)
     status = fields.Enum(Status)
     websites = fields.Factory(Website)
 
@@ -221,14 +218,14 @@ class OpenRestyServer(Base):
     @property
     def path_web(self):
         if not self._path_web:
-            self._path_web = j.sals.fs.join_paths(j.core.dirs.VARDIR, &#34;web&#34;, self.name)
+            self._path_web = j.sals.fs.join_paths(j.core.dirs.VARDIR, &#34;web&#34;, self.instance_name)
             j.sals.fs.mkdirs(j.sals.fs.join_paths(self._path_web, &#34;static&#34;))
         return self._path_web
 
     @property
     def path_cfg_dir(self):
         if not self._path_cfg_dir:
-            self._path_cfg_dir = j.sals.fs.join_paths(j.core.dirs.CFGDIR, &#34;nginx&#34;, self.name)
+            self._path_cfg_dir = j.sals.fs.join_paths(j.core.dirs.CFGDIR, &#34;nginx&#34;, self.instance_name)
             j.sals.fs.mkdirs(self._path_cfg_dir)
         return self._path_cfg_dir
 
@@ -239,7 +236,7 @@ class OpenRestyServer(Base):
     @property
     def logs_dir(self):
         if not self._logs_dir:
-            self._logs_dir = j.sals.fs.join_paths(j.core.dirs.LOGDIR, &#34;openresty&#34;, self.name)
+            self._logs_dir = j.sals.fs.join_paths(j.core.dirs.LOGDIR, &#34;openresty&#34;, self.instance_name)
             j.sals.fs.mkdirs(self._logs_dir)
         return self._logs_dir
 
@@ -265,7 +262,7 @@ class OpenRestyServer(Base):
         Returns:
             Website: A new or an old website instance with the needed port
         &#34;&#34;&#34;
-        website_name = f&#34;{self.name}_website_{port}&#34;
+        website_name = f&#34;{self.instance_name}_website_{port}&#34;
 
         website = self.websites.find(website_name)
         if website:
@@ -337,22 +334,9 @@ class OpenRestyServer(Base):
 <pre><code class="python">@property
 def logs_dir(self):
     if not self._logs_dir:
-        self._logs_dir = j.sals.fs.join_paths(j.core.dirs.LOGDIR, &#34;openresty&#34;, self.name)
+        self._logs_dir = j.sals.fs.join_paths(j.core.dirs.LOGDIR, &#34;openresty&#34;, self.instance_name)
         j.sals.fs.mkdirs(self._logs_dir)
     return self._logs_dir</code></pre>
-</details>
-</dd>
-<dt id="jumpscale.servers.openresty.server.OpenRestyServer.name"><code class="name">var <span class="ident">name</span></code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def getter(self):
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.servers.openresty.server.OpenRestyServer.path_cfg"><code class="name">var <span class="ident">path_cfg</span></code></dt>
@@ -373,7 +357,7 @@ def path_cfg(self):
 <pre><code class="python">@property
 def path_cfg_dir(self):
     if not self._path_cfg_dir:
-        self._path_cfg_dir = j.sals.fs.join_paths(j.core.dirs.CFGDIR, &#34;nginx&#34;, self.name)
+        self._path_cfg_dir = j.sals.fs.join_paths(j.core.dirs.CFGDIR, &#34;nginx&#34;, self.instance_name)
         j.sals.fs.mkdirs(self._path_cfg_dir)
     return self._path_cfg_dir</code></pre>
 </details>
@@ -386,7 +370,7 @@ def path_cfg_dir(self):
 <pre><code class="python">@property
 def path_web(self):
     if not self._path_web:
-        self._path_web = j.sals.fs.join_paths(j.core.dirs.VARDIR, &#34;web&#34;, self.name)
+        self._path_web = j.sals.fs.join_paths(j.core.dirs.VARDIR, &#34;web&#34;, self.instance_name)
         j.sals.fs.mkdirs(j.sals.fs.join_paths(self._path_web, &#34;static&#34;))
     return self._path_web</code></pre>
 </details>
@@ -492,7 +476,7 @@ def startup_cmd(self):
     Returns:
         Website: A new or an old website instance with the needed port
     &#34;&#34;&#34;
-    website_name = f&#34;{self.name}_website_{port}&#34;
+    website_name = f&#34;{self.instance_name}_website_{port}&#34;
 
     website = self.websites.find(website_name)
     if website:
@@ -629,7 +613,6 @@ def startup_cmd(self):
 <summary>Source code</summary>
 <pre><code class="python">class Website(Base):
 
-    name = fields.String()
     port = fields.Integer(default=80)
     ssl = fields.Boolean()
     domain = fields.String()
@@ -642,7 +625,7 @@ def startup_cmd(self):
 
     @property
     def path_cfg(self):
-        return f&#34;{self.path_cfg_dir}/{self.name}.http.conf&#34;
+        return f&#34;{self.path_cfg_dir}/{self.instance_name}.http.conf&#34;
 
     @property
     def path_web(self):
@@ -693,19 +676,6 @@ def startup_cmd(self):
     return field.from_raw(field.default)</code></pre>
 </details>
 </dd>
-<dt id="jumpscale.servers.openresty.server.Website.name"><code class="name">var <span class="ident">name</span></code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def getter(self):
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
-</details>
-</dd>
 <dt id="jumpscale.servers.openresty.server.Website.path"><code class="name">var <span class="ident">path</span></code></dt>
 <dd>
 <section class="desc"></section>
@@ -726,7 +696,7 @@ def startup_cmd(self):
 <summary>Source code</summary>
 <pre><code class="python">@property
 def path_cfg(self):
-    return f&#34;{self.path_cfg_dir}/{self.name}.http.conf&#34;</code></pre>
+    return f&#34;{self.path_cfg_dir}/{self.instance_name}.http.conf&#34;</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.servers.openresty.server.Website.path_cfg_dir"><code class="name">var <span class="ident">path_cfg_dir</span></code></dt>
@@ -825,7 +795,6 @@ def path_web(self):
 <li><code><a title="jumpscale.servers.openresty.server.OpenRestyServer.install" href="#jumpscale.servers.openresty.server.OpenRestyServer.install">install</a></code></li>
 <li><code><a title="jumpscale.servers.openresty.server.OpenRestyServer.is_running" href="#jumpscale.servers.openresty.server.OpenRestyServer.is_running">is_running</a></code></li>
 <li><code><a title="jumpscale.servers.openresty.server.OpenRestyServer.logs_dir" href="#jumpscale.servers.openresty.server.OpenRestyServer.logs_dir">logs_dir</a></code></li>
-<li><code><a title="jumpscale.servers.openresty.server.OpenRestyServer.name" href="#jumpscale.servers.openresty.server.OpenRestyServer.name">name</a></code></li>
 <li><code><a title="jumpscale.servers.openresty.server.OpenRestyServer.path_cfg" href="#jumpscale.servers.openresty.server.OpenRestyServer.path_cfg">path_cfg</a></code></li>
 <li><code><a title="jumpscale.servers.openresty.server.OpenRestyServer.path_cfg_dir" href="#jumpscale.servers.openresty.server.OpenRestyServer.path_cfg_dir">path_cfg_dir</a></code></li>
 <li><code><a title="jumpscale.servers.openresty.server.OpenRestyServer.path_web" href="#jumpscale.servers.openresty.server.OpenRestyServer.path_web">path_web</a></code></li>
@@ -850,7 +819,6 @@ def path_web(self):
 <li><code><a title="jumpscale.servers.openresty.server.Website.configure" href="#jumpscale.servers.openresty.server.Website.configure">configure</a></code></li>
 <li><code><a title="jumpscale.servers.openresty.server.Website.domain" href="#jumpscale.servers.openresty.server.Website.domain">domain</a></code></li>
 <li><code><a title="jumpscale.servers.openresty.server.Website.locations" href="#jumpscale.servers.openresty.server.Website.locations">locations</a></code></li>
-<li><code><a title="jumpscale.servers.openresty.server.Website.name" href="#jumpscale.servers.openresty.server.Website.name">name</a></code></li>
 <li><code><a title="jumpscale.servers.openresty.server.Website.path" href="#jumpscale.servers.openresty.server.Website.path">path</a></code></li>
 <li><code><a title="jumpscale.servers.openresty.server.Website.path_cfg" href="#jumpscale.servers.openresty.server.Website.path_cfg">path_cfg</a></code></li>
 <li><code><a title="jumpscale.servers.openresty.server.Website.path_cfg_dir" href="#jumpscale.servers.openresty.server.Website.path_cfg_dir">path_cfg_dir</a></code></li>
