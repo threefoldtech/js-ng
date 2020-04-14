@@ -12,7 +12,6 @@ class Status(Enum):
 
 class Website(Base):
 
-    name = fields.String()
     port = fields.Integer(default=80)
     ssl = fields.Boolean()
     domain = fields.String()
@@ -25,7 +24,7 @@ class Website(Base):
 
     @property
     def path_cfg(self):
-        return f"{self.path_cfg_dir}/{self.name}.http.conf"
+        return f"{self.path_cfg_dir}/{self.instance_name}.http.conf"
 
     @property
     def path_web(self):
@@ -45,7 +44,6 @@ class Website(Base):
 
 
 class OpenRestyServer(Base):
-    name = fields.String(default="default")
     status = fields.Enum(Status)
     websites = fields.Factory(Website)
 
@@ -61,14 +59,14 @@ class OpenRestyServer(Base):
     @property
     def path_web(self):
         if not self._path_web:
-            self._path_web = j.sals.fs.join_paths(j.core.dirs.VARDIR, "web", self.name)
+            self._path_web = j.sals.fs.join_paths(j.core.dirs.VARDIR, "web", self.instance_name)
             j.sals.fs.mkdirs(j.sals.fs.join_paths(self._path_web, "static"))
         return self._path_web
 
     @property
     def path_cfg_dir(self):
         if not self._path_cfg_dir:
-            self._path_cfg_dir = j.sals.fs.join_paths(j.core.dirs.CFGDIR, "nginx", self.name)
+            self._path_cfg_dir = j.sals.fs.join_paths(j.core.dirs.CFGDIR, "nginx", self.instance_name)
             j.sals.fs.mkdirs(self._path_cfg_dir)
         return self._path_cfg_dir
 
@@ -79,7 +77,7 @@ class OpenRestyServer(Base):
     @property
     def logs_dir(self):
         if not self._logs_dir:
-            self._logs_dir = j.sals.fs.join_paths(j.core.dirs.LOGDIR, "openresty", self.name)
+            self._logs_dir = j.sals.fs.join_paths(j.core.dirs.LOGDIR, "openresty", self.instance_name)
             j.sals.fs.mkdirs(self._logs_dir)
         return self._logs_dir
 
@@ -105,7 +103,7 @@ class OpenRestyServer(Base):
         Returns:
             Website: A new or an old website instance with the needed port
         """
-        website_name = f"{self.name}_website_{port}"
+        website_name = f"{self.instance_name}_website_{port}"
 
         website = self.websites.find(website_name)
         if website:

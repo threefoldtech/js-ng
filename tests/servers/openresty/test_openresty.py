@@ -7,7 +7,6 @@ class TestOpenResty(unittest.TestCase):
     def setUp(self):
         self.instance_name = j.data.random_names.random_name()
         self.server = j.servers.openresty.new(self.instance_name)
-        self.server.name = self.instance_name  # Remove me when instance name is added to baseclasses
 
     def test001_write_config(self):
 
@@ -19,12 +18,10 @@ class TestOpenResty(unittest.TestCase):
 
         website_name = j.data.random_names.random_name()
         website = self.server.websites.new(website_name)
-        website.name = website_name  # Remove me when instance name is added to baseclasses
         website.domain = "www.testdomain.com"
 
         loc_name = j.data.random_names.random_name()
         location = website.locations.new(loc_name)
-        location.name = loc_name  # Remove me when instance name is added to baseclasses
         location.location_type = "proxy"
         location.ipaddr_dest = "0.0.0.0"
         location.path_dest = "/"
@@ -37,7 +34,7 @@ class TestOpenResty(unittest.TestCase):
         website_config = j.sals.fs.read_file(website.path_cfg)
         self.assertIn(f"?{website.domain}$;", website_config)
         self.assertIn(f"listen {website.port};", website_config)
-        self.assertIn(f"include {website.path_cfg_dir}/{website.name}_locations/*.conf;", website_config)
+        self.assertIn(f"include {website.path_cfg_dir}/{website.instance_name}_locations/*.conf;", website_config)
 
         loc_config = j.sals.fs.read_file(location.path_cfg)
 

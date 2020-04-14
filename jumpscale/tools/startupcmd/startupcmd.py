@@ -41,7 +41,7 @@ class StartupCmd(Base):
     ports = fields.List(fields.Integer())
     executor = fields.Enum(Executor)
     check_cmd = fields.String()
-    path = fields.String(default="/tmp")
+    path = fields.String(default=j.core.dirs.TMPDIR)
     stop_cmd = fields.String()
     env = fields.Typed(dict, default={})
     timeout = fields.Integer(default=60)
@@ -54,15 +54,10 @@ class StartupCmd(Base):
         self._pid = None
         self._cmd_path = None
         self.__tmux_window = None
-        self._instance_name = None
 
     def reset(self):
         self._process = None
         self._pid = None
-
-    @property
-    def instance_name(self):
-        return self._instance_name
 
     @property
     def pid(self):

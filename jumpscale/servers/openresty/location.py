@@ -21,11 +21,11 @@ class Location(Base):
 
     @property
     def path_cfg_dir(self):
-        return f"{self.parent.path_cfg_dir}/{self.parent.name}_locations"
+        return f"{self.parent.path_cfg_dir}/{self.parent.instance_name}_locations"
 
     @property
     def path_cfg(self):
-        return f"{self.path_cfg_dir}/{self.name}.conf"
+        return f"{self.path_cfg_dir}/{self.instance_name}.conf"
 
     @property
     def path_web(self):
