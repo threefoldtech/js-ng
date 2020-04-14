@@ -172,7 +172,7 @@ class RedisClient(Client):
         if name == 'hostname':
             self.client = Redis(value, self.port)
         elif name == 'port':
-            self.client = Redis(self.hostname, port)
+            self.client = Redis(self.hostname, value)
 
 ```
 
