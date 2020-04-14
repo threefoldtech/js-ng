@@ -1,5 +1,4 @@
 from jumpscale.god import j
-from redis import Redis
 
 
 def _get_identifier(appname, message, public_message, category, alert_type):
