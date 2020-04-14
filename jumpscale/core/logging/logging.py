@@ -7,7 +7,16 @@ from abc import ABC, abstractmethod
 from jumpscale.god import j
 
 
-class CustomLogHandler(ABC):
+LEVELS = {
+    10: "DEBUG",
+    20: "INFO",
+    30: "WARNING",
+    40: "ERROR",
+    50: "CRITICAL",
+}
+
+
+class LogHandler(ABC):
     """the interface every cutom log handler should implement"""
 
     @abstractmethod
@@ -19,25 +28,60 @@ class Logger:
     def __init__(self):
         """Logger init method
         """
-        self.logger = loguru.logger
+        self._logger = loguru.logger
 
     def add_handler(self, *args, **kwargs):
         """Add handler to the logger
         takes the same parameters of loguru.logger.add
         """
-        self.logger.add(*args, **kwargs)
+        self._logger.add(*args, **kwargs)
 
-    def add_custom_handler(self, name: str, handler: CustomLogHandler, *args, **kwargs):
+    def add_custom_handler(self, name: str, handler: LogHandler, *args, **kwargs):
         """Add custom log handler
-        
+
         Arguments:
-            handler {CustomLogHandler} -- handler function
+            handler {LogHandler} -- handler function
         """
         setattr(self, name, handler)
-        self.logger.add(handler._handle, **kwargs)
+        self._logger.add(handler._handle, **kwargs)
+
+    def _log(self, level, message, *args, category, data, exception=None):
+        self._logger.opt(exception=exception).bind(category=category, data=data).log(level, message, *args)
+
+    def debug(self, message, *args, category: str = "", data: dict = None):
+        """Log debug message
+        """
+        self._log("DEBUG", message, *args, category=category, data=data)
+
+    def info(self, message, *args, category: str = "", data: dict = None):
+        """Log info message
+        """
+        self._log("INFO", message, *args, category=category, data=data)
+
+    def warning(self, message, *args, category: str = "", data: dict = None):
+        """Log warning message
+        """
+        self._log("WARNING", message, *args, category=category, data=data)
+
+    def error(self, message, *args, category: str = "", data: dict = None):
+        """Log error message
+        """
+        self._log("ERROR", message, *args, category=category, data=data)
+
+    def critical(self, message, *args, category: str = "", data: dict = None):
+        """Log critical message
+        """
+        self._log("CRITICAL", message, *args, category=category, data=data)
+
+    def exception(
+        self, message, *args, category: str = "", data: dict = None, level: int = 40, exception: Exception = None
+    ):
+        """Log exception message
+        """
+        self._log(LEVELS.get(level, 40), message, *args, category=category, data=data, exception=exception)
 
 
-class RedisHandler(CustomLogHandler):
+class RedisLogHandler(LogHandler):
     def __init__(self, max_size: int = 1000, dump: bool = True, dump_dir: str = None):
         self._max_size = max_size
         self._dump = dump
@@ -87,14 +131,16 @@ class RedisHandler(CustomLogHandler):
         return dict(
             id=record_id,
             appname=self._appname,
-            name=record["name"],
             message=record["message"],
             level=record["level"]["no"],
             linenr=record["line"],
+            file=record["file"],
             processid=record["process"]["id"],
             context=record["function"],
-            exception=record["exception"],
             epoch=record["time"]["timestamp"],
+            exception=record["exception"],
+            category=record["extra"].get("category", ""),
+            data=record["extra"].get("data", {}),
         )
 
     def _clean_up(self):
@@ -172,3 +218,18 @@ class RedisHandler(CustomLogHandler):
 
         if self.dump:
             j.sals.fs.rmtree(path)
+
+    def tail(self, appname: str = "", limit: int = None) -> iter:
+        """Tail records
+        
+        Keyword Arguments:
+            appname (str) -- appname (default: {""})
+            limit (int) -- max number of record to be returned (default: {None})
+        
+        Yields:
+            iter -- iterator of the requested logs
+        """
+        appname = appname or self._appname
+        records = self._db.lrange(self._rkey % appname, 0, limit or -1)
+        for record in records:
+            yield j.data.serializers.json.loads(record)
