@@ -45,11 +45,11 @@ class Location(Base):
 
     @property
     def path_cfg_dir(self):
-        return f&#34;{self.parent.path_cfg_dir}/{self.parent.name}_locations&#34;
+        return f&#34;{self.parent.path_cfg_dir}/{self.parent.instance_name}_locations&#34;
 
     @property
     def path_cfg(self):
-        return f&#34;{self.path_cfg_dir}/{self.name}.conf&#34;
+        return f&#34;{self.path_cfg_dir}/{self.instance_name}.conf&#34;
 
     @property
     def path_web(self):
@@ -111,11 +111,11 @@ class Location(Base):
 
     @property
     def path_cfg_dir(self):
-        return f&#34;{self.parent.path_cfg_dir}/{self.parent.name}_locations&#34;
+        return f&#34;{self.parent.path_cfg_dir}/{self.parent.instance_name}_locations&#34;
 
     @property
     def path_cfg(self):
-        return f&#34;{self.path_cfg_dir}/{self.name}.conf&#34;
+        return f&#34;{self.path_cfg_dir}/{self.instance_name}.conf&#34;
 
     @property
     def path_web(self):
@@ -258,7 +258,7 @@ class Location(Base):
 <summary>Source code</summary>
 <pre><code class="python">@property
 def path_cfg(self):
-    return f&#34;{self.path_cfg_dir}/{self.name}.conf&#34;</code></pre>
+    return f&#34;{self.path_cfg_dir}/{self.instance_name}.conf&#34;</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.servers.openresty.location.Location.path_cfg_dir"><code class="name">var <span class="ident">path_cfg_dir</span></code></dt>
@@ -268,7 +268,7 @@ def path_cfg(self):
 <summary>Source code</summary>
 <pre><code class="python">@property
 def path_cfg_dir(self):
-    return f&#34;{self.parent.path_cfg_dir}/{self.parent.name}_locations&#34;</code></pre>
+    return f&#34;{self.parent.path_cfg_dir}/{self.parent.instance_name}_locations&#34;</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.servers.openresty.location.Location.path_dest"><code class="name">var <span class="ident">path_dest</span></code></dt>

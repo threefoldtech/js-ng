@@ -37,7 +37,7 @@ The backend to store configurations
 from functools import partial
 from jumpscale.core import config, events
 
-from .events import InstanceCreateEvent, InstanceDeleteEvent
+from .events import AttributeUpdateEvent, InstanceCreateEvent, InstanceDeleteEvent
 from .store import Location, FileSystemStore, RedisStore
 
 STORES = {&#34;filesystem&#34;: FileSystemStore, &#34;redis&#34;: RedisStore}
@@ -85,7 +85,7 @@ class Factory:
         setattr(self, name, instance)
 
         self.count += 1
-        self._created(name, instance)
+        self._created(instance)
         return instance
 
     def find(self, name):
@@ -107,18 +107,18 @@ class Factory:
         self._deleted(name)
 
     def _deleted(self, name):
-        event = InstanceDeleteEvent(name, instance=None)
+        event = InstanceDeleteEvent(name, factory=self)
         events.notify(event)
 
-    def _created(self, name, instance):
-        event = InstanceCreateEvent(name, instance)
+    def _created(self, instance):
+        event = InstanceCreateEvent(instance=instance, factory=self)
         events.notify(event)
 
     def list_all(self):
         return [name for name, value in self.__dict__ if isinstance(value, self.type)]
 
 
-class StoredFactory(Factory):
+class StoredFactory(events.Handler, Factory):
     STORE = STORES[config.get_config()[&#34;store&#34;]]
 
     def __init__(self, type_, name_=None, parent_instance_=None, parent_factory_=None):
@@ -126,6 +126,8 @@ class StoredFactory(Factory):
 
         if not parent_instance_:
             self._load()
+
+        events.add_listenter(self, AttributeUpdateEvent)
 
     @property
     def parent_location(self):
@@ -179,59 +181,29 @@ class StoredFactory(Factory):
             pass
         return instance
 
-    def _instance_updated(self, name, prop, value):
-        &#34;&#34;&#34;called when data is updated for an instance
+    def handle(self, ev):
+        &#34;&#34;&#34;
+        handle when data is updated for an instance
 
         Args:
-            name (str): instance name
-            prop (str): property/field name
-            value (any): updated value
+            ev (AttributeUpdateEvent): attribute update event
         &#34;&#34;&#34;
-        instance = self._try_save_instance(name)
-        instance._on_data_update(prop, value)
+        instance = ev.instance
+        if instance.parent == self.parent_instance and isinstance(instance, self.type):
+            if self.find(instance.instance_name):
+                # just try to save this instance
+                self._try_save_instance(instance.instance_name)
 
-    def _instance_sub_factory_updated(self, name, factory, new_count):
-        &#34;&#34;&#34;called when a sub-factory is updated for an instance
-
-        Args:
-            name (str): instance name
-            factory (fields.Factory): factory field/object
-            new_count (int): new count for this factory instance
-        &#34;&#34;&#34;
-        self._try_save_instance(name)
-        factory._on_update(new_count)
-
-    def _setup_data_handlers(self, name, instance):
-        &#34;&#34;&#34;setup data update and save handlers for a given instance
-
-        Args:
-            name (str)
-            instance (Base): instance object
-        &#34;&#34;&#34;
-        # save method
-        instance.save = partial(self._validate_and_save_instance, name, instance)
-
-        # TODO: better use events for data updates
-        instance_updated = partial(self._instance_updated, name)
-        instance._data_updated = instance_updated
-        # for embedded objects too
-        for obj in instance._get_embedded_objects():
-            obj._data_updated = instance_updated
-
-        return instance
-
-    def _setup_sub_factories(self, name, instance):
-        # factories
-        # TODO: better use events for factory updates
+    def _load_sub_factories(self, name, instance):
         for factory in instance._get_factories().values():
-            factory._updated = partial(self._instance_sub_factory_updated, name, factory)
             factory._set_parent_factory(self)
             factory._load()
 
     def new(self, name, *args, **kwargs):
         instance = super().new(name, *args, **kwargs)
-        self._setup_data_handlers(name, instance)
-        self._setup_sub_factories(name, instance)
+        instance.save = partial(self._validate_and_save_instance, name, instance)
+
+        self._load_sub_factories(name, instance)
         return instance
 
     def _load(self):
@@ -324,7 +296,7 @@ class StoredFactory(Factory):
         setattr(self, name, instance)
 
         self.count += 1
-        self._created(name, instance)
+        self._created(instance)
         return instance
 
     def find(self, name):
@@ -346,11 +318,11 @@ class StoredFactory(Factory):
         self._deleted(name)
 
     def _deleted(self, name):
-        event = InstanceDeleteEvent(name, instance=None)
+        event = InstanceDeleteEvent(name, factory=self)
         events.notify(event)
 
-    def _created(self, name, instance):
-        event = InstanceCreateEvent(name, instance)
+    def _created(self, instance):
+        event = InstanceCreateEvent(instance=instance, factory=self)
         events.notify(event)
 
     def list_all(self):
@@ -469,7 +441,7 @@ def parent_instance(self):
     setattr(self, name, instance)
 
     self.count += 1
-    self._created(name, instance)
+    self._created(instance)
     return instance</code></pre>
 </details>
 </dd>
@@ -483,7 +455,7 @@ def parent_instance(self):
 <section class="desc"></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class StoredFactory(Factory):
+<pre><code class="python">class StoredFactory(events.Handler, Factory):
     STORE = STORES[config.get_config()[&#34;store&#34;]]
 
     def __init__(self, type_, name_=None, parent_instance_=None, parent_factory_=None):
@@ -491,6 +463,8 @@ def parent_instance(self):
 
         if not parent_instance_:
             self._load()
+
+        events.add_listenter(self, AttributeUpdateEvent)
 
     @property
     def parent_location(self):
@@ -544,59 +518,29 @@ def parent_instance(self):
             pass
         return instance
 
-    def _instance_updated(self, name, prop, value):
-        &#34;&#34;&#34;called when data is updated for an instance
+    def handle(self, ev):
+        &#34;&#34;&#34;
+        handle when data is updated for an instance
 
         Args:
-            name (str): instance name
-            prop (str): property/field name
-            value (any): updated value
+            ev (AttributeUpdateEvent): attribute update event
         &#34;&#34;&#34;
-        instance = self._try_save_instance(name)
-        instance._on_data_update(prop, value)
+        instance = ev.instance
+        if instance.parent == self.parent_instance and isinstance(instance, self.type):
+            if self.find(instance.instance_name):
+                # just try to save this instance
+                self._try_save_instance(instance.instance_name)
 
-    def _instance_sub_factory_updated(self, name, factory, new_count):
-        &#34;&#34;&#34;called when a sub-factory is updated for an instance
-
-        Args:
-            name (str): instance name
-            factory (fields.Factory): factory field/object
-            new_count (int): new count for this factory instance
-        &#34;&#34;&#34;
-        self._try_save_instance(name)
-        factory._on_update(new_count)
-
-    def _setup_data_handlers(self, name, instance):
-        &#34;&#34;&#34;setup data update and save handlers for a given instance
-
-        Args:
-            name (str)
-            instance (Base): instance object
-        &#34;&#34;&#34;
-        # save method
-        instance.save = partial(self._validate_and_save_instance, name, instance)
-
-        # TODO: better use events for data updates
-        instance_updated = partial(self._instance_updated, name)
-        instance._data_updated = instance_updated
-        # for embedded objects too
-        for obj in instance._get_embedded_objects():
-            obj._data_updated = instance_updated
-
-        return instance
-
-    def _setup_sub_factories(self, name, instance):
-        # factories
-        # TODO: better use events for factory updates
+    def _load_sub_factories(self, name, instance):
         for factory in instance._get_factories().values():
-            factory._updated = partial(self._instance_sub_factory_updated, name, factory)
             factory._set_parent_factory(self)
             factory._load()
 
     def new(self, name, *args, **kwargs):
         instance = super().new(name, *args, **kwargs)
-        self._setup_data_handlers(name, instance)
-        self._setup_sub_factories(name, instance)
+        instance.save = partial(self._validate_and_save_instance, name, instance)
+
+        self._load_sub_factories(name, instance)
         return instance
 
     def _load(self):
@@ -618,6 +562,7 @@ def parent_instance(self):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="jumpscale.core.events.Handler" href="../events/index.html#jumpscale.core.events.Handler">Handler</a></li>
 <li><a title="jumpscale.core.base.factory.Factory" href="#jumpscale.core.base.factory.Factory">Factory</a></li>
 </ul>
 <h3>Class variables</h3>
@@ -707,6 +652,32 @@ def store(self):
     super(StoredFactory, self).delete(name)</code></pre>
 </details>
 </dd>
+<dt id="jumpscale.core.base.factory.StoredFactory.handle"><code class="name flex">
+<span>def <span class="ident">handle</span></span>(<span>self, ev)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>handle when data is updated for an instance</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>ev</code></strong> :&ensp;<code>AttributeUpdateEvent</code></dt>
+<dd>attribute update event</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def handle(self, ev):
+    &#34;&#34;&#34;
+    handle when data is updated for an instance
+
+    Args:
+        ev (AttributeUpdateEvent): attribute update event
+    &#34;&#34;&#34;
+    instance = ev.instance
+    if instance.parent == self.parent_instance and isinstance(instance, self.type):
+        if self.find(instance.instance_name):
+            # just try to save this instance
+            self._try_save_instance(instance.instance_name)</code></pre>
+</details>
+</dd>
 <dt id="jumpscale.core.base.factory.StoredFactory.list_all"><code class="name flex">
 <span>def <span class="ident">list_all</span></span>(<span>self)</span>
 </code></dt>
@@ -727,8 +698,9 @@ def store(self):
 <summary>Source code</summary>
 <pre><code class="python">def new(self, name, *args, **kwargs):
     instance = super().new(name, *args, **kwargs)
-    self._setup_data_handlers(name, instance)
-    self._setup_sub_factories(name, instance)
+    instance.save = partial(self._validate_and_save_instance, name, instance)
+
+    self._load_sub_factories(name, instance)
     return instance</code></pre>
 </details>
 </dd>
@@ -771,6 +743,7 @@ def store(self):
 <ul class="two-column">
 <li><code><a title="jumpscale.core.base.factory.StoredFactory.STORE" href="#jumpscale.core.base.factory.StoredFactory.STORE">STORE</a></code></li>
 <li><code><a title="jumpscale.core.base.factory.StoredFactory.delete" href="#jumpscale.core.base.factory.StoredFactory.delete">delete</a></code></li>
+<li><code><a title="jumpscale.core.base.factory.StoredFactory.handle" href="#jumpscale.core.base.factory.StoredFactory.handle">handle</a></code></li>
 <li><code><a title="jumpscale.core.base.factory.StoredFactory.list_all" href="#jumpscale.core.base.factory.StoredFactory.list_all">list_all</a></code></li>
 <li><code><a title="jumpscale.core.base.factory.StoredFactory.location" href="#jumpscale.core.base.factory.StoredFactory.location">location</a></code></li>
 <li><code><a title="jumpscale.core.base.factory.StoredFactory.new" href="#jumpscale.core.base.factory.StoredFactory.new">new</a></code></li>

@@ -12,4 +12,4 @@ api_docs:
 docs: api_docs
 
 docs-serve:
-	python3 -m http.server -d docs
+	python -m http.server --directory ./docs

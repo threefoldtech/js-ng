@@ -108,11 +108,7 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
 
         for name, field in self._get_fields().items():
             if isinstance(field, fields.Factory):
-                if field.stored:
-                    value = StoredFactory(field.type_for_factory, name_=name, parent_instance_=self)
-                else:
-                    value = Factory(field.type_for_factory, name_=name, parent_instance_=self)
-
+                value = field.factory_type(field.type, name_=name, parent_instance_=self)
                 self._factories[name] = value
             else:
                 value = values.get(name, field.from_raw(field.default))
@@ -247,11 +243,7 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
 
         for name, field in self._get_fields().items():
             if isinstance(field, fields.Factory):
-                if field.stored:
-                    value = StoredFactory(field.type_for_factory, name_=name, parent_instance_=self)
-                else:
-                    value = Factory(field.type_for_factory, name_=name, parent_instance_=self)
-
+                value = field.factory_type(field.type, name_=name, parent_instance_=self)
                 self._factories[name] = value
             else:
                 value = values.get(name, field.from_raw(field.default))
@@ -329,6 +321,7 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
 <li><a title="jumpscale.servers.openresty.location.Location" href="../../servers/openresty/location.html#jumpscale.servers.openresty.location.Location">Location</a></li>
 <li><a title="jumpscale.servers.openresty.server.Website" href="../../servers/openresty/server.html#jumpscale.servers.openresty.server.Website">Website</a></li>
 <li><a title="jumpscale.servers.openresty.server.OpenRestyServer" href="../../servers/openresty/server.html#jumpscale.servers.openresty.server.OpenRestyServer">OpenRestyServer</a></li>
+<li><a title="jumpscale.tools.startupcmd.startupcmd.StartupCmd" href="../../tools/startupcmd/startupcmd.html#jumpscale.tools.startupcmd.startupcmd.StartupCmd">StartupCmd</a></li>
 </ul>
 <h3>Instance variables</h3>
 <dl>
