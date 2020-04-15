@@ -34,7 +34,7 @@ class RedisClient(Client):
         self.__client = None
 
     def __dir__(self):
-        return list(self.__dict__.keys()) + dir(self.redis_client)
+        return list(self._fields.keys()) + dir(self.redis_client)
 
     @property
     def redis_client(self):
