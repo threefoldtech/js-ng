@@ -87,7 +87,7 @@ class Factory:
         events.notify(event)
 
     def list_all(self):
-        return [name for name, value in self.__dict__ if isinstance(value, self.type)]
+        return [name for name, value in self.__dict__.items() if isinstance(value, self.type)]
 
 
 class StoredFactory(events.Handler, Factory):
@@ -144,14 +144,12 @@ class StoredFactory(events.Handler, Factory):
         instance.validate()
         self.store.save(name, instance._get_data())
 
-    def _try_save_instance(self, name):
+    def _try_save_instance(self, instance):
         # try to save instance if it's validated
-        instance = self.get(name)
         try:
             self._validate_and_save_instance(name, instance)
         except:
             pass
-        return instance
 
     def handle(self, ev):
         """
@@ -162,9 +160,7 @@ class StoredFactory(events.Handler, Factory):
         """
         instance = ev.instance
         if instance.parent == self.parent_instance and isinstance(instance, self.type):
-            if self.find(instance.instance_name):
-                # just try to save this instance
-                self._try_save_instance(instance.instance_name)
+            self._try_save_instance(instance)
 
     def _load_sub_factories(self, name, instance):
         for factory in instance._get_factories().values():
@@ -188,7 +184,14 @@ class StoredFactory(events.Handler, Factory):
         super(StoredFactory, self).delete(name)
 
     def list_all(self):
-        return self.store.list_all()
+        """
+        get all instance names (stored or not)
+
+        Returns:
+            list of str: names
+        """
+        names = set(self.store.list_all())
+        return names.union(super().list_all())
 
     def __iter__(self):
         for value in vars(self).values():
