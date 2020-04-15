@@ -25,6 +25,7 @@
     * RPC
     * [JS-NG Shell](./jsng_shell.md)
     * Builders
+    * [Github actions](./githubactions.md)
 * Tutorials
     * Interacting with Filesystem
     * Interacting with configurations

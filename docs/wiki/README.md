@@ -29,6 +29,7 @@ Here you will find documentation on js-ng project, its specs and its APIs too.
     * [JS-NG Shell](./jsng_shell.md)
     * [API](generated_apis.md)
     * Builders
+    * [Github actions](./githubactions.md)
 * Tutorials
     * Interacting with Filesystem
     * Interacting with configurations
