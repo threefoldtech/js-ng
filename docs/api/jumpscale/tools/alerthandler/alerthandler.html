@@ -42,6 +42,7 @@ class Alert:
         self.status = None
         self.first_occurrence = None
         self.last_occurrence = None
+        self.data = None
         self.event = []
         self.tracebacks = []
 
@@ -69,13 +70,16 @@ class AlertsHandler:
         self._rkey = &#34;alerts&#34;
         self._rkey_id = &#34;alerts:id&#34;
         self._rkey_incr = &#34;alerts:id:incr&#34;
-        self.__db = None
+        self._db = None
+
+    def __dir__(self):
+        return (&#34;get&#34;, &#34;find&#34;, &#34;alert_raise&#34;, &#34;count&#34;, &#34;reset&#34;, &#34;delete&#34;, &#34;delete_all&#34;)
 
     @property
-    def _db(self):
-        if self.__db is None:
-            self.__db = j.core.db
-        return self.__db
+    def db(self):
+        if self._db is None:
+            self._db = j.core.db
+        return self._db
 
     def get(self, alert_id: int = None, identifier: str = None, die: bool = True) -&gt; Alert:
         &#34;&#34;&#34;Get alert by its id or identifier
@@ -95,9 +99,9 @@ class AlertsHandler:
         if not (alert_id or identifier):
             raise j.core.exceptions.Value(&#34;Either alert id or alert identifier are required&#34;)
 
-        alert_id = alert_id or self._db.hget(self._rkey_id, identifier)
+        alert_id = alert_id or self.db.hget(self._rkey_id, identifier)
         if alert_id:
-            alert = self._db.hget(self._rkey, alert_id)
+            alert = self.db.hget(self._rkey, alert_id)
             if alert:
                 return Alert.loads(alert)
         if die:
@@ -131,7 +135,7 @@ class AlertsHandler:
         message = message.strip().lower()
 
         alerts = []
-        items = self._db.hscan_iter(self._rkey)
+        items = self.db.hscan_iter(self._rkey)
 
         for item in items:
             alert = Alert.loads(item[1])
@@ -163,11 +167,14 @@ class AlertsHandler:
 
     def alert_raise(
         self,
-        message: str,
+        appname,
+        message,
         public_message: str = &#34;&#34;,
         category: str = &#34;&#34;,
         alert_type: str = &#34;event_system&#34;,
         level: int = 40,
+        data: dict = None,
+        timestamp: float = None,
         traceback: dict = None,
     ) -&gt; Alert:
 
@@ -186,7 +193,6 @@ class AlertsHandler:
         Returns:
             Alert -- alert object
         &#34;&#34;&#34;
-        appname = j.core.application.appname
         identifier = _get_identifier(appname, message, public_message, category, alert_type)
         alert = self.get(identifier=identifier, die=False) or Alert()
 
@@ -197,7 +203,7 @@ class AlertsHandler:
                 alert.status = &#34;reopened&#34;
         else:
             alert.status = &#34;new&#34;
-            alert.first_occurrence = j.data.time.now().timestamp
+            alert.first_occurrence = timestamp or j.data.time.now().timestamp
 
         alert.appname = appname
         alert.category = category
@@ -206,15 +212,14 @@ class AlertsHandler:
         alert.level = level
         alert.type = alert_type
         alert.count += 1
-        alert.last_occurrence = j.data.time.now().timestamp
+        alert.last_occurrence = timestamp or j.data.time.now().timestamp
 
         if traceback:
             if len(alert.tracebacks) &gt; 5:
                 alert.tracebacks.pop(0)
 
         alert.tracebacks.append(traceback)
-        self.save(alert)
-
+        self._save(alert)
         return alert
 
     def count(self) -&gt; int:
@@ -223,19 +228,19 @@ class AlertsHandler:
         Returns:
             int -- total number of alerts
         &#34;&#34;&#34;
-        return self._db.hlen(self._rkey)
+        return self.db.hlen(self._rkey)
 
-    def save(self, alert: Alert):
+    def _save(self, alert: Alert):
         &#34;&#34;&#34;Saves alert object in db
         
         Arguments:
             alert {Alert} -- alert object
         &#34;&#34;&#34;
         if not alert.id:
-            alert.id = self._db.incr(self._rkey_incr)
+            alert.id = self.db.incr(self._rkey_incr)
 
-        self._db.hset(self._rkey, alert.id, alert.dumps())
-        self._db.hset(self._rkey_id, alert.identifier, alert.id)
+        self.db.hset(self._rkey, alert.id, alert.dumps())
+        self.db.hset(self._rkey_id, alert.identifier, alert.id)
 
     def delete(self, alert_id: int = None, identifier: str = None):
         &#34;&#34;&#34;Delete alert by its id or identifier
@@ -250,20 +255,20 @@ class AlertsHandler:
         if not (alert_id or identifier):
             raise j.core.exceptions.Value(&#34;Either alert id or alert identifier are required&#34;)
 
-        alert_id = alert_id or self._db.hget(self._rkey_id, identifier)
+        alert_id = alert_id or self.db.hget(self._rkey_id, identifier)
         if alert_id:
-            self._db.hdel(self._rkey, alert_id)
+            self.db.hdel(self._rkey, alert_id)
 
     def delete_all(self):
         &#34;&#34;&#34;Deletes all alerts
         &#34;&#34;&#34;
-        self._db.delete(self._rkey, self._rkey_id)
+        self.db.delete(self._rkey, self._rkey_id)
 
     def reset(self):
         &#34;&#34;&#34;Delete all alerts and reset the db
         &#34;&#34;&#34;
         self.delete_all()
-        self._db.delete(self._rkey_incr)</code></pre>
+        self.db.delete(self._rkey_incr)</code></pre>
 </details>
 </section>
 <section>
@@ -295,6 +300,7 @@ class AlertsHandler:
         self.status = None
         self.first_occurrence = None
         self.last_occurrence = None
+        self.data = None
         self.event = []
         self.tracebacks = []
 
@@ -384,13 +390,16 @@ def json(self):
         self._rkey = &#34;alerts&#34;
         self._rkey_id = &#34;alerts:id&#34;
         self._rkey_incr = &#34;alerts:id:incr&#34;
-        self.__db = None
+        self._db = None
+
+    def __dir__(self):
+        return (&#34;get&#34;, &#34;find&#34;, &#34;alert_raise&#34;, &#34;count&#34;, &#34;reset&#34;, &#34;delete&#34;, &#34;delete_all&#34;)
 
     @property
-    def _db(self):
-        if self.__db is None:
-            self.__db = j.core.db
-        return self.__db
+    def db(self):
+        if self._db is None:
+            self._db = j.core.db
+        return self._db
 
     def get(self, alert_id: int = None, identifier: str = None, die: bool = True) -&gt; Alert:
         &#34;&#34;&#34;Get alert by its id or identifier
@@ -410,9 +419,9 @@ def json(self):
         if not (alert_id or identifier):
             raise j.core.exceptions.Value(&#34;Either alert id or alert identifier are required&#34;)
 
-        alert_id = alert_id or self._db.hget(self._rkey_id, identifier)
+        alert_id = alert_id or self.db.hget(self._rkey_id, identifier)
         if alert_id:
-            alert = self._db.hget(self._rkey, alert_id)
+            alert = self.db.hget(self._rkey, alert_id)
             if alert:
                 return Alert.loads(alert)
         if die:
@@ -446,7 +455,7 @@ def json(self):
         message = message.strip().lower()
 
         alerts = []
-        items = self._db.hscan_iter(self._rkey)
+        items = self.db.hscan_iter(self._rkey)
 
         for item in items:
             alert = Alert.loads(item[1])
@@ -478,11 +487,14 @@ def json(self):
 
     def alert_raise(
         self,
-        message: str,
+        appname,
+        message,
         public_message: str = &#34;&#34;,
         category: str = &#34;&#34;,
         alert_type: str = &#34;event_system&#34;,
         level: int = 40,
+        data: dict = None,
+        timestamp: float = None,
         traceback: dict = None,
     ) -&gt; Alert:
 
@@ -501,7 +513,6 @@ def json(self):
         Returns:
             Alert -- alert object
         &#34;&#34;&#34;
-        appname = j.core.application.appname
         identifier = _get_identifier(appname, message, public_message, category, alert_type)
         alert = self.get(identifier=identifier, die=False) or Alert()
 
@@ -512,7 +523,7 @@ def json(self):
                 alert.status = &#34;reopened&#34;
         else:
             alert.status = &#34;new&#34;
-            alert.first_occurrence = j.data.time.now().timestamp
+            alert.first_occurrence = timestamp or j.data.time.now().timestamp
 
         alert.appname = appname
         alert.category = category
@@ -521,15 +532,14 @@ def json(self):
         alert.level = level
         alert.type = alert_type
         alert.count += 1
-        alert.last_occurrence = j.data.time.now().timestamp
+        alert.last_occurrence = timestamp or j.data.time.now().timestamp
 
         if traceback:
             if len(alert.tracebacks) &gt; 5:
                 alert.tracebacks.pop(0)
 
         alert.tracebacks.append(traceback)
-        self.save(alert)
-
+        self._save(alert)
         return alert
 
     def count(self) -&gt; int:
@@ -538,19 +548,19 @@ def json(self):
         Returns:
             int -- total number of alerts
         &#34;&#34;&#34;
-        return self._db.hlen(self._rkey)
+        return self.db.hlen(self._rkey)
 
-    def save(self, alert: Alert):
+    def _save(self, alert: Alert):
         &#34;&#34;&#34;Saves alert object in db
         
         Arguments:
             alert {Alert} -- alert object
         &#34;&#34;&#34;
         if not alert.id:
-            alert.id = self._db.incr(self._rkey_incr)
+            alert.id = self.db.incr(self._rkey_incr)
 
-        self._db.hset(self._rkey, alert.id, alert.dumps())
-        self._db.hset(self._rkey_id, alert.identifier, alert.id)
+        self.db.hset(self._rkey, alert.id, alert.dumps())
+        self.db.hset(self._rkey_id, alert.identifier, alert.id)
 
     def delete(self, alert_id: int = None, identifier: str = None):
         &#34;&#34;&#34;Delete alert by its id or identifier
@@ -565,25 +575,40 @@ def json(self):
         if not (alert_id or identifier):
             raise j.core.exceptions.Value(&#34;Either alert id or alert identifier are required&#34;)
 
-        alert_id = alert_id or self._db.hget(self._rkey_id, identifier)
+        alert_id = alert_id or self.db.hget(self._rkey_id, identifier)
         if alert_id:
-            self._db.hdel(self._rkey, alert_id)
+            self.db.hdel(self._rkey, alert_id)
 
     def delete_all(self):
         &#34;&#34;&#34;Deletes all alerts
         &#34;&#34;&#34;
-        self._db.delete(self._rkey, self._rkey_id)
+        self.db.delete(self._rkey, self._rkey_id)
 
     def reset(self):
         &#34;&#34;&#34;Delete all alerts and reset the db
         &#34;&#34;&#34;
         self.delete_all()
-        self._db.delete(self._rkey_incr)</code></pre>
+        self.db.delete(self._rkey_incr)</code></pre>
 </details>
+<h3>Instance variables</h3>
+<dl>
+<dt id="jumpscale.tools.alerthandler.alerthandler.AlertsHandler.db"><code class="name">var <span class="ident">db</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def db(self):
+    if self._db is None:
+        self._db = j.core.db
+    return self._db</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="jumpscale.tools.alerthandler.alerthandler.AlertsHandler.alert_raise"><code class="name flex">
-<span>def <span class="ident">alert_raise</span></span>(<span>self, message, public_message=&#39;&#39;, category=&#39;&#39;, alert_type=&#39;event_system&#39;, level=40, traceback=None)</span>
+<span>def <span class="ident">alert_raise</span></span>(<span>self, appname, message, public_message=&#39;&#39;, category=&#39;&#39;, alert_type=&#39;event_system&#39;, level=40, data=None, timestamp=None, traceback=None)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Raise a new alert</p>
@@ -604,11 +629,14 @@ traceback {dict} &ndash; alert traceback (default: {None})</p>
 <summary>Source code</summary>
 <pre><code class="python">def alert_raise(
     self,
-    message: str,
+    appname,
+    message,
     public_message: str = &#34;&#34;,
     category: str = &#34;&#34;,
     alert_type: str = &#34;event_system&#34;,
     level: int = 40,
+    data: dict = None,
+    timestamp: float = None,
     traceback: dict = None,
 ) -&gt; Alert:
 
@@ -627,7 +655,6 @@ traceback {dict} &ndash; alert traceback (default: {None})</p>
     Returns:
         Alert -- alert object
     &#34;&#34;&#34;
-    appname = j.core.application.appname
     identifier = _get_identifier(appname, message, public_message, category, alert_type)
     alert = self.get(identifier=identifier, die=False) or Alert()
 
@@ -638,7 +665,7 @@ traceback {dict} &ndash; alert traceback (default: {None})</p>
             alert.status = &#34;reopened&#34;
     else:
         alert.status = &#34;new&#34;
-        alert.first_occurrence = j.data.time.now().timestamp
+        alert.first_occurrence = timestamp or j.data.time.now().timestamp
 
     alert.appname = appname
     alert.category = category
@@ -647,15 +674,14 @@ traceback {dict} &ndash; alert traceback (default: {None})</p>
     alert.level = level
     alert.type = alert_type
     alert.count += 1
-    alert.last_occurrence = j.data.time.now().timestamp
+    alert.last_occurrence = timestamp or j.data.time.now().timestamp
 
     if traceback:
         if len(alert.tracebacks) &gt; 5:
             alert.tracebacks.pop(0)
 
     alert.tracebacks.append(traceback)
-    self.save(alert)
-
+    self._save(alert)
     return alert</code></pre>
 </details>
 </dd>
@@ -677,7 +703,7 @@ traceback {dict} &ndash; alert traceback (default: {None})</p>
     Returns:
         int -- total number of alerts
     &#34;&#34;&#34;
-    return self._db.hlen(self._rkey)</code></pre>
+    return self.db.hlen(self._rkey)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.tools.alerthandler.alerthandler.AlertsHandler.delete"><code class="name flex">
@@ -708,9 +734,9 @@ identifier {str} &ndash; alert identifier (default: {None})</dd>
     if not (alert_id or identifier):
         raise j.core.exceptions.Value(&#34;Either alert id or alert identifier are required&#34;)
 
-    alert_id = alert_id or self._db.hget(self._rkey_id, identifier)
+    alert_id = alert_id or self.db.hget(self._rkey_id, identifier)
     if alert_id:
-        self._db.hdel(self._rkey, alert_id)</code></pre>
+        self.db.hdel(self._rkey, alert_id)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.tools.alerthandler.alerthandler.AlertsHandler.delete_all"><code class="name flex">
@@ -723,7 +749,7 @@ identifier {str} &ndash; alert identifier (default: {None})</dd>
 <pre><code class="python">def delete_all(self):
     &#34;&#34;&#34;Deletes all alerts
     &#34;&#34;&#34;
-    self._db.delete(self._rkey, self._rkey_id)</code></pre>
+    self.db.delete(self._rkey, self._rkey_id)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.tools.alerthandler.alerthandler.AlertsHandler.find"><code class="name flex">
@@ -773,7 +799,7 @@ end_time {int} &ndash; filter by end time (default: {None})</p>
     message = message.strip().lower()
 
     alerts = []
-    items = self._db.hscan_iter(self._rkey)
+    items = self.db.hscan_iter(self._rkey)
 
     for item in items:
         alert = Alert.loads(item[1])
@@ -845,9 +871,9 @@ die {bool} &ndash; flag to rasie exception if alert is not found (default: {True
     if not (alert_id or identifier):
         raise j.core.exceptions.Value(&#34;Either alert id or alert identifier are required&#34;)
 
-    alert_id = alert_id or self._db.hget(self._rkey_id, identifier)
+    alert_id = alert_id or self.db.hget(self._rkey_id, identifier)
     if alert_id:
-        alert = self._db.hget(self._rkey, alert_id)
+        alert = self.db.hget(self._rkey, alert_id)
         if alert:
             return Alert.loads(alert)
     if die:
@@ -865,29 +891,7 @@ die {bool} &ndash; flag to rasie exception if alert is not found (default: {True
     &#34;&#34;&#34;Delete all alerts and reset the db
     &#34;&#34;&#34;
     self.delete_all()
-    self._db.delete(self._rkey_incr)</code></pre>
-</details>
-</dd>
-<dt id="jumpscale.tools.alerthandler.alerthandler.AlertsHandler.save"><code class="name flex">
-<span>def <span class="ident">save</span></span>(<span>self, alert)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Saves alert object in db</p>
-<h2 id="arguments">Arguments</h2>
-<p>alert {Alert} &ndash; alert object</p></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def save(self, alert: Alert):
-    &#34;&#34;&#34;Saves alert object in db
-    
-    Arguments:
-        alert {Alert} -- alert object
-    &#34;&#34;&#34;
-    if not alert.id:
-        alert.id = self._db.incr(self._rkey_incr)
-
-    self._db.hset(self._rkey, alert.id, alert.dumps())
-    self._db.hset(self._rkey_id, alert.identifier, alert.id)</code></pre>
+    self.db.delete(self._rkey_incr)</code></pre>
 </details>
 </dd>
 </dl>
@@ -922,12 +926,12 @@ die {bool} &ndash; flag to rasie exception if alert is not found (default: {True
 <ul class="two-column">
 <li><code><a title="jumpscale.tools.alerthandler.alerthandler.AlertsHandler.alert_raise" href="#jumpscale.tools.alerthandler.alerthandler.AlertsHandler.alert_raise">alert_raise</a></code></li>
 <li><code><a title="jumpscale.tools.alerthandler.alerthandler.AlertsHandler.count" href="#jumpscale.tools.alerthandler.alerthandler.AlertsHandler.count">count</a></code></li>
+<li><code><a title="jumpscale.tools.alerthandler.alerthandler.AlertsHandler.db" href="#jumpscale.tools.alerthandler.alerthandler.AlertsHandler.db">db</a></code></li>
 <li><code><a title="jumpscale.tools.alerthandler.alerthandler.AlertsHandler.delete" href="#jumpscale.tools.alerthandler.alerthandler.AlertsHandler.delete">delete</a></code></li>
 <li><code><a title="jumpscale.tools.alerthandler.alerthandler.AlertsHandler.delete_all" href="#jumpscale.tools.alerthandler.alerthandler.AlertsHandler.delete_all">delete_all</a></code></li>
 <li><code><a title="jumpscale.tools.alerthandler.alerthandler.AlertsHandler.find" href="#jumpscale.tools.alerthandler.alerthandler.AlertsHandler.find">find</a></code></li>
 <li><code><a title="jumpscale.tools.alerthandler.alerthandler.AlertsHandler.get" href="#jumpscale.tools.alerthandler.alerthandler.AlertsHandler.get">get</a></code></li>
 <li><code><a title="jumpscale.tools.alerthandler.alerthandler.AlertsHandler.reset" href="#jumpscale.tools.alerthandler.alerthandler.AlertsHandler.reset">reset</a></code></li>
-<li><code><a title="jumpscale.tools.alerthandler.alerthandler.AlertsHandler.save" href="#jumpscale.tools.alerthandler.alerthandler.AlertsHandler.save">save</a></code></li>
 </ul>
 </li>
 </ul>

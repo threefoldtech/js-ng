@@ -152,7 +152,7 @@ class J:
 
     @property
     def logger(self):
-        return self.__loaded_simplenamespace.jumpscale.core.logging.logger
+        return self.__loaded_simplenamespace.jumpscale.core.logging
 
     @property
     def application(self):
