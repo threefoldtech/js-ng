@@ -16,7 +16,7 @@ jobs:
     
     runs-on: ubuntu-latest
     steps: 
-      - uses: actions/checkout@development 
+      - uses: actions/checkout@master 
       - uses: jpetrucciani/black-check@master
       - name: Gathering deps #defining another step with a name
         run: | # commands to be run in this step
@@ -49,7 +49,7 @@ jobs:
 * `runs-on` Each job runs in an environment specified by runs-on. 
 * `steps` #A job contains a sequence of tasks called steps.
 * `uses` Selects an action to run as part of a step in your job. An action is a reusable unit of code. You can use an action defined in the same repository as the workflow, a public repository, or in a published Docker container image.
-* `uses: actions/checkout@development` this means we are checking out our code to development branch
+* `uses: actions/checkout@master` defining the version of github action
 * `uses: jpetrucciani/black-check@master` using action black-check to check if code is blacked or not 
 * `run` defines commands to be run on this step, can be bash commands or python...etc. check the github actions docs for more on this 
 ```
