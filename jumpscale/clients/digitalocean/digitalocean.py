@@ -29,12 +29,6 @@ class ProjectFactory(StoredFactory):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    # def new(self, name, *args, **kwargs):
-    #     valid_name = convert_to_valid_identifier(name)
-    #     instance = super().new(valid_name, *args, **kwargs)
-    #     instance.name = name
-    #     return instance
-
     def list_remote(self):
         """
         Returns list of projects on Digital Ocean
@@ -47,28 +41,11 @@ class ProjectFactory(StoredFactory):
                 return True
         return False
 
-    # def list_all_projects(self):
-    #     """
-    #     Returns list of projects, if there is not projects created it will return
-    #     the projects created on Digital Ocean
-    #     """
-    #     projects = self.list_all()
-    #     if not projects:
-    #         for project in self.list_project_in_digital_ocean():
-    #             # project_temp = self.new("_" + project.name.replace(" ", "_"))
-    #             # project_temp.project_name = project.name
-    #             self.new(project.name)
-    #     return self.list_all()
-
-    # def _project_get(self, name):
-    #     for project in self.projects:
-    #         if project.name.lower() == name.lower():
-    #             return project
-    #     return None
-
-    # def get(self, name):
-    #     for project in self.list_all_projects():
-    #         project.project_name
+    def get_project_exist_remote(self, name):
+        for project in self.list_remote():
+            if project.name == name:
+                return project
+        raise j.exceptions.Input("could not find project with name:%s on you Digital Ocean account" % name)
 
 
 class Project(Client):
@@ -76,8 +53,6 @@ class Project(Client):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Setting the token for the digital ocean client
-        #
 
     def create_project(self):
         print("project created")
@@ -122,8 +97,18 @@ class Project(Client):
 
         return project
 
-    # def project_list(self):
-    #     print("project list ")
+    def delete_remote(self):
+        """Delete an exisiting project.
+        A project can't be deleted unless it has no resources.
+
+        :param name: project name
+        :type name: str
+        :raises j.exceptions.Input: raises an error if there is no project with this name
+        """
+        project = self.parent.projects.get_project_exist_remote(self.do_name)
+        project.delete()
+
+        # self._projects.remove(project)
 
 
 # class Droplet
@@ -132,11 +117,8 @@ class Project(Client):
 class DigitalOcean(Client):
     name = fields.String()
     token_ = fields.String()
-    # project_name = fields.String()
     vms = fields.List(fields.Object(VM))
-    # projects = ProjectFactory(Project)
     projects = fields.Factory(Project, factory_type=ProjectFactory)
-    # listing_project
 
     def __init__(self):
         super().__init__()
@@ -408,92 +390,6 @@ class DigitalOcean(Client):
             raise j.exceptions.Input("could not find project with name:%s" % project)
 
         return project.list_droplets()
-
-    # def _projects_list(self):
-    #     return ProjectManagement.list(self.client)
-
-    # @property
-    # def projects(self):
-    #     """property to return all the cached projects
-
-    #     :return: list of project
-    #     :rtype: [Project]
-    #     """
-    #     if not self._projects:
-    #         for project in self._projects_list():
-    #             self._projects.append(project)
-    #     return self._projects
-
-    # def _project_get(self, name):
-    #     for project in self.projects:
-    #         if project.name.lower() == name.lower():
-    #             return project
-    #     return None
-
-    # def project_create(self, name, purpose, description="", environment="", is_default=False):
-    #     """Create a digital ocean project
-
-    #     :param name: name of the project
-    #     :type name: str
-    #     :param purpose: purpose of the project
-    #     :type purpose: str
-    #     :param description: description of the project, defaults to ""
-    #     :type description: str, optional
-    #     :param environment: environment of project's resources, defaults to ""
-    #     :type environment: str, optional
-    #     :param is_default: make this the default project for your user
-    #     :type is_default: bool
-    #     :return: project instance
-    #     :rtype: Project
-    #     """
-    #     if self._project_get(name):
-    #         raise j.exceptions.Value("A project with the same name already exists")
-
-    #     project = ProjectManagement(
-    #         token=self.token_,
-    #         name=name,
-    #         purpose=purpose,
-    #         description=description,
-    #         environment=environment,
-    #         is_default=is_default,
-    #     )
-    #     project.create()
-
-    #     if is_default:
-    #         project.update(is_default=True)
-
-    #     self._projects.append(project)
-
-    #     return project
-
-    def project_get(self, name):
-        """Get an existing project
-
-        :param name: project name
-        :type name: str
-        :raises j.exceptions.Input: raises an error if there is no project with this name
-        :return: Project object
-        :rtype: Project
-        """
-        project = self._project_get(name)
-        if not project:
-            raise j.exceptions.Input("could not find project with name:%s" % name)
-        return project
-
-    # def project_delete(self, name):
-    #     """Delete an exisiting project.
-    #     A project can't be deleted unless it has no resources.
-
-    #     :param name: project name
-    #     :type name: str
-    #     :raises j.exceptions.Input: raises an error if there is no project with this name
-    #     """
-    #     project = self._project_get(name)
-    #     if not project:
-    #         raise j.exceptions.Input("could not find project with name:%s" % name)
-    #     project.delete()
-
-    #     self._projects.remove(project)
 
     def __str__(self):
         return "digital ocean client:%s" % self.name
