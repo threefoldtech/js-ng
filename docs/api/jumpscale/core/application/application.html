@@ -37,10 +37,11 @@ class Application:
 
     def start(self, appname):
         self.appname = appname
-        j.core.logging.logger.info(&#34;Application {} is started, process id: {}&#34;, self.appname, self.process_id)
+        j.logger.appname = appname
+        j.logger.info(&#34;Application {} is started, process id: {}&#34;, self.appname, self.process_id)
 
     def stop(self):
-        j.core.logging.logger.info(&#34;Application {} is stopped&#34;, self.appname)
+        j.logger.info(&#34;Application {} is stopped&#34;, self.appname)
         self.appname = DEFAULT_APP_NAME</code></pre>
 </details>
 </section>
@@ -70,10 +71,11 @@ class Application:
 
     def start(self, appname):
         self.appname = appname
-        j.core.logging.logger.info(&#34;Application {} is started, process id: {}&#34;, self.appname, self.process_id)
+        j.logger.appname = appname
+        j.logger.info(&#34;Application {} is started, process id: {}&#34;, self.appname, self.process_id)
 
     def stop(self):
-        j.core.logging.logger.info(&#34;Application {} is stopped&#34;, self.appname)
+        j.logger.info(&#34;Application {} is stopped&#34;, self.appname)
         self.appname = DEFAULT_APP_NAME</code></pre>
 </details>
 <h3>Instance variables</h3>
@@ -100,7 +102,8 @@ def process_id(self):
 <summary>Source code</summary>
 <pre><code class="python">def start(self, appname):
     self.appname = appname
-    j.core.logging.logger.info(&#34;Application {} is started, process id: {}&#34;, self.appname, self.process_id)</code></pre>
+    j.logger.appname = appname
+    j.logger.info(&#34;Application {} is started, process id: {}&#34;, self.appname, self.process_id)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.core.application.application.Application.stop"><code class="name flex">
@@ -111,7 +114,7 @@ def process_id(self):
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def stop(self):
-    j.core.logging.logger.info(&#34;Application {} is stopped&#34;, self.appname)
+    j.logger.info(&#34;Application {} is stopped&#34;, self.appname)
     self.appname = DEFAULT_APP_NAME</code></pre>
 </details>
 </dd>

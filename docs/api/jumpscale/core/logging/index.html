@@ -23,18 +23,17 @@
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">from jumpscale.god import j
-from .logging import Logger, RedisHandler, CustomLogHandler
+from .logging import Logger, RedisLogHandler, LogHandler
+
 
 logger = Logger()
-logger.logger.catch(exception=ValueError)
-
 config = j.core.config.config.get_config().get(&#34;logging&#34;)
 
 if config:
     # configure redis handler if enabled
     if config[&#34;redis&#34;][&#34;enabled&#34;] and j.core.db:
         redis_config = config[&#34;redis&#34;]
-        redis_handler = RedisHandler(
+        redis_handler = RedisLogHandler(
             max_size=redis_config[&#34;max_size&#34;], dump=redis_config[&#34;dump&#34;], dump_dir=redis_config[&#34;dump_dir&#34;]
         )
         logger.add_custom_handler(&#34;redis&#34;, redis_handler, serialize=True, level=redis_config[&#34;level&#34;])

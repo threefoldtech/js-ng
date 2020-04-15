@@ -50,22 +50,22 @@ class ModelBase:
         self.schema.props[&#34;id&#34;].index = True
         self.schema.props[&#34;id&#34;].type = Integer()
         self.schema.props[&#34;id&#34;].name = &#34;id&#34;
-
+        
         self.bcdb = bcdb
         self.name = self._name
 
     def _load_schema(self):
         return j.data.schema.parse_schema(self._schema)
-
+    
     def create_obj(self, data):
         &#34;&#34;&#34;Create a new object and assign a new id to it with the given data dict.
         Missing props are defaultly initialized.
-
+        
         Args:
             data (dict): The data dict that is used to create the object.
-
+        
         Returns:
-            JSObjBase: The newly created
+            JSObjBase: The newly created 
         &#34;&#34;&#34;
         o = JSObjBase(self)
         data[&#39;id&#39;] = self._incr_id()
@@ -74,10 +74,10 @@ class ModelBase:
 
     def _assert_uniqueness(self, obj):
         &#34;&#34;&#34;Checks that the object doesn&#39;t contain an already existing property that is marked as unique.
-
+        
         Args:
             obj (JSObjBase): The JS Object.
-
+        
         Raises:
             RuntimeError: If it contains a duplicate of a unique value.
         &#34;&#34;&#34;
@@ -86,10 +86,10 @@ class ModelBase:
                 dbobj = self.get_by(prop.name, getattr(obj, prop.name))
                 if dbobj is not None and dbobj.id != obj.id:
                     raise RuntimeError(f&#34;{prop.name} is unique. One already exists.&#34;)
-
+    
     def save_obj(self, obj):
         &#34;&#34;&#34;Saves the object to the db. It forwards the call to the bcdb client.
-
+        
         Args:
             obj (JSObjBase): The object to be saved.
         &#34;&#34;&#34;
@@ -98,18 +98,18 @@ class ModelBase:
 
     def _incr_id(self):
         &#34;&#34;&#34;Increment the id counter and returns the newly incremented unique id.
-
+        
         Returns:
             int: The new id.
         &#34;&#34;&#34;
         return self.bcdb.model_id_incr(self)
-
+    
     def get_by(self, key, value):
         &#34;&#34;&#34;Search for objects whose key equal value.
         1. It searches in the redis index if key is indexed.
         2. Else, It&#39;s searched for in the sqlite index if the key is indexed for range search.
         3. Else, All objects in the db belonging to the given model is scanned linearly to determine the matching object.
-
+        
         Args:
             key (str): The model property that is checked for.
             val (value): The value.
@@ -124,32 +124,32 @@ class ModelBase:
 
     def get_range(self, key, min, max):
         return self.bcdb.get_item_from_index_set(self, key, min, max)
-
+    
     def get_pattern(self, key, pattern):
         &#34;&#34;&#34;Searches for objects whose key matches the given pattern in this model. The key must be registered in the text index.
-
+        
         Args:
             key (str): The model property that the pattern is searched for in.
             pattern (str): The pattern to be searched for.
-
+        
         Notes:
             Currently sonic server matches for some patterns and doesn&#39;t for others.
 
         Raises:
             RuntimeError: If the key is not defined in the model.
             RuntimeError: If the key is not indexed for search
-
+        
         Returns:
             list[JSObjBase]: List of matching objects (o: o.key matches pattern).
         &#34;&#34;&#34;
         return self.bcdb.get_item_from_index_text(self, key, pattern)
-
+    
     def get_dict(self, obj):
         &#34;&#34;&#34;Extracts a dict with all attributes from obj.
-
+        
         Args:
             obj (JSObjBase): The object that the data is extracted from.
-
+        
         Returns:
             dict: The data dict.
         &#34;&#34;&#34;
@@ -164,18 +164,18 @@ class ModelBase:
     def set_from_dict(self, o, d):
         &#34;&#34;&#34;Sets the attributes in the object o to the data from the dict d.
         Default values is used if it&#39;s not present in d.
-
+        
         Args:
             o (JSObjBase): The object that will be set.
             d (dict): The dict containing the object new data.
-
+        
         Notes:
             Type checking needs modification.
             It was assumed to receive strings convertable to the defined property.
 
         Raises:
             ValueError: If a value in the dict doesn&#39;t conform to the type checking rules imposed by the model&#39;s schema.
-
+        
         Returns:
             JSObjBase: The JSObject after setting its data from the dict d.
         &#34;&#34;&#34;
@@ -195,10 +195,10 @@ class ModelBase:
 
     def load_obj_from_dict(self, d):
         &#34;&#34;&#34;Creates a new object with its data extracted from the d.
-
+        
         Args:
             d (dict): The dict containing the newly created object&#39;s attributes.
-
+        
         Returns:
             JSObjBase: The newly created object.
         &#34;&#34;&#34;
@@ -281,22 +281,22 @@ class ModelBase:
         self.schema.props[&#34;id&#34;].index = True
         self.schema.props[&#34;id&#34;].type = Integer()
         self.schema.props[&#34;id&#34;].name = &#34;id&#34;
-
+        
         self.bcdb = bcdb
         self.name = self._name
 
     def _load_schema(self):
         return j.data.schema.parse_schema(self._schema)
-
+    
     def create_obj(self, data):
         &#34;&#34;&#34;Create a new object and assign a new id to it with the given data dict.
         Missing props are defaultly initialized.
-
+        
         Args:
             data (dict): The data dict that is used to create the object.
-
+        
         Returns:
-            JSObjBase: The newly created
+            JSObjBase: The newly created 
         &#34;&#34;&#34;
         o = JSObjBase(self)
         data[&#39;id&#39;] = self._incr_id()
@@ -305,10 +305,10 @@ class ModelBase:
 
     def _assert_uniqueness(self, obj):
         &#34;&#34;&#34;Checks that the object doesn&#39;t contain an already existing property that is marked as unique.
-
+        
         Args:
             obj (JSObjBase): The JS Object.
-
+        
         Raises:
             RuntimeError: If it contains a duplicate of a unique value.
         &#34;&#34;&#34;
@@ -317,10 +317,10 @@ class ModelBase:
                 dbobj = self.get_by(prop.name, getattr(obj, prop.name))
                 if dbobj is not None and dbobj.id != obj.id:
                     raise RuntimeError(f&#34;{prop.name} is unique. One already exists.&#34;)
-
+    
     def save_obj(self, obj):
         &#34;&#34;&#34;Saves the object to the db. It forwards the call to the bcdb client.
-
+        
         Args:
             obj (JSObjBase): The object to be saved.
         &#34;&#34;&#34;
@@ -329,18 +329,18 @@ class ModelBase:
 
     def _incr_id(self):
         &#34;&#34;&#34;Increment the id counter and returns the newly incremented unique id.
-
+        
         Returns:
             int: The new id.
         &#34;&#34;&#34;
         return self.bcdb.model_id_incr(self)
-
+    
     def get_by(self, key, value):
         &#34;&#34;&#34;Search for objects whose key equal value.
         1. It searches in the redis index if key is indexed.
         2. Else, It&#39;s searched for in the sqlite index if the key is indexed for range search.
         3. Else, All objects in the db belonging to the given model is scanned linearly to determine the matching object.
-
+        
         Args:
             key (str): The model property that is checked for.
             val (value): The value.
@@ -355,32 +355,32 @@ class ModelBase:
 
     def get_range(self, key, min, max):
         return self.bcdb.get_item_from_index_set(self, key, min, max)
-
+    
     def get_pattern(self, key, pattern):
         &#34;&#34;&#34;Searches for objects whose key matches the given pattern in this model. The key must be registered in the text index.
-
+        
         Args:
             key (str): The model property that the pattern is searched for in.
             pattern (str): The pattern to be searched for.
-
+        
         Notes:
             Currently sonic server matches for some patterns and doesn&#39;t for others.
 
         Raises:
             RuntimeError: If the key is not defined in the model.
             RuntimeError: If the key is not indexed for search
-
+        
         Returns:
             list[JSObjBase]: List of matching objects (o: o.key matches pattern).
         &#34;&#34;&#34;
         return self.bcdb.get_item_from_index_text(self, key, pattern)
-
+    
     def get_dict(self, obj):
         &#34;&#34;&#34;Extracts a dict with all attributes from obj.
-
+        
         Args:
             obj (JSObjBase): The object that the data is extracted from.
-
+        
         Returns:
             dict: The data dict.
         &#34;&#34;&#34;
@@ -395,18 +395,18 @@ class ModelBase:
     def set_from_dict(self, o, d):
         &#34;&#34;&#34;Sets the attributes in the object o to the data from the dict d.
         Default values is used if it&#39;s not present in d.
-
+        
         Args:
             o (JSObjBase): The object that will be set.
             d (dict): The dict containing the object new data.
-
+        
         Notes:
             Type checking needs modification.
             It was assumed to receive strings convertable to the defined property.
 
         Raises:
             ValueError: If a value in the dict doesn&#39;t conform to the type checking rules imposed by the model&#39;s schema.
-
+        
         Returns:
             JSObjBase: The JSObject after setting its data from the dict d.
         &#34;&#34;&#34;
@@ -426,10 +426,10 @@ class ModelBase:
 
     def load_obj_from_dict(self, d):
         &#34;&#34;&#34;Creates a new object with its data extracted from the d.
-
+        
         Args:
             d (dict): The dict containing the newly created object&#39;s attributes.
-
+        
         Returns:
             JSObjBase: The newly created object.
         &#34;&#34;&#34;
@@ -440,12 +440,12 @@ class ModelBase:
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="jumpscale.data.bcdb.models.model_model.ModelModel" href="model_model.html#jumpscale.data.bcdb.models.model_model.ModelModel">ModelModel</a></li>
-<li><a title="jumpscale.data.bcdb.models.user_model.UserModel" href="user_model.html#jumpscale.data.bcdb.models.user_model.UserModel">UserModel</a></li>
-<li><a title="jumpscale.data.bcdb.models.proj_model.ProjModel" href="proj_model.html#jumpscale.data.bcdb.models.proj_model.ProjModel">ProjModel</a></li>
-<li><a title="jumpscale.data.bcdb.models.test_model.TestModel" href="test_model.html#jumpscale.data.bcdb.models.test_model.TestModel">TestModel</a></li>
-<li><a title="jumpscale.data.bcdb.models.db_model.DBModel" href="db_model.html#jumpscale.data.bcdb.models.db_model.DBModel">DBModel</a></li>
 <li><a title="jumpscale.data.bcdb.models.post_model.QuoteModel" href="post_model.html#jumpscale.data.bcdb.models.post_model.QuoteModel">QuoteModel</a></li>
+<li><a title="jumpscale.data.bcdb.models.test_model.TestModel" href="test_model.html#jumpscale.data.bcdb.models.test_model.TestModel">TestModel</a></li>
+<li><a title="jumpscale.data.bcdb.models.proj_model.ProjModel" href="proj_model.html#jumpscale.data.bcdb.models.proj_model.ProjModel">ProjModel</a></li>
 <li><a title="jumpscale.data.bcdb.models.emplyee_model.EmployeeModel" href="emplyee_model.html#jumpscale.data.bcdb.models.emplyee_model.EmployeeModel">EmployeeModel</a></li>
+<li><a title="jumpscale.data.bcdb.models.user_model.UserModel" href="user_model.html#jumpscale.data.bcdb.models.user_model.UserModel">UserModel</a></li>
+<li><a title="jumpscale.data.bcdb.models.db_model.DBModel" href="db_model.html#jumpscale.data.bcdb.models.db_model.DBModel">DBModel</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -470,12 +470,12 @@ Missing props are defaultly initialized.</p>
 <pre><code class="python">def create_obj(self, data):
     &#34;&#34;&#34;Create a new object and assign a new id to it with the given data dict.
     Missing props are defaultly initialized.
-
+    
     Args:
         data (dict): The data dict that is used to create the object.
-
+    
     Returns:
-        JSObjBase: The newly created
+        JSObjBase: The newly created 
     &#34;&#34;&#34;
     o = JSObjBase(self)
     data[&#39;id&#39;] = self._incr_id()
@@ -512,7 +512,7 @@ Missing props are defaultly initialized.</p>
     1. It searches in the redis index if key is indexed.
     2. Else, It&#39;s searched for in the sqlite index if the key is indexed for range search.
     3. Else, All objects in the db belonging to the given model is scanned linearly to determine the matching object.
-
+    
     Args:
         key (str): The model property that is checked for.
         val (value): The value.
@@ -545,10 +545,10 @@ Missing props are defaultly initialized.</p>
 <summary>Source code</summary>
 <pre><code class="python">def get_dict(self, obj):
     &#34;&#34;&#34;Extracts a dict with all attributes from obj.
-
+    
     Args:
         obj (JSObjBase): The object that the data is extracted from.
-
+    
     Returns:
         dict: The data dict.
     &#34;&#34;&#34;
@@ -588,18 +588,18 @@ Missing props are defaultly initialized.</p>
 <summary>Source code</summary>
 <pre><code class="python">def get_pattern(self, key, pattern):
     &#34;&#34;&#34;Searches for objects whose key matches the given pattern in this model. The key must be registered in the text index.
-
+    
     Args:
         key (str): The model property that the pattern is searched for in.
         pattern (str): The pattern to be searched for.
-
+    
     Notes:
         Currently sonic server matches for some patterns and doesn&#39;t for others.
 
     Raises:
         RuntimeError: If the key is not defined in the model.
         RuntimeError: If the key is not indexed for search
-
+    
     Returns:
         list[JSObjBase]: List of matching objects (o: o.key matches pattern).
     &#34;&#34;&#34;
@@ -636,10 +636,10 @@ Missing props are defaultly initialized.</p>
 <summary>Source code</summary>
 <pre><code class="python">def load_obj_from_dict(self, d):
     &#34;&#34;&#34;Creates a new object with its data extracted from the d.
-
+    
     Args:
         d (dict): The dict containing the newly created object&#39;s attributes.
-
+    
     Returns:
         JSObjBase: The newly created object.
     &#34;&#34;&#34;
@@ -662,7 +662,7 @@ Missing props are defaultly initialized.</p>
 <summary>Source code</summary>
 <pre><code class="python">def save_obj(self, obj):
     &#34;&#34;&#34;Saves the object to the db. It forwards the call to the bcdb client.
-
+    
     Args:
         obj (JSObjBase): The object to be saved.
     &#34;&#34;&#34;
@@ -701,18 +701,18 @@ It was assumed to receive strings convertable to the defined property.</p>
 <pre><code class="python">def set_from_dict(self, o, d):
     &#34;&#34;&#34;Sets the attributes in the object o to the data from the dict d.
     Default values is used if it&#39;s not present in d.
-
+    
     Args:
         o (JSObjBase): The object that will be set.
         d (dict): The dict containing the object new data.
-
+    
     Notes:
         Type checking needs modification.
         It was assumed to receive strings convertable to the defined property.
 
     Raises:
         ValueError: If a value in the dict doesn&#39;t conform to the type checking rules imposed by the model&#39;s schema.
-
+    
     Returns:
         JSObjBase: The JSObject after setting its data from the dict d.
     &#34;&#34;&#34;

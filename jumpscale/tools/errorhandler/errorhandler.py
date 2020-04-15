@@ -34,37 +34,41 @@ class ErrorHandler:
             frame = frame.tb_next
         return stacktrace
 
-    def _handle_exception(self, ttype, tvalue, tb, level=40, die=False, stdout=True, category=""):
-        process = j.sals.process.get_my_process()
+    def _handle_exception(self, ttype, tvalue, tb, level=40, die=False, log=True, category="", data=None):
         timestamp = j.data.time.now().timestamp
         stacktrace = self._construct_stacktrace(tb)
         message = self._format_lines(traceback.format_exception_only(ttype, tvalue))
         traceback_text = self._format_lines(traceback.format_exception(ttype, tvalue, tb))
 
-        error_dict = {
+        err_dict = {
+            "appname": j.application.appname,
             "level": level,
             "message": message,
+            "timestamp": timestamp,
             "category": category or "exception",
-            "traceback": {
-                "text": traceback_text,
-                "timestamp": timestamp,
-                "process_id": process.pid,
-                "stacktrace": stacktrace,
-            },
+            "data": data,
+            "traceback": {"raw": traceback_text, "stacktrace": stacktrace, "process_id": j.application.process_id},
         }
 
-        if stdout:
-            j.logger.error(message)
+        if log:
+            exception = (ttype, tvalue, tb)
+            j.logger.exception(message=message, category=category, data=data, level=level, exception=exception)
 
         for handler_func, handler_level in self.handlers:
             if level >= handler_level:
-                handler_func(**error_dict)
+                handler_func(**err_dict)
 
         if die:
             sys.exit(1)
 
     def handle_exception(
-        self, exception: Exception, level: int = 40, die: bool = False, stdout: bool = True, category: str = ""
+        self,
+        exception: Exception,
+        level: int = 40,
+        die: bool = False,
+        log: bool = True,
+        category: str = "",
+        data: dict = None,
     ):
         """Hndler exception
         
@@ -74,11 +78,11 @@ class ErrorHandler:
         Keyword Arguments:
             level {int} -- exception level (default: {40})
             die {bool} -- optional flag to exit after handling the exception (default: {True})
-            stdout {bool} -- option flag to log the exception in the stdout (default: {True})
+            log {bool} -- option flag to log the exception (default: {True})
             category {str} -- category (default: {""})
         """
         ttype, _, tb = sys.exc_info()
-        self._handle_exception(ttype, exception, tb, die=die, stdout=stdout, category=category)
+        self._handle_exception(ttype, exception, tb, die=die, log=log, category=category, data=data)
 
     def register_handler(self, handler: callable, level: int = 40):
         """Register new error handler
