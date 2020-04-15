@@ -74,13 +74,18 @@ class ProjectFactory(StoredFactory):
 class Project(Client):
     do_name = fields.String()
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Setting the token for the digital ocean client
+        #
+
     def create_project(self):
         print("project created")
 
     def set_digital_ocean_name(self, name):
         self.do_name = name
 
-    def deploy(self, name, purpose, description="", environment="", is_default=False):
+    def deploy(self, purpose, description="", environment="", is_default=False):
         """Create a digital ocean project
 
         :param name: name of the project
@@ -96,12 +101,13 @@ class Project(Client):
         :return: project instance
         :rtype: Project
         """
-        if self._project_get(name):
+
+        if self.parent.projects.check_project_exist_remote(self.do_name):
             raise j.exceptions.Value("A project with the same name already exists")
 
         project = ProjectManagement(
-            token=self.token_,
-            name=name,
+            token=self.parent.projects.parent_instance.token_,
+            name=self.do_name,
             purpose=purpose,
             description=description,
             environment=environment,
@@ -474,20 +480,20 @@ class DigitalOcean(Client):
             raise j.exceptions.Input("could not find project with name:%s" % name)
         return project
 
-    def project_delete(self, name):
-        """Delete an exisiting project.
-        A project can't be deleted unless it has no resources.
+    # def project_delete(self, name):
+    #     """Delete an exisiting project.
+    #     A project can't be deleted unless it has no resources.
 
-        :param name: project name
-        :type name: str
-        :raises j.exceptions.Input: raises an error if there is no project with this name
-        """
-        project = self._project_get(name)
-        if not project:
-            raise j.exceptions.Input("could not find project with name:%s" % name)
-        project.delete()
+    #     :param name: project name
+    #     :type name: str
+    #     :raises j.exceptions.Input: raises an error if there is no project with this name
+    #     """
+    #     project = self._project_get(name)
+    #     if not project:
+    #         raise j.exceptions.Input("could not find project with name:%s" % name)
+    #     project.delete()
 
-        self._projects.remove(project)
+    #     self._projects.remove(project)
 
     def __str__(self):
         return "digital ocean client:%s" % self.name
