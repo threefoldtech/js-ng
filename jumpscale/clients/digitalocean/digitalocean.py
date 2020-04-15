@@ -29,30 +29,36 @@ class ProjectFactory(StoredFactory):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def new(self, name, *args, **kwargs):
-        valid_name = convert_to_valid_identifier(name)
-        instance = super().new(valid_name, *args, **kwargs)
-        instance.name = name
-        return instance
+    # def new(self, name, *args, **kwargs):
+    #     valid_name = convert_to_valid_identifier(name)
+    #     instance = super().new(valid_name, *args, **kwargs)
+    #     instance.name = name
+    #     return instance
 
-    def list_project_in_digital_ocean(self):
+    def list_remote(self):
         """
         Returns list of projects on Digital Ocean
         """
         return ProjectManagement.list(self.parent_instance.client)
 
-    def list_all_projects(self):
-        """
-        Returns list of projects, if there is not projects created it will return
-        the projects created on Digital Ocean 
-        """
-        projects = self.list_all()
-        if not projects:
-            for project in self.list_project_in_digital_ocean():
-                # project_temp = self.new("_" + project.name.replace(" ", "_"))
-                # project_temp.project_name = project.name
-                self.new(project.name)
-        return self.list_all()
+    def check_project_exist_remote(self, name):
+        for project in self.list_remote():
+            if project.name == name:
+                return True
+        return False
+
+    # def list_all_projects(self):
+    #     """
+    #     Returns list of projects, if there is not projects created it will return
+    #     the projects created on Digital Ocean
+    #     """
+    #     projects = self.list_all()
+    #     if not projects:
+    #         for project in self.list_project_in_digital_ocean():
+    #             # project_temp = self.new("_" + project.name.replace(" ", "_"))
+    #             # project_temp.project_name = project.name
+    #             self.new(project.name)
+    #     return self.list_all()
 
     # def _project_get(self, name):
     #     for project in self.projects:
@@ -66,10 +72,49 @@ class ProjectFactory(StoredFactory):
 
 
 class Project(Client):
-    name = fields.String()
+    do_name = fields.String()
 
     def create_project(self):
         print("project created")
+
+    def set_digital_ocean_name(self, name):
+        self.do_name = name
+
+    def deploy(self, name, purpose, description="", environment="", is_default=False):
+        """Create a digital ocean project
+
+        :param name: name of the project
+        :type name: str
+        :param purpose: purpose of the project
+        :type purpose: str
+        :param description: description of the project, defaults to ""
+        :type description: str, optional
+        :param environment: environment of project's resources, defaults to ""
+        :type environment: str, optional
+        :param is_default: make this the default project for your user
+        :type is_default: bool
+        :return: project instance
+        :rtype: Project
+        """
+        if self._project_get(name):
+            raise j.exceptions.Value("A project with the same name already exists")
+
+        project = ProjectManagement(
+            token=self.token_,
+            name=name,
+            purpose=purpose,
+            description=description,
+            environment=environment,
+            is_default=is_default,
+        )
+        project.create()
+
+        if is_default:
+            project.update(is_default=True)
+
+        # self._projects.append(project) this for cashing
+
+        return project
 
     # def project_list(self):
     #     print("project list ")
@@ -379,41 +424,41 @@ class DigitalOcean(Client):
     #             return project
     #     return None
 
-    def project_create(self, name, purpose, description="", environment="", is_default=False):
-        """Create a digital ocean project
+    # def project_create(self, name, purpose, description="", environment="", is_default=False):
+    #     """Create a digital ocean project
 
-        :param name: name of the project
-        :type name: str
-        :param purpose: purpose of the project
-        :type purpose: str
-        :param description: description of the project, defaults to ""
-        :type description: str, optional
-        :param environment: environment of project's resources, defaults to ""
-        :type environment: str, optional
-        :param is_default: make this the default project for your user
-        :type is_default: bool
-        :return: project instance
-        :rtype: Project
-        """
-        if self._project_get(name):
-            raise j.exceptions.Value("A project with the same name already exists")
+    #     :param name: name of the project
+    #     :type name: str
+    #     :param purpose: purpose of the project
+    #     :type purpose: str
+    #     :param description: description of the project, defaults to ""
+    #     :type description: str, optional
+    #     :param environment: environment of project's resources, defaults to ""
+    #     :type environment: str, optional
+    #     :param is_default: make this the default project for your user
+    #     :type is_default: bool
+    #     :return: project instance
+    #     :rtype: Project
+    #     """
+    #     if self._project_get(name):
+    #         raise j.exceptions.Value("A project with the same name already exists")
 
-        project = ProjectManagement(
-            token=self.token_,
-            name=name,
-            purpose=purpose,
-            description=description,
-            environment=environment,
-            is_default=is_default,
-        )
-        project.create()
+    #     project = ProjectManagement(
+    #         token=self.token_,
+    #         name=name,
+    #         purpose=purpose,
+    #         description=description,
+    #         environment=environment,
+    #         is_default=is_default,
+    #     )
+    #     project.create()
 
-        if is_default:
-            project.update(is_default=True)
+    #     if is_default:
+    #         project.update(is_default=True)
 
-        self._projects.append(project)
+    #     self._projects.append(project)
 
-        return project
+    #     return project
 
     def project_get(self, name):
         """Get an existing project
