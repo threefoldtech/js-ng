@@ -49,11 +49,11 @@ pycountry = "^19.8"
 docker = "^4.2.0"
 jinja2 = "^2.11.1"
 psutil = "^5.7.0"
-python-digitalocean = "^1.15.0"
 snakeviz = "^2.0.1"
+pudb = "^2019.1"
+python-digitalocean = "^1.15.0"
 
 [tool.poetry.dev-dependencies]
-pudb = "^2019.1"
 ipdb = "^0.12.1"
 black = {version = "^18.3-alpha.0", allow-prereleases = true}
 flake8 = "^3.7"
