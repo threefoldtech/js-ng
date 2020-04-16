@@ -9,7 +9,7 @@ ssh.load_from_file_system()
 ## Create Digital Ocean client and set your token and load your sshkey 
 ```python
 dg = j.clients.digitalocean.get("testDG")
-dg.token_ = "de1548ce52ed3905d98b5134e699d317c983906b22c470e915d0856d01f19cde"
+dg.token_ = ""
 ```
 ## Set sshclient you have created
 ``` python
