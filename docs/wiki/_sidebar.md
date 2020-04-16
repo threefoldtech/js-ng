@@ -14,7 +14,7 @@
     * [Development process/Contribution](./devprocess.md)
     * [Poetry](./poetry.md)
     * [Interacting with the development shell: jsng](./jsng_shell.md)
-    * Configuration Management
+    * [Configuration Management](configmgmt.md)
     * [Base Classes and Hierarchical Configurations](./baseclasses.md)
     * [Adding a new command](./distributing_cmds.md)
     * [Executors](./executors.md)
