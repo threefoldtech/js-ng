@@ -22,9 +22,10 @@
 <section id="section-intro">
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">import sys
+<pre><code class="python">import better_exceptions
+import pudb
+import sys
 import traceback
-import better_exceptions
 
 from functools import partial
 from prompt_toolkit.application import get_app
@@ -34,7 +35,7 @@ from prompt_toolkit.shortcuts import print_formatted_text
 from prompt_toolkit.completion import Completion
 
 from ptpython.prompt_style import PromptStyle
-import pudb
+from ptpython.utils import get_jedi_script_from_document
 
 
 def patched_handle_exception(self, e):
@@ -68,114 +69,66 @@ def patched_handle_exception(self, e):
     output.flush()
 
 
-def eval_code(stmts, locals_=None, globals_=None):
+def sort_completions_key(completion):
     &#34;&#34;&#34;
-    a helper function to ignore incomplete syntax erros when evaluating code
-    while typing incomplete lines, e.g.: j.clien...
+    sort completions according to their type
+
+    Args:
+        completion (jedi.api.classes.Completion): completion
+
+    Returns:
+        int: sorting order
     &#34;&#34;&#34;
-    if not stmts:
-        return
-
-    try:
-        code = compile(stmts, filename=&#34;&lt;kosmos&gt;&#34;, mode=&#34;eval&#34;)
-    except SyntaxError:
-        return
-
-    return eval(code, globals_, locals_)
+    if completion.type == &#34;function&#34;:
+        return 2
+    elif completion.type == &#34;instance&#34;:
+        return 1
+    else:
+        return 3
 
 
-def get_current_line(document):
-    tbc = document.current_line_before_cursor
-    if tbc:
-        line = tbc.split(&#34;.&#34;)
-        parent, member = &#34;.&#34;.join(line[:-1]), line[-1]
-        if member.startswith(&#34;__&#34;):  # then we want to show private methods
-            prefix = &#34;__&#34;
-        elif member.startswith(&#34;_&#34;):  # then we want to show private methods
-            prefix = &#34;_&#34;
-        else:
-            prefix = &#34;&#34;
-        return parent, member, prefix
-    raise ValueError(&#34;nothing is written&#34;)
+def get_style_for_completion(completion):
+    base = &#34;bg:%s fg:ansiblack&#34;
+    if completion.type == &#34;function&#34;:
+        return base % &#34;ansigreen&#34;
+    elif completion.type == &#34;instance&#34;:
+        return base % &#34;ansiyellow&#34;
+    else:
+        return base % &#34;ansigray&#34;
+
+
+HIDDEN_PREFIXES = (&#34;_&#34;, &#34;__&#34;)
 
 
 def get_completions(self, document, complete_event):
     &#34;&#34;&#34;
-    get completions for j objects (using _method_) and others (using dir)
-    :rtype: `Completion` generator
+    get completions filtered and colored
+
+    To filter and color completions on type, we try get jedi completions first
+    and check their type, because `prompt-toolkit.completion.Completion` does not contain type information
     &#34;&#34;&#34;
-
-    def colored_completions(names, color):
-        for name in names:
-            if not name:
-                continue
-            if name.startswith(member):
-                completion = name[len(member) :]
-                yield Completion(
-                    completion, 0, display=name, style=&#34;bg:%s fg:ansiblack&#34; % color, selected_style=&#34;bg:ansidarkgray&#34;
-                )
-
     try:
-        parent, member, prefix = get_current_line(document)
-    except ValueError:
+        script = get_jedi_script_from_document(document, self.get_globals(), self.get_locals())
+    except:
         return
 
-    obj = eval_code(parent, self.get_locals(), self.get_globals())
-    if obj:
+    if script:
+        try:
+            reference = script.get_references()[0]
+        except Exception:
+            reference = &#34;&#34;
 
-        members = sorted(dir(obj), key=sort_children_key)
-        yield from colored_completions(members, &#34;ansigray&#34;)
-    # code was on kosmos-improve to support multi colors in the completion
-    #    import types
+        for c in sorted(script.completions(), key=sort_completions_key):
+            if c.name.startswith(HIDDEN_PREFIXES):
+                if not reference or not reference.description.startswith(&#34;_&#34;):
+                    continue
 
-    #     methods_list = []
-    #     props_list = []
-    #     rest_list = []
-
-    #     attrnames = dir(obj)
-    #     classattrnames = dir(obj.__class_)
-
-    #     for aname in attrnames:
-    #         attr = getattr(obj, aname)
-    #         if isinstance(attr, types.MethodType) or isinstance(attr, types.FunctionType):
-    #             methods_list.append(aname)
-    #         elif aname in dir(obj.__class__) and isinstance(attr):
-    #             props_list.append(aname)
-    #         else:
-    #             rest_list.append(aname)
-
-    #     from functools import partial
-
-    #     def filter_items(collection, prefix):
-    #         for el in collection:
-    #             if el.startswith(prefix):
-    #                 yield el
-
-    #     filter_props = partial(filter_items, props_list)
-    #     filter_methods = partial(filter_items, methods_list)
-    #     filter_rest = partial(filter_items, rest_list)
-
-    #     members = sorted(dir(obj), key=sort_children_key)
-    #     yield from colored_completions(filter_props, &#34;ansigreen&#34;)
-    #     yield from colored_completions(filter_methods, &#34;ansiblue&#34;)
-    #     yield from colored_completions(filter_rest, &#34;ansigray&#34;)
-
-
-def sort_children_key(name):
-    &#34;&#34;&#34;Sort members of an object
-    :param name: name
-    :type name: str
-    :return: the order of sorting
-    :rtype: int
-    &#34;&#34;&#34;
-    if name.startswith(&#34;__&#34;):
-        return 3
-    elif name.startswith(&#34;_&#34;):
-        return 2
-    elif name.isupper():
-        return 1
-    else:
-        return 0
+            yield Completion(
+                c.name_with_symbols,
+                len(c.complete) - len(c.name_with_symbols),
+                display=c.name_with_symbols,
+                style=get_style_for_completion(c),
+            )
 
 
 def ptconfig(repl):
@@ -317,35 +270,22 @@ def ptconfig(repl):
     repl._handle_exception = partial(patched_handle_exception, repl)
     better_exceptions.hook()
 
-    old_get_completions = repl._completer.__class__.get_completions
+    old_get_completions = repl._completer.completer.__class__.get_completions
 
     def custom_get_completions(self, document, complete_event):
-        try:
-            _, _, prefix = get_current_line(document)
-        except ValueError:
-            return
-
         completions = []
+
         try:
             completions = list(get_completions(self, document, complete_event))
+
+            if not completions:
+                completions = old_get_completions(self, document, complete_event)
         except Exception:
-            RuntimeError(&#34;Error while getting completions\n&#34; + traceback.format_exc())
+            pass
 
-        if not completions:
-            completions = old_get_completions(self, document, complete_event)
+        yield from completions
 
-        def filter_completions_on_prefix(completions, prefix=None):
-            HIDDEN_PREFIXES = (&#34;_&#34;, &#34;__&#34;)
-
-            for completion in completions:
-                text = completion.text
-                if prefix not in HIDDEN_PREFIXES and text.startswith(HIDDEN_PREFIXES):
-                    continue
-                yield completion
-
-        yield from filter_completions_on_prefix(completions, prefix)
-
-    # repl._completer.__class__.get_completions = custom_get_completions</code></pre>
+    repl._completer.completer.__class__.get_completions = custom_get_completions</code></pre>
 </details>
 </section>
 <section>
@@ -355,86 +295,61 @@ def ptconfig(repl):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="jumpscale.shell.config.eval_code"><code class="name flex">
-<span>def <span class="ident">eval_code</span></span>(<span>stmts, locals_=None, globals_=None)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>a helper function to ignore incomplete syntax erros when evaluating code
-while typing incomplete lines, e.g.: j.clien&hellip;</p></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def eval_code(stmts, locals_=None, globals_=None):
-    &#34;&#34;&#34;
-    a helper function to ignore incomplete syntax erros when evaluating code
-    while typing incomplete lines, e.g.: j.clien...
-    &#34;&#34;&#34;
-    if not stmts:
-        return
-
-    try:
-        code = compile(stmts, filename=&#34;&lt;kosmos&gt;&#34;, mode=&#34;eval&#34;)
-    except SyntaxError:
-        return
-
-    return eval(code, globals_, locals_)</code></pre>
-</details>
-</dd>
 <dt id="jumpscale.shell.config.get_completions"><code class="name flex">
 <span>def <span class="ident">get_completions</span></span>(<span>self, document, complete_event)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>get completions for j objects (using <em>method</em>) and others (using dir)
-:rtype: <code>Completion</code> generator</p></section>
+<section class="desc"><p>get completions filtered and colored</p>
+<p>To filter and color completions on type, we try get jedi completions first
+and check their type, because <code>prompt-toolkit.completion.Completion</code> does not contain type information</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def get_completions(self, document, complete_event):
     &#34;&#34;&#34;
-    get completions for j objects (using _method_) and others (using dir)
-    :rtype: `Completion` generator
+    get completions filtered and colored
+
+    To filter and color completions on type, we try get jedi completions first
+    and check their type, because `prompt-toolkit.completion.Completion` does not contain type information
     &#34;&#34;&#34;
-
-    def colored_completions(names, color):
-        for name in names:
-            if not name:
-                continue
-            if name.startswith(member):
-                completion = name[len(member) :]
-                yield Completion(
-                    completion, 0, display=name, style=&#34;bg:%s fg:ansiblack&#34; % color, selected_style=&#34;bg:ansidarkgray&#34;
-                )
-
     try:
-        parent, member, prefix = get_current_line(document)
-    except ValueError:
+        script = get_jedi_script_from_document(document, self.get_globals(), self.get_locals())
+    except:
         return
 
-    obj = eval_code(parent, self.get_locals(), self.get_globals())
-    if obj:
+    if script:
+        try:
+            reference = script.get_references()[0]
+        except Exception:
+            reference = &#34;&#34;
 
-        members = sorted(dir(obj), key=sort_children_key)
-        yield from colored_completions(members, &#34;ansigray&#34;)</code></pre>
+        for c in sorted(script.completions(), key=sort_completions_key):
+            if c.name.startswith(HIDDEN_PREFIXES):
+                if not reference or not reference.description.startswith(&#34;_&#34;):
+                    continue
+
+            yield Completion(
+                c.name_with_symbols,
+                len(c.complete) - len(c.name_with_symbols),
+                display=c.name_with_symbols,
+                style=get_style_for_completion(c),
+            )</code></pre>
 </details>
 </dd>
-<dt id="jumpscale.shell.config.get_current_line"><code class="name flex">
-<span>def <span class="ident">get_current_line</span></span>(<span>document)</span>
+<dt id="jumpscale.shell.config.get_style_for_completion"><code class="name flex">
+<span>def <span class="ident">get_style_for_completion</span></span>(<span>completion)</span>
 </code></dt>
 <dd>
 <section class="desc"></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def get_current_line(document):
-    tbc = document.current_line_before_cursor
-    if tbc:
-        line = tbc.split(&#34;.&#34;)
-        parent, member = &#34;.&#34;.join(line[:-1]), line[-1]
-        if member.startswith(&#34;__&#34;):  # then we want to show private methods
-            prefix = &#34;__&#34;
-        elif member.startswith(&#34;_&#34;):  # then we want to show private methods
-            prefix = &#34;_&#34;
-        else:
-            prefix = &#34;&#34;
-        return parent, member, prefix
-    raise ValueError(&#34;nothing is written&#34;)</code></pre>
+<pre><code class="python">def get_style_for_completion(completion):
+    base = &#34;bg:%s fg:ansiblack&#34;
+    if completion.type == &#34;function&#34;:
+        return base % &#34;ansigreen&#34;
+    elif completion.type == &#34;instance&#34;:
+        return base % &#34;ansiyellow&#34;
+    else:
+        return base % &#34;ansigray&#34;</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.shell.config.patched_handle_exception"><code class="name flex">
@@ -623,61 +538,57 @@ it will call excepthook after ommitting all this framework's calls from tracebac
     repl._handle_exception = partial(patched_handle_exception, repl)
     better_exceptions.hook()
 
-    old_get_completions = repl._completer.__class__.get_completions
+    old_get_completions = repl._completer.completer.__class__.get_completions
 
     def custom_get_completions(self, document, complete_event):
-        try:
-            _, _, prefix = get_current_line(document)
-        except ValueError:
-            return
-
         completions = []
+
         try:
             completions = list(get_completions(self, document, complete_event))
+
+            if not completions:
+                completions = old_get_completions(self, document, complete_event)
         except Exception:
-            RuntimeError(&#34;Error while getting completions\n&#34; + traceback.format_exc())
+            pass
 
-        if not completions:
-            completions = old_get_completions(self, document, complete_event)
+        yield from completions
 
-        def filter_completions_on_prefix(completions, prefix=None):
-            HIDDEN_PREFIXES = (&#34;_&#34;, &#34;__&#34;)
-
-            for completion in completions:
-                text = completion.text
-                if prefix not in HIDDEN_PREFIXES and text.startswith(HIDDEN_PREFIXES):
-                    continue
-                yield completion
-
-        yield from filter_completions_on_prefix(completions, prefix)</code></pre>
+    repl._completer.completer.__class__.get_completions = custom_get_completions</code></pre>
 </details>
 </dd>
-<dt id="jumpscale.shell.config.sort_children_key"><code class="name flex">
-<span>def <span class="ident">sort_children_key</span></span>(<span>name)</span>
+<dt id="jumpscale.shell.config.sort_completions_key"><code class="name flex">
+<span>def <span class="ident">sort_completions_key</span></span>(<span>completion)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Sort members of an object
-:param name: name
-:type name: str
-:return: the order of sorting
-:rtype: int</p></section>
+<section class="desc"><p>sort completions according to their type</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>completion</code></strong> :&ensp;<code>jedi.api.classes.Completion</code></dt>
+<dd>completion</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>int</code></strong></dt>
+<dd>sorting order</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def sort_children_key(name):
-    &#34;&#34;&#34;Sort members of an object
-    :param name: name
-    :type name: str
-    :return: the order of sorting
-    :rtype: int
+<pre><code class="python">def sort_completions_key(completion):
     &#34;&#34;&#34;
-    if name.startswith(&#34;__&#34;):
-        return 3
-    elif name.startswith(&#34;_&#34;):
+    sort completions according to their type
+
+    Args:
+        completion (jedi.api.classes.Completion): completion
+
+    Returns:
+        int: sorting order
+    &#34;&#34;&#34;
+    if completion.type == &#34;function&#34;:
         return 2
-    elif name.isupper():
+    elif completion.type == &#34;instance&#34;:
         return 1
     else:
-        return 0</code></pre>
+        return 3</code></pre>
 </details>
 </dd>
 </dl>
@@ -698,12 +609,11 @@ it will call excepthook after ommitting all this framework's calls from tracebac
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="jumpscale.shell.config.eval_code" href="#jumpscale.shell.config.eval_code">eval_code</a></code></li>
 <li><code><a title="jumpscale.shell.config.get_completions" href="#jumpscale.shell.config.get_completions">get_completions</a></code></li>
-<li><code><a title="jumpscale.shell.config.get_current_line" href="#jumpscale.shell.config.get_current_line">get_current_line</a></code></li>
+<li><code><a title="jumpscale.shell.config.get_style_for_completion" href="#jumpscale.shell.config.get_style_for_completion">get_style_for_completion</a></code></li>
 <li><code><a title="jumpscale.shell.config.patched_handle_exception" href="#jumpscale.shell.config.patched_handle_exception">patched_handle_exception</a></code></li>
 <li><code><a title="jumpscale.shell.config.ptconfig" href="#jumpscale.shell.config.ptconfig">ptconfig</a></code></li>
-<li><code><a title="jumpscale.shell.config.sort_children_key" href="#jumpscale.shell.config.sort_children_key">sort_children_key</a></code></li>
+<li><code><a title="jumpscale.shell.config.sort_completions_key" href="#jumpscale.shell.config.sort_completions_key">sort_completions_key</a></code></li>
 </ul>
 </li>
 </ul>

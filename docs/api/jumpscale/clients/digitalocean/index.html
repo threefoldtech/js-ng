@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.4" />
-<title>jumpscale.clients.base API documentation</title>
+<title>jumpscale.clients.digitalocean API documentation</title>
 <meta name="description" content="" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
@@ -17,70 +17,36 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>jumpscale.clients.base</code></h1>
+<h1 class="title">Module <code>jumpscale.clients.digitalocean</code></h1>
 </header>
 <section id="section-intro">
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">from jumpscale.core.base import Base
+<pre><code class="python">from jumpscale.core.base import StoredFactory
 
+from .digitalocean import DigitalOcean
 
-class Client(Base):
-    pass</code></pre>
+export_module_as = StoredFactory(DigitalOcean)</code></pre>
 </details>
 </section>
 <section>
-</section>
-<section>
-</section>
-<section>
-</section>
-<section>
-<h2 class="section-title" id="header-classes">Classes</h2>
+<h2 class="section-title" id="header-submodules">Sub-modules</h2>
 <dl>
-<dt id="jumpscale.clients.base.Client"><code class="flex name class">
-<span>class <span class="ident">Client</span></span>
-<span>(</span><span>parent_=None, instance_name_=None, **values)</span>
-</code></dt>
+<dt><code class="name"><a title="jumpscale.clients.digitalocean.digitalocean" href="digitalocean.html">jumpscale.clients.digitalocean.digitalocean</a></code></dt>
 <dd>
-<section class="desc"><p>A simple attribute-based namespace.</p>
-<p>SimpleNamespace(**kwargs)</p></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">class Client(Base):
-    pass</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="jumpscale.core.base.meta.Base" href="../core/base/meta.html#jumpscale.core.base.meta.Base">Base</a></li>
-<li>types.SimpleNamespace</li>
-</ul>
-<h3>Subclasses</h3>
-<ul class="hlist">
-<li><a title="jumpscale.clients.trello.trello.TrelloClient" href="trello/trello.html#jumpscale.clients.trello.trello.TrelloClient">TrelloClient</a></li>
-<li><a title="jumpscale.clients.redis.redis.RedisClient" href="redis/redis.html#jumpscale.clients.redis.redis.RedisClient">RedisClient</a></li>
-<li><a title="jumpscale.clients.github.github.GithubClient" href="github/github.html#jumpscale.clients.github.github.GithubClient">GithubClient</a></li>
-<li><a title="jumpscale.clients.sshclient.sshclient.SSHClient" href="sshclient/sshclient.html#jumpscale.clients.sshclient.sshclient.SSHClient">SSHClient</a></li>
-<li><a title="jumpscale.clients.gdrive.gdrive.GdriveClient" href="gdrive/gdrive.html#jumpscale.clients.gdrive.gdrive.GdriveClient">GdriveClient</a></li>
-<li><a title="jumpscale.clients.sendgrid.sendgrid.SendGridClient" href="sendgrid/sendgrid.html#jumpscale.clients.sendgrid.sendgrid.SendGridClient">SendGridClient</a></li>
-<li><a title="jumpscale.clients.docker.docker.DockerClient" href="docker/docker.html#jumpscale.clients.docker.docker.DockerClient">DockerClient</a></li>
-<li><a title="jumpscale.clients.git.git.GitClient" href="git/git.html#jumpscale.clients.git.git.GitClient">GitClient</a></li>
-<li><a title="jumpscale.clients.syncthing.syncthing.SyncthingClient" href="syncthing/syncthing.html#jumpscale.clients.syncthing.syncthing.SyncthingClient">SyncthingClient</a></li>
-<li><a title="jumpscale.clients.gogs.gogs.Gogs" href="gogs/gogs.html#jumpscale.clients.gogs.gogs.Gogs">Gogs</a></li>
-<li><a title="jumpscale.clients.currencylayer.currencylayer.CurrencyLayerClient" href="currencylayer/currencylayer.html#jumpscale.clients.currencylayer.currencylayer.CurrencyLayerClient">CurrencyLayerClient</a></li>
-<li><a title="jumpscale.clients.digitalocean.digitalocean.Project" href="digitalocean/digitalocean.html#jumpscale.clients.digitalocean.digitalocean.Project">Project</a></li>
-<li><a title="jumpscale.clients.digitalocean.digitalocean.Droplet" href="digitalocean/digitalocean.html#jumpscale.clients.digitalocean.digitalocean.Droplet">Droplet</a></li>
-<li><a title="jumpscale.clients.digitalocean.digitalocean.DigitalOcean" href="digitalocean/digitalocean.html#jumpscale.clients.digitalocean.digitalocean.DigitalOcean">DigitalOcean</a></li>
-<li><a title="jumpscale.clients.twilio.twilio.TwilioSMSClient" href="twilio/twilio.html#jumpscale.clients.twilio.twilio.TwilioSMSClient">TwilioSMSClient</a></li>
-<li><a title="jumpscale.clients.mail.mail.MailClient" href="mail/mail.html#jumpscale.clients.mail.mail.MailClient">MailClient</a></li>
-<li><a title="jumpscale.clients.gedis.gedis.GedisClient" href="gedis/gedis.html#jumpscale.clients.gedis.gedis.GedisClient">GedisClient</a></li>
-<li><a title="jumpscale.clients.sshkey.sshkey.SSHKeyClient" href="sshkey/sshkey.html#jumpscale.clients.sshkey.sshkey.SSHKeyClient">SSHKeyClient</a></li>
-<li><a title="jumpscale.clients.sonic.client.SonicClient" href="sonic/client.html#jumpscale.clients.sonic.client.SonicClient">SonicClient</a></li>
-<li><a title="jumpscale.clients.s3.s3.S3Client" href="s3/s3.html#jumpscale.clients.s3.s3.S3Client">S3Client</a></li>
-<li><a title="jumpscale.clients.zerotier.zerotier.ZerotierClient" href="zerotier/zerotier.html#jumpscale.clients.zerotier.zerotier.ZerotierClient">ZerotierClient</a></li>
-</ul>
+<section class="desc"><p>This module is used to manage your digital ocean account, create droplet,list all the droplets, destroy droplets, create project, list all the …</p></section>
+</dd>
+<dt><code class="name"><a title="jumpscale.clients.digitalocean.project" href="project.html">jumpscale.clients.digitalocean.project</a></code></dt>
+<dd>
+<section class="desc"></section>
 </dd>
 </dl>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
 </section>
 </article>
 <nav id="sidebar">
@@ -91,14 +57,13 @@ class Client(Base):
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="jumpscale.clients" href="index.html">jumpscale.clients</a></code></li>
+<li><code><a title="jumpscale.clients" href="../index.html">jumpscale.clients</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-classes">Classes</a></h3>
+<li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
-<li>
-<h4><code><a title="jumpscale.clients.base.Client" href="#jumpscale.clients.base.Client">Client</a></code></h4>
-</li>
+<li><code><a title="jumpscale.clients.digitalocean.digitalocean" href="digitalocean.html">jumpscale.clients.digitalocean.digitalocean</a></code></li>
+<li><code><a title="jumpscale.clients.digitalocean.project" href="project.html">jumpscale.clients.digitalocean.project</a></code></li>
 </ul>
 </li>
 </ul>

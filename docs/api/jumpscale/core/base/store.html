@@ -164,7 +164,7 @@ class EncryptedConfigStore(ConfigStore, EncryptionMixin):
         &#34;&#34;&#34;
         new_config = {}
         for name, value in config.items():
-            if name.startswith(&#34;__&#34;):
+            if name.startswith(&#34;__&#34;) and value is not None:
                 if mode == EncryptionMode.Decrypt:
                     new_config[name.lstrip(&#34;__&#34;)] = self._decrypt_value(value)
                 else:
@@ -421,7 +421,7 @@ def write(self, instance_name, data):
         &#34;&#34;&#34;
         new_config = {}
         for name, value in config.items():
-            if name.startswith(&#34;__&#34;):
+            if name.startswith(&#34;__&#34;) and value is not None:
                 if mode == EncryptionMode.Decrypt:
                     new_config[name.lstrip(&#34;__&#34;)] = self._decrypt_value(value)
                 else:

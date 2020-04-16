@@ -172,7 +172,9 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
         return self.__instance_name
 
     def _set_instance_name(self, name):
-        self.__instance_name = name</code></pre>
+        self.__instance_name = name
+
+    to_dict = _get_data</code></pre>
 </details>
 </section>
 <section>
@@ -307,7 +309,9 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
         return self.__instance_name
 
     def _set_instance_name(self, name):
-        self.__instance_name = name</code></pre>
+        self.__instance_name = name
+
+    to_dict = _get_data</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -348,6 +352,30 @@ def parent(self):
 </dl>
 <h3>Methods</h3>
 <dl>
+<dt id="jumpscale.core.base.meta.Base.to_dict"><code class="name flex">
+<span>def <span class="ident">to_dict</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def _get_data(self):
+    data = {}
+
+    for name, field in self._get_fields().items():
+        if isinstance(field, fields.Factory):
+            # skip for factories for now
+            continue
+        value = getattr(self, name)
+        raw_value = field.to_raw(value)
+        if isinstance(field, fields.Secret):
+            data[f&#34;__{name}&#34;] = raw_value
+        else:
+            data[name] = raw_value
+
+    return data</code></pre>
+</details>
+</dd>
 <dt id="jumpscale.core.base.meta.Base.validate"><code class="name flex">
 <span>def <span class="ident">validate</span></span>(<span>self)</span>
 </code></dt>
@@ -439,6 +467,7 @@ type(name, bases, dict) -&gt; a new type</p></section>
 <ul class="">
 <li><code><a title="jumpscale.core.base.meta.Base.instance_name" href="#jumpscale.core.base.meta.Base.instance_name">instance_name</a></code></li>
 <li><code><a title="jumpscale.core.base.meta.Base.parent" href="#jumpscale.core.base.meta.Base.parent">parent</a></code></li>
+<li><code><a title="jumpscale.core.base.meta.Base.to_dict" href="#jumpscale.core.base.meta.Base.to_dict">to_dict</a></code></li>
 <li><code><a title="jumpscale.core.base.meta.Base.validate" href="#jumpscale.core.base.meta.Base.validate">validate</a></code></li>
 </ul>
 </li>

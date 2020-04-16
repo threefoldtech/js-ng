@@ -21,17 +21,17 @@
 </header>
 <section id="section-intro">
 <p>This module is providing everything needed for decent filesystem management</p>
-<pre><code>        j.sals.fs.cwd()  -&gt; '/home/rafy' 
+<pre><code>        j.sals.fs.cwd()  -&gt; '/home/rafy'
         j.sals.fs.is_dir(path= '/home/rafy')  -&gt; True
         j.sals.fs.is_file(path= '/home/rafy')  -&gt; False
         j.sals.fs.is_absolute('/home/rafy/')  -&gt; True
         j.sals.fs.is_empty_dir(&quot;/home/rafy/empty_dir&quot;)  -&gt; True
-        j.sals.fs.mkdirs(&quot;/home/rafy/testing_make_dir/test1/test2&quot;,exist_ok=False) 
-        j.sals.fs.mkdirs(&quot;/home/rafy/testing_make_dir/test1/test2&quot;,exist_ok=True) 
+        j.sals.fs.mkdirs(&quot;/home/rafy/testing_make_dir/test1/test2&quot;,exist_ok=False)
+        j.sals.fs.mkdirs(&quot;/home/rafy/testing_make_dir/test1/test2&quot;,exist_ok=True)
         j.sals.fs.is_ascii_file(path=&quot;/home/rafy/testfile&quot;)  -&gt; True
         j.sals.fs.stem(&quot;/tmp/tmp-5383p1GOmMOOwvfi.tpl&quot;)  -&gt; 'tmp-5383p1GOmMOOwvfi'
         j.sals.fs.parent(&quot;/home/rafy/testing_make_dir/test1&quot;)  -&gt; '/home/rafy/testing_make_dir'
-        j.sals.fs.parents(&quot;/tmp/home/ahmed/myfile.py&quot;) -&gt; 
+        j.sals.fs.parents(&quot;/tmp/home/ahmed/myfile.py&quot;) -&gt;
     [PosixPath('/tmp/home/ahmed'),
     PosixPath('/tmp/home'),
     PosixPath('/tmp'),
@@ -39,7 +39,7 @@
 </code></pre>
 <pre><code>&gt; j.sals.fs.exists(&quot;/home/rafy/testing_make_dir/test1&quot;)
 True
-&gt; j.sals.fs.rename(&quot;/home/rafy/testing_make_dir&quot;,&quot;/home/rafy/testing_dir&quot;) 
+&gt; j.sals.fs.rename(&quot;/home/rafy/testing_make_dir&quot;,&quot;/home/rafy/testing_dir&quot;)
 &gt; j.sals.fs.expanduser(&quot;~/work&quot;)
 '/home/xmonader/work'
 &gt; j.sals.fs.unlink(&quot;/home/rafy/testfile3&quot;)
@@ -49,32 +49,32 @@ True
 &gt; j.sals.fs.read_bytes(&quot;/home/rafy/testing_text.txt&quot;)
 b'hello world
 '
-&gt; j.sals.fs.write_text(path=&quot;/home/rafy/testing_text.txt&quot;,data=&quot;hello world&quot;)  
+&gt; j.sals.fs.write_text(path=&quot;/home/rafy/testing_text.txt&quot;,data=&quot;hello world&quot;)
 11
-&gt; j.sals.fs.write_bytes(path=&quot;/home/rafy/testing_text.txt&quot;,data=b&quot;hello world&quot;)  
+&gt; j.sals.fs.write_bytes(path=&quot;/home/rafy/testing_text.txt&quot;,data=b&quot;hello world&quot;)
 11
 &gt; j.sals.fs.touch(&quot;/home/rafy/testing_touch&quot;)
-&gt; j.sals.fs.get_temp_filename(dir=&quot;/home/rafy/&quot;)  
+&gt; j.sals.fs.get_temp_filename(dir=&quot;/home/rafy/&quot;)
 '/home/rafy/tmp6x7w71ml'
-&gt; j.sals.fs.get_temp_dirname(dir=&quot;/home/rafy&quot;)  
+&gt; j.sals.fs.get_temp_dirname(dir=&quot;/home/rafy&quot;)
 '/home/rafy/tmpntm2ptqy'
-&gt; j.sals.fs.join_paths(&quot;home&quot;,&quot;rafy&quot;)  
-'home/rafy' 
-&gt; j.sals.fs.rm_emptry_dir(&quot;/home/rafy/empty_dir&quot;)   
+&gt; j.sals.fs.join_paths(&quot;home&quot;,&quot;rafy&quot;)
+'home/rafy'
+&gt; j.sals.fs.rm_emptry_dir(&quot;/home/rafy/empty_dir&quot;)
 &gt; j.sals.fs.copy_file(src=&quot;/home/rafy/testing_text.txt&quot;,dst=&quot;/home/rafy/Documents/testing_text.txt&quot;)
 &gt; j.sals.fs.symlink(src=&quot;/home/rafy/testing_text.txt&quot;,dst=&quot;/home/rafy/link_test&quot;)
-&gt; j.sals.fs.change_dir(&quot;/home/rafy/Documents&quot;)  
+&gt; j.sals.fs.change_dir(&quot;/home/rafy/Documents&quot;)
 '/home/rafy/Documents'
 &gt; j.sals.fs.chmod(&quot;/home/rafy/testing_dir&quot;,777)
-&gt; j.sals.fs.stat(&quot;/home/rafy/test_dir/test&quot;)  
+&gt; j.sals.fs.stat(&quot;/home/rafy/test_dir/test&quot;)
 os.stat_result(st_mode=33204, st_ino=795348, st_dev=2049, st_nlink=1, st_uid=1000, st_gid=1000, st_size=0, st_atime=1586445434, st_mtime=1586445434, st_ctime=1586445434)
-&gt; j.sals.fs.lstat(&quot;/home/rafy/testing_link&quot;)  
+&gt; j.sals.fs.lstat(&quot;/home/rafy/testing_link&quot;)
 os.stat_result(st_mode=41471, st_ino=7081257, st_dev=2049, st_nlink=1, st_uid=1000, st_gid=1000, st_size=16, st_atime=1586445737, st_mtime=1586445734, st_ctime=1586445734)
-&gt; j.sals.fs.resolve(&quot;&quot;)  
+&gt; j.sals.fs.resolve(&quot;&quot;)
 PosixPath('/home/rafy/Documents')
-&gt; j.sals.fs.resolve(&quot;./testing_text.txt&quot;)  
+&gt; j.sals.fs.resolve(&quot;./testing_text.txt&quot;)
 PosixPath('/home/rafy/Documents/testing_text.txt')
-&gt; '/home/ahmed/myfile.py' 
+&gt; '/home/ahmed/myfile.py'
 `.py` if include_dot else `py`
 
 </code></pre>
@@ -93,17 +93,17 @@ PosixPath('/home/rafy/Documents/testing_text.txt')
 <pre><code class="python">&#34;&#34;&#34;This module is providing everything needed for decent filesystem management
 
 ```
-        j.sals.fs.cwd()  -&gt; &#39;/home/rafy&#39; 
+        j.sals.fs.cwd()  -&gt; &#39;/home/rafy&#39;
         j.sals.fs.is_dir(path= &#39;/home/rafy&#39;)  -&gt; True
         j.sals.fs.is_file(path= &#39;/home/rafy&#39;)  -&gt; False
         j.sals.fs.is_absolute(&#39;/home/rafy/&#39;)  -&gt; True
         j.sals.fs.is_empty_dir(&#34;/home/rafy/empty_dir&#34;)  -&gt; True
-        j.sals.fs.mkdirs(&#34;/home/rafy/testing_make_dir/test1/test2&#34;,exist_ok=False) 
-        j.sals.fs.mkdirs(&#34;/home/rafy/testing_make_dir/test1/test2&#34;,exist_ok=True) 
+        j.sals.fs.mkdirs(&#34;/home/rafy/testing_make_dir/test1/test2&#34;,exist_ok=False)
+        j.sals.fs.mkdirs(&#34;/home/rafy/testing_make_dir/test1/test2&#34;,exist_ok=True)
         j.sals.fs.is_ascii_file(path=&#34;/home/rafy/testfile&#34;)  -&gt; True
         j.sals.fs.stem(&#34;/tmp/tmp-5383p1GOmMOOwvfi.tpl&#34;)  -&gt; &#39;tmp-5383p1GOmMOOwvfi&#39;
         j.sals.fs.parent(&#34;/home/rafy/testing_make_dir/test1&#34;)  -&gt; &#39;/home/rafy/testing_make_dir&#39;
-        j.sals.fs.parents(&#34;/tmp/home/ahmed/myfile.py&#34;) -&gt; 
+        j.sals.fs.parents(&#34;/tmp/home/ahmed/myfile.py&#34;) -&gt;
     [PosixPath(&#39;/tmp/home/ahmed&#39;),
     PosixPath(&#39;/tmp/home&#39;),
     PosixPath(&#39;/tmp&#39;),
@@ -114,7 +114,7 @@ PosixPath('/home/rafy/Documents/testing_text.txt')
 ```
 &gt; j.sals.fs.exists(&#34;/home/rafy/testing_make_dir/test1&#34;)
 True
-&gt; j.sals.fs.rename(&#34;/home/rafy/testing_make_dir&#34;,&#34;/home/rafy/testing_dir&#34;) 
+&gt; j.sals.fs.rename(&#34;/home/rafy/testing_make_dir&#34;,&#34;/home/rafy/testing_dir&#34;)
 &gt; j.sals.fs.expanduser(&#34;~/work&#34;)
 &#39;/home/xmonader/work&#39;
 &gt; j.sals.fs.unlink(&#34;/home/rafy/testfile3&#34;)
@@ -122,37 +122,37 @@ True
 &#39;hello world\n&#39;
 &gt; j.sals.fs.read_bytes(&#34;/home/rafy/testing_text.txt&#34;)
 b&#39;hello world\n&#39;
-&gt; j.sals.fs.write_text(path=&#34;/home/rafy/testing_text.txt&#34;,data=&#34;hello world&#34;)  
+&gt; j.sals.fs.write_text(path=&#34;/home/rafy/testing_text.txt&#34;,data=&#34;hello world&#34;)
 11
-&gt; j.sals.fs.write_bytes(path=&#34;/home/rafy/testing_text.txt&#34;,data=b&#34;hello world&#34;)  
+&gt; j.sals.fs.write_bytes(path=&#34;/home/rafy/testing_text.txt&#34;,data=b&#34;hello world&#34;)
 11
 &gt; j.sals.fs.touch(&#34;/home/rafy/testing_touch&#34;)
-&gt; j.sals.fs.get_temp_filename(dir=&#34;/home/rafy/&#34;)  
+&gt; j.sals.fs.get_temp_filename(dir=&#34;/home/rafy/&#34;)
 &#39;/home/rafy/tmp6x7w71ml&#39;
-&gt; j.sals.fs.get_temp_dirname(dir=&#34;/home/rafy&#34;)  
+&gt; j.sals.fs.get_temp_dirname(dir=&#34;/home/rafy&#34;)
 &#39;/home/rafy/tmpntm2ptqy&#39;
-&gt; j.sals.fs.join_paths(&#34;home&#34;,&#34;rafy&#34;)  
-&#39;home/rafy&#39; 
-&gt; j.sals.fs.rm_emptry_dir(&#34;/home/rafy/empty_dir&#34;)   
+&gt; j.sals.fs.join_paths(&#34;home&#34;,&#34;rafy&#34;)
+&#39;home/rafy&#39;
+&gt; j.sals.fs.rm_emptry_dir(&#34;/home/rafy/empty_dir&#34;)
 &gt; j.sals.fs.copy_file(src=&#34;/home/rafy/testing_text.txt&#34;,dst=&#34;/home/rafy/Documents/testing_text.txt&#34;)
 &gt; j.sals.fs.symlink(src=&#34;/home/rafy/testing_text.txt&#34;,dst=&#34;/home/rafy/link_test&#34;)
-&gt; j.sals.fs.change_dir(&#34;/home/rafy/Documents&#34;)  
+&gt; j.sals.fs.change_dir(&#34;/home/rafy/Documents&#34;)
 &#39;/home/rafy/Documents&#39;
 &gt; j.sals.fs.chmod(&#34;/home/rafy/testing_dir&#34;,777)
-&gt; j.sals.fs.stat(&#34;/home/rafy/test_dir/test&#34;)  
+&gt; j.sals.fs.stat(&#34;/home/rafy/test_dir/test&#34;)
 os.stat_result(st_mode=33204, st_ino=795348, st_dev=2049, st_nlink=1, st_uid=1000, st_gid=1000, st_size=0, st_atime=1586445434, st_mtime=1586445434, st_ctime=1586445434)
-&gt; j.sals.fs.lstat(&#34;/home/rafy/testing_link&#34;)  
+&gt; j.sals.fs.lstat(&#34;/home/rafy/testing_link&#34;)
 os.stat_result(st_mode=41471, st_ino=7081257, st_dev=2049, st_nlink=1, st_uid=1000, st_gid=1000, st_size=16, st_atime=1586445737, st_mtime=1586445734, st_ctime=1586445734)
-&gt; j.sals.fs.resolve(&#34;&#34;)  
+&gt; j.sals.fs.resolve(&#34;&#34;)
 PosixPath(&#39;/home/rafy/Documents&#39;)
-&gt; j.sals.fs.resolve(&#34;./testing_text.txt&#34;)  
+&gt; j.sals.fs.resolve(&#34;./testing_text.txt&#34;)
 PosixPath(&#39;/home/rafy/Documents/testing_text.txt&#39;)
-&gt; &#39;/home/ahmed/myfile.py&#39; 
+&gt; &#39;/home/ahmed/myfile.py&#39;
 `.py` if include_dot else `py`
 
 ```
 And very fancy walkers
-```        
+```
         for el in walk(&#39;/tmp&#39;, filter_fun=j.sals.fs.is_file) : ..
         for el in walk(&#39;/tmp&#39;, filter_fun=j.sals.fs.is_dir) : ..
         for el in walk(&#39;/tmp&#39;, filter_fun= lambda x: len(x)&gt;4 and (j.sals.fs.is_file(x) or j.sals.fs.is_dir(x)) ) : ..
@@ -203,7 +203,7 @@ def home() -&gt; str:
 def cwd() -&gt; str:
     &#34;&#34;&#34;Return current working directory.
     e.g
-        j.sals.fs.cwd()  -&gt; &#39;/home/rafy&#39; 
+        j.sals.fs.cwd()  -&gt; &#39;/home/rafy&#39;
 
 
     Returns:
@@ -263,7 +263,7 @@ def is_absolute(path: str) -&gt; bool:
         j.sals.fs.is_absolute(&#39;~/rafy/&#39;)  -&gt; False
 
     Args:
-        path (str): path to check if it is absolute 
+        path (str): path to check if it is absolute
 
     Returns:
         bool: True if absolute
@@ -364,11 +364,11 @@ def stem(path: str) -&gt; str:
 
 def mkdir(path: str, exist_ok=True):
     &#34;&#34;&#34;Makes directory at path
-    e.g 
+    e.g
         j.sals.fs.mkdir(&#34;/home/rafy/testing_make_dir&#34;)
         j.sals.fs.mkdir(&#34;/home/rafy/testing_make_dir&#34;,exist_ok=True)
         j.sals.fs.mkdir(&#34;/home/rafy/testing_make_dir&#34;,exist_ok=False) -&gt; File exists: &#39;/home/rafy/testing_make_dir&#39; (raise exception as the file exist and  exist_ok flag is false)
-        
+
     Args:
         path (str): path to create dir at
         exist_ok (bool, optional): won&#39;t fail if directory exists. Defaults to True.
@@ -382,8 +382,8 @@ def mkdir(path: str, exist_ok=True):
 def mkdirs(path: str, exist_ok=True):
     &#34;&#34;&#34;Creates dir as well as all non exisitng parents in the path
     e.g
-        j.sals.fs.mkdirs(&#34;/home/rafy/testing_make_dir/test1/test2&#34;,exist_ok=False) 
-        j.sals.fs.mkdirs(&#34;/home/rafy/testing_make_dir/test1/test2&#34;,exist_ok=True) 
+        j.sals.fs.mkdirs(&#34;/home/rafy/testing_make_dir/test1/test2&#34;,exist_ok=False)
+        j.sals.fs.mkdirs(&#34;/home/rafy/testing_make_dir/test1/test2&#34;,exist_ok=True)
         j.sals.fs.mkdirs(&#34;/home/rafy/testing_make_dir/test1/test2&#34;,exist_ok=False)  -&gt; File exists: &#39;/home/rafy/testing_make_dir/test1/test2&#39;(raise exception as the file exist and  exist_ok flag is false)
 
     Args:
@@ -395,9 +395,9 @@ def mkdirs(path: str, exist_ok=True):
 
 def parent(path: str) -&gt; str:
     &#34;&#34;&#34;Get path&#39;s parent
-    e.g 
+    e.g
         j.sals.fs.parent(&#34;/home/rafy/testing_make_dir/test1&#34;)  -&gt; &#39;/home/rafy/testing_make_dir&#39;
-    
+
     Args:
         path (str): path to get its parent
 
@@ -411,7 +411,7 @@ def parents(path: str) -&gt; List[str]:
     &#34;&#34;&#34;Get parents list
 
     e.g
-        j.sals.fs.parents(&#34;/tmp/home/ahmed/myfile.py&#34;) -&gt; 
+        j.sals.fs.parents(&#34;/tmp/home/ahmed/myfile.py&#34;) -&gt;
     [PosixPath(&#39;/tmp/home/ahmed&#39;),
     PosixPath(&#39;/tmp/home&#39;),
     PosixPath(&#39;/tmp&#39;),
@@ -458,7 +458,7 @@ def exists(path: str) -&gt; bool:
 def rename(path1: str, path2: str):
     &#34;&#34;&#34;Rename path1 to path2
     e.g
-        j.sals.fs.rename(&#34;/home/rafy/testing_make_dir&#34;,&#34;/home/rafy/testing_dir&#34;) 
+        j.sals.fs.rename(&#34;/home/rafy/testing_make_dir&#34;,&#34;/home/rafy/testing_dir&#34;)
 
     Args:
         path1 (str): source path
@@ -483,7 +483,7 @@ def expanduser(path: str) -&gt; str:
 
 def unlink(path: str):
     &#34;&#34;&#34;unlink path
-    e.g 
+    e.g
         j.sals.fs.unlink(&#34;/home/rafy/testfile3&#34;)
     Args:
         path (str): path to unlink
@@ -553,9 +553,9 @@ def write_bytes(path: str, data: bytes):
     Args:
         path (str): path to write to
         data (bytes): binary content
-    
+
     Returns:
-        int: Return the binary contents of the pointed-to file as a bytes object 
+        int: Return the binary contents of the pointed-to file as a bytes object
     &#34;&#34;&#34;
     return pathlib.Path(path).write_bytes(data)
 
@@ -623,7 +623,7 @@ def parts_to_path(parts: List[str]) -&gt; str:
     &#34;&#34;&#34;Convert list of path parts into a path string
     e.g
         j.sals.fs.parts_to_path([&#34;home&#34;,&#34;rafy&#34;])  -&gt; &#39;home/rafy&#39;
-    
+
     Args:
         parts (List[str]): path parts
 
@@ -640,7 +640,7 @@ def join_paths(*paths) -&gt; str:
     &#34;&#34;&#34;
     Convert tuple of path parts into a path string
     e.g
-        j.sals.fs.join_paths(&#34;home&#34;,&#34;rafy&#34;)  -&gt; &#39;home/rafy&#39; 
+        j.sals.fs.join_paths(&#34;home&#34;,&#34;rafy&#34;)  -&gt; &#39;home/rafy&#39;
 
     Args:
         parts (tuple): path parts (path parts comma seprated and they will be used as a tuple)
@@ -656,7 +656,7 @@ def join_paths(*paths) -&gt; str:
 def rm_emptry_dir(path: str):
     &#34;&#34;&#34;Remove empty directory if the directory is not empty it will throw exception (Directory not empty)
     e.g
-        j.sals.fs.rm_emptry_dir(&#34;/home/rafy/empty_dir&#34;)   
+        j.sals.fs.rm_emptry_dir(&#34;/home/rafy/empty_dir&#34;)
 
     Args:
         path (str): path to remove.
@@ -777,7 +777,7 @@ def lchmod(path: str, mode):
 
 def stat(path: str):
     &#34;&#34;&#34;Gets stat of path `path`
-    e.g 
+    e.g
         j.sals.fs.stat(&#34;/home/rafy/test_dir/test&#34;)  -&gt; os.stat_result(st_mode=33204, st_ino=795348, st_dev=2049, st_nlink=1, st_uid=1000, st_gid=1000, st_size=0, st_atime=1586445434, st_mtime=1586445434, st_ctime=1586445434)
     Args:
         path (str): path to get its stat
@@ -806,7 +806,7 @@ def lstat(path: str):
 
 def resolve(path: str) -&gt; str:
     &#34;&#34;&#34;resolve `.` and `..` in path
-    e.g 
+    e.g
         j.sals.fs.resolve(&#34;&#34;)  -&gt; PosixPath(&#39;/home/rafy/Documents&#39;)
         j.sals.fs.resolve(&#34;./testing_text.txt&#34;)  -&gt; PosixPath(&#39;/home/rafy/Documents/testing_text.txt&#39;)
 
@@ -948,7 +948,89 @@ def walk_dirs(path, recursive=True):
     if recursive:
         return walk(path, filter_fun=is_dir)
     else:
-        return walk_non_recursive(path, filter_fun=is_dir)</code></pre>
+        return walk_non_recursive(path, filter_fun=is_dir)
+
+
+
+
+def fs_check(**arguments):
+    &#34;&#34;&#34;Abstracts common checks over your file system related functions.
+    To reduce the boilerplate of expanding paths, checking for existence or ensuring non empty values.
+
+    Checks are defined for each argument separately in a form of a set
+        e.g
+        @fs_check(path={&#39;required&#39;, &#39;exists&#39;, &#39;expand&#39;})
+        @fs_check(path1={&#39;required&#39;, &#39;exists&#39;, &#39;expand&#39;}, path2={&#39;required&#39;, &#39;exists&#39;, &#39;expand&#39;})
+
+    Available checks:
+        - `required`: ensures the argument is passed with a non-empty value.
+        - `expand`  : expands the tilde `~` in path.
+        - `exists`  : the path exists.
+        - `file`    : the path is a file.
+        - `dir`     : the path is a dir.
+
+    &#34;&#34;&#34;
+
+
+    for argument, validators in arguments.items():
+        if not isinstance(validators, set):
+            raise ValueError(f&#34;Expected tuple of validators for argument {argument}&#34;)
+        for validator in validators:
+            if validator not in {&#34;required&#34;, &#34;exists&#34;, &#34;file&#34;, &#34;dir&#34;, &#34;expand&#34;}:
+                raise ValueError(f&#34;Unsupported validator &#39;{validator}&#39; for argument {argument}&#34;)
+
+    def decorator(func):
+        import inspect
+
+        signature = inspect.signature(func)
+        for argument in arguments:
+            if signature.parameters.get(argument) is None:
+                raise j.exceptions.Value(f&#34;Argument {argument} not found in function declaration of {func.__name__}&#34;)
+
+        def wrapper(*args, **kwargs):
+            args = list(args)
+            position = 0
+            for parameter in signature.parameters.values():
+                if parameter.name in arguments:
+                    value = args[position] if position &lt; len(args) else kwargs[parameter.name]
+                    if isinstance(value, str):
+                        value = expanduser(expandvars(value))
+                    if position &lt; len(args):
+                        args[position] = value
+                    else:
+                        kwargs[parameter.name] = value
+
+                    validators = arguments[parameter.name]
+                    if value and validators.intersection({&#34;exists&#34;, &#34;file&#34;, &#34;dir&#34;}) and not exists(value):
+                        msg = f&#34;Argument {parameter.name} in {func.__name__} expects an existing path value! {value} does not exist.&#34;
+                        raise j.exceptions.Value(msg)
+
+                    if &#34;required&#34; in validators and (value is None or value.strip() == &#34;&#34;):
+                        raise j.exceptions.Value(
+                            f&#34;Argument {parameter.name} in {func.__name__}  should not be None or empty string!&#34;
+                        )
+
+                    if &#34;required&#34; in validators:
+                        value = norm_path(value)
+                        if position &lt; len(args):
+                            args[position] = value
+                        else:
+                            kwargs[parameter.name] = value
+
+                    if value and validators.intersection({&#34;file&#34;}) and not isfile(value):
+                        raise j.exceptions.Value(
+                            f&#34;Argument {parameter.name} in {func.__name__} expects a file path! {value} is not a file.&#34;
+                        )
+                    if value and validators.intersection({&#34;dir&#34;}) and not isdir(value):
+                        raise j.exceptions.Value(
+                            f&#34;Argument {parameter.name} in {func.__name__} expects a directory path! {value} is not a directory.&#34;
+                        )
+                position += 1
+            return fun(*args, **kwargs)
+
+        return wrapper
+
+    return decorator</code></pre>
 </details>
 </section>
 <section>
@@ -1142,7 +1224,7 @@ j.sals.fs.cwd()
 <pre><code class="python">def cwd() -&gt; str:
     &#34;&#34;&#34;Return current working directory.
     e.g
-        j.sals.fs.cwd()  -&gt; &#39;/home/rafy&#39; 
+        j.sals.fs.cwd()  -&gt; &#39;/home/rafy&#39;
 
 
     Returns:
@@ -1319,6 +1401,109 @@ e.g
         return splitted[1].strip(&#34;.&#34;)</code></pre>
 </details>
 </dd>
+<dt id="jumpscale.sals.fs.fs_check"><code class="name flex">
+<span>def <span class="ident">fs_check</span></span>(<span>**arguments)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Abstracts common checks over your file system related functions.
+To reduce the boilerplate of expanding paths, checking for existence or ensuring non empty values.</p>
+<p>Checks are defined for each argument separately in a form of a set
+e.g
+@fs_check(path={'required', 'exists', 'expand'})
+@fs_check(path1={'required', 'exists', 'expand'}, path2={'required', 'exists', 'expand'})
+</p>
+<p>Available checks:
+- <code>required</code>: ensures the argument is passed with a non-empty value.
+- <code>expand</code>
+: expands the tilde <code>~</code> in path.
+- <a title="jumpscale.sals.fs.exists" href="#jumpscale.sals.fs.exists"><code>exists()</code></a>
+: the path exists.
+- <code>file</code>
+: the path is a file.
+- <code>dir</code>
+: the path is a dir.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def fs_check(**arguments):
+    &#34;&#34;&#34;Abstracts common checks over your file system related functions.
+    To reduce the boilerplate of expanding paths, checking for existence or ensuring non empty values.
+
+    Checks are defined for each argument separately in a form of a set
+        e.g
+        @fs_check(path={&#39;required&#39;, &#39;exists&#39;, &#39;expand&#39;})
+        @fs_check(path1={&#39;required&#39;, &#39;exists&#39;, &#39;expand&#39;}, path2={&#39;required&#39;, &#39;exists&#39;, &#39;expand&#39;})
+
+    Available checks:
+        - `required`: ensures the argument is passed with a non-empty value.
+        - `expand`  : expands the tilde `~` in path.
+        - `exists`  : the path exists.
+        - `file`    : the path is a file.
+        - `dir`     : the path is a dir.
+
+    &#34;&#34;&#34;
+
+
+    for argument, validators in arguments.items():
+        if not isinstance(validators, set):
+            raise ValueError(f&#34;Expected tuple of validators for argument {argument}&#34;)
+        for validator in validators:
+            if validator not in {&#34;required&#34;, &#34;exists&#34;, &#34;file&#34;, &#34;dir&#34;, &#34;expand&#34;}:
+                raise ValueError(f&#34;Unsupported validator &#39;{validator}&#39; for argument {argument}&#34;)
+
+    def decorator(func):
+        import inspect
+
+        signature = inspect.signature(func)
+        for argument in arguments:
+            if signature.parameters.get(argument) is None:
+                raise j.exceptions.Value(f&#34;Argument {argument} not found in function declaration of {func.__name__}&#34;)
+
+        def wrapper(*args, **kwargs):
+            args = list(args)
+            position = 0
+            for parameter in signature.parameters.values():
+                if parameter.name in arguments:
+                    value = args[position] if position &lt; len(args) else kwargs[parameter.name]
+                    if isinstance(value, str):
+                        value = expanduser(expandvars(value))
+                    if position &lt; len(args):
+                        args[position] = value
+                    else:
+                        kwargs[parameter.name] = value
+
+                    validators = arguments[parameter.name]
+                    if value and validators.intersection({&#34;exists&#34;, &#34;file&#34;, &#34;dir&#34;}) and not exists(value):
+                        msg = f&#34;Argument {parameter.name} in {func.__name__} expects an existing path value! {value} does not exist.&#34;
+                        raise j.exceptions.Value(msg)
+
+                    if &#34;required&#34; in validators and (value is None or value.strip() == &#34;&#34;):
+                        raise j.exceptions.Value(
+                            f&#34;Argument {parameter.name} in {func.__name__}  should not be None or empty string!&#34;
+                        )
+
+                    if &#34;required&#34; in validators:
+                        value = norm_path(value)
+                        if position &lt; len(args):
+                            args[position] = value
+                        else:
+                            kwargs[parameter.name] = value
+
+                    if value and validators.intersection({&#34;file&#34;}) and not isfile(value):
+                        raise j.exceptions.Value(
+                            f&#34;Argument {parameter.name} in {func.__name__} expects a file path! {value} is not a file.&#34;
+                        )
+                    if value and validators.intersection({&#34;dir&#34;}) and not isdir(value):
+                        raise j.exceptions.Value(
+                            f&#34;Argument {parameter.name} in {func.__name__} expects a directory path! {value} is not a directory.&#34;
+                        )
+                position += 1
+            return fun(*args, **kwargs)
+
+        return wrapper
+
+    return decorator</code></pre>
+</details>
+</dd>
 <dt id="jumpscale.sals.fs.get_temp_dirname"><code class="name flex">
 <span>def <span class="ident">get_temp_dirname</span></span>(<span>suffix=None, prefix=None, dir=None)</span>
 </code></dt>
@@ -1464,7 +1649,7 @@ j.sals.fs.is_absolute('~/rafy/')
         j.sals.fs.is_absolute(&#39;~/rafy/&#39;)  -&gt; False
 
     Args:
-        path (str): path to check if it is absolute 
+        path (str): path to check if it is absolute
 
     Returns:
         bool: True if absolute
@@ -1775,7 +1960,7 @@ j.sals.fs.join_paths("home","rafy")
     &#34;&#34;&#34;
     Convert tuple of path parts into a path string
     e.g
-        j.sals.fs.join_paths(&#34;home&#34;,&#34;rafy&#34;)  -&gt; &#39;home/rafy&#39; 
+        j.sals.fs.join_paths(&#34;home&#34;,&#34;rafy&#34;)  -&gt; &#39;home/rafy&#39;
 
     Args:
         parts (tuple): path parts (path parts comma seprated and they will be used as a tuple)
@@ -1870,11 +2055,11 @@ exist_ok flag is false)</p>
 <summary>Source code</summary>
 <pre><code class="python">def mkdir(path: str, exist_ok=True):
     &#34;&#34;&#34;Makes directory at path
-    e.g 
+    e.g
         j.sals.fs.mkdir(&#34;/home/rafy/testing_make_dir&#34;)
         j.sals.fs.mkdir(&#34;/home/rafy/testing_make_dir&#34;,exist_ok=True)
         j.sals.fs.mkdir(&#34;/home/rafy/testing_make_dir&#34;,exist_ok=False) -&gt; File exists: &#39;/home/rafy/testing_make_dir&#39; (raise exception as the file exist and  exist_ok flag is false)
-        
+
     Args:
         path (str): path to create dir at
         exist_ok (bool, optional): won&#39;t fail if directory exists. Defaults to True.
@@ -1908,8 +2093,8 @@ exist_ok flag is false)</p>
 <pre><code class="python">def mkdirs(path: str, exist_ok=True):
     &#34;&#34;&#34;Creates dir as well as all non exisitng parents in the path
     e.g
-        j.sals.fs.mkdirs(&#34;/home/rafy/testing_make_dir/test1/test2&#34;,exist_ok=False) 
-        j.sals.fs.mkdirs(&#34;/home/rafy/testing_make_dir/test1/test2&#34;,exist_ok=True) 
+        j.sals.fs.mkdirs(&#34;/home/rafy/testing_make_dir/test1/test2&#34;,exist_ok=False)
+        j.sals.fs.mkdirs(&#34;/home/rafy/testing_make_dir/test1/test2&#34;,exist_ok=True)
         j.sals.fs.mkdirs(&#34;/home/rafy/testing_make_dir/test1/test2&#34;,exist_ok=False)  -&gt; File exists: &#39;/home/rafy/testing_make_dir/test1/test2&#39;(raise exception as the file exist and  exist_ok flag is false)
 
     Args:
@@ -1941,9 +2126,9 @@ j.sals.fs.parent("/home/rafy/testing_make_dir/test1")
 <summary>Source code</summary>
 <pre><code class="python">def parent(path: str) -&gt; str:
     &#34;&#34;&#34;Get path&#39;s parent
-    e.g 
+    e.g
         j.sals.fs.parent(&#34;/home/rafy/testing_make_dir/test1&#34;)  -&gt; &#39;/home/rafy/testing_make_dir&#39;
-    
+
     Args:
         path (str): path to get its parent
 
@@ -1980,7 +2165,7 @@ PosixPath('/')]</p>
     &#34;&#34;&#34;Get parents list
 
     e.g
-        j.sals.fs.parents(&#34;/tmp/home/ahmed/myfile.py&#34;) -&gt; 
+        j.sals.fs.parents(&#34;/tmp/home/ahmed/myfile.py&#34;) -&gt;
     [PosixPath(&#39;/tmp/home/ahmed&#39;),
     PosixPath(&#39;/tmp/home&#39;),
     PosixPath(&#39;/tmp&#39;),
@@ -2020,7 +2205,7 @@ j.sals.fs.parts_to_path(["home","rafy"])
     &#34;&#34;&#34;Convert list of path parts into a path string
     e.g
         j.sals.fs.parts_to_path([&#34;home&#34;,&#34;rafy&#34;])  -&gt; &#39;home/rafy&#39;
-    
+
     Args:
         parts (List[str]): path parts
 
@@ -2290,7 +2475,7 @@ j.sals.fs.rename("/home/rafy/testing_make_dir","/home/rafy/testing_dir") </p>
 <pre><code class="python">def rename(path1: str, path2: str):
     &#34;&#34;&#34;Rename path1 to path2
     e.g
-        j.sals.fs.rename(&#34;/home/rafy/testing_make_dir&#34;,&#34;/home/rafy/testing_dir&#34;) 
+        j.sals.fs.rename(&#34;/home/rafy/testing_make_dir&#34;,&#34;/home/rafy/testing_dir&#34;)
 
     Args:
         path1 (str): source path
@@ -2335,7 +2520,7 @@ j.sals.fs.resolve("./testing_text.txt")
 <summary>Source code</summary>
 <pre><code class="python">def resolve(path: str) -&gt; str:
     &#34;&#34;&#34;resolve `.` and `..` in path
-    e.g 
+    e.g
         j.sals.fs.resolve(&#34;&#34;)  -&gt; PosixPath(&#39;/home/rafy/Documents&#39;)
         j.sals.fs.resolve(&#34;./testing_text.txt&#34;)  -&gt; PosixPath(&#39;/home/rafy/Documents/testing_text.txt&#39;)
 
@@ -2366,7 +2551,7 @@ j.sals.fs.rm_emptry_dir("/home/rafy/empty_dir")
 <pre><code class="python">def rm_emptry_dir(path: str):
     &#34;&#34;&#34;Remove empty directory if the directory is not empty it will throw exception (Directory not empty)
     e.g
-        j.sals.fs.rm_emptry_dir(&#34;/home/rafy/empty_dir&#34;)   
+        j.sals.fs.rm_emptry_dir(&#34;/home/rafy/empty_dir&#34;)
 
     Args:
         path (str): path to remove.
@@ -2421,7 +2606,7 @@ j.sals.fs.stat("/home/rafy/test_dir/test")
 <summary>Source code</summary>
 <pre><code class="python">def stat(path: str):
     &#34;&#34;&#34;Gets stat of path `path`
-    e.g 
+    e.g
         j.sals.fs.stat(&#34;/home/rafy/test_dir/test&#34;)  -&gt; os.stat_result(st_mode=33204, st_ino=795348, st_dev=2049, st_nlink=1, st_uid=1000, st_gid=1000, st_size=0, st_atime=1586445434, st_mtime=1586445434, st_ctime=1586445434)
     Args:
         path (str): path to get its stat
@@ -2543,7 +2728,7 @@ j.sals.fs.unlink("/home/rafy/testfile3")</p>
 <summary>Source code</summary>
 <pre><code class="python">def unlink(path: str):
     &#34;&#34;&#34;unlink path
-    e.g 
+    e.g
         j.sals.fs.unlink(&#34;/home/rafy/testfile3&#34;)
     Args:
         path (str): path to unlink
@@ -2775,9 +2960,9 @@ j.sals.fs.write_bytes(path="/home/rafy/testing_text.txt",data=b"hello world")
     Args:
         path (str): path to write to
         data (bytes): binary content
-    
+
     Returns:
-        int: Return the binary contents of the pointed-to file as a bytes object 
+        int: Return the binary contents of the pointed-to file as a bytes object
     &#34;&#34;&#34;
     return pathlib.Path(path).write_bytes(data)</code></pre>
 </details>
@@ -2812,9 +2997,9 @@ j.sals.fs.write_bytes(path="/home/rafy/testing_text.txt",data=b"hello world")
     Args:
         path (str): path to write to
         data (bytes): binary content
-    
+
     Returns:
-        int: Return the binary contents of the pointed-to file as a bytes object 
+        int: Return the binary contents of the pointed-to file as a bytes object
     &#34;&#34;&#34;
     return pathlib.Path(path).write_bytes(data)</code></pre>
 </details>
@@ -2890,9 +3075,9 @@ j.sals.fs.write_bytes(path="/home/rafy/testing_text.txt",data=b"hello world")
     Args:
         path (str): path to write to
         data (bytes): binary content
-    
+
     Returns:
-        int: Return the binary contents of the pointed-to file as a bytes object 
+        int: Return the binary contents of the pointed-to file as a bytes object
     &#34;&#34;&#34;
     return pathlib.Path(path).write_bytes(data)</code></pre>
 </details>
@@ -2968,6 +3153,7 @@ j.sals.fs.write_text(path="/home/rafy/testing_text.txt",data="hello world")
 <li><code><a title="jumpscale.sals.fs.expanduser" href="#jumpscale.sals.fs.expanduser">expanduser</a></code></li>
 <li><code><a title="jumpscale.sals.fs.ext" href="#jumpscale.sals.fs.ext">ext</a></code></li>
 <li><code><a title="jumpscale.sals.fs.extension" href="#jumpscale.sals.fs.extension">extension</a></code></li>
+<li><code><a title="jumpscale.sals.fs.fs_check" href="#jumpscale.sals.fs.fs_check">fs_check</a></code></li>
 <li><code><a title="jumpscale.sals.fs.get_temp_dirname" href="#jumpscale.sals.fs.get_temp_dirname">get_temp_dirname</a></code></li>
 <li><code><a title="jumpscale.sals.fs.get_temp_filename" href="#jumpscale.sals.fs.get_temp_filename">get_temp_filename</a></code></li>
 <li><code><a title="jumpscale.sals.fs.home" href="#jumpscale.sals.fs.home">home</a></code></li>
