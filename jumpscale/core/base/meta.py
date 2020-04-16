@@ -149,3 +149,5 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
 
     def _set_instance_name(self, name):
         self.__instance_name = name
+
+    to_dict = _get_data

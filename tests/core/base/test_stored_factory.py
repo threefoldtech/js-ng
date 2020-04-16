@@ -34,6 +34,7 @@ class User(Base):
     permissions = fields.List(fields.Object(Permission))
     custom_config = fields.Typed(dict)
     type = fields.Enum(UserType)
+    password = fields.Secret()
 
 
 class Client(Base):
@@ -44,6 +45,33 @@ class Client(Base):
 class TestStoredFactory(unittest.TestCase):
     def setUp(self):
         self.factory = StoredFactory(Client)
+
+    def test_secret_field(self):
+        cl = self.factory.get("test_secret")
+        user = cl.users.get("user_with_password")
+
+        # do not set password and try to save
+        # should not fail
+        user.save()
+        # do not forget to save the client
+        cl.save()
+
+        # get a new factory and check password
+        self.factory = StoredFactory(Client)
+        cl = self.factory.get("test_secret")
+        user = cl.users.get("user_with_password")
+        self.assertIsNone(user.password)
+
+        # set password and save
+        user.password = "test124"
+        user.save()
+        cl.save()
+
+        # get a new factory and check password again
+        self.factory = StoredFactory(Client)
+        cl = self.factory.get("test_secret")
+        user = cl.users.get("user_with_password")
+        self.assertEqual(user.password, "test124")
 
     def test_create_stored_factory(self):
         cl = self.factory.get("client")
@@ -71,6 +99,7 @@ class TestStoredFactory(unittest.TestCase):
 
         # test saving
         user = cl.users.get("auser")
+
         emails = ["a@b.com"]
         perm1 = Permission()
         perm1.is_admin = True

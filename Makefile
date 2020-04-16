@@ -4,8 +4,7 @@ tests:
 	pytest tests -s
 
 coverage:
-	pytest tests -s --cov=jumpscale
-
+	pytest tests -s --cov=jumpscale --cov-report=xml
 api_docs:
 	pdoc3 jumpscale --html --output-dir docs/api --force
 

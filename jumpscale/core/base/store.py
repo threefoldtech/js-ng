@@ -137,7 +137,7 @@ class EncryptedConfigStore(ConfigStore, EncryptionMixin):
         """
         new_config = {}
         for name, value in config.items():
-            if name.startswith("__"):
+            if name.startswith("__") and value is not None:
                 if mode == EncryptionMode.Decrypt:
                     new_config[name.lstrip("__")] = self._decrypt_value(value)
                 else:
