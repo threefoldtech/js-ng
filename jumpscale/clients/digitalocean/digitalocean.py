@@ -57,12 +57,12 @@ droplet.delete_remote()
 
 ### Get digital ocean regions 
 ```python 
-dg.digitalocean_regions 
+dg.regions 
 ```
 
 ### Get digital ocean images 
 ```python 
-dg.digitalocean_images
+dg.images
 ```
 
 In the below examples, I have supposed that you followed the above steps
@@ -451,11 +451,11 @@ class DigitalOcean(Client):
 
     # Images
     @property
-    def digitalocean_images(self):
+    def images(self):
         """Return a list of digital ocean availabe images 
 
         e.g
-            dg.digitalocean_images  -> [<Image: 31354013 CentOS 6.9 x32>,
+            dg.images  -> [<Image: 31354013 CentOS 6.9 x32>,
                                          <Image: 34902021 CentOS 6.9 x64>,...]
 
         Returns
@@ -464,11 +464,11 @@ class DigitalOcean(Client):
         return self.client.get_distro_images()
 
     @property
-    def digitalocean_myimages(self):
+    def myimages(self):
         """Return a list of digital ocean images, you have created
 
         e.g
-            dg.digitalocean_myimages  -> [<Image: 48614453 Unknown Zero_OS>,
+            dg.myimages  -> [<Image: 48614453 Unknown Zero_OS>,
                                         <Image: 50898718 Ubuntu JumpScale>,...]
 
         Returns
@@ -477,18 +477,18 @@ class DigitalOcean(Client):
         return self.client.get_images(private=True)
 
     @property
-    def digitalocean_account_images(self):
+    def account_images(self):
         """Return a list of digital ocean images and the images you have created
 
         e.g
-            dg.digitalocean_account_images  -> [<Image: 31354013 CentOS 6.9 x32>,
+            dg.account_images  -> [<Image: 31354013 CentOS 6.9 x32>,
                                              <Image: 34902021 CentOS 6.9 x64>,...]
 
         Returns
             List : list of images on digital ocean images and the images you have created
         """
 
-        return self.digitalocean_images + self.digitalocean_myimages
+        return self.images + self.myimages
 
     def get_image(self, name):
         """Return an image 
@@ -501,7 +501,7 @@ class DigitalOcean(Client):
         Returns
             Image : list of images on digital ocean images and the images you have created
         """
-        for item in self.digitalocean_account_images:
+        for item in self.account_images:
             if item.description:
                 name_do1 = item.description.lower()
             else:
@@ -525,7 +525,7 @@ class DigitalOcean(Client):
         """
         res = []
         name = name.lower()
-        for item in self.digitalocean_images:
+        for item in self.images:
             if item.description:
                 name_do = item.description.lower()
             else:
@@ -537,11 +537,11 @@ class DigitalOcean(Client):
     # Size
 
     @property
-    def digitalocean_sizes(self):
+    def sizes(self):
         """Return a list sizes available on digital ocean
 
         e.g
-            dg.digitalocean_sizes -> [s-1vcpu-1gb, 512mb, s-1vcpu-2gb, 1gb, s-3vcpu-1gb,.....]
+            dg.sizes -> [s-1vcpu-1gb, 512mb, s-1vcpu-2gb, 1gb, s-3vcpu-1gb,.....]
 
         Returns
             List : list of sizes
@@ -551,11 +551,11 @@ class DigitalOcean(Client):
     # Regions
 
     @property
-    def digitalocean_regions(self):
+    def regions(self):
         """Return a list regions available on digital ocean
 
         e.g
-            dg.digitalocean_regions  -> [<Region: nyc1 New York 1>, <Region: sgp1 Singapore 1>,...]
+            dg.regions  -> [<Region: nyc1 New York 1>, <Region: sgp1 Singapore 1>,...]
 
         Returns
             List : list of regions
@@ -563,16 +563,16 @@ class DigitalOcean(Client):
         return self.client.get_all_regions()
 
     @property
-    def digitalocean_region_names(self):
+    def region_names(self):
         """Returns Digital Ocean regions 
         
         e.g 
-            dg.digitalocean_region_names  -> ['nyc1', 'sgp1', 'lon1', 'nyc3', 'ams3', 'fra1', 'tor1', 'sfo2', 'blr1']
+            dg.region_names  -> ['nyc1', 'sgp1', 'lon1', 'nyc3', 'ams3', 'fra1', 'tor1', 'sfo2', 'blr1']
         
         Returns
             list : list of digital ocean regions
         """
-        return [i.slug for i in self.digitalocean_regions]
+        return [i.slug for i in self.regions]
 
     def get_region(self, name):
         """
@@ -586,7 +586,7 @@ class DigitalOcean(Client):
         Returns
             Region : the region with the name specified
         """
-        for item in self.digitalocean_regions:
+        for item in self.regions:
             if name == item.slug:
                 return item
             if name == item.name:
