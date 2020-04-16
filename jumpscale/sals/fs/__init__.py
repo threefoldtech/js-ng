@@ -857,3 +857,85 @@ def walk_dirs(path, recursive=True):
         return walk(path, filter_fun=is_dir)
     else:
         return walk_non_recursive(path, filter_fun=is_dir)
+
+
+
+
+def fs_check(**arguments):
+    """Abstracts common checks over your file system related functions.
+    To reduce the boilerplate of expanding paths, checking for existence or ensuring non empty values.
+
+    Checks are defined for each argument separately in a form of a set 
+        e.g
+        @fs_check(path={'required', 'exists', 'expand'})
+        @fs_check(path1={'required', 'exists', 'expand'}, path2={'required', 'exists', 'expand'})    
+        
+    Available checks:
+        - `required`: ensures the argument is passed with a non-empty value.
+        - `expand`  : expands the tilde `~` in path.
+        - `exists`  : the path exists.
+        - `file`    : the path is a file.
+        - `dir`     : the path is a dir.
+
+    """
+
+
+    for argument, validators in arguments.items():
+        if not isinstance(validators, set):
+            raise ValueError(f"Expected tuple of validators for argument {argument}")
+        for validator in validators:
+            if validator not in {"required", "exists", "file", "dir", "expand"}:
+                raise ValueError(f"Unsupported validator '{validator}' for argument {argument}")
+
+    def decorator(func):
+        import inspect
+
+        signature = inspect.signature(func)
+        for argument in arguments:
+            if signature.parameters.get(argument) is None:
+                raise j.exceptions.Value(f"Argument {argument} not found in function declaration of {func.__name__}")
+
+        def wrapper(*args, **kwargs):
+            args = list(args)
+            position = 0
+            for parameter in signature.parameters.values():
+                if parameter.name in arguments:
+                    value = args[position] if position < len(args) else kwargs[parameter.name]
+                    if isinstance(value, str):
+                        value = expanduser(expandvars(value))
+                    if position < len(args):
+                        args[position] = value
+                    else:
+                        kwargs[parameter.name] = value
+
+                    validators = arguments[parameter.name]
+                    if value and validators.intersection({"exists", "file", "dir"}) and not exists(value):
+                        msg = f"Argument {parameter.name} in {func.__name__} expects an existing path value! {value} does not exist."
+                        raise j.exceptions.Value(msg)
+
+                    if "required" in validators and (value is None or value.strip() == ""):
+                        raise j.exceptions.Value(
+                            f"Argument {parameter.name} in {func.__name__}  should not be None or empty string!"
+                        )
+
+                    if "required" in validators:
+                        value = norm_path(value)
+                        if position < len(args):
+                            args[position] = value
+                        else:
+                            kwargs[parameter.name] = value
+
+                    if value and validators.intersection({"file"}) and not isfile(value):
+                        raise j.exceptions.Value(
+                            f"Argument {parameter.name} in {func.__name__} expects a file path! {value} is not a file."
+                        )
+                    if value and validators.intersection({"dir"}) and not isdir(value):
+                        raise j.exceptions.Value(
+                            f"Argument {parameter.name} in {func.__name__} expects a directory path! {value} is not a directory."
+                        )
+                position += 1
+            return fun(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
