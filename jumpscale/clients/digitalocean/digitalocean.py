@@ -184,7 +184,7 @@ class Droplet(Client):
 
         # Get ssh
         if not sshkey:
-            sshkey_do = self.parent._sshkey_get_default()
+            sshkey_do = self.parent.get_default_sshkey()
 
             if not sshkey_do:
                 # means we did not find the sshkey on digital ocean yet, need to create
@@ -194,7 +194,7 @@ class Droplet(Client):
                     token=self.parent.projects.parent_instance.token_, name=sshkey.name, public_key=sshkey.public_key
                 )
                 key.create()
-            sshkey_do = self.parent._sshkey_get_default()
+            sshkey_do = self.parent.get_default_sshkey()
             assert sshkey_do
             sshkey = sshkey_do.name
 
@@ -206,9 +206,9 @@ class Droplet(Client):
                 sshcl = j.clients.sshclient.get(name="do_%s" % self.do_name, host=dr0.ip_address, sshkey=sshkey)
                 return dr0, sshcl
 
-        sshkey = self.parent.droplets.parent_instance.sshkey_get(sshkey)
-        region = self.parent.droplets.parent_instance.region_get(region)
-        imagedo = self.parent.droplets.parent_instance.image_get(image)
+        sshkey = self.parent.droplets.parent_instance.get_sshkey(sshkey)
+        region = self.parent.droplets.parent_instance.get_region(region)
+        imagedo = self.parent.droplets.parent_instance.get_image(image)
 
         img_slug_or_id = imagedo.slug if imagedo.slug else imagedo.id
 
@@ -271,7 +271,7 @@ class DigitalOcean(Client):
     def digitalocean_sizes(self):
         return self.client.get_all_sizes()
 
-    def image_get(self, name):
+    def get_image(self, name):
         for item in self.digitalocean_account_images:
             if item.description:
                 name_do1 = item.description.lower()
@@ -283,7 +283,7 @@ class DigitalOcean(Client):
                 return item
         raise j.exceptions.Base("did not find image:%s" % name)
 
-    def image_names_get(self, name=""):
+    def get_image_names(self, name=""):
         res = []
         name = name.lower()
         for item in self.digitalocean_images:
@@ -305,7 +305,7 @@ class DigitalOcean(Client):
     def digitalocean_region_names(self):
         return [i.slug for i in self.digitalocean_regions]
 
-    def region_get(self, name):
+    def get_region(self, name):
         for item in self.digitalocean_regions:
             if name == item.slug:
                 return item
@@ -318,17 +318,17 @@ class DigitalOcean(Client):
     def sshkeys(self):
         return self.client.get_all_sshkeys()
 
-    def _sshkey_get_default(self):
+    def get_default_sshkey(self):
         pubkeyonly = self.sshkey.public_key
         for item in self.sshkeys:
             if item.public_key.find(pubkeyonly) != -1:
                 return item
         return None
 
-    def sshkey_set_default(self, default_sshkey):
+    def det_default_sshkey(self, default_sshkey):
         self.sshkey = default_sshkey
 
-    def sshkey_get(self, name):
+    def get_sshkey(self, name):
         for item in self.sshkeys:
             if name == item.name:
                 return item
