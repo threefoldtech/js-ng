@@ -11,8 +11,7 @@
 * Developers
     * Structure
     * [Developer setup](./devsetup.md)
-    * [Contribution](./contribution.md)
-    * Development Process - soon
+    * [Development process/Contribution](./devprocess.md)
     * [Poetry](./poetry.md)
     * [Interacting with the development shell: jsng](./jsng_shell.md)
     * Configuration Management
