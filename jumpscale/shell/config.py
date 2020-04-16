@@ -91,7 +91,7 @@ def get_completions(self, document, complete_event):
     if script:
         try:
             reference = script.get_references()[0]
-        except IndexError:
+        except Exception:
             reference = ""
 
         for c in sorted(script.completions(), key=sort_completions_key):
@@ -253,11 +253,11 @@ def ptconfig(repl):
 
         try:
             completions = list(get_completions(self, document, complete_event))
-        except Exception:
-            raise
 
-        if not completions:
-            completions = old_get_completions(self, document, complete_event)
+            if not completions:
+                completions = old_get_completions(self, document, complete_event)
+        except Exception:
+            pass
 
         yield from completions
 
