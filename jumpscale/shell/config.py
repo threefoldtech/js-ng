@@ -1,6 +1,7 @@
+import better_exceptions
+import pudb
 import sys
 import traceback
-import better_exceptions
 
 from functools import partial
 from prompt_toolkit.application import get_app
@@ -10,7 +11,7 @@ from prompt_toolkit.shortcuts import print_formatted_text
 from prompt_toolkit.completion import Completion
 
 from ptpython.prompt_style import PromptStyle
-import pudb
+from ptpython.utils import get_jedi_script_from_document
 
 
 def patched_handle_exception(self, e):
@@ -44,114 +45,66 @@ def patched_handle_exception(self, e):
     output.flush()
 
 
-def eval_code(stmts, locals_=None, globals_=None):
+def sort_completions_key(completion):
     """
-    a helper function to ignore incomplete syntax erros when evaluating code
-    while typing incomplete lines, e.g.: j.clien...
+    sort completions according to their type
+
+    Args:
+        completion (jedi.api.classes.Completion): completion
+
+    Returns:
+        int: sorting order
     """
-    if not stmts:
-        return
-
-    try:
-        code = compile(stmts, filename="<kosmos>", mode="eval")
-    except SyntaxError:
-        return
-
-    return eval(code, globals_, locals_)
+    if completion.type == "function":
+        return 2
+    elif completion.type == "instance":
+        return 1
+    else:
+        return 3
 
 
-def get_current_line(document):
-    tbc = document.current_line_before_cursor
-    if tbc:
-        line = tbc.split(".")
-        parent, member = ".".join(line[:-1]), line[-1]
-        if member.startswith("__"):  # then we want to show private methods
-            prefix = "__"
-        elif member.startswith("_"):  # then we want to show private methods
-            prefix = "_"
-        else:
-            prefix = ""
-        return parent, member, prefix
-    raise ValueError("nothing is written")
+def get_style_for_completion(completion):
+    base = "bg:%s fg:ansiblack"
+    if completion.type == "function":
+        return base % "ansigreen"
+    elif completion.type == "instance":
+        return base % "ansiyellow"
+    else:
+        return base % "ansigray"
+
+
+HIDDEN_PREFIXES = ("_", "__")
 
 
 def get_completions(self, document, complete_event):
     """
-    get completions for j objects (using _method_) and others (using dir)
-    :rtype: `Completion` generator
+    get completions filtered and colored
+
+    To filter and color completions on type, we try get jedi completions first
+    and check their type, because `prompt-toolkit.completion.Completion` does not contain type information
     """
-
-    def colored_completions(names, color):
-        for name in names:
-            if not name:
-                continue
-            if name.startswith(member):
-                completion = name[len(member) :]
-                yield Completion(
-                    completion, 0, display=name, style="bg:%s fg:ansiblack" % color, selected_style="bg:ansidarkgray"
-                )
-
     try:
-        parent, member, prefix = get_current_line(document)
-    except ValueError:
+        script = get_jedi_script_from_document(document, self.get_globals(), self.get_locals())
+    except:
         return
 
-    obj = eval_code(parent, self.get_locals(), self.get_globals())
-    if obj:
+    if script:
+        try:
+            reference = script.get_references()[0]
+        except IndexError:
+            reference = ""
 
-        members = sorted(dir(obj), key=sort_children_key)
-        yield from colored_completions(members, "ansigray")
-    # code was on kosmos-improve to support multi colors in the completion
-    #    import types
+        for c in sorted(script.completions(), key=sort_completions_key):
+            if c.name.startswith(HIDDEN_PREFIXES):
+                if not reference or not reference.description.startswith("_"):
+                    continue
 
-    #     methods_list = []
-    #     props_list = []
-    #     rest_list = []
-
-    #     attrnames = dir(obj)
-    #     classattrnames = dir(obj.__class_)
-
-    #     for aname in attrnames:
-    #         attr = getattr(obj, aname)
-    #         if isinstance(attr, types.MethodType) or isinstance(attr, types.FunctionType):
-    #             methods_list.append(aname)
-    #         elif aname in dir(obj.__class__) and isinstance(attr):
-    #             props_list.append(aname)
-    #         else:
-    #             rest_list.append(aname)
-
-    #     from functools import partial
-
-    #     def filter_items(collection, prefix):
-    #         for el in collection:
-    #             if el.startswith(prefix):
-    #                 yield el
-
-    #     filter_props = partial(filter_items, props_list)
-    #     filter_methods = partial(filter_items, methods_list)
-    #     filter_rest = partial(filter_items, rest_list)
-
-    #     members = sorted(dir(obj), key=sort_children_key)
-    #     yield from colored_completions(filter_props, "ansigreen")
-    #     yield from colored_completions(filter_methods, "ansiblue")
-    #     yield from colored_completions(filter_rest, "ansigray")
-
-
-def sort_children_key(name):
-    """Sort members of an object
-    :param name: name
-    :type name: str
-    :return: the order of sorting
-    :rtype: int
-    """
-    if name.startswith("__"):
-        return 3
-    elif name.startswith("_"):
-        return 2
-    elif name.isupper():
-        return 1
-    else:
-        return 0
+            yield Completion(
+                c.name_with_symbols,
+                len(c.complete) - len(c.name_with_symbols),
+                display=c.name_with_symbols,
+                style=get_style_for_completion(c),
+            )
 
 
 def ptconfig(repl):
@@ -293,32 +246,19 @@ def ptconfig(repl):
     repl._handle_exception = partial(patched_handle_exception, repl)
     better_exceptions.hook()
 
-    old_get_completions = repl._completer.__class__.get_completions
+    old_get_completions = repl._completer.completer.__class__.get_completions
 
     def custom_get_completions(self, document, complete_event):
-        try:
-            _, _, prefix = get_current_line(document)
-        except ValueError:
-            return
-
         completions = []
+
         try:
             completions = list(get_completions(self, document, complete_event))
         except Exception:
-            RuntimeError("Error while getting completions\n" + traceback.format_exc())
+            raise
 
         if not completions:
             completions = old_get_completions(self, document, complete_event)
 
-        def filter_completions_on_prefix(completions, prefix=None):
-            HIDDEN_PREFIXES = ("_", "__")
+        yield from completions
 
-            for completion in completions:
-                text = completion.text
-                if prefix not in HIDDEN_PREFIXES and text.startswith(HIDDEN_PREFIXES):
-                    continue
-                yield completion
-
-        yield from filter_completions_on_prefix(completions, prefix)
-
-    # repl._completer.__class__.get_completions = custom_get_completions
+    repl._completer.completer.__class__.get_completions = custom_get_completions
