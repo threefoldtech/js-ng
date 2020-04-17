@@ -7,6 +7,13 @@
     * [Interacting with the development shell: jsng](./jsng_shell.md)
     * FAQ - soon
     * [API](generated_apis.md)
+* Tutorials
+    * [Interacting with Filesystem](./tutorials/salfs.md)
+    * [Interacting with configurations](./configmgmt.md)
+    * [Developing a SAL](./tutorials/developing_sal.md)
+    * [Developing a client](./tutorials/developing_client.md)
+    * Developing a Builder
+    * [Using jsync](./tutorials/jsync.md)
 * Developers
     * Structure
     * [Developer setup](./devsetup.md)
@@ -27,13 +34,6 @@
     * [API](generated_apis.md)
     * Builders
     * [Github actions](./githubactions.md)
-* Tutorials
-    * [Interacting with Filesystem](./tutorials/salfs.md)
-    * [Interacting with configurations](./configmgmt.md)
-    * [Developing a SAL](./tutorials/developing_sal.md)
-    * [Developing a client](./tutorials/developing_client.md)
-    * Developing a Builder
-    * [Using jsync](./tutorials/jsync.md)
 * [Specs](specs.md)
     * [Poetry](poetry.md)
     * [God object and namespaces](god_object_namespaces_concepts.md)
