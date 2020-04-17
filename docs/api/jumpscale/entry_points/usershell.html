@@ -41,24 +41,24 @@ class Container:
         self, name=&#34;jsng&#34;, image=&#34;threefoldtech/js-ng:latest&#34;, ports=None, volumes=None, devices=None, identity=None
     ):
         &#34;&#34;&#34;Creates a docker container with jsng installed on it and ready to use
-
+        
         Keyword Arguments:
             name {str} -- Name of the new docker container (default: {&#34;jsng&#34;})
             image {str} -- which image you want to use (should be first contains docker) (default: {&#34;threefoldtech/js-ng:latest&#34;})
-            ports {dict} -- ports The port number, as an integer. For example,
+            ports {dict} -- ports The port number, as an integer. For example, 
                 - {&#39;2222/tcp&#39;: 3333} will expose port 2222 inside the container as port 3333 on the host. (default: {None})
             volumes volumes (dict or list) –
                 A dictionary to configure volumes mounted inside the container. The key is either the host path or a volume name, and the value is a dictionary with the keys:
                 bind The path to mount the volume inside the container
                 mode Either rw to mount the volume read/write, or ro to mount it read-only.
-                example
+                example 
                 {&#39;/home/user1/&#39;: {&#39;bind&#39;: &#39;/mnt/vol2&#39;, &#39;mode&#39;: &#39;rw&#39;},
                 &#39;/var/www&#39;: {&#39;bind&#39;: &#39;/mnt/vol1&#39;, &#39;mode&#39;: &#39;ro&#39;}}
             devices {list} –
                 Expose host devices to the container, as a list of strings in the form &lt;path_on_host&gt;:&lt;path_in_container&gt;:&lt;cgroup_permissions&gt;.
                 For example, /dev/sda:/dev/xvda:rwm allows the container to have read-write access to the host’s /dev/sda via a node named /dev/xvda inside the container.
             identity {str} - string contains private key
-
+        
         Raises:
             j.exceptions.NotFound: [description]
         &#34;&#34;&#34;
@@ -127,24 +127,24 @@ def run():
         self, name=&#34;jsng&#34;, image=&#34;threefoldtech/js-ng:latest&#34;, ports=None, volumes=None, devices=None, identity=None
     ):
         &#34;&#34;&#34;Creates a docker container with jsng installed on it and ready to use
-
+        
         Keyword Arguments:
             name {str} -- Name of the new docker container (default: {&#34;jsng&#34;})
             image {str} -- which image you want to use (should be first contains docker) (default: {&#34;threefoldtech/js-ng:latest&#34;})
-            ports {dict} -- ports The port number, as an integer. For example,
+            ports {dict} -- ports The port number, as an integer. For example, 
                 - {&#39;2222/tcp&#39;: 3333} will expose port 2222 inside the container as port 3333 on the host. (default: {None})
             volumes volumes (dict or list) –
                 A dictionary to configure volumes mounted inside the container. The key is either the host path or a volume name, and the value is a dictionary with the keys:
                 bind The path to mount the volume inside the container
                 mode Either rw to mount the volume read/write, or ro to mount it read-only.
-                example
+                example 
                 {&#39;/home/user1/&#39;: {&#39;bind&#39;: &#39;/mnt/vol2&#39;, &#39;mode&#39;: &#39;rw&#39;},
                 &#39;/var/www&#39;: {&#39;bind&#39;: &#39;/mnt/vol1&#39;, &#39;mode&#39;: &#39;ro&#39;}}
             devices {list} –
                 Expose host devices to the container, as a list of strings in the form &lt;path_on_host&gt;:&lt;path_in_container&gt;:&lt;cgroup_permissions&gt;.
                 For example, /dev/sda:/dev/xvda:rwm allows the container to have read-write access to the host’s /dev/sda via a node named /dev/xvda inside the container.
             identity {str} - string contains private key
-
+        
         Raises:
             j.exceptions.NotFound: [description]
         &#34;&#34;&#34;
@@ -193,24 +193,24 @@ identity {str} - string contains private key</p>
     self, name=&#34;jsng&#34;, image=&#34;threefoldtech/js-ng:latest&#34;, ports=None, volumes=None, devices=None, identity=None
 ):
     &#34;&#34;&#34;Creates a docker container with jsng installed on it and ready to use
-
+    
     Keyword Arguments:
         name {str} -- Name of the new docker container (default: {&#34;jsng&#34;})
         image {str} -- which image you want to use (should be first contains docker) (default: {&#34;threefoldtech/js-ng:latest&#34;})
-        ports {dict} -- ports The port number, as an integer. For example,
+        ports {dict} -- ports The port number, as an integer. For example, 
             - {&#39;2222/tcp&#39;: 3333} will expose port 2222 inside the container as port 3333 on the host. (default: {None})
         volumes volumes (dict or list) –
             A dictionary to configure volumes mounted inside the container. The key is either the host path or a volume name, and the value is a dictionary with the keys:
             bind The path to mount the volume inside the container
             mode Either rw to mount the volume read/write, or ro to mount it read-only.
-            example
+            example 
             {&#39;/home/user1/&#39;: {&#39;bind&#39;: &#39;/mnt/vol2&#39;, &#39;mode&#39;: &#39;rw&#39;},
             &#39;/var/www&#39;: {&#39;bind&#39;: &#39;/mnt/vol1&#39;, &#39;mode&#39;: &#39;ro&#39;}}
         devices {list} –
             Expose host devices to the container, as a list of strings in the form &lt;path_on_host&gt;:&lt;path_in_container&gt;:&lt;cgroup_permissions&gt;.
             For example, /dev/sda:/dev/xvda:rwm allows the container to have read-write access to the host’s /dev/sda via a node named /dev/xvda inside the container.
         identity {str} - string contains private key
-
+    
     Raises:
         j.exceptions.NotFound: [description]
     &#34;&#34;&#34;
