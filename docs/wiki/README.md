@@ -1,23 +1,19 @@
-Here you will find documentation on js-ng project, its specs and its APIs too.
-
-
 * [Home](/)
 * Getting Started
     * [Intro](./intro.md)
     * [Installation](./installation.md)
     * [Installation for JS-NG developers](./devsetup.md)
-    * [Docker based setup](./docker.md)
-    * Enduser shell - soon
+    * Docker based setup
     * [Interacting with the development shell: jsng](./jsng_shell.md)
     * FAQ - soon
     * [API](generated_apis.md)
 * Developers
     * Structure
     * [Developer setup](./devsetup.md)
-    * [Contribution](./contribution.md)
-    * Development Process - soon
+    * [Development process/Contribution](./devprocess.md)
     * [Poetry](./poetry.md)
     * [Interacting with the development shell: jsng](./jsng_shell.md)
+    * Configuration Management
     * [Configuration Management](./configmgmt.md)
     * [Base Classes and Hierarchical Configurations](./baseclasses.md)
     * [Adding a new command](./distributing_cmds.md)
