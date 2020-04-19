@@ -173,11 +173,13 @@ class J:
 
     def _load(self):
         if not self.__loaded:
+            # print("loading")
+            # print("id :", id(self))
             self.__loaded_simplenamespace = namespaceify(loadjsmodules())
+            self.__loaded = True
 
     def __getattr__(self, name):
         self._load()
-
         return getattr(self.__loaded_simplenamespace.jumpscale, name)
 
 
