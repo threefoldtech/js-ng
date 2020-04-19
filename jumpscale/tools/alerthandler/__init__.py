@@ -1,3 +1,4 @@
-from .alerthandler import AlertsHandler
+def export_module_as():
+    from .alerthandler import AlertsHandler
 
-export_module_as = AlertsHandler()
+    return AlertsHandler()

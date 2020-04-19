@@ -1,3 +1,4 @@
-from .errorhandler import ErrorHandler
+def export_module_as():
+    from .errorhandler import ErrorHandler
 
-export_module_as = ErrorHandler()
+    return ErrorHandler()

@@ -1,6 +1,6 @@
-from jumpscale.core.base import StoredFactory
+def export_module_as():
+    from jumpscale.core.base import StoredFactory
 
-from .gdrive import GdriveClient
+    from .gdrive import GdriveClient
 
-
-export_module_as = StoredFactory(GdriveClient)
+    return StoredFactory(GdriveClient)

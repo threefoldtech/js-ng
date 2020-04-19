@@ -1,6 +1,6 @@
-from jumpscale.core.base import StoredFactory
+def export_module_as():
+    from jumpscale.core.base import StoredFactory
 
-from .zerotier import ZerotierClient
+    from .zerotier import ZerotierClient
 
-
-export_module_as = StoredFactory(ZerotierClient)
+    return StoredFactory(ZerotierClient)

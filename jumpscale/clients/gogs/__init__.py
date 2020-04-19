@@ -1,5 +1,5 @@
-from jumpscale.core.base import StoredFactory
-from .gogs import Gogs
+def export_module_as():
+    from jumpscale.core.base import StoredFactory
+    from .gogs import Gogs
 
-
-export_module_as = StoredFactory(Gogs)
+    return StoredFactory(Gogs)
