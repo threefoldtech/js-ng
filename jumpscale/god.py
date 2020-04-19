@@ -163,7 +163,9 @@ def loadjsmodules():
                     if hasattr(m, "export_module_as"):
                         # print("rootbase: ", rootbase, importedpkgstr)
                         # print(m.export_module_as)
-                        loadeddict["jumpscale"][rootbase][pkgname] = ExportedModule(m)
+                        expmod = ExportedModule(m)
+                        expmod.__doc__ = m.__doc__
+                        loadeddict["jumpscale"][rootbase][pkgname] = expmod
                         # loadeddict[importedpkgstr] = m.export_module_as
                     else:
                         loadeddict["jumpscale"][rootbase][pkgname] = m
