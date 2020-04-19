@@ -86,7 +86,7 @@ import sys
 import traceback
 from types import SimpleNamespace
 
-__all__ = ["j", "loadjsmodules"]
+__all__ = ["j"]
 
 
 class ExportedModule(SimpleNamespace):
