@@ -10,10 +10,11 @@ If simple extension you can just write your code in `yourpackage/__init__.py` fi
 
 The way we do for faker data package we replace the package completely with one instance of `Faker`.
 ```
-from faker import Faker
-import sys
+def export_module_as():
+    from faker import Faker
+    import sys
 
-export_module_as = Faker()
+    return Faker()
 ```
 
 ### Import all from another package
@@ -27,23 +28,17 @@ from arrow import *
 The same way we do for the clients by replacing the loaded client package with one instance of a factory of the client
 
 ```python
-from jumpscale.core.base import StoredFactory
-from .redis import RedisClient
+
+def export_module_as():
+    from jumpscale.core.base import StoredFactory
+    from .redis import RedisClient
 
 
-export_module_as = StoredFactory(RedisClient)
+    return StoredFactory(RedisClient)
 
 ```
-
 
 ## export_module_as
 
 `export_module_as` is our mechanism to define how to expose a certain package under j object. In case it's defined in the package we replace the package with its value.
 
-Here's a snippet of the code in our loader.
-```python
-if hasattr(m, "export_module_as"):
-    loadeddict["jumpscale"][rootbase][pkgname] = m.export_module_as
-else:
-    loadeddict["jumpscale"][rootbase][pkgname] = m
-```
