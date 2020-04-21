@@ -22,9 +22,10 @@
 <section id="section-intro">
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">from .alerthandler import AlertsHandler
+<pre><code class="python">def export_module_as():
+    from .alerthandler import AlertsHandler
 
-export_module_as = AlertsHandler()</code></pre>
+    return AlertsHandler()</code></pre>
 </details>
 </section>
 <section>
@@ -39,6 +40,22 @@ export_module_as = AlertsHandler()</code></pre>
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="jumpscale.tools.alerthandler.export_module_as"><code class="name flex">
+<span>def <span class="ident">export_module_as</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def export_module_as():
+    from .alerthandler import AlertsHandler
+
+    return AlertsHandler()</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 </section>
@@ -57,6 +74,11 @@ export_module_as = AlertsHandler()</code></pre>
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
 <li><code><a title="jumpscale.tools.alerthandler.alerthandler" href="alerthandler.html">jumpscale.tools.alerthandler.alerthandler</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="jumpscale.tools.alerthandler.export_module_as" href="#jumpscale.tools.alerthandler.export_module_as">export_module_as</a></code></li>
 </ul>
 </li>
 </ul>

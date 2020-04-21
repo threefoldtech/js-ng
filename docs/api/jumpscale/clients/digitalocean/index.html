@@ -22,11 +22,13 @@
 <section id="section-intro">
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">from jumpscale.core.base import StoredFactory
+<pre><code class="python">def export_module_as():
 
-from .digitalocean import DigitalOcean
+    from jumpscale.core.base import StoredFactory
 
-export_module_as = StoredFactory(DigitalOcean)</code></pre>
+    from .digitalocean import DigitalOcean
+
+    return StoredFactory(DigitalOcean)</code></pre>
 </details>
 </section>
 <section>
@@ -45,6 +47,25 @@ export_module_as = StoredFactory(DigitalOcean)</code></pre>
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="jumpscale.clients.digitalocean.export_module_as"><code class="name flex">
+<span>def <span class="ident">export_module_as</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def export_module_as():
+
+    from jumpscale.core.base import StoredFactory
+
+    from .digitalocean import DigitalOcean
+
+    return StoredFactory(DigitalOcean)</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 </section>
@@ -64,6 +85,11 @@ export_module_as = StoredFactory(DigitalOcean)</code></pre>
 <ul>
 <li><code><a title="jumpscale.clients.digitalocean.digitalocean" href="digitalocean.html">jumpscale.clients.digitalocean.digitalocean</a></code></li>
 <li><code><a title="jumpscale.clients.digitalocean.project" href="project.html">jumpscale.clients.digitalocean.project</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="jumpscale.clients.digitalocean.export_module_as" href="#jumpscale.clients.digitalocean.export_module_as">export_module_as</a></code></li>
 </ul>
 </li>
 </ul>

@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.4" />
 <title>jumpscale.entry_points.jsync API documentation</title>
-<meta name="description" content="syncing tool to sync over certain set of directories against remote machine.
+<meta name="description" content="`jsync` is syncing tool to sync over certain set of directories against remote machine.
 list available clients
 ```
-~&gt; poetry run jsync list-ssh-clients …" />
+~&gt; poetry run jsync …" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -23,30 +23,28 @@ list available clients
 <h1 class="title">Module <code>jumpscale.entry_points.jsync</code></h1>
 </header>
 <section id="section-intro">
-<p>syncing tool to sync over certain set of directories against remote machine.
-list available clients</p>
-<pre><code>~&gt; poetry run jsync list-ssh-clients           
+<p><code>jsync</code> is syncing tool to sync over certain set of directories against remote machine.</p>
+<h2 id="list-available-clients">list available clients</h2>
+<pre><code>~&gt; poetry run jsync list-ssh-clients
 ['xmonader']
-
 </code></pre>
-<p>sync with a client certain set of paths
-~&gt; poetry run jsync sync &ndash;clients "xmonader" &ndash;paths "~/wspace/tq,/tmp/proj:/tmp/proj2"
-['xmonader'] {'~/wspace/tq': '~/wspace/tq', '/tmp/proj': '/tmp/proj2'}</p>
-<pre><code>
+<h2 id="sync-with-a-client-certain-set-of-paths">sync with a client certain set of paths</h2>
+<pre><code>~&gt; poetry run jsync sync --clients &quot;xmonader&quot; --paths &quot;~/wspace/tq,/tmp/proj:/tmp/proj2&quot;
+['xmonader'] {'~/wspace/tq': '~/wspace/tq', '/tmp/proj': '/tmp/proj2'}
 </code></pre>
-<p>poetry run jsync sync &ndash;clients "xmonader" &ndash;paths "~/wspace/tq:/tmp/tq" &ndash;sync
-```</p>
+<pre><code>poetry run jsync sync --clients &quot;xmonader&quot; --paths &quot;~/wspace/tq:/tmp/tq&quot; --sync
+</code></pre>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">&#34;&#34;&#34;syncing tool to sync over certain set of directories against remote machine.
-list available clients
+<pre><code class="python">&#34;&#34;&#34;`jsync` is syncing tool to sync over certain set of directories against remote machine.
+## list available clients
 ```
-~&gt; poetry run jsync list-ssh-clients           
+~&gt; poetry run jsync list-ssh-clients
 [&#39;xmonader&#39;]
-
 ```
 
-sync with a client certain set of paths
+## sync with a client certain set of paths
+```
 ~&gt; poetry run jsync sync --clients &#34;xmonader&#34; --paths &#34;~/wspace/tq,/tmp/proj:/tmp/proj2&#34;
 [&#39;xmonader&#39;] {&#39;~/wspace/tq&#39;: &#39;~/wspace/tq&#39;, &#39;/tmp/proj&#39;: &#39;/tmp/proj2&#39;}
 ```
@@ -112,7 +110,10 @@ if __name__ == &#34;__main__&#34;:
 <nav id="sidebar">
 <h1>Index</h1>
 <div class="toc">
-<ul></ul>
+<ul>
+<li><a href="#list-available-clients">list available clients</a></li>
+<li><a href="#sync-with-a-client-certain-set-of-paths">sync with a client certain set of paths</a></li>
+</ul>
 </div>
 <ul id="index">
 <li><h3>Super-module</h3>

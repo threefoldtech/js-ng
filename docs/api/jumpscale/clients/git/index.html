@@ -22,12 +22,13 @@
 <section id="section-intro">
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">from jumpscale.core.base import StoredFactory
+<pre><code class="python">def export_module_as():
 
-from .git import GitClient
+    from jumpscale.core.base import StoredFactory
 
+    from .git import GitClient
 
-export_module_as = StoredFactory(GitClient)</code></pre>
+    return StoredFactory(GitClient)</code></pre>
 </details>
 </section>
 <section>
@@ -42,6 +43,25 @@ export_module_as = StoredFactory(GitClient)</code></pre>
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="jumpscale.clients.git.export_module_as"><code class="name flex">
+<span>def <span class="ident">export_module_as</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def export_module_as():
+
+    from jumpscale.core.base import StoredFactory
+
+    from .git import GitClient
+
+    return StoredFactory(GitClient)</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 </section>
@@ -60,6 +80,11 @@ export_module_as = StoredFactory(GitClient)</code></pre>
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
 <li><code><a title="jumpscale.clients.git.git" href="git.html">jumpscale.clients.git.git</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="jumpscale.clients.git.export_module_as" href="#jumpscale.clients.git.export_module_as">export_module_as</a></code></li>
 </ul>
 </li>
 </ul>

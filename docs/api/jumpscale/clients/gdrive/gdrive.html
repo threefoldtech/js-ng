@@ -101,7 +101,25 @@ class GdriveClient(Client):
 </code></dt>
 <dd>
 <section class="desc"><p>A simple attribute-based namespace.</p>
-<p>SimpleNamespace(**kwargs)</p></section>
+<p>SimpleNamespace(**kwargs)</p>
+<p>base class implementation for any class with fields which supports getting/setting raw data for any instance fields.</p>
+<p>any instance can have an optional name and a parent.</p>
+<pre><code class="python">class Person(Base):
+    name = fields.String()
+    age = fields.Float()
+
+p = Person(name=&quot;ahmed&quot;, age=&quot;19&quot;)
+print(p.name, p.age)
+</code></pre>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>parent_</code></strong> :&ensp;<code>Base</code>, optional</dt>
+<dd>parent instance. Defaults to None.</dd>
+<dt><strong><code>instance_name_</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>instance name. Defaults to None.</dd>
+</dl>
+<p>Keyword args:
+values: any given field values to initiate the instance with</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class GdriveClient(Client):
@@ -162,13 +180,26 @@ def credentials(self):
 </dd>
 <dt id="jumpscale.clients.gdrive.gdrive.GdriveClient.credfile"><code class="name">var <span class="ident">credfile</span></code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>getter method this property</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>any</code></strong></dt>
+<dd>the field value</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def getter(self):
+    &#34;&#34;&#34;
+    getter method this property
+
+    Returns:
+        any: the field value
+    &#34;&#34;&#34;
+    # if it&#39;s already defined, just return it
     if hasattr(self, inner_name):
         return getattr(self, inner_name)
 
+    # if not, it will just return the default value of the field
     # accept raw value as default too
     return field.from_raw(field.default)</code></pre>
 </details>
@@ -225,6 +256,16 @@ def files(self):
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="jumpscale.clients.base.Client" href="../base.html#jumpscale.clients.base.Client">Client</a></b></code>:
+<ul class="hlist">
+<li><code><a title="jumpscale.clients.base.Client.from_dict" href="../../core/base/meta.html#jumpscale.core.base.meta.Base.from_dict">from_dict</a></code></li>
+<li><code><a title="jumpscale.clients.base.Client.to_dict" href="../../core/base/meta.html#jumpscale.core.base.meta.Base.to_dict">to_dict</a></code></li>
+<li><code><a title="jumpscale.clients.base.Client.validate" href="../../core/base/meta.html#jumpscale.core.base.meta.Base.validate">validate</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 </dl>
 </section>

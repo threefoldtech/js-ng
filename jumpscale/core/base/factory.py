@@ -204,17 +204,17 @@ class Factory:
         """
         delete the instance with given name
 
-        here, we only remove the property
+        here, we only remove the attribute
 
         Args:
-            name (str): instance/property name
+            name (str): instance/attribute name
         """
         if hasattr(self, name):
             delattr(self, name)
 
     def delete(self, name):
         """
-        delete an instance (with its property)
+        delete an instance (with its attribute)
 
         this will update the count and trigger `_deleted`
 
