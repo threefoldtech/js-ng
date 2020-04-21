@@ -14,7 +14,7 @@ HISTORY_FILENAME = os.path.join(BASE_CONFIG_DIR, "history.txt")
 
 class Container:
     def install(
-        self, name="jsng", image="threefoldtech/js-ng:latest", ports=None, volumes=None, devices=None, identity=None
+        self, name="jsng", image="threefoldtech/js-ng:latest", ports=None, volumes=None, devices=None, identity=None, mount_code=True
     ):
         """Creates a docker container with jsng installed on it and ready to use
         
@@ -23,7 +23,7 @@ class Container:
             image {str} -- which image you want to use (should be first contains docker) (default: {"threefoldtech/js-ng:latest"})
             ports {dict} -- ports The port number, as an integer. For example, 
                 - {'2222/tcp': 3333} will expose port 2222 inside the container as port 3333 on the host. (default: {None})
-            volumes volumes (dict or list) –
+            volumes volumes (dict) –
                 A dictionary to configure volumes mounted inside the container. The key is either the host path or a volume name, and the value is a dictionary with the keys:
                 bind The path to mount the volume inside the container
                 mode Either rw to mount the volume read/write, or ro to mount it read-only.
@@ -39,7 +39,11 @@ class Container:
             j.exceptions.NotFound: [description]
         """
         client = j.clients.docker.get("container_install")
+        CODEDIR = j.core.dirs.CODEDIR
         try:
+            if mount_code and j.sals.fs.exists(CODEDIR):
+                volumes = volumes or {}
+                volumes.update( {CODEDIR: {'bind': "/sandbox/code", 'mode': 'rw'}})    
             cotainer = client.get(name)
             raise j.exceptions.NotFound(f"docker with name: {name} already exists, try another name")
         except docker.errors.NotFound:
