@@ -3,13 +3,13 @@ name: jsng-ci
 
 on: pull_request
 jobs:
-    black:
+    black-docstr:
         runs-on: ubuntu-latest
         steps:
         - uses: actions/checkout@v2
         - run: |
             git fetch --no-tags --prune --depth=1 origin +refs/heads/*:refs/remotes/origin/*
-        - name: Gathering deps
+        - name: Running black and docstr-coverage check
           run: |
             sudo apt-get update
             sudo apt-get install git python3-pip -y
