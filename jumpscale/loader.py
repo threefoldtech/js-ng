@@ -69,7 +69,7 @@ def expose_all(root_module: types.ModuleType, container_type: type):
 
             full_name = f"{root_module.__name__}.{name}"
             mod = importlib.import_module(full_name)
-            if mod.__spec__.origin == "namespace":
+            if mod.__spec__.origin in ("namespace", None):
                 # if this module is a namespace, create a new container type
                 # then do the same with it
                 sub_container_type = get_container_type(full_name)
