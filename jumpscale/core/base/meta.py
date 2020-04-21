@@ -220,9 +220,7 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
         Args:
             parent_ (Base, optional): parent instance. Defaults to None.
             instance_name_ (str, optional): instance name. Defaults to None.
-
-        Keyword args:
-            values: any given field values to initiate the instance with
+            **values: any given field values to initiate the instance with
         """
         self.__parent = parent_
         self.__instance_name = instance_name_

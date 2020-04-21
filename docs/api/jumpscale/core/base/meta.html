@@ -289,9 +289,7 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
         Args:
             parent_ (Base, optional): parent instance. Defaults to None.
             instance_name_ (str, optional): instance name. Defaults to None.
-
-        Keyword args:
-            values: any given field values to initiate the instance with
+            **values: any given field values to initiate the instance with
         &#34;&#34;&#34;
         self.__parent = parent_
         self.__instance_name = instance_name_
@@ -583,9 +581,9 @@ print(p.name, p.age)
 <dd>parent instance. Defaults to None.</dd>
 <dt><strong><code>instance_name_</code></strong> :&ensp;<code>str</code>, optional</dt>
 <dd>instance name. Defaults to None.</dd>
-</dl>
-<p>Keyword args:
-values: any given field values to initiate the instance with</p></section>
+<dt><strong><code>**values</code></strong></dt>
+<dd>any given field values to initiate the instance with</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class Base(SimpleNamespace, metaclass=BaseMeta):
@@ -607,9 +605,7 @@ values: any given field values to initiate the instance with</p></section>
         Args:
             parent_ (Base, optional): parent instance. Defaults to None.
             instance_name_ (str, optional): instance name. Defaults to None.
-
-        Keyword args:
-            values: any given field values to initiate the instance with
+            **values: any given field values to initiate the instance with
         &#34;&#34;&#34;
         self.__parent = parent_
         self.__instance_name = instance_name_
