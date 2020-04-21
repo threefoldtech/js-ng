@@ -1,0 +1,19 @@
+
+name: jsng-ci
+
+on: pull_request
+jobs:
+    black:
+        runs-on: ubuntu-latest
+        steps:
+        - uses: actions/checkout@v2
+        - run: |
+            git fetch --no-tags --prune --depth=1 origin +refs/heads/*:refs/remotes/origin/*
+        - name: Gathering deps
+          run: |
+            sudo apt-get update
+            sudo apt-get install git python3-pip -y
+            sudo pip3 install black docstr-coverage
+            FILES="$(git diff --name-only --diff-filter=A --diff-filter=M "origin/${{github.base_ref}}" '*.py')"
+            black --check $FILES
+            for FILE in $FILES; do echo $FILE; docstr-coverage $FILE; done
