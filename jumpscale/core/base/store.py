@@ -1,8 +1,10 @@
 """
-store defines the interface for the backend storage, let it be filesystem or redis.
-this module also defines the abstractions needed for Encryption modes and different types of stores.
+Store defines the interface for the backend storage, let it be filesystem or redis.
 
+This module also defines the abstractions needed for any storage backend.
 
+Every backend should be able to organize configuration for multiple instance given a location, also
+read/write the config data in raw (string) format.
 """
 
 
@@ -21,7 +23,9 @@ from jumpscale.sals.fs import read_file_binary, write_file_binary, rmtree
 
 
 class InvalidPrivateKey(Exception):
-    pass
+    """
+    raised when the private key configured is invalid
+    """
 
 
 class Location:
@@ -37,14 +41,35 @@ class Location:
 
     @property
     def name(self):
+        """
+        get dot seprated string from current name list
+
+        Returns:
+            str: dot separated string
+        """
         return ".".join(self.name_list)
 
     @property
     def path(self):
+        """
+        get a filesystem path with from `name`, where dots are replaced by `os.sep`
+
+        Returns:
+            str: path
+        """
         return os.path.join(*self.name.split("."))
 
     @classmethod
     def from_type(cls, type_):
+        """
+        get a location from any type/class
+
+        Args:
+            type_ (type): any type (class)
+
+        Returns:
+            Location: a location object
+        """
         return cls(type_.__module__, type_.__name__)
 
     def __str__(self):
@@ -56,7 +81,8 @@ class Location:
 
 
 class EncryptionMode(Enum):
-    """Encryption mode used to configure storing mode for full blown stores.
+    """
+    An enum to select encryption mode based on loading or storing the data
     """
 
     Encrypt = 0
@@ -64,6 +90,10 @@ class EncryptionMode(Enum):
 
 
 class EncryptionMixin:
+    """
+    A mixin that provides encrypt and decrypt methods, which can be used in any store
+    """
+
     def encrypt(self, data):
         """encrypt data
 
@@ -90,7 +120,14 @@ class EncryptionMixin:
 
 
 class ConfigStore(ABC):
-    """the interface every config store should implement which is read, write, list_all, delete."""
+    """
+    the interface every config store should implement:
+
+    - `read(instance_name)`:  reads the data of this instance name
+    - `write(instance_name, data)`: writes the data of this instance
+    - `list_all(instance_name)`: lists all instance names
+    - `delete(instance_name)`: delete instance data
+    """
 
     @abstractmethod
     def read(self, instance_name):
@@ -110,7 +147,7 @@ class ConfigStore(ABC):
 
 
 class EncryptedConfigStore(ConfigStore, EncryptionMixin):
-    """secure config storage base"""
+    """the base class for any config store backend"""
 
     def __init__(self, location):
         self.location = location
@@ -123,13 +160,32 @@ class EncryptedConfigStore(ConfigStore, EncryptionMixin):
             raise InvalidPrivateKey
 
     def _encrypt_value(self, value):
+        """
+        encrypt a single value
+
+        Args:
+            value (str): value
+
+        Returns:
+            str: decrypted value
+        """
         return base64.encode(self.encrypt(value)).decode("ascii")
 
     def _decrypt_value(self, value):
+        """
+        decrypt a single value
+
+        Args:
+            value (str): value
+
+        Returns:
+            str: decrypted value
+        """
         return self.decrypt(base64.decode(value))
 
     def _process_config(self, config, mode):
-        """return the config encrypted or decrypted
+        """
+        process current config according to encryption mode
 
         Args:
             config (dict): config dict (can be nested)
@@ -150,25 +206,24 @@ class EncryptedConfigStore(ConfigStore, EncryptionMixin):
         return new_config
 
     def get(self, instance_name):
-        """get instance config
+        """
+        get instance config
 
         Args:
             instance_name (str): instance name
 
         Returns:
-            dict: instance config as dict (key, values)
+            dict: instance config as dict
         """
         config = json.loads(self.read(instance_name))
         return self._process_config(config, EncryptionMode.Decrypt)
 
-    def get_all(self):
-        return {name: self.get(name) for name in self.list_all()}
-
     def save(self, instance_name, config):
-        """save instance config
+        """
+        save instance config
 
         Args:
-            instance_name (str): name of instnace
+            instance_name (str): name
             config (dict): config data, any key that starts with `__` will be encrypted
 
         Returns:
@@ -179,84 +234,248 @@ class EncryptedConfigStore(ConfigStore, EncryptionMixin):
 
 
 class FileSystemStore(EncryptedConfigStore):
-    """Filesystem store is an EncryptedConfigStore
+    """
+    Filesystem store is an EncryptedConfigStore
+
     It saves the config relative to `config_env.get_store_config("filesystem")`
 
+    To store every instance config in a different path, it uses the given `Location`.
     """
 
     def __init__(self, location):
+        """
+        create a new `FileSystemStore` that stores config at the given location under configured root.
+
+        The root directory can be configured, see `jumpscale.core.config`
+
+        Args:
+            location (Location): where config will be stored per instance
+        """
         super(FileSystemStore, self).__init__(location)
         self.root = self.config_env.get_store_config("filesystem")["path"]
 
     @property
     def config_root(self):
+        """
+        get the root directory where all configurations are written
+
+        Returns:
+            str: path
+        """
         return os.path.join(self.root, self.location.path)
 
     def get_instance_root(self, instance_name):
+        """
+        get the directory where instance config is written
+
+        Args:
+            instance_name (str): name
+
+        Returns:
+            str: path
+        """
         return os.path.join(self.config_root, instance_name)
 
     def get_path(self, instance_name):
+        """
+        get the path to data file where instance config is written
+
+        Args:
+            instance_name (str): name
+
+        Returns:
+            str: path
+        """
         return os.path.join(self.get_instance_root(instance_name), "data")
 
     def make_path(self, path):
+        """
+        to ensure the given path, create it if it does not exist
+
+        Args:
+            path (str): path
+        """
         if not os.path.exists(path):
             os.makedirs(os.path.dirname(path), exist_ok=True)
             os.mknod(path)
 
     def read(self, instance_name):
+        """
+        read config data from the data file
+
+        Args:
+            instance_name (str): name
+
+        Returns:
+            str: data
+        """
         path = self.get_path(instance_name)
         return read_file_binary(path)
 
     def list_all(self):
+        """
+        list all instance names (directories under config root)
+
+        Returns:
+            list: instance/directory names
+        """
         if not os.path.exists(self.config_root):
             return []
         return os.listdir(self.config_root)
 
     def write(self, instance_name, data):
+        """
+        write config data to data file
+
+        Args:
+            instance_name (str): config
+            data (str): data
+
+        Returns:
+            bool: written or not
+        """
         path = self.get_path(instance_name)
         self.make_path(path)
         return write_file_binary(path, data.encode())
 
     def delete(self, instance_name):
+        """
+        delete instance config directory
+
+        Args:
+            instance_name (str):
+        """
         path = self.get_instance_root(instance_name)
         if os.path.exists(path):
             rmtree(path)
 
 
 class RedisStore(EncryptedConfigStore):
-    """RedisStore store is an EncryptedConfigStore
+    """
+    RedisStore store is an EncryptedConfigStore
+
     It saves the data in redis and configuration for redis comes from `config_env.get_store_config("redis")`
     """
 
     def __init__(self, location):
+        """
+        create a new redis store, the location given will be used to generate keys
+
+        this keys will be combined to get/set instance config
+
+        Args:
+            location (Location)
+        """
         super().__init__(location)
         redis_config = self.config_env.get_store_config("redis")
         self.redis_client = redis.Redis(redis_config["hostname"], redis_config["port"])
 
     def get_key(self, instance_name):
+        """
+        get a key for an instance
+
+        this will return a dot-separated key derived from current location
+
+        Args:
+            instance_name (str): name
+
+        Returns:
+            str: key
+        """
         return ".".join([self.location.name, instance_name])
 
     def read(self, instance_name):
+        """
+        read instance config from redis
+
+        Args:
+            instance_name (name): name
+
+        Returns:
+            str: data
+        """
         return self.redis_client.get(self.get_key(instance_name))
 
+    def _full_scan(self, pattern):
+        """
+        get the full result of a scan command on current redis database by this pattern
+
+        Args:
+            pattern ([type]): [description]
+        """
+        keys = []
+        cursor, values = self.redis_client.scan(0, pattern)
+
+        while values:
+            keys += values
+            if not cursor:
+                break
+            cursor, values = self.redis_client.scan(cursor, pattern)
+
+        return keys
+
     def get_location_keys(self):
-        return self.redis_client.keys(f"{self.location.name}.*")
+        """
+        get all keys under current location (scanned)
+
+        Returns:
+            list: a list of keys
+        """
+        return self._full_scan(f"{self.location.name}.*")
 
     def get_instance_keys(self, instance_name):
-        return self.redis_client.keys(f"{self.location.name}.{instance_name}*")
+        """
+        get all instance related keys (scanned)
+
+        Args:
+            instance_name (str): name
+
+        Returns:
+            list: list of keys
+        """
+        return self._full_scan(f"{self.location.name}.{instance_name}*")
 
     def list_all(self):
+        """
+        get all names of instances (instance keys)
+
+        Returns:
+            [type]: [description]
+        """
         names = []
 
         keys = self.get_location_keys()
         for key in keys:
+            # remove location name part
             name = key.decode().replace(self.location.name, "").lstrip(".")
             if "." not in name:
                 names.append(name)
         return names
 
     def write(self, instance_name, data):
+        """
+        set data with the corresponding key for this instance
+
+        Args:
+            instance_name (str): name
+            data (str): data
+
+        Returns:
+            bool: written or not
+        """
         return self.redis_client.set(self.get_key(instance_name), data)
 
     def delete(self, instance_name):
-        return self.redis_client.delete(*self.get_instance_keys(instance_name))
+        """
+        delete all instance related keys
+
+        Args:
+            instance_name (str): name
+
+        Returns:
+            bool
+        """
+        keys = self.get_instance_keys(instance_name)
+        if keys:
+            return self.redis_client.delete(*keys)
+        return True

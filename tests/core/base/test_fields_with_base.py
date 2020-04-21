@@ -75,3 +75,16 @@ class TestBaseWithFields(unittest.TestCase):
 
         with self.assertRaises(ValidationError):
             car.color = "xyz"
+
+    def test_from_dict(self):
+        user = User.from_dict({"id": 10, "rating": 1.5})
+
+        self.assertEqual(user.id, 10)
+        self.assertEqual(user.rating, 1.5)
+
+    def test_to_dict(self):
+        user = User()
+        user.rating = "11.2"
+
+        data = user.to_dict()
+        self.assertEqual(data["rating"], 11.2)
