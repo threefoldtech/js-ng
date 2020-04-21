@@ -93,7 +93,7 @@ class StartupCmd(Base):
 
     @property
     def _tmux_window(self):
-        if self.executor == Executor.TMUX:
+        if self.executor.value == Executor.TMUX.value:
             if self.__tmux_window is None:
                 self.__tmux_window = j.core.executors.tmux.get_js_window(self.instance_name)
         return self.__tmux_window
@@ -173,7 +173,7 @@ class StartupCmd(Base):
 
         self._kill_processes_by_port_or_filter()
 
-        if self.executor == Executor.TMUX:
+        if self.executor.value == Executor.TMUX.value:
             self._tmux_window.kill_window()
             self.__tmux_window = None
 
@@ -294,9 +294,9 @@ class StartupCmd(Base):
             j.sals.fs.chmod(self.cmd_path, 0o770)
             command = f"sh {self.cmd_path}"
 
-        if self.executor == Executor.FOREGROUND:
+        if self.executor.value == Executor.FOREGROUND.value:
             j.sals.process.execute(command)
-        elif self.executor == Executor.TMUX:
+        elif self.executor.value == Executor.TMUX.value:
             self._tmux_window.attached_pane.send_keys(command)
 
         self.wait_for_running(die=True, timeout=self.timeout)
