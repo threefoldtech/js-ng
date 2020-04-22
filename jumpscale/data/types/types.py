@@ -326,7 +326,6 @@ class Tel:
 
 
 class IPAddress:
-
     def __init__(self, default=None):
         if not default:
             default = ""
