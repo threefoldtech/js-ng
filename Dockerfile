@@ -1,15 +1,17 @@
-FROM andrewosh/binder-base
+FROM python:3.7-slim
+# install the notebook package
+RUN pip install --no-cache --upgrade pip && \
+    pip install --no-cache notebook
 
-MAINTAINER Andrew Osheroff <andrewosh@gmail.com>
+# create user with a home directory
+ARG NB_USER
+ARG NB_UID
+ENV USER ${NB_USER}
+ENV HOME /home/${NB_USER}
 
-USER root
-
-# Add Julia dependencies
-RUN apt-get update
-RUN apt-get install -y julia libnettle4 && apt-get clean
-
-USER main
-
-# Install Julia kernel
-RUN julia -e 'Pkg.add("IJulia")'
-RUN julia -e 'Pkg.add("Gadfly")' && julia -e 'Pkg.add("RDatasets")'
+RUN adduser --disabled-password \
+    --gecos "Default user" \
+    --uid ${NB_UID} \
+    ${NB_USER}
+WORKDIR ${HOME}
+USER ${USER}
