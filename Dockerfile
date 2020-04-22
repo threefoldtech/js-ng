@@ -18,4 +18,4 @@ RUN chown -R ${NB_UID} /sandbox
 RUN ln -s /sandbox/code/github/js-next/js-ng ${HOME}/js-ng
 USER ${USER}
 
-
+ENTRYPOINT []
