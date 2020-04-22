@@ -6,4 +6,3 @@ RUN apt-get update && \
 RUN git clone https://github.com/js-next/js-ng.git /sandbox/code/github/js-next/js-ng
 WORKDIR /sandbox/code/github/js-next/js-ng
 RUN poetry update && poetry install
-ENTRYPOINT [ "/sbin/my_init" ]
