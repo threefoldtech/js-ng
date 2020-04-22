@@ -1,4 +1,4 @@
-FROM python:3.7-slim
+FROM threefoldtech/js-ng
 # install the notebook package
 RUN pip install --no-cache --upgrade pip && \
     pip install --no-cache notebook
@@ -14,4 +14,7 @@ RUN adduser --disabled-password \
     --uid ${NB_UID} \
     ${NB_USER}
 WORKDIR ${HOME}
+RUN ln -s /sandbox/code/github/js-next/js-ng ${HOME}/js-ng
 USER ${USER}
+
+
