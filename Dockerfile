@@ -1,4 +1,4 @@
-FROM threefoldtech/js-ng:060516baf529
+FROM threefoldtech/js-ng
 
 ARG NB_USER=jovyan
 ARG NB_UID=1000
