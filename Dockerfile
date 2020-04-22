@@ -1,6 +1,6 @@
 FROM threefoldtech/js-ng
 # install the notebook package
-RUN apt-get install python3-pip && pip3 install --no-cache --upgrade pip3 && \
+RUN apt-get install python3-pip && \
     pip3 install --no-cache notebook
 
 # create user with a home directory
