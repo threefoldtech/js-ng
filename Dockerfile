@@ -7,7 +7,7 @@ ENV NB_UID ${NB_UID}
 ENV HOME /home/${NB_USER}
 
 RUN adduser --disabled-password \
-    --gecos "Default user" \
+    --gecos "rafy" \
     --uid ${NB_UID} \
     ${NB_USER}
 
