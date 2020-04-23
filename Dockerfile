@@ -19,9 +19,11 @@ WORKDIR ${HOME}
 
 RUN chown -R ${NB_USER} /sandbox
 # Cloning from the right branch 
-RUN git clone --branch development_binder https://github.com/js-next/js-ng  /sandbox/code/github/js-next/js-ng2
+# RUN git clone --branch development_binder https://github.com/js-next/js-ng  /sandbox/code/github/js-next/js-ng2
+WORKDIR /sandbox/code/github/js-next/js-ng
+RUN git checkout development_binder
 # link the cloned path to ${HOME}/js-ng as it is the default path for binder to start
-RUN ln -s /sandbox/code/github/js-next/js-ng2 ${HOME}/js-ng
+RUN ln -s /sandbox/code/github/js-next/js-ng ${HOME}/js-ng
 # Change user to the one given by binder
 USER ${USER}
 
