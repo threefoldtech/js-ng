@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.4" />
 <title>jumpscale.core.base.meta API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="Meta and Base classes for any class with fields …" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -20,9 +20,122 @@
 <h1 class="title">Module <code>jumpscale.core.base.meta</code></h1>
 </header>
 <section id="section-intro">
+<p>Meta and Base classes for any class with fields.</p>
+<p>Contains mainly:</p>
+<ul>
+<li><a title="jumpscale.core.base.meta.BaseMeta" href="#jumpscale.core.base.meta.BaseMeta"><code>BaseMeta</code></a>: A meta class to get a new class with field property descriptors ready</li>
+<li><a title="jumpscale.core.base.meta.Base" href="#jumpscale.core.base.meta.Base"><code>Base</code></a>: The base class which can be used to get/set current field values</li>
+</ul>
+<p>To explain what it does, we will illustrate the following examples:</p>
+<p>If we have a class called <code>Person</code>, with the following definition:</p>
+<pre><code class="python">class Person:
+    name = fields.String(default=&quot;ahmed&quot;)
+</code></pre>
+<p>Accessing name from class or instance level will yield the same value, an instance of <code>String</code> field:</p>
+<pre><code class="python">Person.name  #=&gt; &lt;jumpscale.core.base.fields.String object at 0x7efd89980c18&gt;
+
+p = Person()
+p.name  #=&gt; &lt;jumpscale.core.base.fields.String object at 0x7efd89980c18&gt;
+</code></pre>
+<p>The solution to this problem is using data descriptors (see <a href="https://docs.python.org/3/howto/descriptor.html">https://docs.python.org/3/howto/descriptor.html</a>)</p>
+<p>In meta and base implementations, we use property data descriptors, so the following class:</p>
+<pre><code class="python">class Person(Base):
+    name = fields.String(default=&quot;ahmed&quot;)
+</code></pre>
+<p>Should have different behavior when accessing <code>name</code> from a class or an objects, so, it will be converted by meta class to a class like:</p>
+<pre><code>class Person(Base):
+    def __init__(self):
+        self.__name = &quot;ahmed&quot;
+
+    @property
+    def get_name(self):
+        return self.__name
+
+    @property
+    def set_name(self, value):
+        self.__name == value
+
+    name = property(get_name, set_name)
+</code></pre>
+<p>And accessing <code>name</code> from class and object levels will yield:</p>
+<pre><code class="python">Person.name  #=&gt; &lt;property object at 0x7efd89a259f8&gt;
+
+
+p = Person()
+p.name  #=&gt; &quot;ahmed&quot;
+</code></pre>
+<p>Parent relationship is supported too, every instance can have a parent object (which must be a <code>Base</code> type too)</p>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">from types import SimpleNamespace
+<pre><code class="python">&#34;&#34;&#34;
+Meta and Base classes for any class with fields.
+
+Contains mainly:
+
+- `BaseMeta`: A meta class to get a new class with field property descriptors ready
+- `Base`: The base class which can be used to get/set current field values
+
+
+To explain what it does, we will illustrate the following examples:
+
+If we have a class called `Person`, with the following definition:
+
+
+```python
+class Person:
+    name = fields.String(default=&#34;ahmed&#34;)
+```
+
+Accessing name from class or instance level will yield the same value, an instance of `String` field:
+
+```python
+Person.name  #=&gt; &lt;jumpscale.core.base.fields.String object at 0x7efd89980c18&gt;
+
+p = Person()
+p.name  #=&gt; &lt;jumpscale.core.base.fields.String object at 0x7efd89980c18&gt;
+```
+
+The solution to this problem is using data descriptors (see https://docs.python.org/3/howto/descriptor.html)
+
+In meta and base implementations, we use property data descriptors, so the following class:
+
+```python
+class Person(Base):
+    name = fields.String(default=&#34;ahmed&#34;)
+```
+
+Should have different behavior when accessing `name` from a class or an objects, so, it will be converted by meta class to a class like:
+
+```
+class Person(Base):
+    def __init__(self):
+        self.__name = &#34;ahmed&#34;
+
+    @property
+    def get_name(self):
+        return self.__name
+
+    @property
+    def set_name(self, value):
+        self.__name == value
+
+    name = property(get_name, set_name)
+```
+
+And accessing `name` from class and object levels will yield:
+
+```python
+Person.name  #=&gt; &lt;property object at 0x7efd89a259f8&gt;
+
+
+p = Person()
+p.name  #=&gt; &#34;ahmed&#34;
+```
+
+
+Parent relationship is supported too, every instance can have a parent object (which must be a `Base` type too)
+&#34;&#34;&#34;
+from types import SimpleNamespace
 
 from jumpscale.core import events
 
@@ -31,17 +144,57 @@ from .factory import Factory, StoredFactory, DuplicateError
 from .events import AttributeUpdateEvent
 
 
-def get_field_property(name, field):
+def get_field_property(name: str, field: fields.Field) -&gt; property:
+    &#34;&#34;&#34;
+    get a new property descriptor object for a field,
+    this property will be used to enable getting/setting the actual value
+
+    as the field only describes the type and other validation/conversion options,
+    but do not hold the value itself, the vale will be held in the base instance
+
+    Args:
+        name (str): field name
+        field (fields.Field): field instance
+
+    Returns:
+        property: property descriptor (object)
+    &#34;&#34;&#34;
+    # in this property getter/setter method, we use an inner_name
+    # this inner name will be used with base instances
     inner_name = f&#34;__{name}&#34;
 
     def getter(self):
+        &#34;&#34;&#34;
+        getter method this property
+
+        Returns:
+            any: the field value
+        &#34;&#34;&#34;
+        # if it&#39;s already defined, just return it
         if hasattr(self, inner_name):
             return getattr(self, inner_name)
 
+        # if not, it will just return the default value of the field
         # accept raw value as default too
         return field.from_raw(field.default)
 
     def setter(self, value):
+        &#34;&#34;&#34;
+        a setter method for this property
+
+        we do some checks and actions too, as we already know the field:
+
+        - validation: using field.validate
+        - coversion: using field.from_raw
+        - setting an attribute with inner_name in the base instance
+        - call `_attr_updated` of the base instance with the name of this property/field
+
+        Args:
+            value (any): a value to be set for this field
+
+        Raises:
+            fields.ValidationError: in case the value is not valid
+        &#34;&#34;&#34;
         if field.readonly:
             raise fields.ValidationError(f&#34;&#39;{name}&#39; is a read only attribute&#34;)
 
@@ -51,7 +204,7 @@ def get_field_property(name, field):
         # validate
         field.validate(value)
 
-        # set parent
+        # set current instance as parent for embedded objects/instances
         if isinstance(field, fields.Object):
             value.parent = self
 
@@ -63,9 +216,20 @@ def get_field_property(name, field):
 
 
 class BaseMeta(type):
-    def __new__(cls, name, based, attrs):
+    &#34;&#34;&#34;
+    this class is used to get a new class with all field attributes replaced by property data descriptors.
+
+    this should be used as a metaclass, example:
+
+    ```python
+    class ExampleWithFields(metaclass=BaseMeta):
+        name = fields.String()
+    ```
+    &#34;&#34;&#34;
+
+    def __new__(cls, name: str, based: tuple, attrs: dict) -&gt; type:
         &#34;&#34;&#34;
-        get a new class with all fields set in _fields, including base/super class fields too.
+        get a new class with all field attributes replaced by property data descriptors.
 
         Args:
             name (str): class name
@@ -73,8 +237,10 @@ class BaseMeta(type):
             attrs (dict): current attributes
 
         Returns:
-            any: a new class
+            type: a new class
         &#34;&#34;&#34;
+        # will collect class fields
+        # and also all fields of super classes, as we already have them in based
         cls_fields = {}
         super_fields = {}
 
@@ -85,6 +251,9 @@ class BaseMeta(type):
         # update current attrs with super class fields
         attrs.update(super_fields)
 
+        # now we maintain old attributes, but convert any attribute
+        # with fields.Field type to property descriptor (property object)
+        # using get_field_property
         new_attrs = {}
         for key in attrs:
             obj = attrs[key]
@@ -92,15 +261,36 @@ class BaseMeta(type):
                 cls_fields[key] = obj
                 new_attrs[key] = get_field_property(key, obj)
             else:
+                # keep other attrs
                 new_attrs[key] = obj
 
         new_class = super(BaseMeta, cls).__new__(cls, name, based, new_attrs)
+        # set _fields attributes to cls_fields dict, so, we still have access to field objects
         new_class._fields = cls_fields
         return new_class
 
 
 class Base(SimpleNamespace, metaclass=BaseMeta):
     def __init__(self, parent_=None, instance_name_=None, **values):
+        &#34;&#34;&#34;
+        base class implementation for any class with fields which supports getting/setting raw data for any instance fields.
+
+        any instance can have an optional name and a parent.
+
+        ```python
+        class Person(Base):
+            name = fields.String()
+            age = fields.Float()
+
+        p = Person(name=&#34;ahmed&#34;, age=&#34;19&#34;)
+        print(p.name, p.age)
+        ```
+
+        Args:
+            parent_ (Base, optional): parent instance. Defaults to None.
+            instance_name_ (str, optional): instance name. Defaults to None.
+            **values: any given field values to initiate the instance with
+        &#34;&#34;&#34;
         self.__parent = parent_
         self.__instance_name = instance_name_
 
@@ -108,25 +298,60 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
 
         for name, field in self._get_fields().items():
             if isinstance(field, fields.Factory):
+                # for factory fields, we need to create a new factory with the given factory_type
                 value = field.factory_type(field.type, name_=name, parent_instance_=self)
                 self._factories[name] = value
             else:
                 value = values.get(name, field.from_raw(field.default))
 
             # accept raw as a default value
-            # and set inner value
+            # and set inner value, so it should be availale from the start
             setattr(self, f&#34;__{name}&#34;, value)
 
     def _get_fields(self):
+        &#34;&#34;&#34;
+        get current defined field objects
+
+        Returns:
+            dict: fields dict as {name: field object}
+        &#34;&#34;&#34;
         return self._fields
 
     def _get_factories(self):
+        &#34;&#34;&#34;
+        get sub-factory objects, which are defined by `fields.Factory`
+
+        Returns:
+            dict: factories as {name: factory object}
+        &#34;&#34;&#34;
         return self._factories
 
     def _get_embedded_objects(self):
+        &#34;&#34;&#34;
+        get a list of embedded objects which are defined by `fields.Object`
+
+        Returns:
+            list: list of `Base` objects
+        &#34;&#34;&#34;
         return [getattr(self, name) for name, field in self._get_fields().items() if isinstance(field, fields.Object)]
 
     def _get_data(self):
+        &#34;&#34;&#34;
+        get a serializable dict from all values of all fields (except factories)
+
+        ```python
+        class Person(Base):
+            name = fields.String()
+            age = fields.Float()
+
+        p = Person(name=&#34;ahmed&#34;, age=1.4)
+        p._get_data()  #=&gt; {&#39;name&#39;: &#39;ahmed&#39;, &#39;age&#39;: &#39;19&#39;}
+        p.to_dict() #=&gt; {&#39;name&#39;: &#39;ahmed&#39;, &#39;age&#39;: &#39;19&#39;}
+        ```
+
+        Returns:
+            dict: data as dict with {name: value}
+        &#34;&#34;&#34;
         data = {}
 
         for name, field in self._get_fields().items():
@@ -143,6 +368,12 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
         return data
 
     def _set_data(self, new_data):
+        &#34;&#34;&#34;
+        set values from dict to all fields (except factories)
+
+        Args:
+            new_data (dict): field values mapping
+        &#34;&#34;&#34;
         for name, field in self._get_fields().items():
             if name in new_data:
                 try:
@@ -153,10 +384,20 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
                     pass
 
     def _attr_updated(self, name, value):
+        &#34;&#34;&#34;
+        called when an attribute value is updated
+
+        Args:
+            name (str): attribute/field name
+            value (any): value
+        &#34;&#34;&#34;
         event = AttributeUpdateEvent(self, name, value)
         events.notify(event)
 
     def validate(self):
+        &#34;&#34;&#34;
+        validate all fields of current instance
+        &#34;&#34;&#34;
         for name, field in self._get_fields().items():
             field.validate(getattr(self, name))
 
@@ -165,6 +406,12 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
         return self.__parent
 
     def _set_parent(self, parent):
+        &#34;&#34;&#34;
+        set current parent instance
+
+        Args:
+            parent (Base): base object/instance
+        &#34;&#34;&#34;
         self.__parent = parent
 
     @property
@@ -172,9 +419,39 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
         return self.__instance_name
 
     def _set_instance_name(self, name):
+        &#34;&#34;&#34;
+        set current instance name
+
+        Args:
+            name (str): name
+        &#34;&#34;&#34;
         self.__instance_name = name
 
-    to_dict = _get_data</code></pre>
+    to_dict = _get_data
+
+    @classmethod
+    def from_dict(cls, data):
+        &#34;&#34;&#34;
+        get an instance from a dict
+
+        ```python
+        class Person(Base):
+            name = fields.String()
+            age = fields.Float()
+
+        p = Person.from_dict({&#34;name&#34;: &#34;ahmed&#34;, &#34;age&#34;: 19})
+        print(p.name, p.age)  #=&gt; ahmed 19
+        ```
+
+        Args:
+            data (dict): values dict
+
+        Returns:
+            Base: an instance from current `Base` type
+        &#34;&#34;&#34;
+        instance = cls()
+        instance._set_data(data)
+        return instance</code></pre>
 </details>
 </section>
 <section>
@@ -188,20 +465,75 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
 <span>def <span class="ident">get_field_property</span></span>(<span>name, field)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>get a new property descriptor object for a field,
+this property will be used to enable getting/setting the actual value</p>
+<p>as the field only describes the type and other validation/conversion options,
+but do not hold the value itself, the vale will be held in the base instance</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>name</code></strong> :&ensp;<code>str</code></dt>
+<dd>field name</dd>
+<dt><strong><code>field</code></strong> :&ensp;<code>fields.Field</code></dt>
+<dd>field instance</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>property</code></strong></dt>
+<dd>property descriptor (object)</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def get_field_property(name, field):
+<pre><code class="python">def get_field_property(name: str, field: fields.Field) -&gt; property:
+    &#34;&#34;&#34;
+    get a new property descriptor object for a field,
+    this property will be used to enable getting/setting the actual value
+
+    as the field only describes the type and other validation/conversion options,
+    but do not hold the value itself, the vale will be held in the base instance
+
+    Args:
+        name (str): field name
+        field (fields.Field): field instance
+
+    Returns:
+        property: property descriptor (object)
+    &#34;&#34;&#34;
+    # in this property getter/setter method, we use an inner_name
+    # this inner name will be used with base instances
     inner_name = f&#34;__{name}&#34;
 
     def getter(self):
+        &#34;&#34;&#34;
+        getter method this property
+
+        Returns:
+            any: the field value
+        &#34;&#34;&#34;
+        # if it&#39;s already defined, just return it
         if hasattr(self, inner_name):
             return getattr(self, inner_name)
 
+        # if not, it will just return the default value of the field
         # accept raw value as default too
         return field.from_raw(field.default)
 
     def setter(self, value):
+        &#34;&#34;&#34;
+        a setter method for this property
+
+        we do some checks and actions too, as we already know the field:
+
+        - validation: using field.validate
+        - coversion: using field.from_raw
+        - setting an attribute with inner_name in the base instance
+        - call `_attr_updated` of the base instance with the name of this property/field
+
+        Args:
+            value (any): a value to be set for this field
+
+        Raises:
+            fields.ValidationError: in case the value is not valid
+        &#34;&#34;&#34;
         if field.readonly:
             raise fields.ValidationError(f&#34;&#39;{name}&#39; is a read only attribute&#34;)
 
@@ -211,7 +543,7 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
         # validate
         field.validate(value)
 
-        # set parent
+        # set current instance as parent for embedded objects/instances
         if isinstance(field, fields.Object):
             value.parent = self
 
@@ -233,11 +565,48 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
 </code></dt>
 <dd>
 <section class="desc"><p>A simple attribute-based namespace.</p>
-<p>SimpleNamespace(**kwargs)</p></section>
+<p>SimpleNamespace(**kwargs)</p>
+<p>base class implementation for any class with fields which supports getting/setting raw data for any instance fields.</p>
+<p>any instance can have an optional name and a parent.</p>
+<pre><code class="python">class Person(Base):
+    name = fields.String()
+    age = fields.Float()
+
+p = Person(name=&quot;ahmed&quot;, age=&quot;19&quot;)
+print(p.name, p.age)
+</code></pre>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>parent_</code></strong> :&ensp;<code>Base</code>, optional</dt>
+<dd>parent instance. Defaults to None.</dd>
+<dt><strong><code>instance_name_</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>instance name. Defaults to None.</dd>
+<dt><strong><code>**values</code></strong></dt>
+<dd>any given field values to initiate the instance with</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class Base(SimpleNamespace, metaclass=BaseMeta):
     def __init__(self, parent_=None, instance_name_=None, **values):
+        &#34;&#34;&#34;
+        base class implementation for any class with fields which supports getting/setting raw data for any instance fields.
+
+        any instance can have an optional name and a parent.
+
+        ```python
+        class Person(Base):
+            name = fields.String()
+            age = fields.Float()
+
+        p = Person(name=&#34;ahmed&#34;, age=&#34;19&#34;)
+        print(p.name, p.age)
+        ```
+
+        Args:
+            parent_ (Base, optional): parent instance. Defaults to None.
+            instance_name_ (str, optional): instance name. Defaults to None.
+            **values: any given field values to initiate the instance with
+        &#34;&#34;&#34;
         self.__parent = parent_
         self.__instance_name = instance_name_
 
@@ -245,25 +614,60 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
 
         for name, field in self._get_fields().items():
             if isinstance(field, fields.Factory):
+                # for factory fields, we need to create a new factory with the given factory_type
                 value = field.factory_type(field.type, name_=name, parent_instance_=self)
                 self._factories[name] = value
             else:
                 value = values.get(name, field.from_raw(field.default))
 
             # accept raw as a default value
-            # and set inner value
+            # and set inner value, so it should be availale from the start
             setattr(self, f&#34;__{name}&#34;, value)
 
     def _get_fields(self):
+        &#34;&#34;&#34;
+        get current defined field objects
+
+        Returns:
+            dict: fields dict as {name: field object}
+        &#34;&#34;&#34;
         return self._fields
 
     def _get_factories(self):
+        &#34;&#34;&#34;
+        get sub-factory objects, which are defined by `fields.Factory`
+
+        Returns:
+            dict: factories as {name: factory object}
+        &#34;&#34;&#34;
         return self._factories
 
     def _get_embedded_objects(self):
+        &#34;&#34;&#34;
+        get a list of embedded objects which are defined by `fields.Object`
+
+        Returns:
+            list: list of `Base` objects
+        &#34;&#34;&#34;
         return [getattr(self, name) for name, field in self._get_fields().items() if isinstance(field, fields.Object)]
 
     def _get_data(self):
+        &#34;&#34;&#34;
+        get a serializable dict from all values of all fields (except factories)
+
+        ```python
+        class Person(Base):
+            name = fields.String()
+            age = fields.Float()
+
+        p = Person(name=&#34;ahmed&#34;, age=1.4)
+        p._get_data()  #=&gt; {&#39;name&#39;: &#39;ahmed&#39;, &#39;age&#39;: &#39;19&#39;}
+        p.to_dict() #=&gt; {&#39;name&#39;: &#39;ahmed&#39;, &#39;age&#39;: &#39;19&#39;}
+        ```
+
+        Returns:
+            dict: data as dict with {name: value}
+        &#34;&#34;&#34;
         data = {}
 
         for name, field in self._get_fields().items():
@@ -280,6 +684,12 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
         return data
 
     def _set_data(self, new_data):
+        &#34;&#34;&#34;
+        set values from dict to all fields (except factories)
+
+        Args:
+            new_data (dict): field values mapping
+        &#34;&#34;&#34;
         for name, field in self._get_fields().items():
             if name in new_data:
                 try:
@@ -290,10 +700,20 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
                     pass
 
     def _attr_updated(self, name, value):
+        &#34;&#34;&#34;
+        called when an attribute value is updated
+
+        Args:
+            name (str): attribute/field name
+            value (any): value
+        &#34;&#34;&#34;
         event = AttributeUpdateEvent(self, name, value)
         events.notify(event)
 
     def validate(self):
+        &#34;&#34;&#34;
+        validate all fields of current instance
+        &#34;&#34;&#34;
         for name, field in self._get_fields().items():
             field.validate(getattr(self, name))
 
@@ -302,6 +722,12 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
         return self.__parent
 
     def _set_parent(self, parent):
+        &#34;&#34;&#34;
+        set current parent instance
+
+        Args:
+            parent (Base): base object/instance
+        &#34;&#34;&#34;
         self.__parent = parent
 
     @property
@@ -309,9 +735,39 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
         return self.__instance_name
 
     def _set_instance_name(self, name):
+        &#34;&#34;&#34;
+        set current instance name
+
+        Args:
+            name (str): name
+        &#34;&#34;&#34;
         self.__instance_name = name
 
-    to_dict = _get_data</code></pre>
+    to_dict = _get_data
+
+    @classmethod
+    def from_dict(cls, data):
+        &#34;&#34;&#34;
+        get an instance from a dict
+
+        ```python
+        class Person(Base):
+            name = fields.String()
+            age = fields.Float()
+
+        p = Person.from_dict({&#34;name&#34;: &#34;ahmed&#34;, &#34;age&#34;: 19})
+        print(p.name, p.age)  #=&gt; ahmed 19
+        ```
+
+        Args:
+            data (dict): values dict
+
+        Returns:
+            Base: an instance from current `Base` type
+        &#34;&#34;&#34;
+        instance = cls()
+        instance._set_data(data)
+        return instance</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -319,14 +775,66 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="jumpscale.clients.base.Client" href="../../clients/base.html#jumpscale.clients.base.Client">Client</a></li>
-<li><a title="jumpscale.clients.github.base.base" href="../../clients/github/base.html#jumpscale.clients.github.base.base">base</a></li>
-<li><a title="jumpscale.clients.gogs.gogs.User" href="../../clients/gogs/gogs.html#jumpscale.clients.gogs.gogs.User">User</a></li>
+<li><a title="jumpscale.tools.startupcmd.startupcmd.StartupCmd" href="../../tools/startupcmd/startupcmd.html#jumpscale.tools.startupcmd.startupcmd.StartupCmd">StartupCmd</a></li>
 <li><a title="jumpscale.servers.openresty.location.Location" href="../../servers/openresty/location.html#jumpscale.servers.openresty.location.Location">Location</a></li>
 <li><a title="jumpscale.servers.openresty.server.Website" href="../../servers/openresty/server.html#jumpscale.servers.openresty.server.Website">Website</a></li>
 <li><a title="jumpscale.servers.openresty.server.OpenRestyServer" href="../../servers/openresty/server.html#jumpscale.servers.openresty.server.OpenRestyServer">OpenRestyServer</a></li>
-<li><a title="jumpscale.tools.startupcmd.startupcmd.StartupCmd" href="../../tools/startupcmd/startupcmd.html#jumpscale.tools.startupcmd.startupcmd.StartupCmd">StartupCmd</a></li>
+<li><a title="jumpscale.clients.base.Client" href="../../clients/base.html#jumpscale.clients.base.Client">Client</a></li>
+<li><a title="jumpscale.clients.github.base.base" href="../../clients/github/base.html#jumpscale.clients.github.base.base">base</a></li>
+<li><a title="jumpscale.clients.gogs.gogs.User" href="../../clients/gogs/gogs.html#jumpscale.clients.gogs.gogs.User">User</a></li>
 </ul>
+<h3>Static methods</h3>
+<dl>
+<dt id="jumpscale.core.base.meta.Base.from_dict"><code class="name flex">
+<span>def <span class="ident">from_dict</span></span>(<span>data)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>get an instance from a dict</p>
+<pre><code class="python">class Person(Base):
+    name = fields.String()
+    age = fields.Float()
+
+p = Person.from_dict({&quot;name&quot;: &quot;ahmed&quot;, &quot;age&quot;: 19})
+print(p.name, p.age)  #=&gt; ahmed 19
+</code></pre>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>data</code></strong> :&ensp;<code>dict</code></dt>
+<dd>values dict</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>Base</code></strong></dt>
+<dd>an instance from current <code>Base</code> type</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@classmethod
+def from_dict(cls, data):
+    &#34;&#34;&#34;
+    get an instance from a dict
+
+    ```python
+    class Person(Base):
+        name = fields.String()
+        age = fields.Float()
+
+    p = Person.from_dict({&#34;name&#34;: &#34;ahmed&#34;, &#34;age&#34;: 19})
+    print(p.name, p.age)  #=&gt; ahmed 19
+    ```
+
+    Args:
+        data (dict): values dict
+
+    Returns:
+        Base: an instance from current `Base` type
+    &#34;&#34;&#34;
+    instance = cls()
+    instance._set_data(data)
+    return instance</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Instance variables</h3>
 <dl>
 <dt id="jumpscale.core.base.meta.Base.instance_name"><code class="name">var <span class="ident">instance_name</span></code></dt>
@@ -356,10 +864,39 @@ def parent(self):
 <span>def <span class="ident">to_dict</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>get a serializable dict from all values of all fields (except factories)</p>
+<pre><code class="python">class Person(Base):
+    name = fields.String()
+    age = fields.Float()
+
+p = Person(name=&quot;ahmed&quot;, age=1.4)
+p._get_data()  #=&gt; {'name': 'ahmed', 'age': '19'}
+p.to_dict() #=&gt; {'name': 'ahmed', 'age': '19'}
+</code></pre>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>dict</code></strong></dt>
+<dd>data as dict with {name: value}</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def _get_data(self):
+    &#34;&#34;&#34;
+    get a serializable dict from all values of all fields (except factories)
+
+    ```python
+    class Person(Base):
+        name = fields.String()
+        age = fields.Float()
+
+    p = Person(name=&#34;ahmed&#34;, age=1.4)
+    p._get_data()  #=&gt; {&#39;name&#39;: &#39;ahmed&#39;, &#39;age&#39;: &#39;19&#39;}
+    p.to_dict() #=&gt; {&#39;name&#39;: &#39;ahmed&#39;, &#39;age&#39;: &#39;19&#39;}
+    ```
+
+    Returns:
+        dict: data as dict with {name: value}
+    &#34;&#34;&#34;
     data = {}
 
     for name, field in self._get_fields().items():
@@ -380,10 +917,13 @@ def parent(self):
 <span>def <span class="ident">validate</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>validate all fields of current instance</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def validate(self):
+    &#34;&#34;&#34;
+    validate all fields of current instance
+    &#34;&#34;&#34;
     for name, field in self._get_fields().items():
         field.validate(getattr(self, name))</code></pre>
 </details>
@@ -395,15 +935,28 @@ def parent(self):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>type(object_or_name, bases, dict)
-type(object) -&gt; the object's type
-type(name, bases, dict) -&gt; a new type</p></section>
+<section class="desc"><p>this class is used to get a new class with all field attributes replaced by property data descriptors.</p>
+<p>this should be used as a metaclass, example:</p>
+<pre><code class="python">class ExampleWithFields(metaclass=BaseMeta):
+    name = fields.String()
+</code></pre></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class BaseMeta(type):
-    def __new__(cls, name, based, attrs):
+    &#34;&#34;&#34;
+    this class is used to get a new class with all field attributes replaced by property data descriptors.
+
+    this should be used as a metaclass, example:
+
+    ```python
+    class ExampleWithFields(metaclass=BaseMeta):
+        name = fields.String()
+    ```
+    &#34;&#34;&#34;
+
+    def __new__(cls, name: str, based: tuple, attrs: dict) -&gt; type:
         &#34;&#34;&#34;
-        get a new class with all fields set in _fields, including base/super class fields too.
+        get a new class with all field attributes replaced by property data descriptors.
 
         Args:
             name (str): class name
@@ -411,8 +964,10 @@ type(name, bases, dict) -&gt; a new type</p></section>
             attrs (dict): current attributes
 
         Returns:
-            any: a new class
+            type: a new class
         &#34;&#34;&#34;
+        # will collect class fields
+        # and also all fields of super classes, as we already have them in based
         cls_fields = {}
         super_fields = {}
 
@@ -423,6 +978,9 @@ type(name, bases, dict) -&gt; a new type</p></section>
         # update current attrs with super class fields
         attrs.update(super_fields)
 
+        # now we maintain old attributes, but convert any attribute
+        # with fields.Field type to property descriptor (property object)
+        # using get_field_property
         new_attrs = {}
         for key in attrs:
             obj = attrs[key]
@@ -430,9 +988,11 @@ type(name, bases, dict) -&gt; a new type</p></section>
                 cls_fields[key] = obj
                 new_attrs[key] = get_field_property(key, obj)
             else:
+                # keep other attrs
                 new_attrs[key] = obj
 
         new_class = super(BaseMeta, cls).__new__(cls, name, based, new_attrs)
+        # set _fields attributes to cls_fields dict, so, we still have access to field objects
         new_class._fields = cls_fields
         return new_class</code></pre>
 </details>
@@ -465,6 +1025,7 @@ type(name, bases, dict) -&gt; a new type</p></section>
 <li>
 <h4><code><a title="jumpscale.core.base.meta.Base" href="#jumpscale.core.base.meta.Base">Base</a></code></h4>
 <ul class="">
+<li><code><a title="jumpscale.core.base.meta.Base.from_dict" href="#jumpscale.core.base.meta.Base.from_dict">from_dict</a></code></li>
 <li><code><a title="jumpscale.core.base.meta.Base.instance_name" href="#jumpscale.core.base.meta.Base.instance_name">instance_name</a></code></li>
 <li><code><a title="jumpscale.core.base.meta.Base.parent" href="#jumpscale.core.base.meta.Base.parent">parent</a></code></li>
 <li><code><a title="jumpscale.core.base.meta.Base.to_dict" href="#jumpscale.core.base.meta.Base.to_dict">to_dict</a></code></li>

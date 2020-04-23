@@ -26,32 +26,32 @@ cl = …" />
 <section id="section-intro">
 <p>This module used to manage your conatiners, create ,run, list, delete and exec commands on docker
 for example </p>
-<pre><code>#getting docker clinet 
-cl = j.clients.docker.get('test') 
-running docker 
-cl.run(&quot;container_name&quot;, &quot;threefoldtech/js-ng&quot;) 
+<pre><code>#getting docker clinet
+cl = j.clients.docker.get('test')
+running docker
+cl.run(&quot;container_name&quot;, &quot;threefoldtech/js-ng&quot;)
 # listing contaienrs
 cl.list(all=True) # lists all containers include stopped ones
 # getting container
 container = cl.get(&lt;container_id or name&gt;)
-executing commmands 
+executing commmands
 cl.exec(&quot;container_id&quot;, &quot;ls /tmp&quot;)
 or container.exec_run(&quot;ls /tmp)
 </code></pre>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">&#34;&#34;&#34;This module used to manage your conatiners, create ,run, list, delete and exec commands on docker
-for example 
+for example
 ```
-#getting docker clinet 
-cl = j.clients.docker.get(&#39;test&#39;) 
-running docker 
-cl.run(&#34;container_name&#34;, &#34;threefoldtech/js-ng&#34;) 
+#getting docker clinet
+cl = j.clients.docker.get(&#39;test&#39;)
+running docker
+cl.run(&#34;container_name&#34;, &#34;threefoldtech/js-ng&#34;)
 # listing contaienrs
 cl.list(all=True) # lists all containers include stopped ones
 # getting container
 container = cl.get(&lt;container_id or name&gt;)
-executing commmands 
+executing commmands
 cl.exec(&#34;container_id&#34;, &#34;ls /tmp&#34;)
 or container.exec_run(&#34;ls /tmp)
 ```
@@ -91,14 +91,14 @@ class DockerClient(Client):
                 A dictionary to configure volumes mounted inside the container. The key is either the host path or a volume name, and the value is a dictionary with the keys:
                 bind The path to mount the volume inside the container
                 mode Either rw to mount the volume read/write, or ro to mount it read-only.
-                example 
+                example
                 {&#39;/home/user1/&#39;: {&#39;bind&#39;: &#39;/mnt/vol2&#39;, &#39;mode&#39;: &#39;rw&#39;},
                 &#39;/var/www&#39;: {&#39;bind&#39;: &#39;/mnt/vol1&#39;, &#39;mode&#39;: &#39;ro&#39;}}
             devices (list) –
                 Expose host devices to the container, as a list of strings in the form &lt;path_on_host&gt;:&lt;path_in_container&gt;:&lt;cgroup_permissions&gt;.
                 For example, /dev/sda:/dev/xvda:rwm allows the container to have read-write access to the host’s /dev/sda via a node named /dev/xvda inside the container.
             detach (bool, optional): detach from container after running it.
-            ports The port number, as an integer. For example, 
+            ports The port number, as an integer. For example,
                 - {&#39;2222/tcp&#39;: 3333} will expose port 2222 inside the container as port 3333 on the host.
                 - None, to assign a random host port. For example, {&#39;2222/tcp&#39;: None}.
                 - A tuple of (address, port) if you want to specify the host interface. For example, {&#39;1111/tcp&#39;: (&#39;127.0.0.1&#39;, 1111)}.
@@ -124,14 +124,14 @@ class DockerClient(Client):
                 A dictionary to configure volumes mounted inside the container. The key is either the host path or a volume name, and the value is a dictionary with the keys:
                 bind The path to mount the volume inside the container
                 mode Either rw to mount the volume read/write, or ro to mount it read-only.
-                example 
+                example
                 {&#39;/home/user1/&#39;: {&#39;bind&#39;: &#39;/mnt/vol2&#39;, &#39;mode&#39;: &#39;rw&#39;},
                 &#39;/var/www&#39;: {&#39;bind&#39;: &#39;/mnt/vol1&#39;, &#39;mode&#39;: &#39;ro&#39;}}
             devices (list) –
                 Expose host devices to the container, as a list of strings in the form &lt;path_on_host&gt;:&lt;path_in_container&gt;:&lt;cgroup_permissions&gt;.
                 For example, /dev/sda:/dev/xvda:rwm allows the container to have read-write access to the host’s /dev/sda via a node named /dev/xvda inside the container.
             detach (bool, optional): detach from container after running it.
-            ports The port number, as an integer. For example, 
+            ports The port number, as an integer. For example,
                 - {&#39;2222/tcp&#39;: 3333} will expose port 2222 inside the container as port 3333 on the host.
                 - None, to assign a random host port. For example, {&#39;2222/tcp&#39;: None}.
                 - A tuple of (address, port) if you want to specify the host interface. For example, {&#39;1111/tcp&#39;: (&#39;127.0.0.1&#39;, 1111)}.
@@ -236,15 +236,15 @@ class DockerClient(Client):
             workdir (str) – Path to working directory for this exec session
             demux (bool) – Return stdout and stderr separately
 
-        Returns:        
+        Returns:
             A tuple of (exit_code, output)
             exit_code: (int):
             Exit code for the executed command or None if either stream or socket is True.
 
             output: (generator, bytes, or tuple):
-                If stream=True, a generator yielding response chunks. 
-                If socket=True, a socket object for the connection. 
-                If demux=True, a tuple of two bytes: stdout and stderr. 
+                If stream=True, a generator yielding response chunks.
+                If socket=True, a socket object for the connection.
+                If demux=True, a tuple of two bytes: stdout and stderr.
                 A bytestring containing response data otherwise.
         &#34;&#34;&#34;
         docker = self.get(container_id)
@@ -265,7 +265,25 @@ class DockerClient(Client):
 </code></dt>
 <dd>
 <section class="desc"><p>A simple attribute-based namespace.</p>
-<p>SimpleNamespace(**kwargs)</p></section>
+<p>SimpleNamespace(**kwargs)</p>
+<p>base class implementation for any class with fields which supports getting/setting raw data for any instance fields.</p>
+<p>any instance can have an optional name and a parent.</p>
+<pre><code class="python">class Person(Base):
+    name = fields.String()
+    age = fields.Float()
+
+p = Person(name=&quot;ahmed&quot;, age=&quot;19&quot;)
+print(p.name, p.age)
+</code></pre>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>parent_</code></strong> :&ensp;<code>Base</code>, optional</dt>
+<dd>parent instance. Defaults to None.</dd>
+<dt><strong><code>instance_name_</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>instance name. Defaults to None.</dd>
+<dt><strong><code>**values</code></strong></dt>
+<dd>any given field values to initiate the instance with</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class DockerClient(Client):
@@ -297,14 +315,14 @@ class DockerClient(Client):
                 A dictionary to configure volumes mounted inside the container. The key is either the host path or a volume name, and the value is a dictionary with the keys:
                 bind The path to mount the volume inside the container
                 mode Either rw to mount the volume read/write, or ro to mount it read-only.
-                example 
+                example
                 {&#39;/home/user1/&#39;: {&#39;bind&#39;: &#39;/mnt/vol2&#39;, &#39;mode&#39;: &#39;rw&#39;},
                 &#39;/var/www&#39;: {&#39;bind&#39;: &#39;/mnt/vol1&#39;, &#39;mode&#39;: &#39;ro&#39;}}
             devices (list) –
                 Expose host devices to the container, as a list of strings in the form &lt;path_on_host&gt;:&lt;path_in_container&gt;:&lt;cgroup_permissions&gt;.
                 For example, /dev/sda:/dev/xvda:rwm allows the container to have read-write access to the host’s /dev/sda via a node named /dev/xvda inside the container.
             detach (bool, optional): detach from container after running it.
-            ports The port number, as an integer. For example, 
+            ports The port number, as an integer. For example,
                 - {&#39;2222/tcp&#39;: 3333} will expose port 2222 inside the container as port 3333 on the host.
                 - None, to assign a random host port. For example, {&#39;2222/tcp&#39;: None}.
                 - A tuple of (address, port) if you want to specify the host interface. For example, {&#39;1111/tcp&#39;: (&#39;127.0.0.1&#39;, 1111)}.
@@ -330,14 +348,14 @@ class DockerClient(Client):
                 A dictionary to configure volumes mounted inside the container. The key is either the host path or a volume name, and the value is a dictionary with the keys:
                 bind The path to mount the volume inside the container
                 mode Either rw to mount the volume read/write, or ro to mount it read-only.
-                example 
+                example
                 {&#39;/home/user1/&#39;: {&#39;bind&#39;: &#39;/mnt/vol2&#39;, &#39;mode&#39;: &#39;rw&#39;},
                 &#39;/var/www&#39;: {&#39;bind&#39;: &#39;/mnt/vol1&#39;, &#39;mode&#39;: &#39;ro&#39;}}
             devices (list) –
                 Expose host devices to the container, as a list of strings in the form &lt;path_on_host&gt;:&lt;path_in_container&gt;:&lt;cgroup_permissions&gt;.
                 For example, /dev/sda:/dev/xvda:rwm allows the container to have read-write access to the host’s /dev/sda via a node named /dev/xvda inside the container.
             detach (bool, optional): detach from container after running it.
-            ports The port number, as an integer. For example, 
+            ports The port number, as an integer. For example,
                 - {&#39;2222/tcp&#39;: 3333} will expose port 2222 inside the container as port 3333 on the host.
                 - None, to assign a random host port. For example, {&#39;2222/tcp&#39;: None}.
                 - A tuple of (address, port) if you want to specify the host interface. For example, {&#39;1111/tcp&#39;: (&#39;127.0.0.1&#39;, 1111)}.
@@ -442,15 +460,15 @@ class DockerClient(Client):
             workdir (str) – Path to working directory for this exec session
             demux (bool) – Return stdout and stderr separately
 
-        Returns:        
+        Returns:
             A tuple of (exit_code, output)
             exit_code: (int):
             Exit code for the executed command or None if either stream or socket is True.
 
             output: (generator, bytes, or tuple):
-                If stream=True, a generator yielding response chunks. 
-                If socket=True, a socket object for the connection. 
-                If demux=True, a tuple of two bytes: stdout and stderr. 
+                If stream=True, a generator yielding response chunks.
+                If socket=True, a socket object for the connection.
+                If demux=True, a tuple of two bytes: stdout and stderr.
                 A bytestring containing response data otherwise.
         &#34;&#34;&#34;
         docker = self.get(container_id)
@@ -466,13 +484,26 @@ class DockerClient(Client):
 <dl>
 <dt id="jumpscale.clients.docker.docker.DockerClient.base_url"><code class="name">var <span class="ident">base_url</span></code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>getter method this property</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>any</code></strong></dt>
+<dd>the field value</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def getter(self):
+    &#34;&#34;&#34;
+    getter method this property
+
+    Returns:
+        any: the field value
+    &#34;&#34;&#34;
+    # if it&#39;s already defined, just return it
     if hasattr(self, inner_name):
         return getattr(self, inner_name)
 
+    # if not, it will just return the default value of the field
     # accept raw value as default too
     return field.from_raw(field.default)</code></pre>
 </details>
@@ -550,14 +581,14 @@ hostname (str) - hostname to be set on docker container default "js-ng"</p>
             A dictionary to configure volumes mounted inside the container. The key is either the host path or a volume name, and the value is a dictionary with the keys:
             bind The path to mount the volume inside the container
             mode Either rw to mount the volume read/write, or ro to mount it read-only.
-            example 
+            example
             {&#39;/home/user1/&#39;: {&#39;bind&#39;: &#39;/mnt/vol2&#39;, &#39;mode&#39;: &#39;rw&#39;},
             &#39;/var/www&#39;: {&#39;bind&#39;: &#39;/mnt/vol1&#39;, &#39;mode&#39;: &#39;ro&#39;}}
         devices (list) –
             Expose host devices to the container, as a list of strings in the form &lt;path_on_host&gt;:&lt;path_in_container&gt;:&lt;cgroup_permissions&gt;.
             For example, /dev/sda:/dev/xvda:rwm allows the container to have read-write access to the host’s /dev/sda via a node named /dev/xvda inside the container.
         detach (bool, optional): detach from container after running it.
-        ports The port number, as an integer. For example, 
+        ports The port number, as an integer. For example,
             - {&#39;2222/tcp&#39;: 3333} will expose port 2222 inside the container as port 3333 on the host.
             - None, to assign a random host port. For example, {&#39;2222/tcp&#39;: None}.
             - A tuple of (address, port) if you want to specify the host interface. For example, {&#39;1111/tcp&#39;: (&#39;127.0.0.1&#39;, 1111)}.
@@ -659,15 +690,15 @@ A bytestring containing response data otherwise.</p>
         workdir (str) – Path to working directory for this exec session
         demux (bool) – Return stdout and stderr separately
 
-    Returns:        
+    Returns:
         A tuple of (exit_code, output)
         exit_code: (int):
         Exit code for the executed command or None if either stream or socket is True.
 
         output: (generator, bytes, or tuple):
-            If stream=True, a generator yielding response chunks. 
-            If socket=True, a socket object for the connection. 
-            If demux=True, a tuple of two bytes: stdout and stderr. 
+            If stream=True, a generator yielding response chunks.
+            If socket=True, a socket object for the connection.
+            If demux=True, a tuple of two bytes: stdout and stderr.
             A bytestring containing response data otherwise.
     &#34;&#34;&#34;
     docker = self.get(container_id)
@@ -851,14 +882,14 @@ hostname (str) - hostname to be set on docker container default "js-ng"</p>
             A dictionary to configure volumes mounted inside the container. The key is either the host path or a volume name, and the value is a dictionary with the keys:
             bind The path to mount the volume inside the container
             mode Either rw to mount the volume read/write, or ro to mount it read-only.
-            example 
+            example
             {&#39;/home/user1/&#39;: {&#39;bind&#39;: &#39;/mnt/vol2&#39;, &#39;mode&#39;: &#39;rw&#39;},
             &#39;/var/www&#39;: {&#39;bind&#39;: &#39;/mnt/vol1&#39;, &#39;mode&#39;: &#39;ro&#39;}}
         devices (list) –
             Expose host devices to the container, as a list of strings in the form &lt;path_on_host&gt;:&lt;path_in_container&gt;:&lt;cgroup_permissions&gt;.
             For example, /dev/sda:/dev/xvda:rwm allows the container to have read-write access to the host’s /dev/sda via a node named /dev/xvda inside the container.
         detach (bool, optional): detach from container after running it.
-        ports The port number, as an integer. For example, 
+        ports The port number, as an integer. For example,
             - {&#39;2222/tcp&#39;: 3333} will expose port 2222 inside the container as port 3333 on the host.
             - None, to assign a random host port. For example, {&#39;2222/tcp&#39;: None}.
             - A tuple of (address, port) if you want to specify the host interface. For example, {&#39;1111/tcp&#39;: (&#39;127.0.0.1&#39;, 1111)}.
@@ -907,6 +938,16 @@ hostname (str) - hostname to be set on docker container default "js-ng"</p>
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="jumpscale.clients.base.Client" href="../base.html#jumpscale.clients.base.Client">Client</a></b></code>:
+<ul class="hlist">
+<li><code><a title="jumpscale.clients.base.Client.from_dict" href="../../core/base/meta.html#jumpscale.core.base.meta.Base.from_dict">from_dict</a></code></li>
+<li><code><a title="jumpscale.clients.base.Client.to_dict" href="../../core/base/meta.html#jumpscale.core.base.meta.Base.to_dict">to_dict</a></code></li>
+<li><code><a title="jumpscale.clients.base.Client.validate" href="../../core/base/meta.html#jumpscale.core.base.meta.Base.validate">validate</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 </dl>
 </section>

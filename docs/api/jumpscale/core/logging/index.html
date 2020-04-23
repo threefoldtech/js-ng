@@ -22,28 +22,29 @@
 <section id="section-intro">
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">from jumpscale.god import j
-from .logging import Logger, RedisLogHandler, LogHandler
+<pre><code class="python">def export_module_as():
 
+    from jumpscale.god import j
+    from .logging import Logger, RedisLogHandler, LogHandler
 
-logger = Logger()
-config = j.core.config.config.get_config().get(&#34;logging&#34;)
+    logger = Logger()
+    config = j.core.config.config.get_config().get(&#34;logging&#34;)
 
-if config:
-    # configure redis handler if enabled
-    if config[&#34;redis&#34;][&#34;enabled&#34;] and j.core.db:
-        redis_config = config[&#34;redis&#34;]
-        redis_handler = RedisLogHandler(
-            max_size=redis_config[&#34;max_size&#34;], dump=redis_config[&#34;dump&#34;], dump_dir=redis_config[&#34;dump_dir&#34;]
-        )
-        logger.add_custom_handler(&#34;redis&#34;, redis_handler, serialize=True, level=redis_config[&#34;level&#34;])
+    if config:
+        # configure redis handler if enabled
+        if config[&#34;redis&#34;][&#34;enabled&#34;] and j.core.db:
+            redis_config = config[&#34;redis&#34;]
+            redis_handler = RedisLogHandler(
+                max_size=redis_config[&#34;max_size&#34;], dump=redis_config[&#34;dump&#34;], dump_dir=redis_config[&#34;dump_dir&#34;]
+            )
+            logger.add_custom_handler(&#34;redis&#34;, redis_handler, serialize=True, level=redis_config[&#34;level&#34;])
 
-    # configure filesystem handler if enabled
-    if config[&#34;filesystem&#34;][&#34;enabled&#34;]:
-        fs_config = config[&#34;filesystem&#34;]
-        logger.add_handler(sink=fs_config[&#34;log_dir&#34;], level=fs_config[&#34;level&#34;], rotation=fs_config[&#34;rotation&#34;])
+        # configure filesystem handler if enabled
+        if config[&#34;filesystem&#34;][&#34;enabled&#34;]:
+            fs_config = config[&#34;filesystem&#34;]
+            logger.add_handler(sink=fs_config[&#34;log_dir&#34;], level=fs_config[&#34;level&#34;], rotation=fs_config[&#34;rotation&#34;])
 
-export_module_as = logger</code></pre>
+    return logger</code></pre>
 </details>
 </section>
 <section>
@@ -58,6 +59,41 @@ export_module_as = logger</code></pre>
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="jumpscale.core.logging.export_module_as"><code class="name flex">
+<span>def <span class="ident">export_module_as</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def export_module_as():
+
+    from jumpscale.god import j
+    from .logging import Logger, RedisLogHandler, LogHandler
+
+    logger = Logger()
+    config = j.core.config.config.get_config().get(&#34;logging&#34;)
+
+    if config:
+        # configure redis handler if enabled
+        if config[&#34;redis&#34;][&#34;enabled&#34;] and j.core.db:
+            redis_config = config[&#34;redis&#34;]
+            redis_handler = RedisLogHandler(
+                max_size=redis_config[&#34;max_size&#34;], dump=redis_config[&#34;dump&#34;], dump_dir=redis_config[&#34;dump_dir&#34;]
+            )
+            logger.add_custom_handler(&#34;redis&#34;, redis_handler, serialize=True, level=redis_config[&#34;level&#34;])
+
+        # configure filesystem handler if enabled
+        if config[&#34;filesystem&#34;][&#34;enabled&#34;]:
+            fs_config = config[&#34;filesystem&#34;]
+            logger.add_handler(sink=fs_config[&#34;log_dir&#34;], level=fs_config[&#34;level&#34;], rotation=fs_config[&#34;rotation&#34;])
+
+    return logger</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 </section>
@@ -76,6 +112,11 @@ export_module_as = logger</code></pre>
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
 <li><code><a title="jumpscale.core.logging.logging" href="logging.html">jumpscale.core.logging.logging</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="jumpscale.core.logging.export_module_as" href="#jumpscale.core.logging.export_module_as">export_module_as</a></code></li>
 </ul>
 </li>
 </ul>

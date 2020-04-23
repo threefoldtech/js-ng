@@ -22,10 +22,11 @@
 <section id="section-intro">
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">from jumpscale.core.base import StoredFactory
-from .startupcmd import StartupCmd
+<pre><code class="python">def export_module_as():
+    from jumpscale.core.base import StoredFactory
+    from .startupcmd import StartupCmd
 
-export_module_as = StoredFactory(StartupCmd)</code></pre>
+    return StoredFactory(StartupCmd)</code></pre>
 </details>
 </section>
 <section>
@@ -40,6 +41,23 @@ export_module_as = StoredFactory(StartupCmd)</code></pre>
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="jumpscale.tools.startupcmd.export_module_as"><code class="name flex">
+<span>def <span class="ident">export_module_as</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def export_module_as():
+    from jumpscale.core.base import StoredFactory
+    from .startupcmd import StartupCmd
+
+    return StoredFactory(StartupCmd)</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 </section>
@@ -58,6 +76,11 @@ export_module_as = StoredFactory(StartupCmd)</code></pre>
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
 <li><code><a title="jumpscale.tools.startupcmd.startupcmd" href="startupcmd.html">jumpscale.tools.startupcmd.startupcmd</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="jumpscale.tools.startupcmd.export_module_as" href="#jumpscale.tools.startupcmd.export_module_as">export_module_as</a></code></li>
 </ul>
 </li>
 </ul>
