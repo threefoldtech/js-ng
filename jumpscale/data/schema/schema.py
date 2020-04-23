@@ -12,6 +12,19 @@ class Property:
         self.comment = ""
         self.defaultvalue = ""
         self.name = ""
+        self.pointer_type = ""
+        self.prop_type = ""
+
+    def __repr__(self):
+        return str(self.__dict__)
+
+    __str__ = __repr__
+
+    @property
+    def url_to_class_name(self):
+        url = self.defaultvalue
+        urlparts = url.split(".")
+        return "".join(x.capitalize() for x in urlparts)
 
 
 class Schema:
@@ -19,6 +32,33 @@ class Schema:
         self.url = ""
         self.system_props = {}
         self.props = {}
+
+    @property
+    def url_to_class_name(self):
+        return "".join(x.capitalize() for x in self.url.split("."))
+
+    def get_enums_required(self):
+        enums = []
+        for prop_name, prop in self.props.items():
+            if prop.prop_type == "E":
+                enums.append(
+                    {
+                        "name": prop.name.capitalize(),
+                        "vals": [x.strip().capitalize() for x in prop.defaultvalue.split(",")],
+                    }
+                )
+        return enums
+
+    def get_classes_required(self):
+        classes = []
+        for prop_name, prop in self.props.items():
+            if prop.prop_type in ["O", "LO"] and "." in prop.defaultvalue:
+                classes.append(prop.url_to_class_name)
+        return classes
+
+    def get_dependencies(self):
+
+        return {enum: self.get_enums_required(), classes: self.get_classes_requireds()}
 
 
 def _normalize_string(text):
@@ -41,13 +81,12 @@ def _normalize_string(text):
             in_comment = True
         if c == "\n":
             in_comment = False
-        if c == "\"" or c == "'":
+        if c == '"' or c == "'":
             if in_string and c == string_char:
                 in_string = False
             elif not in_string:
                 in_string = True
-                string_char  = c
-        
+                string_char = c
 
         if not in_comment and not in_string and c in whitespaces:
             continue
@@ -162,7 +201,13 @@ def _parse_prop(line):
     if name == "id":
         raise NameError("id is reserved and can't be a name of property.")
     pointer_type = pointer_type[1:] if pointer_type else pointer_type
+    prop.pointer_type = pointer_type
     prop_type = prop_type[1:-1] if prop_type else prop_type
+
+    if not prop_type:
+        prop_type = "S"
+    prop.prop_type = prop_type
+
     comment = comment[1:] if comment else comment
     prop.name = name
     prop.unique = unique == "&"
@@ -206,4 +251,3 @@ def parse_schema(text):
             schema.props[name] = prop
     schema.url = schema.system_props["url"]
     return schema
-

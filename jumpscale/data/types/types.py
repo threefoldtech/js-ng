@@ -202,7 +202,8 @@ def get_js_type(type_str, default_value=None):
     4. "O" -> JSObject
     4. "F" -> Float
     5. "L.*" -> List with subtype .*
-    6. "" -> empty defaults to String
+    6. "E" -> String
+    7. "" -> empty defaults to String
     
     Args:
         type_str (str): type description.
@@ -211,7 +212,7 @@ def get_js_type(type_str, default_value=None):
     Returns:
         Object: A js type object.
     """
-    types = {"": String, "S": String, "I": Integer, "B": Boolean, "F": Float, "O": JSObject}
+    types = {"": String, "S": String, "I": Integer, "B": Boolean, "F": Float, "O": JSObject, "E": String}
     if len(type_str) == 0 or type_str[0] != "L":
         return types[type_str](default_value)
     else:
@@ -326,7 +327,6 @@ class Tel:
 
 
 class IPAddress:
-
     def __init__(self, default=None):
         if not default:
             default = ""
