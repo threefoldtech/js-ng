@@ -18,7 +18,7 @@ class RedisClientAttributeUpdated(AttributeUpdateEvent):
 class RedisClient(Client):
     hostname = fields.String(default="localhost")
     port = fields.Integer(default=6379)
-    password = fields.Secret()
+    password = fields.Secret(default="")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

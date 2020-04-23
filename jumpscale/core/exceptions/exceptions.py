@@ -20,7 +20,7 @@ Exceptions module provide a carefully picked list of exceptions to be used acros
 """
 
 
-class JSException(Exception):
+class JSException(BaseException):
     def __init__(self, message, category=None, level=None, context=None):
         super().__init__(message)
 
@@ -50,6 +50,10 @@ class Value(JSException):
 
 
 class NotImplemented(JSException):
+    pass
+
+
+class Validation(JSException):
     pass
 
 

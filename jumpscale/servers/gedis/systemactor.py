@@ -1,16 +1,36 @@
-from .baseactor import BaseActor
-import importlib
 import os
 import sys
 import json
+import inspect
+from jumpscale.god import j
+from jumpscale.servers.gedis.baseactor import BaseActor, actor_method
+
+
+class CoreActor(BaseActor):
+    def __init__(self):
+        self._server = None
+
+    def set_server(self, server):
+        self._server = server
+
+    @actor_method
+    def list_actors(self) -> list:
+        """List available actors
+        
+        Returns:
+            list -- list of available actors
+        """
+        return list(self._server._loaded_actors.keys())
+
 
 class SystemActor(BaseActor):
-    def __init__(self, server):
-        self.server = server
+    def __init__(self):
+        self._server = None
 
-    def list_actors(self):
-        return json.dumps(list(self.server.actors.keys()))
+    def set_server(self, server):
+        self._server = server
 
+    @actor_method
     def register_actor(self, actor_name: str, actor_path: str) -> bool:
         """Register new actor
         
@@ -21,19 +41,27 @@ class SystemActor(BaseActor):
         Returns:
             bool -- True if registered.
         """
+        module = j.tools.codeloader.load_python_module(actor_path)
+        actor = module.Actor()
+        result = actor.__validate_actor__()
 
-        actor_name = actor_name.decode()
-        actor_path = actor_path.decode()
+        if not result["valid"]:
+            raise j.exceptions.Validation(
+                "Actor {} is not valid, check the following errors {}".format(actor_name, result["errors"])
+            )
 
-        if actor_name in self.server.actors:
-            return 1
-        module_python_name = os.path.dirname(actor_path)
-        module_name = os.path.splitext(module_python_name)[0]
-        spec = importlib.util.spec_from_file_location(module_name, actor_path)
-        module = importlib.util.module_from_spec(spec)
-        sys.modules[spec.name] = module
-        spec.loader.exec_module(module)
-        self.server.actors[actor_name] = module.Actor()
-        print(self.server.actors)
+        self._server._register_actor(actor_name, actor)
+        return True
 
-        return 1
+    @actor_method
+    def unregister_actor(self, actor_name: str) -> bool:
+        """Register actor
+        
+        Arguments:
+            actor_name {str} -- actor name
+        
+        Returns:
+            bool -- True if actors is unregistered
+        """
+        self._server._unregister_actor(actor_name)
+        return True
