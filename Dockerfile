@@ -36,5 +36,7 @@ RUN poetry config virtualenvs.create false \
     && poetry install $(test "production" == production && echo "--no-dev") --no-interaction --no-ansi
 
 # RUN chown -R root ${HOME}/js-ng
+RUN mkdir -p ${HOME}/.config/jumpscale
 RUN chown -R ${NB_UID} ${HOME}/.config/jumpscale
+
 ENTRYPOINT []
