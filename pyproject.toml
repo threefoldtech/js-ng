@@ -49,9 +49,9 @@ pycountry = "^19.8"
 docker = "^4.2.0"
 jinja2 = "^2.11.1"
 psutil = "^5.7.0"
-snakeviz = "^2.0.1"
 pudb = "^2019.1"
 python-digitalocean = "^1.15.0"
+snakeviz = "^2.0.1"
 
 [tool.poetry.dev-dependencies]
 ipdb = "^0.12.1"
