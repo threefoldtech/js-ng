@@ -33,6 +33,33 @@ class Schema:
         self.system_props = {}
         self.props = {}
 
+    @property
+    def url_to_class_name(self):
+        return "".join(x.capitalize() for x in self.url.split("."))
+
+    def get_enums_required(self):
+        enums = []
+        for prop_name, prop in self.props.items():
+            if prop.prop_type == "E":
+                enums.append(
+                    {
+                        "name": prop.name.capitalize(),
+                        "vals": [x.strip().capitalize() for x in prop.defaultvalue.split(",")],
+                    }
+                )
+        return enums
+
+    def get_classes_required(self):
+        classes = []
+        for prop_name, prop in self.props.items():
+            if prop.prop_type in ["O", "LO"] and "." in prop.defaultvalue:
+                classes.append(prop.url_to_class_name)
+        return classes
+
+    def get_dependencies(self):
+
+        return {enum: self.get_enums_required(), classes: self.get_classes_requireds()}
+
 
 def _normalize_string(text):
     """Trims the text, removes all the spaces from text and replaces every sequence of lines with a single line.

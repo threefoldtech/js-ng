@@ -1,34 +1,40 @@
-from .utils import convert_url_to_class_name
+from jumpscale.god import j
 
 
 class Plugin:
-    def __init__(self, parsed_schema, schema_text):
-        self._parsed_schema = parsed_schema
-        self._schema_text = schema_text
+    def _generate_single(self, schema):
+        data = dict(
+            generated_class_name=schema.url_to_class_name,
+            generated_properties=schema.props,
+            types_map=self._types_map,
+            enums=schema.get_enums_required(),
+            classes=schema.get_classes_required(),
+            get_prop_line=self._get_prop_line,
+        )
+        return j.tools.jinja2.render_template(template_text=self._single_template, **data)
 
-    @property
-    def generated_class_name(self):
-        return convert_url_to_class_name(self._parsed_schema.url)
+    def generate(self, parsed_schemas):
+        all_enums = []
+        for scm_name, scm in parsed_schemas.items():
+            enums = scm.get_enums_required()
+            for enum in enums:
+                if enum not in all_enums:
+                    all_enums.append(enum)
 
-    def get_enums(self):
-        enums = {}
-        for prop_name, prop in self.generated_properties.items():
-            if prop.prop_type == "E":
-                enums[prop.name.capitalize()] = [x.strip().capitalize() for x in prop.defaultvalue.split(",")]
-        return enums
+        depsresolver = j.tools.depsresolver
+        all_classes = []
+        for scm_name, scm in parsed_schemas.items():
+            depsresolver.add_task(scm.url_to_class_name, scm.get_classes_required(), lambda x: x)
 
-    @property
-    def generated_properties(self):
-        #  ipdb> (c._parsed_schema.props['lobjs'])
-        # {'index': False, 'index_key': False, 'index_text': False, 'unique': False, 'type': <jumpscale.data.
-        # types.types.List object at 0x7f03f61b95d0>, 'comment': '', 'defaultvalue': '7amada.test', 'name': '
-        # lobjs', 'pointer_type': '7amada.test', 'prop_type': 'LO'}
-        # ipdb> (c._parsed_schema.props['objs'])
-        # *** KeyError: 'objs'
-        # ipdb> (c._parsed_schema.props['obj'])
-        # {'index': False, 'index_key': False, 'index_text': False, 'unique': False, 'type': <jumpscale.data.types.types.JSObject object at 0x7f03f61b92d0>, 'comment': '', 'defaultvalue': '7mada.test', 'name': 'obj', 'pointer_type': '7mada.test', 'prop_type': 'O'}
+        independent_schemas = [name for name, deps in depsresolver.tasksgraph.items() if not deps]
+        for schema_name in independent_schemas:
+            all_classes.append(self._generate_single(parsed_schemas[schema_name]))
 
-        return self._parsed_schema.props
+        dependant_schemas = [name for name, deps in depsresolver.tasksgraph.items() if deps]
+        for schema_name in dependant_schemas:
+            all_classes.append(self._generate_single(parsed_schemas[schema_name]))
 
-    def generate(self):
-        pass
+        all_classes_str = "\n\n".join(all_classes)
+        return j.tools.jinja2.render_template(
+            template_text=self._template, classes_generated=all_classes_str, enums=all_enums
+        )

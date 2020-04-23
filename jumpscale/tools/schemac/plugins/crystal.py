@@ -50,38 +50,37 @@ def get_prop_line(prop):
     return line
 
 
-TEMPLATE = """
-# GENERATED CLASS DONT EDIT
-
-
-{%- for enum_name, enum_vals in enums.items() %}
-
-enum {{enum_name}}:
-    {%- for enumval in enum_vals %}
-    {{enumval}} = {{loop.index0}}
-    {%- endfor %}
-{%- endfor %}
+SINGLE_TEMPLATE = """
 
 class {{generated_class_name}}
 {%- for prop in generated_properties.values() %}
     {{get_prop_line(prop)}}
 {%- endfor %}
+end
 
-end 
+"""
+
+TEMPLATE = """
+#GENERATED CLASS DONT EDIT
+
+{%- for enum in enums %}
+
+enum {{enum['name']}}:
+    {%- for enumval in enum['vals'] %}
+    {{enumval}} = {{loop.index0}}
+    {%- endfor %}
+{%- endfor %}
+
+{{classes_generated}}
+
 """
 
 
 class CrystalGenerator(Plugin):
-    def __init__(self, parsed_schema, schema_text):
-        super().__init__(parsed_schema, schema_text)
+    def __init__(self):
+        super().__init__()
 
-    def generate(self):
-        tmpl = TEMPLATE
-        data = dict(
-            generated_class_name=self.generated_class_name,
-            generated_properties=self.generated_properties,
-            types_map=types_map,
-            get_prop_line=get_prop_line,
-            enums=self.get_enums(),
-        )
-        return j.tools.jinja2.render_template(template_text=TEMPLATE, **data)
+        self._single_template = SINGLE_TEMPLATE
+        self._template = TEMPLATE
+        self._get_prop_line = get_prop_line
+        self._types_map = types_map

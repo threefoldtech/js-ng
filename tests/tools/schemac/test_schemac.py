@@ -12,7 +12,7 @@ schema = """
             status = "on,off" (E) 
             happy = "yes, no" (E)
             &nr    = 4
-            obj = (O)!hmada.test
+            obj = (O)!hamada.test
             lobjs = (LO) !hamada.test
 
             date_start = 0 (I)
@@ -25,6 +25,11 @@ schema = """
             nrdefault = 0
             nrdefault2 = (I)
             nrdefault3 = 0 (I)
+
+            @url = hamada.test
+            a = (I)
+            name = (S)
+            mood = "stressed,sleeping" (E)
     """
 
 
@@ -32,11 +37,34 @@ valid_generated_python= """
 #GENERATED CLASS DONT EDIT
 from jumpscale.core.base import Base, fields
 
+class Status:
+    On = 0
+    Off = 1
+
+class Happy:
+    Yes = 0
+    No = 1
+
+class Mood:
+    Stressed = 0
+    Sleeping = 1
+
+
+
+class HamadaTest(Base):
+    a = fields.Integer()
+    name = fields.String(default="")
+    mood = fields.Enum(Mood)
+
+
+
 
 class DespiegkTest(Base):
     listany = fields.List(fields.Object())
     llist2 = fields.List(fields.String())
     llist3 = fields.List(fields.Float())
+    status = fields.Enum(Status)
+    happy = fields.Enum(Happy)
     nr = fields.String(default="4")
     obj = fields.Object()
     lobjs = fields.List(fields.Object())
@@ -50,16 +78,42 @@ class DespiegkTest(Base):
     nrdefault = fields.String(default="0")
     nrdefault2 = fields.Integer()
     nrdefault3 = fields.Integer(default=0)
-
 """
 
 valid_generated_crystal = """
+#GENERATED CLASS DONT EDIT
+
+enum Status:
+    On = 0
+    Off = 1
+
+enum Happy:
+    Yes = 0
+    No = 1
+
+enum Mood:
+    Stressed = 0
+    Sleeping = 1
+
+
+
+class HamadaTest
+    property a : Int64
+    property name = ""
+    property mood : Mood
+end
+
+
+
+
 class DespiegkTest
     property listany : [] of Object
     property llist2 : [] of String
     property llist3 : [] of Float
+    property status : Status
+    property happy : Happy
     property nr = "4"
-    property obj : HmadaTest
+    property obj : HamadaTest
     property lobjs : [] of HamadaTest
     property date_start = 0
     property description = "hello world"
@@ -71,8 +125,8 @@ class DespiegkTest
     property nrdefault = "0"
     property nrdefault2 : Int64
     property nrdefault3 = 0
+end
 
-end 
 """
 
 
@@ -83,9 +137,8 @@ def test001_loading_schema_in_compiler():
     assert c._schema_text
     assert c.lang == "python"
     assert c.generator
-    c.parse()  # parse schema now
-    assert c._parsed_schema is not None
-    generated_python =c.generate()
+    parsed_schemas = c.parse()  # parse schema now
+    generated_python =c.generator.generate(parsed_schemas)
     print(generated_python)
 
     for line in valid_generated_python.splitlines():
@@ -93,8 +146,8 @@ def test001_loading_schema_in_compiler():
             assert line in generated_python
 
     c.lang = "crystal"
-    c.parse()
-    generated_crystal = c.generate()
+    parsed_schemas =c.parse()
+    generated_crystal = c.generator.generate(parsed_schemas)
     print(generated_crystal)
     for line in valid_generated_crystal.splitlines():
         if line.strip():
