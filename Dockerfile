@@ -22,6 +22,7 @@ RUN chown -R ${NB_USER} /sandbox
 RUN git clone --branch development_binder https://github.com/js-next/js-ng  /sandbox/code/github/js-next/js-ng2
 RUN ln -s /sandbox/code/github/js-next/js-ng2 ${HOME}/js-ng
 
+RUN chown -R ${NB_USER} /sandbox/code/github/js-next/js-ng2
 
 RUN chown -R ${NB_USER} ${HOME}/js-ng
 USER ${USER}
