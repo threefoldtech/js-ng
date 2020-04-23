@@ -18,24 +18,20 @@ RUN adduser --disabled-password \
 WORKDIR ${HOME}
 
 RUN chown -R ${NB_USER} /sandbox
-
+# Cloning from the right branch 
 RUN git clone --branch development_binder https://github.com/js-next/js-ng  /sandbox/code/github/js-next/js-ng2
+# link the cloned path to ${HOME}/js-ng as it is the default path for binder to start
 RUN ln -s /sandbox/code/github/js-next/js-ng2 ${HOME}/js-ng
-
-#RUN chown -R ${NB_USER} /sandbox/code/github/js-next/js-ng2
-
-#RUN chown -R ${NB_USER} ${HOME}/js-ng
+# Change user to the one given by binder
 USER ${USER}
 
 WORKDIR ${HOME}/js-ng
-# RUN poetry update && poetry install
-# RUN poetry shell 
-# RUN jsng
+
 USER root
 RUN poetry config virtualenvs.create false \
     && poetry install $(test "production" == production && echo "--no-dev") --no-interaction --no-ansi
 
-# RUN chown -R root ${HOME}/js-ng
+# Creating /.config file which will be used in runtime
 RUN mkdir -p ${HOME}/.config/jumpscale
 RUN chown -R ${NB_UID} ${HOME}/.config/jumpscale
 
