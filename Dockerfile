@@ -34,5 +34,5 @@ WORKDIR ${HOME}/js-ng
 USER root
 RUN poetry config virtualenvs.create false \
     && poetry install $(test "production" == production && echo "--no-dev") --no-interaction --no-ansi
-
+USER ${USER}
 ENTRYPOINT []
