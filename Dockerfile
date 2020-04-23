@@ -17,7 +17,7 @@ RUN adduser --disabled-password \
 
 WORKDIR ${HOME}
 
-RUN chown -R ${NB_UID} /sandbox
+RUN chown -R ${NB_USER} /sandbox
 
 RUN git clone --branch development_binder https://github.com/js-next/js-ng  /sandbox/code/github/js-next/js-ng2
 RUN ln -s /sandbox/code/github/js-next/js-ng2 ${HOME}/js-ng
