@@ -1,6 +1,7 @@
 FROM threefoldtech/js-ng
 # install the notebook package
-RUN apt-get install python3-pip && \
+RUN apt-get install python3-pip python3-venv -y &&\
+    pip3 install poetry &&\
     pip3 install --no-cache notebook
 
 # create user with a home directory
@@ -18,5 +19,5 @@ RUN chown -R ${NB_UID} /sandbox
 RUN git clone --branch development_binder https://github.com/js-next/js-ng  /sandbox/code/github/js-next/js-ng2
 RUN ln -s /sandbox/code/github/js-next/js-ng2 ${HOME}/js-ng
 USER ${USER}
-
+RUN poetry update && poetry install
 ENTRYPOINT []
