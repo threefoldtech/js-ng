@@ -69,7 +69,9 @@ enum {{enum['name']}}:
     {%- for enumval in enum['vals'] %}
     {{enumval}} = {{loop.index0}}
     {%- endfor %}
+end
 {%- endfor %}
+
 
 {{classes_generated}}
 

@@ -62,10 +62,11 @@ class {{generated_class_name}}(Base):
 TEMPLATE = """
 #GENERATED CLASS DONT EDIT
 from jumpscale.core.base import Base, fields
+from enum import Enum
 
 {%- for enum in enums %}
 
-class {{enum['name']}}:
+class {{enum['name']}}(Enum):
     {%- for enumval in enum['vals'] %}
     {{enumval}} = {{loop.index0}}
     {%- endfor %}

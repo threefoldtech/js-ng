@@ -36,16 +36,17 @@ schema = """
 valid_generated_python= """
 #GENERATED CLASS DONT EDIT
 from jumpscale.core.base import Base, fields
+from enum import Enum
 
-class Status:
+class Status(Enum):
     On = 0
     Off = 1
 
-class Happy:
+class Happy(Enum):
     Yes = 0
     No = 1
 
-class Mood:
+class Mood(Enum):
     Stressed = 0
     Sleeping = 1
 
@@ -86,14 +87,18 @@ valid_generated_crystal = """
 enum Status:
     On = 0
     Off = 1
+end
 
 enum Happy:
     Yes = 0
     No = 1
+end
 
 enum Mood:
     Stressed = 0
     Sleeping = 1
+end
+
 
 
 
