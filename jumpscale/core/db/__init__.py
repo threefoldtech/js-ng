@@ -11,11 +11,10 @@ def export_module_as():
         def db(self):
             if not self._db:
                 try:
-                    self._db = j.clients.redis.get("main")
+                    self._db = j.clients.redis.get('main')
                     self._db.ping()
                 except ConnectionError:
-                    # TODO log
-                    return None
+                    j.logger.error("Cannot connect to redis")
             return self._db
 
     return DefaultRedisDB().db
