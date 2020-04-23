@@ -29,7 +29,7 @@ USER ${USER}
 
 WORKDIR ${HOME}/js-ng
 
-# USER root
+USER root
 # RUN poetry config virtualenvs.create false \
 #     && poetry install --no-interaction --no-ansi
 
