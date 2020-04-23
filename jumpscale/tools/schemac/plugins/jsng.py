@@ -13,6 +13,7 @@ types_map = {
     "LI": "List",
     "LF": "List",
     "LO": "List",
+    "E": "Enum",
 }
 
 
@@ -23,8 +24,9 @@ def get_prop_line(prop):
 
     # print(f"\n\n{prop.name} => {prop} \n\n")
     # primitive with a default or not.
-
-    if prop_type == "O":
+    if prop_type == "E":
+        line += f"fields.{python_type}({prop.name.capitalize()})"
+    elif prop_type == "O":
         line += f"fields.{python_type}()"
     elif prop_type == "LO" and prop.defaultvalue and prop.defaultvalue != "[]":
         line += f"fields.List(fields.Object())"
@@ -53,6 +55,15 @@ TEMPLATE = """
 from jumpscale.core.base import Base, fields
 
 
+{%- for enum_name, enum_vals in enums.items() %}
+
+class {{enum_name}}:
+    {%- for enumval in enum_vals %}
+    {{enumval}} = {{loop.index0}}
+    {%- endfor %}
+{%- endfor %}
+
+
 class {{generated_class_name}}(Base):
 {%- for prop in generated_properties.values() %}
     {{get_prop_line(prop)}}
@@ -70,6 +81,7 @@ class JSNGGenerator(Plugin):
             generated_class_name=self.generated_class_name,
             generated_properties=self.generated_properties,
             types_map=types_map,
+            enums=self.get_enums(),
             get_prop_line=get_prop_line,
         )
         return j.tools.jinja2.render_template(template_text=TEMPLATE, **data)

@@ -21,10 +21,11 @@ def get_prop_line(prop):
     crystal_type = types_map.get(prop_type)
     line = f"property {prop.name}"
 
-    print(f"\n\n{prop.name} => {prop} \n\n")
+    # print(f"\n\n{prop.name} => {prop} \n\n")
     # primitive with a default or not.
-
-    if prop_type == "O":
+    if prop_type == "E":
+        line += f" : {prop.name.capitalize()}"
+    elif prop_type == "O":
         line += f" : {prop.url_to_class_name}"
     elif prop_type == "LO" and prop.defaultvalue and prop.defaultvalue != "[]":
         line += f" : [] of {prop.url_to_class_name}"
@@ -51,6 +52,16 @@ def get_prop_line(prop):
 
 TEMPLATE = """
 # GENERATED CLASS DONT EDIT
+
+
+{%- for enum_name, enum_vals in enums.items() %}
+
+enum {{enum_name}}:
+    {%- for enumval in enum_vals %}
+    {{enumval}} = {{loop.index0}}
+    {%- endfor %}
+{%- endfor %}
+
 class {{generated_class_name}}
 {%- for prop in generated_properties.values() %}
     {{get_prop_line(prop)}}
@@ -71,5 +82,6 @@ class CrystalGenerator(Plugin):
             generated_properties=self.generated_properties,
             types_map=types_map,
             get_prop_line=get_prop_line,
+            enums=self.get_enums(),
         )
         return j.tools.jinja2.render_template(template_text=TEMPLATE, **data)

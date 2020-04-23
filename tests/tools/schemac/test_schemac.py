@@ -9,6 +9,8 @@ schema = """
             listany = (LO)
             llist2 = "" (LS) #L means = list, S=String
             llist3     = [1,2,3] (LF)
+            status = "on,off" (E) 
+            happy = "yes, no" (E)
             &nr    = 4
             obj = (O)!hmada.test
             lobjs = (LO) !hamada.test

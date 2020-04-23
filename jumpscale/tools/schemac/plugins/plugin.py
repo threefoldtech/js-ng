@@ -10,6 +10,13 @@ class Plugin:
     def generated_class_name(self):
         return convert_url_to_class_name(self._parsed_schema.url)
 
+    def get_enums(self):
+        enums = {}
+        for prop_name, prop in self.generated_properties.items():
+            if prop.prop_type == "E":
+                enums[prop.name.capitalize()] = [x.strip().capitalize() for x in prop.defaultvalue.split(",")]
+        return enums
+
     @property
     def generated_properties(self):
         #  ipdb> (c._parsed_schema.props['lobjs'])
