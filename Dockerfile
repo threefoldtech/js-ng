@@ -29,5 +29,6 @@ USER ${USER}
 
 WORKDIR ${HOME}/js-ng
 RUN poetry update && poetry install
-RUN poetry shell && jsng
+RUN poetry shell 
+RUN jsng
 ENTRYPOINT []
