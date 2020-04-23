@@ -31,6 +31,8 @@ WORKDIR ${HOME}/js-ng
 # RUN poetry update && poetry install
 # RUN poetry shell 
 # RUN jsng
+USER root
 RUN poetry config virtualenvs.create false \
     && poetry install $(test "production" == production && echo "--no-dev") --no-interaction --no-ansi
+
 ENTRYPOINT []
