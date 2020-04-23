@@ -19,5 +19,6 @@ RUN chown -R ${NB_UID} /sandbox
 RUN git clone --branch development_binder https://github.com/js-next/js-ng  /sandbox/code/github/js-next/js-ng2
 RUN ln -s /sandbox/code/github/js-next/js-ng2 ${HOME}/js-ng
 USER ${USER}
+WORKDIR ${HOME}/js-ng
 RUN poetry update && poetry install
 ENTRYPOINT []
