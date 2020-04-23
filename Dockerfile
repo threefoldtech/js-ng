@@ -28,7 +28,9 @@ RUN chown -R ${NB_USER} ${HOME}/js-ng
 USER ${USER}
 
 WORKDIR ${HOME}/js-ng
-RUN poetry update && poetry install
-RUN poetry shell 
-RUN jsng
+# RUN poetry update && poetry install
+# RUN poetry shell 
+# RUN jsng
+RUN poetry config virtualenvs.create false \
+    && poetry install $(test "production" == production && echo "--no-dev") --no-interaction --no-ansi
 ENTRYPOINT []
