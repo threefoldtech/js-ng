@@ -1,3 +1,5 @@
+"""Generator for crystal language. Takes in parsed schemas and generates crystal language classes.
+"""
 from .plugin import Plugin
 from jumpscale.god import j
 

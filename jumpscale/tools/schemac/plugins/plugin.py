@@ -3,6 +3,14 @@ from jumpscale.god import j
 
 class Plugin:
     def _generate_single(self, schema):
+        """Generates a single schema template
+
+        Arguments:
+            schema (jumpscale.data.Schema) -- Parsed schema.
+
+        Returns:
+            (str) -- schema convert to a class as string.
+        """
         data = dict(
             generated_class_name=schema.url_to_class_name,
             generated_properties=schema.props,
@@ -14,6 +22,14 @@ class Plugin:
         return j.tools.jinja2.render_template(template_text=self._single_template, **data)
 
     def generate(self, parsed_schemas):
+        """Generates a string has all the enumerations and classes in the target language.
+
+        Arguments:
+            parsed_schemas (Dict[str, jumpscale.data.Schema]) -- a dict of schema name to schema object
+
+        Returns:
+            (str) -- Compiled string of all enumerations and classes in the target language.
+        """
         all_enums = []
         for scm_name, scm in parsed_schemas.items():
             enums = scm.get_enums_required()

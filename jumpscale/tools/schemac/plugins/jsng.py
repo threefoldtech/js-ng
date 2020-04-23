@@ -1,3 +1,7 @@
+"""Generator based on JS-NG fields. takes in parsed schemas and generates Python classes based on JS-NG fields.
+
+"""
+
 from .plugin import Plugin
 from jumpscale.god import j
 
