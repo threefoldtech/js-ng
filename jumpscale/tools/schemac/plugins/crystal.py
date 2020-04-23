@@ -12,34 +12,48 @@ types_map = {
     "LS": "[] of String",
     "LI": "[] of Int64",
     "LF": "[] of Float",
-    "LO": "[] of ",
+    "LO": "",
 }
 
 
+def get_prop_line(prop):
+    prop_type = prop.prop_type
+    crystal_type = types_map.get(prop_type)
+    line = f"property {prop.name}"
+
+    print(f"\n\n{prop.name} => {prop} \n\n")
+    # primitive with a default or not.
+
+    if prop_type == "O":
+        line += f" : {prop.url_to_class_name}"
+    elif prop_type == "LO" and prop.defaultvalue and prop.defaultvalue != "[]":
+        line += f" : [] of {prop.url_to_class_name}"
+    elif prop_type == "LO" and not prop.defaultvalue:
+        line += f" : [] of Object"
+    elif crystal_type == "L" and not prop.defaultvalue:
+        line += f" : [] of Object"
+    elif crystal_type == "L" and prop.defaultvalue:
+        line += f" = {crystal_type}"
+    elif len(prop_type) > 1 and prop_type[0] == "L" and prop_type[1] != "O":
+        line += f" : {crystal_type}"
+
+    elif prop_type in ["I", "F", "B"] and not prop.defaultvalue:
+        line += f" : {crystal_type}"
+    elif prop_type in ["I", "F", "B"] and prop.defaultvalue:
+        line += f" = {prop.defaultvalue}"
+    elif prop_type == "S":
+        line += f' = "{prop.defaultvalue}"'
+    else:
+        line += f": {crystal_type}"
+
+    return line
+
+
 TEMPLATE = """
-# GENERATED CLASS DON'T EDIT
+# GENERATED CLASS DONT EDIT
 class {{generated_class_name}}
 {%- for prop in generated_properties.values() %}
-    {%- if prop %}
-        {%- if prop.defaultvalue and prop.prop_type[0] not in ['L', 'O'] %}
-        property {{prop.name}} = {{prop.defaultvalue}}    
-        {%- elif prop.prop_type == "O" %}
-        property {{prop.name}} : {{prop.url_to_class_name}}
-        {%- elif prop.prop_type == "L" and not prop.defaultvalue %}
-        property {{prop.name}} : [] of Object
-        {%- elif prop.prop_type == "L" and prop.defaultvalue %}
-        property {{prop.name}} = {{types_map[prop.prop_type]}}
-        {%- elif prop.prop_type == "LO" and prop.defaultvalue %}
-        property {{prop.name}} : [] of {{prop.url_to_class_name}}
-        {%- elif prop.prop_type == "LO" and not prop.defaultvalue %}
-        property {{prop.name}} : [] of Object
-
-        {%- elif prop.prop_type[0] == 'L' and prop.prop_type[1] != 'O' %}
-        property {{prop.name}} : {{types_map[prop.prop_type]}}
-        {%- else %}
-        property {{prop.name}} : {{types_map[prop.prop_type]}}
-        {%- endif %}
-    {%- endif %}
+    {{get_prop_line(prop)}}
 {%- endfor %}
 
 end 
@@ -56,5 +70,6 @@ class CrystalGenerator(Plugin):
             generated_class_name=self.generated_class_name,
             generated_properties=self.generated_properties,
             types_map=types_map,
+            get_prop_line=get_prop_line,
         )
         return j.tools.jinja2.render_template(template_text=TEMPLATE, **data)

@@ -6,7 +6,6 @@ from hypothesis.strategies import lists, integers
 
 schema = """
             @url = despiegk.test
-            llist = []
             listany = (LO)
             llist2 = "" (LS) #L means = list, S=String
             llist3     = [1,2,3] (LF)
@@ -27,10 +26,52 @@ schema = """
     """
 
 
-# @given(schema_url()))
-# def test_url_convert()(l):
-#     pass
+valid_generated_python= """
+#GENERATED CLASS DONT EDIT
+from jumpscale.core.base import Base, fields
 
+
+class DespiegkTest(Base):
+    listany = fields.List(fields.Object())
+    llist2 = fields.List(fields.String())
+    llist3 = fields.List(fields.Float())
+    nr = fields.String(default="4")
+    obj = fields.Object()
+    lobjs = fields.List(fields.Object())
+    date_start = fields.Integer(default=0)
+    description = fields.String(default="hello world")
+    description2 = fields.String(default="a string")
+    llist4 = fields.List(fields.Integer())
+    llist5 = fields.List(fields.Integer())
+    llist6 = fields.List(fields.Integer())
+    U = fields.String(default="0.0")
+    nrdefault = fields.String(default="0")
+    nrdefault2 = fields.Integer()
+    nrdefault3 = fields.Integer(default=0)
+
+"""
+
+valid_generated_crystal = """
+class DespiegkTest
+    property listany : [] of Object
+    property llist2 : [] of String
+    property llist3 : [] of Float
+    property nr = "4"
+    property obj : HmadaTest
+    property lobjs : [] of HamadaTest
+    property date_start = 0
+    property description = "hello world"
+    property description2 = "a string"
+    property llist4 : [] of Int64
+    property llist5 : [] of Int64
+    property llist6 : [] of Int64
+    property U = "0.0"
+    property nrdefault = "0"
+    property nrdefault2 : Int64
+    property nrdefault3 = 0
+
+end 
+"""
 
 
 def test001_loading_schema_in_compiler():
@@ -42,8 +83,17 @@ def test001_loading_schema_in_compiler():
     assert c.generator
     c.parse()  # parse schema now
     assert c._parsed_schema is not None
-    # import ipdb; ipdb.set_trace()
-    print(c.generate())
+    generated_python =c.generate()
+    print(generated_python)
+
+    for line in valid_generated_python.splitlines():
+        if line.strip():
+            assert line in generated_python
+
     c.lang = "crystal"
     c.parse()
-    print(c.generate())
+    generated_crystal = c.generate()
+    print(generated_crystal)
+    for line in valid_generated_crystal.splitlines():
+        if line.strip():
+            assert line in generated_crystal
