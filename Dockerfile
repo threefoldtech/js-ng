@@ -29,7 +29,7 @@ WORKDIR ${HOME}/js-ng
 
 USER root
 RUN poetry config virtualenvs.create false \
-    && poetry install $(test "production" == production && echo "--no-dev") --no-interaction --no-ansi
+    && poetry install --no-interaction --no-ansi
 
 # Creating /.config file which will be used in runtime
 RUN mkdir -p ${HOME}/.config/jumpscale
