@@ -176,7 +176,7 @@ class Factory:
         if self.find(name):
             raise DuplicateError(f"instance with name {name} already exists")
 
-        instance = self._create_instance(name, *args, *kwargs)
+        instance = self._create_instance(name, *args, **kwargs)
         setattr(self, name, instance)
         return instance
 
