@@ -1,6 +1,5 @@
-from jumpscale.core.base import StoredFactory
-from .twilio import TwilioSMSClient
+def export_module_as():
+    from jumpscale.core.base import StoredFactory
+    from .twilio import TwilioSMSClient
 
-
-export_module_as = StoredFactory(TwilioSMSClient)
-
+    StoredFactory(TwilioSMSClient)

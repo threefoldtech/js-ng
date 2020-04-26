@@ -1,14 +1,45 @@
+import inspect
+import json
 import sys
-from io import BytesIO
+import os
+from redis import Redis
+from enum import Enum
 from functools import partial
+from io import BytesIO
+from signal import SIGKILL, SIGTERM
+import json
+import better_exceptions
 import gevent
 from gevent import time
-from gevent.pool import Pool
 from gevent.server import StreamServer
-import signal
-from redis.connection import DefaultParser, Encoder
+from jumpscale.core.base import Base, fields
 from jumpscale.god import j
-from .systemactor import SystemActor
+from redis.connection import DefaultParser, Encoder
+from redis.exceptions import ConnectionError
+from .baseactor import BaseActor
+from .systemactor import CoreActor, SystemActor
+
+
+def serialize(obj):
+    if not isinstance(obj, (str, int, float, list, tuple, dict, bool)):
+        module = os.path.dirname(inspect.getmodule(obj).__file__)
+        return dict(__serialized__=True, module=module, type=obj.__class__.__name__, data=obj.to_dict())
+    return obj
+
+def deserialize(obj):
+    if isinstance(obj, dict) and obj.get("__serialized__"):
+        module = sys.modules[obj["module"]]
+        object_instance = getattr(module, obj["type"])()
+        object_instance.from_dict(obj["data"])
+        return object_instance
+    return obj
+
+
+class GedisErrorTypes(Enum):
+    NOT_FOUND = 0
+    BAD_REQUEST = 1
+    ACTOR_ERROR = 3
+    INTERNAL_SERVER_ERROR = 4
 
 
 class RedisConnectionAdapter:
@@ -18,8 +49,8 @@ class RedisConnectionAdapter:
         self.socket_timeout = 600
         self.socket_connect_timeout = 600
         self.socket_keepalive = True
-        self.socket_keepalive_options = {}
         self.retry_on_timeout = True
+        self.socket_keepalive_options = {}
         self.encoder = Encoder("utf", "strict", False)
 
 
@@ -92,90 +123,169 @@ class ResponseEncoder:
         self.buffer = BytesIO()  # seems faster then truncating
 
 
-class GedisServer:
-    def __init__(self, endpoint=("127.0.0.1", 16000), actors=None):
-        """Create gedis server
+SERIALIZABLE_TYPES = (str, int, float, list, tuple, dict, bool)
+RESERVED_ACTOR_NAMES = ("core", "system")
 
-        Keyword Arguments:
-            endpoint {tuple[host, port]} -- host and port to bind server on (default: {("127.0.0.1", 16000)})
-            actors {dict[str, Actor]} -- doct of available actors (default: {None})
+
+class GedisServer(Base):
+    host = fields.String(default="127.0.0.1")
+    port = fields.Integer(default=16000)
+    enable_system_actor = fields.Boolean(default=True)
+    run_async = fields.Boolean(default=True)
+    _actors = fields.Typed(dict)
+
+    def __init__(self):
+        super().__init__()
+        self._actors = self._actors or {}
+        self._core_actor = CoreActor()
+        self._system_actor = SystemActor()
+        self._loaded_actors = {"core": self._core_actor}
+
+    @property
+    def actors(self):
+        """Lists saved actors
+        
+        Returns:
+            list -- List of saved actors
         """
-        self.actors = actors or {}
-        self.endpoint = endpoint
+        return self._actors
+
+    def actor_add(self, actor_name: str, actor_path: str):
+        """Adds an actor to the server
+        
+        Arguments:
+            actor_name {str} -- Actor name
+            actor_path {str} -- Actor absolute path
+        
+        Raises:
+            j.exceptions.Value: raises if actor name is matched one of the reserved actor names
+            j.exceptions.Value: raises if actor name is not a valid identifier
+        """
+        if actor_name in RESERVED_ACTOR_NAMES:
+            raise j.exceptions.Value("Invalid actor name")
+
+        if not actor_name.isidentifier():
+            raise j.exceptions.Value(f"Actor name should be a valid identifier")
+
+        self._actors[actor_name] = actor_path
+
+    def actor_delete(self, actor_name: str):
+        """Removes an actor from the server
+        
+        Arguments:
+            actor_name {str} -- Actor name
+        """
+        self._actors.pop(actor_name, None)
 
     def start(self):
-        """Start gedis server.
+        """Starts the server
         """
-        s = StreamServer(self.endpoint, self.on_connection)
+        j.application.start("gedis")
 
-        gevent.signal(signal.SIGTERM, s.stop)
-        gevent.signal(signal.SIGINT, s.stop)
-        s.reuse_addr = True
-        s.serve_forever()
+        # handle signals
+        for signal_type in (SIGTERM, SIGTERM, SIGKILL):
+            gevent.signal(signal_type, self.stop)
+
+        # register system actor if enabled
+        if self.enable_system_actor:
+            self._register_actor("system", self._system_actor)
+
+        self._core_actor.set_server(self)
+        self._system_actor.set_server(self)
+
+        # register saved actors
+        for actor_name, actor_path in self._actors.items():
+            self._system_actor.register_actor(actor_name, actor_path)
+
+        # start the server
+        server = StreamServer((self.host, self.port), self._on_connection)
+        server.reuse_addr = True
+        server.serve_forever()
 
     def stop(self):
-        """Shutting down the server.
+        """Stops the server
         """
-        if self.closed:
-            sys.exit("Multiple exit signals received - aborting.")
-        else:
-            j.logger.debug("Closing listener socket")
-            StreamServer.close(self)
+        j.logger.info("Shutting down ...")
+        self._server.stop()
 
-    def on_connection(self, socket, address):
-        """Handling new connection
+    def _register_actor(self, actor_name: str, actor_module: BaseActor):
+        self._loaded_actors[actor_name] = actor_module
 
-        Arguments:
-            socket {socket} -- TCP socket
-            address {tuple[str, port]} -- connection address
-        """
+    def _unregister_actor(self, actor_name: str):
+        self._loaded_actors.pop(actor_name, None)
 
-        print("New connection from {}".format(address))
-        parser = DefaultParser(65536)
-        conn = RedisConnectionAdapter(socket)
-        encoder = ResponseEncoder(socket)
-        parser.on_connect(conn)
+    def _execute(self, method, args, kwargs):
+        response = {}
         try:
+            response["result"] = method(*args, **kwargs)
+
+        except TypeError as e:
+            response["error"] = str(e)
+            response["error_type"] = GedisErrorTypes.BAD_REQUEST.value
+
+        except:
+            ttype, tvalue, tb = sys.exc_info()
+            response["error"] = better_exceptions.format_exception(ttype, tvalue, tb)
+            response["error_type"] = GedisErrorTypes.ACTOR_ERROR.value
+
+        return response
+
+    def _on_connection(self, socket, address):
+        j.logger.info("New connection from {}", address)
+        parser = DefaultParser(65536)
+        connection = RedisConnectionAdapter(socket)
+        try:
+            encoder = ResponseEncoder(socket)
+            parser.on_connect(connection)
+
             while True:
-                resp = parser.read_response()
-                print(resp)
-                if len(resp) > 1:
-                    actor_name = resp[0].decode()
-                    method_name = resp[1].decode()
-                    args = resp[2:]
-                    print("SERVICE: {} METHOD: {} ARGS : {} ".format(actor_name, method_name, args))
-                    if actor_name not in self.actors:
-                        encoder.encode("actor {} isn't loaded".format(actor_name))
+                try:
+                    request = parser.read_response()
+                    response = dict(success=True, result=None, error=None, error_type=None, is_async=False, task_id=None)
+
+                    if len(request) < 2:
+                        response["error"] = "invalid request"
+                        response["error_type"] = GedisErrorTypes.BAD_REQUEST.value
+
                     else:
-                        actor = self.actors[actor_name]
-                        m = getattr(actor, method_name)
-                        res = None
-                        res = m(*args)
-                        print("RES: ", res)
-                        encoder.encode(res)
-        except Exception as e:
-            # import traceback
-            # exc_info = sys.exc_info()
-            # traceback.print_exception(*exc_info)
-            print(e)
+                        actor_name = request.pop(0).decode()
+                        method_name = request.pop(0).decode()
+                        actor_object = self._loaded_actors.get(actor_name)
 
-        parser.on_disconnect()
+                        if not actor_object:
+                            response["error"] = "actor not found"
+                            response["error_type"] = GedisErrorTypes.NOT_FOUND.value
 
+                        elif not hasattr(actor_object, method_name):
+                            response["error"] = "method not found"
+                            response["error_type"] = GedisErrorTypes.NOT_FOUND.value
 
-def new_server(actors=None):
-    """Launch new gedis server windeth actors `actor`
+                        else:
+                            j.logger.info(
+                                "Executing method {} from actor {} to client {}", method_name, actor_name, address
+                            )
 
-    server will have `SystemActor` enabled under name `system` to allow registration of other actors.
+                            if request:
+                                args, kwargs = json.loads(request.pop(0), object_hook=deserialize)
+                            else:
+                                args, kwargs = (), {}
 
-    Keyword Arguments:
-        actors {dict[str, Actor]} -- dict of actor name -> actor object. (default: {None})
-    """
-    actors = actors or {}
-    if not actors:
-        print("empty actors on the gedis server.")
+                            method = getattr(actor_object, method_name)
+                            result = self._execute(method, args, kwargs)
+                            response.update(result)
 
-    s = GedisServer()
-    default_actors = {"system": SystemActor(s)}
-    s.actors = {**s.actors, **default_actors}
-    s.start()
-    gevent.wait()
+                except ConnectionError:
+                    j.logger.info("Client {} closed the connection", address)
+
+                except Exception as exception:
+                    j.logger.exception("internal error", exception=exception)
+                    response["error"] = "internal server error"
+                    response["error_type"] = GedisErrorTypes.INTERNAL_SERVER_ERROR.value
+
+                response["success"] = response["error"] is None
+                encoder.encode(json.dumps(response, default=serialize))
+
+            parser.on_disconnect()
+
+        except BrokenPipeError:
+            pass

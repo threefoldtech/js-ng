@@ -90,7 +90,25 @@ class Location(Base):
 </code></dt>
 <dd>
 <section class="desc"><p>A simple attribute-based namespace.</p>
-<p>SimpleNamespace(**kwargs)</p></section>
+<p>SimpleNamespace(**kwargs)</p>
+<p>base class implementation for any class with fields which supports getting/setting raw data for any instance fields.</p>
+<p>any instance can have an optional name and a parent.</p>
+<pre><code class="python">class Person(Base):
+    name = fields.String()
+    age = fields.Float()
+
+p = Person(name=&quot;ahmed&quot;, age=&quot;19&quot;)
+print(p.name, p.age)
+</code></pre>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>parent_</code></strong> :&ensp;<code>Base</code>, optional</dt>
+<dd>parent instance. Defaults to None.</dd>
+<dt><strong><code>instance_name_</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>instance name. Defaults to None.</dd>
+<dt><strong><code>**values</code></strong></dt>
+<dd>any given field values to initiate the instance with</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class Location(Base):
@@ -149,104 +167,208 @@ class Location(Base):
 <dl>
 <dt id="jumpscale.servers.openresty.location.Location.config"><code class="name">var <span class="ident">config</span></code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>getter method this property</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>any</code></strong></dt>
+<dd>the field value</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def getter(self):
+    &#34;&#34;&#34;
+    getter method this property
+
+    Returns:
+        any: the field value
+    &#34;&#34;&#34;
+    # if it&#39;s already defined, just return it
     if hasattr(self, inner_name):
         return getattr(self, inner_name)
 
+    # if not, it will just return the default value of the field
     # accept raw value as default too
     return field.from_raw(field.default)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.servers.openresty.location.Location.connection_type"><code class="name">var <span class="ident">connection_type</span></code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>getter method this property</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>any</code></strong></dt>
+<dd>the field value</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def getter(self):
+    &#34;&#34;&#34;
+    getter method this property
+
+    Returns:
+        any: the field value
+    &#34;&#34;&#34;
+    # if it&#39;s already defined, just return it
     if hasattr(self, inner_name):
         return getattr(self, inner_name)
 
+    # if not, it will just return the default value of the field
     # accept raw value as default too
     return field.from_raw(field.default)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.servers.openresty.location.Location.force_https"><code class="name">var <span class="ident">force_https</span></code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>getter method this property</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>any</code></strong></dt>
+<dd>the field value</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def getter(self):
+    &#34;&#34;&#34;
+    getter method this property
+
+    Returns:
+        any: the field value
+    &#34;&#34;&#34;
+    # if it&#39;s already defined, just return it
     if hasattr(self, inner_name):
         return getattr(self, inner_name)
 
+    # if not, it will just return the default value of the field
     # accept raw value as default too
     return field.from_raw(field.default)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.servers.openresty.location.Location.index"><code class="name">var <span class="ident">index</span></code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>getter method this property</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>any</code></strong></dt>
+<dd>the field value</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def getter(self):
+    &#34;&#34;&#34;
+    getter method this property
+
+    Returns:
+        any: the field value
+    &#34;&#34;&#34;
+    # if it&#39;s already defined, just return it
     if hasattr(self, inner_name):
         return getattr(self, inner_name)
 
+    # if not, it will just return the default value of the field
     # accept raw value as default too
     return field.from_raw(field.default)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.servers.openresty.location.Location.ipaddr_dest"><code class="name">var <span class="ident">ipaddr_dest</span></code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>getter method this property</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>any</code></strong></dt>
+<dd>the field value</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def getter(self):
+    &#34;&#34;&#34;
+    getter method this property
+
+    Returns:
+        any: the field value
+    &#34;&#34;&#34;
+    # if it&#39;s already defined, just return it
     if hasattr(self, inner_name):
         return getattr(self, inner_name)
 
+    # if not, it will just return the default value of the field
     # accept raw value as default too
     return field.from_raw(field.default)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.servers.openresty.location.Location.is_auth"><code class="name">var <span class="ident">is_auth</span></code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>getter method this property</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>any</code></strong></dt>
+<dd>the field value</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def getter(self):
+    &#34;&#34;&#34;
+    getter method this property
+
+    Returns:
+        any: the field value
+    &#34;&#34;&#34;
+    # if it&#39;s already defined, just return it
     if hasattr(self, inner_name):
         return getattr(self, inner_name)
 
+    # if not, it will just return the default value of the field
     # accept raw value as default too
     return field.from_raw(field.default)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.servers.openresty.location.Location.location_type"><code class="name">var <span class="ident">location_type</span></code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>getter method this property</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>any</code></strong></dt>
+<dd>the field value</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def getter(self):
+    &#34;&#34;&#34;
+    getter method this property
+
+    Returns:
+        any: the field value
+    &#34;&#34;&#34;
+    # if it&#39;s already defined, just return it
     if hasattr(self, inner_name):
         return getattr(self, inner_name)
 
+    # if not, it will just return the default value of the field
     # accept raw value as default too
     return field.from_raw(field.default)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.servers.openresty.location.Location.name"><code class="name">var <span class="ident">name</span></code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>getter method this property</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>any</code></strong></dt>
+<dd>the field value</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def getter(self):
+    &#34;&#34;&#34;
+    getter method this property
+
+    Returns:
+        any: the field value
+    &#34;&#34;&#34;
+    # if it&#39;s already defined, just return it
     if hasattr(self, inner_name):
         return getattr(self, inner_name)
 
+    # if not, it will just return the default value of the field
     # accept raw value as default too
     return field.from_raw(field.default)</code></pre>
 </details>
@@ -273,39 +395,78 @@ def path_cfg_dir(self):
 </dd>
 <dt id="jumpscale.servers.openresty.location.Location.path_dest"><code class="name">var <span class="ident">path_dest</span></code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>getter method this property</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>any</code></strong></dt>
+<dd>the field value</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def getter(self):
+    &#34;&#34;&#34;
+    getter method this property
+
+    Returns:
+        any: the field value
+    &#34;&#34;&#34;
+    # if it&#39;s already defined, just return it
     if hasattr(self, inner_name):
         return getattr(self, inner_name)
 
+    # if not, it will just return the default value of the field
     # accept raw value as default too
     return field.from_raw(field.default)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.servers.openresty.location.Location.path_location"><code class="name">var <span class="ident">path_location</span></code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>getter method this property</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>any</code></strong></dt>
+<dd>the field value</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def getter(self):
+    &#34;&#34;&#34;
+    getter method this property
+
+    Returns:
+        any: the field value
+    &#34;&#34;&#34;
+    # if it&#39;s already defined, just return it
     if hasattr(self, inner_name):
         return getattr(self, inner_name)
 
+    # if not, it will just return the default value of the field
     # accept raw value as default too
     return field.from_raw(field.default)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.servers.openresty.location.Location.path_url"><code class="name">var <span class="ident">path_url</span></code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>getter method this property</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>any</code></strong></dt>
+<dd>the field value</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def getter(self):
+    &#34;&#34;&#34;
+    getter method this property
+
+    Returns:
+        any: the field value
+    &#34;&#34;&#34;
+    # if it&#39;s already defined, just return it
     if hasattr(self, inner_name):
         return getattr(self, inner_name)
 
+    # if not, it will just return the default value of the field
     # accept raw value as default too
     return field.from_raw(field.default)</code></pre>
 </details>
@@ -322,39 +483,78 @@ def path_web(self):
 </dd>
 <dt id="jumpscale.servers.openresty.location.Location.port_dest"><code class="name">var <span class="ident">port_dest</span></code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>getter method this property</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>any</code></strong></dt>
+<dd>the field value</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def getter(self):
+    &#34;&#34;&#34;
+    getter method this property
+
+    Returns:
+        any: the field value
+    &#34;&#34;&#34;
+    # if it&#39;s already defined, just return it
     if hasattr(self, inner_name):
         return getattr(self, inner_name)
 
+    # if not, it will just return the default value of the field
     # accept raw value as default too
     return field.from_raw(field.default)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.servers.openresty.location.Location.scheme"><code class="name">var <span class="ident">scheme</span></code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>getter method this property</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>any</code></strong></dt>
+<dd>the field value</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def getter(self):
+    &#34;&#34;&#34;
+    getter method this property
+
+    Returns:
+        any: the field value
+    &#34;&#34;&#34;
+    # if it&#39;s already defined, just return it
     if hasattr(self, inner_name):
         return getattr(self, inner_name)
 
+    # if not, it will just return the default value of the field
     # accept raw value as default too
     return field.from_raw(field.default)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.servers.openresty.location.Location.use_weblibs"><code class="name">var <span class="ident">use_weblibs</span></code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>getter method this property</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>any</code></strong></dt>
+<dd>the field value</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def getter(self):
+    &#34;&#34;&#34;
+    getter method this property
+
+    Returns:
+        any: the field value
+    &#34;&#34;&#34;
+    # if it&#39;s already defined, just return it
     if hasattr(self, inner_name):
         return getattr(self, inner_name)
 
+    # if not, it will just return the default value of the field
     # accept raw value as default too
     return field.from_raw(field.default)</code></pre>
 </details>
@@ -398,6 +598,16 @@ def path_web(self):
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="jumpscale.core.base.meta.Base" href="../../core/base/meta.html#jumpscale.core.base.meta.Base">Base</a></b></code>:
+<ul class="hlist">
+<li><code><a title="jumpscale.core.base.meta.Base.from_dict" href="../../core/base/meta.html#jumpscale.core.base.meta.Base.from_dict">from_dict</a></code></li>
+<li><code><a title="jumpscale.core.base.meta.Base.to_dict" href="../../core/base/meta.html#jumpscale.core.base.meta.Base.to_dict">to_dict</a></code></li>
+<li><code><a title="jumpscale.core.base.meta.Base.validate" href="../../core/base/meta.html#jumpscale.core.base.meta.Base.validate">validate</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 </dl>
 </section>

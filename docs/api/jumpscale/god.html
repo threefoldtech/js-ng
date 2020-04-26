@@ -191,11 +191,44 @@ from types import SimpleNamespace
 __all__ = [&#34;j&#34;]
 
 
+class ExportedModule(SimpleNamespace):
+    def __init__(self, m):
+        super().__init__()
+        self._m = m
+        self._exportedas = None
+        self._loaded = False
+
+    def _load(self):
+        if not self._loaded:
+            self._exportedas = self._m.export_module_as()
+            self._loaded = True
+
+    def __dir__(self):
+        self._load()
+        return dir(self._exportedas)
+
+    def __getattr__(self, name):
+        self._load()
+        return getattr(self._exportedas, name)
+
+
+class ExportAsSimpleNamespace(SimpleNamespace):
+    def __getattr__(self, name):
+        # print(&#34;getting attr: &#34;, name)
+        if name not in self.__dict__:
+            raise AttributeError(f&#34;Can&#39;t find attr {name}&#34;)
+        attr = self.__dict__[name]
+        if &#34;export_module_as&#34; in dir(attr):
+            return attr.export_module_as()
+        else:
+            return attr
+
+
 def namespaceify(mapping):
-    if isinstance(mapping, collections.Mapping) and not isinstance(mapping, SimpleNamespace):
+    if isinstance(mapping, collections.Mapping) and not isinstance(mapping, ExportAsSimpleNamespace):
         for key, value in mapping.items():
             mapping[key] = namespaceify(value)
-        return SimpleNamespace(**mapping)
+        return ExportAsSimpleNamespace(**mapping)
     return mapping
 
 
@@ -232,7 +265,9 @@ def loadjsmodules():
                     if hasattr(m, &#34;export_module_as&#34;):
                         # print(&#34;rootbase: &#34;, rootbase, importedpkgstr)
                         # print(m.export_module_as)
-                        loadeddict[&#34;jumpscale&#34;][rootbase][pkgname] = m.export_module_as
+                        expmod = ExportedModule(m)
+                        expmod.__doc__ = m.__doc__
+                        loadeddict[&#34;jumpscale&#34;][rootbase][pkgname] = expmod
                         # loadeddict[importedpkgstr] = m.export_module_as
                     else:
                         loadeddict[&#34;jumpscale&#34;][rootbase][pkgname] = m
@@ -275,15 +310,18 @@ class J:
 
     def _load(self):
         if not self.__loaded:
+            # print(&#34;loading&#34;)
+            # print(&#34;id :&#34;, id(self))
             self.__loaded_simplenamespace = namespaceify(loadjsmodules())
+            self.__loaded = True
 
     def __getattr__(self, name):
         self._load()
-
         return getattr(self.__loaded_simplenamespace.jumpscale, name)
 
 
 j = J()
+# jxmods = loadjsmodules()
 j._load()
 
 

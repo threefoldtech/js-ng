@@ -22,12 +22,12 @@
 <section id="section-intro">
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">from jumpscale.core.base import StoredFactory
+<pre><code class="python">def export_module_as():
+    from jumpscale.core.base import StoredFactory
 
-from .sshkey import SSHKeyClient
+    from .sshkey import SSHKeyClient
 
-
-export_module_as = StoredFactory(SSHKeyClient)</code></pre>
+    return StoredFactory(SSHKeyClient)</code></pre>
 </details>
 </section>
 <section>
@@ -42,6 +42,24 @@ export_module_as = StoredFactory(SSHKeyClient)</code></pre>
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="jumpscale.clients.sshkey.export_module_as"><code class="name flex">
+<span>def <span class="ident">export_module_as</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def export_module_as():
+    from jumpscale.core.base import StoredFactory
+
+    from .sshkey import SSHKeyClient
+
+    return StoredFactory(SSHKeyClient)</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 </section>
@@ -60,6 +78,11 @@ export_module_as = StoredFactory(SSHKeyClient)</code></pre>
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
 <li><code><a title="jumpscale.clients.sshkey.sshkey" href="sshkey.html">jumpscale.clients.sshkey.sshkey</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="jumpscale.clients.sshkey.export_module_as" href="#jumpscale.clients.sshkey.export_module_as">export_module_as</a></code></li>
 </ul>
 </li>
 </ul>

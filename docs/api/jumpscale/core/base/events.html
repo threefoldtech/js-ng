@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.4" />
 <title>jumpscale.core.base.events API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="Base and factory related events." />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -20,9 +20,15 @@
 <h1 class="title">Module <code>jumpscale.core.base.events</code></h1>
 </header>
 <section id="section-intro">
+<p>Base and factory related events.</p>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class InstanceEvent:
+<pre><code class="python">&#34;&#34;&#34;
+Base and factory related events.
+&#34;&#34;&#34;
+
+
+class InstanceEvent:
     def __init__(self, instance=None, factory=None):
         self.instance = instance
         self.factory = factory

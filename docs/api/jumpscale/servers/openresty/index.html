@@ -22,10 +22,11 @@
 <section id="section-intro">
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">from jumpscale.core.base import StoredFactory
-from .server import OpenRestyServer
+<pre><code class="python">def export_module_as():
+    from jumpscale.core.base import StoredFactory
+    from .server import OpenRestyServer
 
-export_module_as = StoredFactory(OpenRestyServer)</code></pre>
+    return StoredFactory(OpenRestyServer)</code></pre>
 </details>
 </section>
 <section>
@@ -48,6 +49,23 @@ export_module_as = StoredFactory(OpenRestyServer)</code></pre>
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="jumpscale.servers.openresty.export_module_as"><code class="name flex">
+<span>def <span class="ident">export_module_as</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def export_module_as():
+    from jumpscale.core.base import StoredFactory
+    from .server import OpenRestyServer
+
+    return StoredFactory(OpenRestyServer)</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 </section>
@@ -68,6 +86,11 @@ export_module_as = StoredFactory(OpenRestyServer)</code></pre>
 <li><code><a title="jumpscale.servers.openresty.location" href="location.html">jumpscale.servers.openresty.location</a></code></li>
 <li><code><a title="jumpscale.servers.openresty.server" href="server.html">jumpscale.servers.openresty.server</a></code></li>
 <li><code><a title="jumpscale.servers.openresty.utils" href="utils.html">jumpscale.servers.openresty.utils</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="jumpscale.servers.openresty.export_module_as" href="#jumpscale.servers.openresty.export_module_as">export_module_as</a></code></li>
 </ul>
 </li>
 </ul>
