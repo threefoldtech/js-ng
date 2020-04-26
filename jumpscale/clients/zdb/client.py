@@ -1,34 +1,40 @@
+"""
+# To get a new ZDB instance
+
+zcl = j.clients.zdb.get("instance", admin=True, mode="user")
+
+# This will gets an instance with admin capabilities in user mode
+
+"""
 from jumpscale.clients.base import Client
-from jumpscale.core.base import Base, fields
-from redis import ResponseError
+from jumpscale.core.base import fields
+from enum import Enum
 
 
 import redis
 import struct
 
 
-class ZDBClientBase(Client):
-    name = fields.String(default="test_instance")
+class Mode(Enum):
+    SEQ = "seq"
+    USER = "user"
+
+
+class ZDBClient(Client):
     addr = fields.String(default="localhost")
     port = fields.Integer(default=9900)
     secret_ = fields.String(default="1234567")
     nsname = fields.String(default="test")
     admin = fields.Boolean(default=False)
-    # TODO: Replace it with enum  data type of (seq) and (user)
-    mode = fields.String(default="seq")
+    mode = fields.Enum(Mode)
 
     def __init__(self, *args, **kwargs):
         super().__init__()
         # if not self.secret_:
         #     self.secret_ = j.core.myenv.adminsecret
 
-        self.name = kwargs.get("name")
-        self.addr = kwargs.get("addr")
-        self.port = kwargs.get("port")
-        self.secret_ = kwargs.get("secret_")
-        self.nsname = kwargs.get("nsname")
-        self.admin = kwargs.get("admin")
-        self.mode = kwargs.get("mode")
+        self._set_data(kwargs)
+
         assert len(self.secret_) > 5
 
         if self.admin:
@@ -36,8 +42,6 @@ class ZDBClientBase(Client):
         self.type = "ZDB"
         self._redis = None
         self.nsname = self.nsname.lower().strip()
-
-        # self._logger_enable()
 
         # if j.data.bcdb._master:
         #     self._model.trigger_add(self._update_trigger)
@@ -62,25 +66,38 @@ class ZDBClientBase(Client):
         return self._redis
 
     def _key_encode(self, key):
+        if self.mode.value == Mode.SEQ.value:
+            if key is None:
+                key = ""
+            else:
+                key = struct.pack("<I", key)
         return key
 
     def _key_decode(self, key):
+        if self.mode.value == Mode.SEQ.value:
+            key = struct.unpack("<I", key)[0]
         return key
 
     def set(self, data, key=None):
-        if key is None:
-            key = ""
-        return self.redis.execute_command("SET", key, data)
+        key = key or ""
+        key = self._key_encode(key)
+        res = self.redis.execute_command("SET", key, data)
+        if not res:
+            return res
+        return self._key_decode(res)
 
     def get(self, key):
+        key = self._key_encode(key)
         return self.redis.execute_command("GET", key)
 
     def exists(self, key):
+        key = self._key_encode(key)
         return self.redis.execute_command("EXISTS", key) == 1
 
     def delete(self, key):
         if not key:
             raise j.exceptions.Value("key must be provided")
+        key = self._key_encode(key)
         self.redis.execute_command("DEL", key)
 
     def flush(self):
@@ -233,7 +250,7 @@ def _parse_nsinfo(raw):
 
 class ZDBConnection(redis.Connection):
     """
-    ZDBConnection implement the custom selection of namespace 
+    ZDBConnection implement the custom selection of namespace
     on 0-DB
     """
 
@@ -268,24 +285,11 @@ class ZDBConnection(redis.Connection):
                 raise redis.connection.ConnectionError(f"Failed to select namespace {self.namespace}")
 
 
-class ZDBAdminClientBase(Base):
-    name = fields.String(default="test_instance")
-    addr = fields.String(default="localhost")
-    port = fields.Integer(default=9900)
-    secret_ = fields.String(default="")
-    nsname = fields.String(default="test")
-    admin = fields.Boolean(default=False)
-    # TODO: Replace it with enum  data type of (seq) and (user)
-    mode = fields.String(default="seq")
-
-    def __init__(self):
-        super().__init__()
-
+class ZDBAdminClient(ZDBClient):
     def auth(self):
         assert self.admin
         if self.secret_:
             # authentication should only happen in zdbadmin client
-            self._log_debug("AUTH in namespace %s" % (self.nsname))
             self.redis.execute_command("AUTH", self.secret_)
 
     def namespace_exists(self, name):
@@ -293,12 +297,10 @@ class ZDBAdminClientBase(Base):
         self.auth()
         try:
             self.redis.execute_command("NSINFO", name)
-            # self._log_debug("namespace_exists:%s" % name)
             return True
         except Exception as e:
             if not "Namespace not found" in str(e):
                 raise j.exceptions.Base("could not check namespace:%s, error:%s" % (name, e))
-            # self._log_debug("namespace_NOTexists:%s" % name)
             return False
 
     def namespaces_list(self):
@@ -319,24 +321,18 @@ class ZDBAdminClientBase(Base):
         """
         assert self.admin
         self.auth()
-        self._log_debug("namespace_new:%s" % name)
         if not self.namespace_exists(name):
-            self._log_debug("namespace does not exists")
             self.redis.execute_command("NSNEW", name)
         else:
             if die:
                 raise j.exceptions.Base("namespace already exists:%s" % name)
 
         if secret:
-            self._log_debug("set secret")
             self.redis.execute_command("NSSET", name, "password", secret)
             self.redis.execute_command("NSSET", name, "public", "no")
 
         if maxsize is not 0:
-            self._log_debug("set maxsize")
             self.redis.execute_command("NSSET", name, "maxsize", maxsize)
-
-        self._log_debug("connect client")
 
         ns = j.clients.zdb.client_get(
             name="temp_%s" % name, addr=self.addr, port=self.port, mode=self.mode, secret=secret, namespace=name
@@ -360,7 +356,6 @@ class ZDBAdminClientBase(Base):
         assert self.admin
         self.auth()
         if self.namespace_exists(name):
-            self._log_debug("namespace_delete:%s" % name)
             self.redis.execute_command("NSDEL", name)
 
     def reset(self, ignore=[]):
@@ -374,62 +369,3 @@ class ZDBAdminClientBase(Base):
         for name in self.namespaces_list():
             if name not in ["default"] and name not in ignore:
                 self.namespace_delete(name)
-
-
-# USER store
-class ZDBClientUserMode(ZDBClientBase):
-    def set(self, data, key):
-        return self.redis.execute_command("SET", key, data)
-
-
-class ZDBClientUserModeAdmin(ZDBClientUserMode, ZDBAdminClientBase):
-    pass
-
-
-# sequential store
-
-
-class ZDBClientSeqMode(ZDBClientBase):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def _key_encode(self, key):
-        if key is None:
-            key = ""
-        else:
-            key = struct.pack("<I", key)
-        return key
-
-    def _key_decode(self, key):
-        return struct.unpack("<I", key)[0]
-
-    def set(self, data, key=None):
-        key1 = self._key_encode(key)
-        res = self.redis.execute_command("SET", key1, data)
-        if not res:  # data already present and the same, 0-db did nothing.
-            return res
-
-        key = self._key_decode(res)
-        return key
-
-    def delete(self, key):
-        key1 = self._key_encode(key)
-        try:
-            self.redis.execute_command("DEL", key1)
-        except ResponseError as e:
-            if str(e).find("Key not found") != -1:
-                return
-            else:
-                raise e
-
-    def get(self, key):
-        key = self._key_encode(key)
-        return self.redis.execute_command("GET", key)
-
-    def exists(self, key):
-        key = self._key_encode(key)
-        return self.redis.execute_command("EXISTS", key) == 1
-
-
-class ZDBClientSeqModeAdmin(ZDBClientSeqMode, ZDBAdminClientBase):
-    pass
