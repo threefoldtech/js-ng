@@ -20,9 +20,9 @@ RUN chown -R ${NB_USER} /sandbox
 # Changing working direcotry to our code
 WORKDIR /sandbox/code/github/js-next/js-ng
 # Checkout the branch which contain our data
-RUN git fetch --all
-RUN git checkout development_binder_examples
-RUN git pull
+#RUN git fetch --all
+#RUN git checkout development_binder_examples
+#RUN git pull
 # link the cloned path to ${HOME}/js-ng as it is the default path for binder to start
 RUN ln -s /sandbox/code/github/js-next/js-ng ${HOME}/js-ng
 # Change user to the one given by binder
