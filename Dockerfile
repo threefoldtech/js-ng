@@ -21,7 +21,7 @@ RUN chown -R ${NB_USER} /sandbox
 WORKDIR /sandbox/code/github/js-next/js-ng
 # Checkout the branch which contain our data
 RUN git fetch --all
-RUN git checkout development_binder_examples
+RUN git checkout development_binder_examples -f
 RUN git pull
 # link the cloned path to ${HOME}/js-ng as it is the default path for binder to start
 RUN ln -s /sandbox/code/github/js-next/js-ng ${HOME}/js-ng
