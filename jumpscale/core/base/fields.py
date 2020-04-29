@@ -782,7 +782,7 @@ class Bytes(Field):
 
 
 class Json(Field):
-    def __init__(self, default="", **kwargs):
+    def __init__(self, default="{}", **kwargs):
         """
         json field, will validate the value of being a json loadable string.
 
@@ -810,7 +810,9 @@ class Json(Field):
                 raise ValidationError(f"{value} isn't a valid json.") from e
 
     def from_raw(self, value):
-        return json.loads(value)
+        if not isinstance(value, dict):
+            value = json.loads(value)
+        return value
 
     def to_raw(self, value):
         return json.dumps(value)

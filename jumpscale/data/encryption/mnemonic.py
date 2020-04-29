@@ -72,7 +72,7 @@ def _verify_checksum(data, checksum):
     Returns:
         bool: True if the checksum matches that of the data.
     """
-    sha256_hash = hashlib.sha256(data).hexdigest().encode()
+    sha256_hash = hashlib.sha256(data).digest()
     return to_bin(sha256_hash)[0 : len(data) * 8 // 32] == checksum
 
 

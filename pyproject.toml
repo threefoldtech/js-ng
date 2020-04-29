@@ -39,6 +39,9 @@ docker = "^4.2.0"
 jinja2 = "^2.11.1"
 psutil = "^5.7.0"
 pudb = "^2019.1"
+base58 = "^2.0.0"
+stellar-sdk = "^2.3.2"
+netaddr = "^0.7.19"
 
 [tool.poetry.dev-dependencies]
 ipdb = "^0.12.1"

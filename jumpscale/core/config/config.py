@@ -12,11 +12,20 @@ import os
 import nacl.utils
 import nacl.encoding
 import pytoml as toml
+from jumpscale.data.encryption import mnemonic
 
 from nacl.public import PrivateKey, Box
 
 
-__all__ = ["config_path", "config_root", "get_default_config", "get_config", "update_config", "Environment"]
+__all__ = [
+    "config_path",
+    "config_root",
+    "get_default_config",
+    "get_config",
+    "update_config",
+    "Environment",
+    "configure_threebot",
+]
 
 
 config_root = os.path.expanduser(os.path.join("~/.config", "jumpscale"))
@@ -42,6 +51,13 @@ def get_default_config():
             "filesystem": {"path": os.path.expanduser(os.path.join(config_root, "secureconfig"))},
         },
         "store": "filesystem",
+        "threebot": {
+            "name": "",
+            "id": 0,
+            "explorer_url": "https://explorer.testnet.grid.tf/explorer",
+            "private_key": "",
+            "email": "",
+        },
        }```
     """
     return {
@@ -69,6 +85,13 @@ def get_default_config():
             "filesystem": {"path": os.path.expanduser(os.path.join(config_root, "secureconfig"))},
         },
         "store": "filesystem",
+        "threebot": {
+            "name": "",
+            "id": 0,
+            "explorer_url": "https://explorer.testnet.grid.tf/explorer",
+            "private_key": "",
+            "email": "",
+        },
     }
 
 
@@ -118,6 +141,8 @@ if not os.path.exists(config_path):
 
 
 def generate_key(basepath):
+    # seed = mnemonic.mnemonic_to_key(words)
+    # hsk = PrivateKey(seed)
     hsk = PrivateKey.generate()
     hpk = hsk.public_key
     skpath = basepath + ".priv"
@@ -129,6 +154,20 @@ def generate_key(basepath):
     return skpath
 
 
+def configure_threebot(name, email, wordsfile):
+    with open(wordsfile) as wf:
+        words = wf.read()
+
+    seed = mnemonic.mnemonic_to_key(words.strip())
+    hsk = PrivateKey(seed)
+    priv_key = hsk.encode(nacl.encoding.Base64Encoder).decode()
+    config = get_config()
+    default_config = get_default_config()
+    config["threebot"] = default_config["threebot"]
+    config["threebot"].update({"private_key": priv_key, "name": name, "email": email})
+    update_config(config)
+
+
 class StoreTypeNotFound(Exception):
     pass
 
@@ -138,6 +177,10 @@ class Environment:
         config = get_config()
         private_key_path = config["private_key_path"]
         return private_key_path
+
+    def get_threebot_data(self):
+        config = get_config()
+        return config.get("threebot", {})
 
     def get_private_key(self):
         private_key_path = self.get_private_key_path()
