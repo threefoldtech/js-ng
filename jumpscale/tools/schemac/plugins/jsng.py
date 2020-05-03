@@ -35,15 +35,15 @@ def get_prop_line(prop):
     if prop_type == "E":
         line += f"fields.{python_type}({prop.name.capitalize()})"
     elif prop_type == "O":
-        line += f"fields.{python_type}()"
+        line += f"fields.{python_type}({prop.url_to_class_name})"
     elif prop_type == "LO" and prop.defaultvalue and prop.defaultvalue != "[]":
-        line += f"fields.List(fields.Object())"
+        line += f"fields.List(fields.Object({prop.url_to_class_name}))"
     elif prop_type == "LO" and not prop.defaultvalue:
-        line += f"fields.List(fields.Object())"
+        line += f"fields.List(fields.Object(Base))"
     elif python_type == "L" and not prop.defaultvalue:
         line += f" fields.List(fields.Object())"
     elif python_type == "L" and prop.defaultvalue:
-        line += f" fields.List(fields.Object())"
+        line += f" fields.List(fields.Object({prop.defaultvalue}))"
     elif len(prop_type) > 1 and prop_type[0] == "L" and prop_type[1] != "O":
         line += f"fields.{python_type}(fields.{types_map[prop_type[1:]]}())"
     elif prop_type in ["I", "F", "B"] and not prop.defaultvalue:
