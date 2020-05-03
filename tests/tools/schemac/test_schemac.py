@@ -12,6 +12,7 @@ schema = """
             today = (D)
             now = (T)
             info = (dict)
+            theemail = (email)
             status = "on,off" (E) 
             happy = "yes, no" (E)
             &nr    = 4

@@ -56,6 +56,8 @@ def get_prop_line(prop):
         line += f"fields.{types_map[prop_type]}()"
     elif prop_type == "dict":
         line += f"fields.Typed(dict)"
+    elif prop_type == "email":
+        line += f"fields.Email()"
     else:
         line += f"fields.{python_type}()"
 
