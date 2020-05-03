@@ -65,14 +65,18 @@ class HamadaTest(Base):
 
 
 class DespiegkTest(Base):
-    listany = fields.List(fields.Object())
+    listany = fields.List(fields.Object(Base))
     llist2 = fields.List(fields.String())
     llist3 = fields.List(fields.Float())
+    today = fields.DateTime()
+    now = fields.Time()
+    info = fields.Typed(dict)
+    theemail = fields.Email()
     status = fields.Enum(Status)
     happy = fields.Enum(Happy)
     nr = fields.String(default="4")
-    obj = fields.Object()
-    lobjs = fields.List(fields.Object())
+    obj = fields.Object(HamadaTest)
+    lobjs = fields.List(fields.Object(HamadaTest))
     date_start = fields.Integer(default=0)
     description = fields.String(default="hello world")
     description2 = fields.String(default="a string")
@@ -83,6 +87,7 @@ class DespiegkTest(Base):
     nrdefault = fields.String(default="0")
     nrdefault2 = fields.Integer()
     nrdefault3 = fields.Integer(default=0)
+
 """
 
 valid_generated_crystal = """
