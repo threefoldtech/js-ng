@@ -212,7 +212,20 @@ def get_js_type(type_str, default_value=None):
     Returns:
         Object: A js type object.
     """
-    types = {"": String, "S": String, "I": Integer, "B": Boolean, "F": Float, "O": JSObject, "E": String}
+    types = {
+        "": String,
+        "S": String,
+        "I": Integer,
+        "B": Boolean,
+        "F": Float,
+        "O": JSObject,
+        "E": String,
+        ## TODO: the following are totally wrong, but capturing them to be able to generate in python backend
+        "email": String,
+        "T": String,
+        "D": String,
+        "dict": String,
+    }
     if len(type_str) == 0 or type_str[0] != "L":
         return types[type_str](default_value)
     else:

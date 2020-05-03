@@ -18,6 +18,10 @@ types_map = {
     "LF": "List",
     "LO": "List",
     "E": "Enum",
+    "D": "DateTime",
+    "T": "Time",
+    "email": "Email",
+    "dict": "Object",
 }
 
 
@@ -48,6 +52,10 @@ def get_prop_line(prop):
         line += f"fields.{python_type}(default={prop.defaultvalue})"
     elif prop_type == "S":
         line += f'fields.String(default="{prop.defaultvalue}")'
+    elif prop_type in ["T", "D"]:
+        line += f"fields.{types_map[prop_type]}()"
+    elif prop_type == "dict":
+        line += f"fields.Typed(dict)"
     else:
         line += f"fields.{python_type}()"
 
