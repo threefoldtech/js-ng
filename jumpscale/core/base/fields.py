@@ -607,7 +607,7 @@ class IPAddress(Field):
             value (str)
 
         Raises:
-            ValidationError: in case the value is not a telephone
+            ValidationError: in case the value is not an IPAddress
         """
 
         super().validate(value)

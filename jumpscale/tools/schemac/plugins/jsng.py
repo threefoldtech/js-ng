@@ -22,6 +22,9 @@ types_map = {
     "T": "Time",
     "email": "Email",
     "dict": "Object",
+    "ipaddr": "IPAddress",
+    "ipaddress": "IPAddress",
+    "iprange": "IPAddress",
 }
 
 
@@ -58,6 +61,10 @@ def get_prop_line(prop):
         line += f"fields.Typed(dict)"
     elif prop_type == "email":
         line += f"fields.Email()"
+    elif prop_type in ["ipaddress", "ipaddr", "iprange"] and prop.defaultvalue:
+        line += f"fields.IPAddress(default={prop.defaultvalue})"
+    elif prop_type in ["ipaddress", "ipaddr", "iprange"] and not prop.defaultvalue:
+        line += f"fields.IPAddress()"
     else:
         line += f"fields.{python_type}()"
 

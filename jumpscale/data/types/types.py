@@ -225,6 +225,8 @@ def get_js_type(type_str, default_value=None):
         "T": String,
         "D": String,
         "dict": String,
+        "ipaddr": String,
+        "iprange": String,
     }
     if len(type_str) == 0 or type_str[0] != "L":
         return types[type_str](default_value)
