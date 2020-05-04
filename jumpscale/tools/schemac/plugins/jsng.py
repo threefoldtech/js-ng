@@ -25,6 +25,8 @@ types_map = {
     "ipaddr": "IPAddress",
     "ipaddress": "IPAddress",
     "iprange": "IPAddress",
+    "json": "Json",
+    "bytes": "Bytes",
 }
 
 
@@ -65,6 +67,10 @@ def get_prop_line(prop):
         line += f"fields.IPAddress(default={prop.defaultvalue})"
     elif prop_type in ["ipaddress", "ipaddr", "iprange"] and not prop.defaultvalue:
         line += f"fields.IPAddress()"
+    elif prop_type == "json":
+        line += f"fields.Json()"
+    elif prop_type == "bytes":
+        line += f"fields.Bytes()"
     else:
         line += f"fields.{python_type}()"
 
