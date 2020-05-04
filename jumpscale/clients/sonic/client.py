@@ -6,7 +6,7 @@ from jumpscale.core.base import Base, fields
 class SonicClient(Client):
     host = fields.String(default="127.0.0.1")
     port = fields.Integer(default=1491)
-    password = fields.String(default="pass")
+    password = fields.String(default="password")
 
     def __init__(self):
         super().__init__()
