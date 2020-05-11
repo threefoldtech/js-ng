@@ -17,6 +17,7 @@
 * Developers
     * Structure
     * [Developer setup](./devsetup.md)
+    * [Editor setup](./editor_setup.md)
     * [Development process/Contribution](./devprocess.md)
     * [Poetry](./poetry.md)
     * [Interacting with the development shell: jsng](./jsng_shell.md)

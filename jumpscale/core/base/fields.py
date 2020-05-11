@@ -59,6 +59,7 @@ import enum
 import ipaddress
 import re
 import time
+import json
 
 from urllib.parse import urlparse
 
@@ -607,7 +608,7 @@ class IPAddress(Field):
             value (str)
 
         Raises:
-            ValidationError: in case the value is not a telephone
+            ValidationError: in case the value is not an IPAddress
         """
 
         super().validate(value)
@@ -752,6 +753,67 @@ class Time(DateTimeMixin, Typed):
         if not format_:
             format_ = "%H:%M"
         self.format = format_
+
+
+class Bytes(Field):
+    def __init__(self, default=b"", **kwargs):
+        """
+        email field, will validate the value of emails
+
+        Args:
+            default (b"", optional): default value. Defaults to b""
+            kwargs: any keyword arguments supported by `Field`
+        """
+        super().__init__(default, **kwargs)
+
+    def validate(self, value):
+        """
+        check whether provided value is a valid email representation
+
+        Args:
+            value (str)
+
+        Raises:
+            ValidationError: in case the value is not a telephone
+        """
+        super().validate(value)
+        if isinstance(value, bytes):
+            raise ValidationError(f"{value} is not a bytes")
+
+
+class Json(Field):
+    def __init__(self, default="", **kwargs):
+        """
+        json field, will validate the value of being a json loadable string.
+
+        Args:
+            default (b"", optional): default value. Defaults to b""
+            kwargs: any keyword arguments supported by `Field`
+        """
+        super().__init__(default, **kwargs)
+
+    def validate(self, value):
+        """
+        check whether provided value is a valid json
+
+        Args:
+            value (str)
+
+        Raises:
+            ValidationError: in case the value isn't a valid json
+        """
+        super().validate(value)
+        if isinstance(value, (str, bytes, bytearray)):
+            try:
+                json.loads(value)
+            except Exception as e:
+                raise ValidationError(f"{value} isn't a valid json.") from e
+
+    def from_raw(self, value):
+        return json.loads(value)
+
+    def to_raw(self, value):
+        return json.dumps(value)
 
 
 class Factory(Field):

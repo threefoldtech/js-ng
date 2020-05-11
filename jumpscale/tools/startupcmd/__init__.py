@@ -1,4 +1,5 @@
-from jumpscale.core.base import StoredFactory
-from .startupcmd import StartupCmd
+def export_module_as():
+    from jumpscale.core.base import StoredFactory
+    from .startupcmd import StartupCmd
 
-export_module_as = StoredFactory(StartupCmd)
+    return StoredFactory(StartupCmd)

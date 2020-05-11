@@ -1,3 +1,8 @@
+"""
+Base and factory related events.
+"""
+
+
 class InstanceEvent:
     def __init__(self, instance=None, factory=None):
         self.instance = instance

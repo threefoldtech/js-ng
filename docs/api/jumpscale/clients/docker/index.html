@@ -22,12 +22,13 @@
 <section id="section-intro">
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">from jumpscale.core.base import StoredFactory
+<pre><code class="python">def export_module_as():
 
-from .docker import DockerClient
+    from jumpscale.core.base import StoredFactory
 
+    from .docker import DockerClient
 
-export_module_as = StoredFactory(DockerClient)</code></pre>
+    return StoredFactory(DockerClient)</code></pre>
 </details>
 </section>
 <section>
@@ -46,6 +47,25 @@ cl = …</p></section>
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="jumpscale.clients.docker.export_module_as"><code class="name flex">
+<span>def <span class="ident">export_module_as</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def export_module_as():
+
+    from jumpscale.core.base import StoredFactory
+
+    from .docker import DockerClient
+
+    return StoredFactory(DockerClient)</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 </section>
@@ -64,6 +84,11 @@ cl = …</p></section>
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
 <li><code><a title="jumpscale.clients.docker.docker" href="docker.html">jumpscale.clients.docker.docker</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="jumpscale.clients.docker.export_module_as" href="#jumpscale.clients.docker.export_module_as">export_module_as</a></code></li>
 </ul>
 </li>
 </ul>

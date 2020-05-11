@@ -1,6 +1,7 @@
-from jumpscale.core.base import StoredFactory
+def export_module_as():
 
-from .git import GitClient
+    from jumpscale.core.base import StoredFactory
 
+    from .git import GitClient
 
-export_module_as = StoredFactory(GitClient)
+    return StoredFactory(GitClient)

@@ -1,6 +1,7 @@
-from jumpscale.core.base import StoredFactory
+def export_module_as():
 
-from .docker import DockerClient
+    from jumpscale.core.base import StoredFactory
 
+    from .docker import DockerClient
 
-export_module_as = StoredFactory(DockerClient)
+    return StoredFactory(DockerClient)

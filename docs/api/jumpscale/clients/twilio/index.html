@@ -22,11 +22,11 @@
 <section id="section-intro">
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">from jumpscale.core.base import StoredFactory
-from .twilio import TwilioSMSClient
+<pre><code class="python">def export_module_as():
+    from jumpscale.core.base import StoredFactory
+    from .twilio import TwilioSMSClient
 
-
-export_module_as = StoredFactory(TwilioSMSClient)</code></pre>
+    StoredFactory(TwilioSMSClient)</code></pre>
 </details>
 </section>
 <section>
@@ -41,6 +41,23 @@ export_module_as = StoredFactory(TwilioSMSClient)</code></pre>
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="jumpscale.clients.twilio.export_module_as"><code class="name flex">
+<span>def <span class="ident">export_module_as</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def export_module_as():
+    from jumpscale.core.base import StoredFactory
+    from .twilio import TwilioSMSClient
+
+    StoredFactory(TwilioSMSClient)</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 </section>
@@ -59,6 +76,11 @@ export_module_as = StoredFactory(TwilioSMSClient)</code></pre>
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
 <li><code><a title="jumpscale.clients.twilio.twilio" href="twilio.html">jumpscale.clients.twilio.twilio</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="jumpscale.clients.twilio.export_module_as" href="#jumpscale.clients.twilio.export_module_as">export_module_as</a></code></li>
 </ul>
 </li>
 </ul>

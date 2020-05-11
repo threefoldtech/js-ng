@@ -44,7 +44,3 @@ jobs:
           python_version: 3.6
           poetry_version: 1.0.5
           args: run python -m pytest tests -s
-
-      - uses: jpetrucciani/black-check@master
-
-

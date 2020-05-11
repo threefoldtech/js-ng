@@ -1,6 +1,7 @@
-from jumpscale.core.base import StoredFactory
+def export_module_as():
 
-from .sshclient import SSHClient
+    from jumpscale.core.base import StoredFactory
 
+    from .sshclient import SSHClient
 
-export_module_as = StoredFactory(SSHClient)
+    return StoredFactory(SSHClient)

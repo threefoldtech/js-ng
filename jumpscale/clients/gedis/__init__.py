@@ -70,9 +70,12 @@ JS-NG> gedis.actors.greeter.add2("a", "b")
 b'ab'
 ```
 """
-from jumpscale.core.base import StoredFactory
-
-from .gedis import GedisClient
 
 
-export_module_as = StoredFactory(GedisClient)
+def export_module_as():
+
+    from jumpscale.core.base import StoredFactory
+
+    from .gedis import GedisClient
+
+    return StoredFactory(GedisClient)

@@ -1,4 +1,5 @@
 # js-ng
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/js-next/js-ng/development?filepath=docs%2Fnotebooks)
 ![[https://pypi.python.org/pypi/js-ng](pypi)](https://img.shields.io/pypi/v/js-ng.svg)
 ![[https://travis-ci.org/js-next/js-ng]](https://travis-ci.org/js-next/js-ng.png)
 ![[https://codecov.io/gh/js-next/js-ng]](https://codecov.io/gh/js-next/js-ng/branch/development/graph/badge.svg)

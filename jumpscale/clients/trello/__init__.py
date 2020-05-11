@@ -1,6 +1,6 @@
-from jumpscale.core.base import StoredFactory
+def export_module_as():
+    from jumpscale.core.base import StoredFactory
 
-from .trello import TrelloClient
+    from .trello import TrelloClient
 
-
-export_module_as = StoredFactory(TrelloClient)
+    return StoredFactory(TrelloClient)

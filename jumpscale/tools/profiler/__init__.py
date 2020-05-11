@@ -1,16 +1,16 @@
 """This module is used to do profiling for methods. profiling can be visulaized or just printed to stdout
-How to use it 
+How to use it
 ```
 @j.tools.profiler.profiled(visualized=True)
-def foo(): 
-  for i in range(10): 
+def foo():
+  for i in range(10):
     print("test")
 ```
 to do visualizing, add (visualize=True) when u call profiled decorator
 example
 @j.tools.profiler.profiled() # this will print the profiling results to stdout
 j.tools.profiler.profiled(visualized=True) # will launce a server with the visualized profiling on `http://127.0.0.1:8080/snakeviz/%2Fsandbox%2Fcode%2Fgithub%2Fjs-next%2Fjs-ng%2Fresult.prof`
-to change port and host 
+to change port and host
 j.tools.profiler.profiled(visualized=True, port="8008", host="0.0.0.0", print_data=True)
 this will print data to stdout and launce snakeviz server on this url
 `http://127.0.0.1:8080/snakeviz/foo`
@@ -46,7 +46,7 @@ def visualize(filename, host="127.0.0.1", port="8080"):
         Stats(filename)
     except Exception as e:
         print(f"{filename} is not a valid stats file")
-        raise  e
+        raise e
     try:
         conn = app.listen(port, address=host)
     except socket.error as e:

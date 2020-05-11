@@ -1,5 +1,7 @@
-from jumpscale.core.base import StoredFactory
+def export_module_as():
 
-from .digitalocean import DigitalOcean
+    from jumpscale.core.base import StoredFactory
 
-export_module_as = StoredFactory(DigitalOcean)
+    from .digitalocean import DigitalOcean
+
+    return StoredFactory(DigitalOcean)

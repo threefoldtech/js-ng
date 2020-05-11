@@ -1,3 +1,4 @@
-from .application import Application
+def export_module_as():
+    from .application import Application
 
-export_module_as = Application()
+    return Application()

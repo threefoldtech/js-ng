@@ -1,4 +1,5 @@
-from faker import Faker
-import sys
+def export_module_as():
+    from faker import Faker
+    import sys
 
-export_module_as = Faker()
+    return Faker()
