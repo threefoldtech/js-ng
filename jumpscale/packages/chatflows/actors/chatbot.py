@@ -12,7 +12,7 @@ class ChatFlows(BaseActor):
         self.sessions = {}
 
     @actor_method
-    def new(self, topic: str, query_params: dict = None) -> dict:
+    def new(self, topic: str, client_ip: str, query_params: dict = None) -> dict:
         chatflow = self.chats[topic]()
         self.sessions[chatflow.session_id] = chatflow
         return {"sessionId": chatflow.session_id}

@@ -20,7 +20,7 @@ def actor_method(func):
         result = func(*bound.args, **bound.kwargs)
         # verify result type
         return_type = signature.return_annotation
-        if return_type is inspect._empty:
+        if return_type is inspect._empty or return_type is None:
             return_type = type(None)
 
         if not isinstance(result, return_type):
