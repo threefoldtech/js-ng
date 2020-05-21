@@ -10,6 +10,7 @@ from signal import SIGKILL, SIGTERM
 import json
 import better_exceptions
 import gevent
+from gevent.pool import Pool
 from gevent import time
 from gevent.server import StreamServer
 from jumpscale.core.base import Base, fields
@@ -198,9 +199,9 @@ class GedisServer(Base):
             self._system_actor.register_actor(actor_name, actor_path)
 
         # start the server
-        server = StreamServer((self.host, self.port), self._on_connection)
-        server.reuse_addr = True
-        server.serve_forever()
+        self._server = StreamServer((self.host, self.port), self._on_connection, spawn=Pool())
+        self._server.reuse_addr = True
+        self._server.start()
 
     def stop(self):
         """Stops the server

@@ -19,9 +19,13 @@ def actor_method(func):
         # call method
         result = func(*bound.args, **bound.kwargs)
         # verify result type
-        if not isinstance(result, signature.return_annotation):
+        return_type = signature.return_annotation
+        if return_type is inspect._empty:
+            return_type = type(None)
+
+        if not isinstance(result, return_type):
             raise TypeError(
-                f"method is supposed to return ({signature.return_annotation}), but it returned ({type(result)})"
+                f"method is supposed to return ({return_type}), but it returned ({type(result)})"
             )
 
         return result
