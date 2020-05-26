@@ -1,4 +1,4 @@
-from jumpscale.god import j
+from jumpscale.data.nacl import NACL
 from .mnemonic import key_to_mnemonic, mnemonic_to_key, generate_mnemonic
 
 
@@ -13,7 +13,7 @@ def encrypt(message, private_key, receiver_public_key):
     Returns:
         bytes: The encryption of the message.
     """
-    nacl_obj = j.data.nacl.NACL(private_key=private_key)
+    nacl_obj = NACL(private_key=private_key)
     message = nacl_obj.encrypt(message, receiver_public_key)
     return message
 
@@ -29,7 +29,7 @@ def decrypt(message, private_key, sender_public_key):
     Returns:
         bytes: The decryption of the message.
     """
-    nacl_obj = j.data.nacl.NACL(private_key=private_key)
+    nacl_obj = NACL(private_key=private_key)
     message = nacl_obj.decrypt(message, sender_public_key)
     return message
 
@@ -44,7 +44,7 @@ def encrypt_symmetric(message, symmetric_key):
     Returns:
         bytes: The encryption of the message.
     """
-    nacl_obj = j.data.nacl.NACL(symmetric_key=symmetric_key)
+    nacl_obj = NACL(symmetric_key=symmetric_key)
     return nacl_obj.encrypt_symmetric(message)
 
 
@@ -58,6 +58,5 @@ def decrypt_symmetric(message, symmetric_key):
     Returns:
         bytes: The decryption of the message.
     """
-    nacl_obj = j.data.nacl.NACL(symmetric_key=symmetric_key)
+    nacl_obj = NACL(symmetric_key=symmetric_key)
     return nacl_obj.decrypt_symmetric(message, symmetric_key)
-

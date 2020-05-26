@@ -19,7 +19,7 @@ types_map = {
     "LO": "List",
     "E": "Enum",
     "D": "DateTime",
-    "T": "Time",
+    "T": "Date",
     "email": "Email",
     "dict": "Object",
     "ipaddr": "IPAddress",
@@ -27,14 +27,20 @@ types_map = {
     "iprange": "IPAddress",
     "json": "Json",
     "bytes": "Bytes",
+    "I64": "Float",
 }
 
 
 def get_prop_line(prop):
     prop_type = prop.prop_type
+    if prop_type == "B":
+        if prop.defaultvalue.lower() == "true":
+            prop.defaultvalue = "True"
+        elif prop.defaultvalue.lower() == "false":
+            prop.defaultvalue = "False"
+
     python_type = types_map.get(prop_type)
     line = f"{prop.name} = "
-
     # print(f"\n\n{prop.name} => {prop} \n\n")
     # primitive with a default or not.
     if prop_type == "E":
@@ -49,8 +55,8 @@ def get_prop_line(prop):
         line += f" fields.List(fields.Object())"
     elif python_type == "L" and prop.defaultvalue:
         line += f" fields.List(fields.Object({prop.defaultvalue}))"
-    elif len(prop_type) > 1 and prop_type[0] == "L" and prop_type[1] != "O":
-        line += f"fields.{python_type}(fields.{types_map[prop_type[1:]]}())"
+    elif len(prop_type) > 1 and prop_type[0] == "L":
+        line += f"fields.List(fields.{types_map[prop_type[1:]]}())"
     elif prop_type in ["I", "F", "B"] and not prop.defaultvalue:
         line += f"fields.{python_type}()"
     elif prop_type in ["I", "F", "B"] and prop.defaultvalue:
@@ -64,13 +70,15 @@ def get_prop_line(prop):
     elif prop_type == "email":
         line += f"fields.Email()"
     elif prop_type in ["ipaddress", "ipaddr", "iprange"] and prop.defaultvalue:
-        line += f"fields.IPAddress(default={prop.defaultvalue})"
+        line += f'fields.IPAddress(default="{prop.defaultvalue}")'
     elif prop_type in ["ipaddress", "ipaddr", "iprange"] and not prop.defaultvalue:
         line += f"fields.IPAddress()"
     elif prop_type == "json":
         line += f"fields.Json()"
     elif prop_type == "bytes":
         line += f"fields.Bytes()"
+    elif prop_type == "I64":
+        line += f"fields.Float()"
     else:
         line += f"fields.{python_type}()"
 

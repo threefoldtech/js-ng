@@ -306,7 +306,7 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
             new_data (dict): field values mapping
         """
         for name, field in self._get_fields().items():
-            if name in new_data:
+            if name in new_data and new_data[name] is not None:
                 try:
                     setattr(self, f"__{name}", field.from_raw(new_data[name]))
                 except (fields.ValidationError, ValueError):

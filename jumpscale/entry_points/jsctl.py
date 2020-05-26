@@ -1,6 +1,6 @@
 import click
 
-from jumpscale.core.config import get_default_config, update_config, get_config
+from jumpscale.core.config import get_default_config, update_config, get_config, configure_threebot
 
 
 def format_config_parameter(name, value):
@@ -44,6 +44,15 @@ def update(name, value):
     click.echo("Updated.")
 
 
+@config.command()
+@click.option("--name")
+@click.option("--email")
+@click.option("--wordsfile")
+def threebot(name, email, wordsfile):
+    configure_threebot(name, email, wordsfile)
+    # click.echo(f"Threebot configured, user id: {threebot_id}")
+
+
 @click.group()
 def cli():
     pass
@@ -53,4 +62,3 @@ cli.add_command(config)
 
 if __name__ == "__main__":
     cli()
-

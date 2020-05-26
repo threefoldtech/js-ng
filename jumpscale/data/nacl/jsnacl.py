@@ -1,3 +1,4 @@
+import binascii
 import nacl.utils
 
 from nacl.public import PrivateKey, PublicKey, Box
@@ -81,6 +82,19 @@ class NACL:
         signed = self.signing_key.sign(message)
         return message, signed.signature
 
+    def sign_hex(self, message):
+        """Sign the message and return the messsage and the signature.
+
+        Args:
+            message (bytes): The message to be signed
+
+        Returns:
+            bytes: The message and the signature.
+        """
+        signed = self.signing_key.sign(message)
+        signedhex = binascii.hexlify(signed.signature)
+        return signedhex
+
     def verify(self, message, signature, verification_key):
         """Verify that the signature using the verification key
 
@@ -113,6 +127,9 @@ class NACL:
             bytes: The verification key.
         """
         return bytes(self.signing_key.verify_key)
+
+    def get_verify_key_hex(self):
+        return binascii.hexlify(self.signing_key.verify_key.encode()).decode()
 
     def get_public_key(self):
         """Getter for the public key.
