@@ -5,6 +5,6 @@ RUN apt-get update && \
     mkdir -p /sandbox/code/github/js-next
 RUN git clone https://github.com/js-next/js-ng.git /sandbox/code/github/js-next/js-ng
 WORKDIR /sandbox/code/github/js-next/js-ng
-RUN poetry config virtualenvs.create false \
-    && poetry install
+RUN poetry build
+RUN pip3 install dist/*.whl
 ENTRYPOINT ["/sbin/my_init"]
