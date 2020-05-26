@@ -10,7 +10,6 @@ license = "MIT"
 [tool.poetry.dependencies]
 python = "^3.6"
 pdoc3 = "^0.6.3"
-lazy-import = "^0.2.2"
 pytoml = "^0.1.21"
 secretconf = "^0.1.2"
 better-exceptions = "^0.2.2"
