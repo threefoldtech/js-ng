@@ -152,7 +152,6 @@ def loadjsmodules():
                     continue
                 importedpkgstr = "jumpscale.{}.{}".format(rootbase, pkgname)
                 __all__.append(importedpkgstr)
-                # globals()[importedpkgstr] = lazy_import.lazy_module(importedpkgstr)
                 try:
                     m = importlib.import_module(importedpkgstr)
                 except Exception as e:

@@ -13,6 +13,7 @@ An alternative will be to use let's ecnrypt with nginx. The `certbot` serves as 
 It is required to add this repository `ppa:certbot/certbot` and then you can install `certbot` as follows:
 
 ```bash
+add-apt-repository ppa:certbot/certbot
 apt-get install python-certbot-nginx
 ```
 
@@ -29,7 +30,7 @@ The user will be asked to confirm certain agreements and to specify his email to
 The command can also be done non interactively as follows:
 
 ```bash
-certbot --nginx -d {domain} --non-interactive --agree-tos -m email@example.com
+certbot --nginx -d {domain} --non-interactive --agree-tos -m email@example.com --nginx-server-root {server root}
 ```
 
 Certificate should be generated now and will expire in 90 days from date of issue.
@@ -44,4 +45,4 @@ certbot renew
 
 The command will automatically renew all certificates if they will expire in the next 30 days.
 
-We can add a cron job that runs daily for auto renewing.
+`certbot` handles that by adding a cron job that runs daily to renew the certificate if needed.
