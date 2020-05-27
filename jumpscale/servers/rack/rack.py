@@ -37,11 +37,11 @@ class ServerRack(Base):
             server_name (str, optional): server name, if None will start all the servers. Defaults to None.
         """
         if server_name:
-           self._start(server_name)
+            self._start(server_name)
         else:
             for server_name in self._servers:
                 self._start(server_name)
-    
+
     def stop(self, server_name: str = None):
         """Stop server by its name or stop all running servers
 
@@ -49,7 +49,7 @@ class ServerRack(Base):
             server_name (str, optional): server name, if None will stop all running servers. Defaults to None.
         """
         if server_name:
-           self._stop(server_name)
+            self._stop(server_name)
         else:
             for server_name in self._servers:
                 self._stop(server_name)
