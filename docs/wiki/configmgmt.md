@@ -20,7 +20,7 @@ from enum import Enum
 from jumpscale.core.base import Base, fields, StoredFactory
 from jumpscale.clients.sshclient import sshclient
 
-class Region(enum):
+class Region(Enum):
     US = "us"
     EU = "eu"
 
