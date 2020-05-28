@@ -64,3 +64,5 @@ def run():
         sys.exit(embed(globals(), locals(), configure=ptconfig, history_filename=HISTORY_FILENAME))
     else:
         sys.exit(print(eval(sys.argv[1])))
+if __name__ == "__main__":
+    run()
