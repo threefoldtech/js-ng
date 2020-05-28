@@ -19,11 +19,12 @@ we provide a carefully picked list of exceptions
 
 ## better_exceptions
 
-we integrate [better_exceptions](https://github.com/Qix-/better-exceptions) for friendly, humane stacktraces 
+we integrate [better_exceptions](https://github.com/Qix-/better-exceptions) for friendly, humane stacktraces
+
 ![better exceptions](images/betterexceptions.png)
 
 ```
-JS-NG> j.data.serializers.base64.encode(obj)                                                        
+JS-NG> j.data.serializers.base64.encode(obj)
 Traceback (most recent call last):
   File "<stdin>", line 1, in <module>
   File "/home/xmonader/wspace/js-next/js-ng/jumpscale/data/serializers/base64.py", line 17, in encod

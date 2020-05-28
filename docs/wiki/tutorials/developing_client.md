@@ -1,6 +1,6 @@
 # Developing clients
 
-Client is also almost like a SAL(./developing_sal.md), but requires configuration management at some point and maybe credentials, and can have multiple objects. e.g redis client for my localhost and one to another remote redis machine
+Client is also almost like a [SAL](./developing_sal.md), but requires configuration management at some point and maybe credentials, and can have multiple objects. e.g redis client for my localhost and one to another remote redis machine
 
 ## Code structure
 
@@ -23,7 +23,7 @@ class RedisClient(Client):
     port = fields.Integer(default=6379)
     password = fields.Secret()
 ```
-And then we define the fields relevant to the client as class attributes using our `jumpscale.core.base.fields`. Make sure to review the [baseclasses](../baseclasses.md) and [config management](../configmgmt.md) sections 
+And then we define the fields relevant to the client as class attributes using our `jumpscale.core.base.fields`. Make sure to review the [baseclasses](../baseclasses.md) and [config management](../configmgmt.md) sections
 
 
 Here's the full code of redis client as of the moment.
