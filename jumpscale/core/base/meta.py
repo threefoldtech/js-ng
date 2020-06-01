@@ -233,7 +233,7 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
                 value = field.factory_type(field.type, name_=name, parent_instance_=self)
                 self._factories[name] = value
             else:
-                value = values.get(name, field.from_raw(field.default))
+                value = field.from_raw(values.get(name, field.default))
 
             # accept raw as a default value
             # and set inner value, so it should be availale from the start
