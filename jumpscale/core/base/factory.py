@@ -184,6 +184,8 @@ class Factory:
         """
         get an instance (will create if it does not exist)
 
+        if the instance with `name` exists, `args` and `kwargs` are ignored.
+
         Args:
             name (str): name
             *args: arbitrary arguments passed to the factory `Base` type

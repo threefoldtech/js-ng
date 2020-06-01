@@ -227,17 +227,25 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
 
         self._factories = {}
 
+        # now we iterate over all fields and set their values for:
+        #   - factoires: we create an instance of this factory type
+        #   - normal fields:
+        #       - if a value is given in **values, we set it as it's set like x.attr = y
+        #       - if not, we set the field.default as the value, note that None is allowed
+        #         so, we add it as an inner value, to escape validation and other stuff
         for name, field in self._get_fields().items():
             if isinstance(field, fields.Factory):
-                # for factory fields, we need to create a new factory with the given factory_type
                 value = field.factory_type(field.type, name_=name, parent_instance_=self)
                 self._factories[name] = value
+                setattr(self, f"__{name}", value)
             else:
-                value = field.from_raw(values.get(name, field.default))
-
-            # accept raw as a default value
-            # and set inner value, so it should be availale from the start
-            setattr(self, f"__{name}", value)
+                if name in values:
+                    # setting the attribute here would do validation, triggers...etc
+                    setattr(self, name, field.from_raw(values[name]))
+                else:
+                    # we allow None, no need to do validation...etc
+                    # just set inner attribute
+                    setattr(self, f"__{name}", field.from_raw(field.default))
 
     def _get_fields(self):
         """
