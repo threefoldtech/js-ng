@@ -1,7 +1,7 @@
 - start redis
-- start nginx `sudo nginx -c ~/sandbox/cfg/nginx/main/nginx.conf`
 - `poetry run jsng`
-- make sure to nginx configure ` j.sals.nginx.main.configure()`
+- get `main` instance and make sure to nginx configure` j.sals.nginx.main.configure()`
+- start nginx `sudo nginx -c ~/sandbox/cfg/nginx/main/nginx.conf`
 
 
 ```
