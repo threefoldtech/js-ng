@@ -1,6 +1,6 @@
-
 from gevent import monkey
-monkey.patch_all()
+
+monkey.patch_all(subprocess=False)
 
 import os
 import pathlib
