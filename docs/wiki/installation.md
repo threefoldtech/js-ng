@@ -4,7 +4,7 @@ Installation is as easy as `pip install js-ng`
 ## Install requierd packages 
 ```
 apt-get update
-apt-get install git python3-vent python3-pip
+apt-get install git python3-venv python3-pip
 pip3 install poetry
 ```
 ## clone repo 
