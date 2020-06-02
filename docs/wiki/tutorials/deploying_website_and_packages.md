@@ -41,9 +41,9 @@
   server.start()
   ```
 
-Locations should be like the following
+- Locations should be like the following
 
-![cert](../images/locations_main.png)
+  ![cert](../images/locations_main.png)
 
 - start nginx
 
@@ -57,69 +57,69 @@ Locations should be like the following
 
 - Get nginx sal instance
 
-```python
-nginx = j.sals.nginx.get("threefold_tech_nginx")
-nginx.configure()
-nginx.save()
-```
+  ```python
+  nginx = j.sals.nginx.get("threefold_tech_nginx")
+  nginx.configure()
+  nginx.save()
+  ```
 
 - create 443 website
 
-```python
-website = nginx.websites.get("threefold_tech_website_443")
-website.port = 443
-website.ssl = True
-website.domain = "waleed.grid.tf"
-website.letsencryptemail =  "waleed.hammam@gmail.com"
-```
+  ```python
+  website = nginx.websites.get("threefold_tech_website_443")
+  website.port = 443
+  website.ssl = True
+  website.domain = "waleed.grid.tf"
+  website.letsencryptemail =  "waleed.hammam@gmail.com"
+  ```
 
 - create 443 location
 
-```python
-loc = website.locations.get("location_443")
-loc.path_url = "/" #  location path
-loc.path_location = "/root/js-ng/jumpscale/packages/threefold_tech/html/" #  alias for the location
-loc.index = "index.html"#  index of the location
-loc.location_type = "static" # static,spa,proxy type of location config
-loc.scheme = "https" #  https or https
-website.configure()
-```
+  ```python
+  loc = website.locations.get("location_443")
+  loc.path_url = "/" #  location path
+  loc.path_location = "/root/js-ng/jumpscale/packages/  threefold_tech/html/" #  alias for the location
+  loc.index = "index.html"#  index of the location
+  loc.location_type = "static" # static,spa,proxy type of   location config
+  loc.scheme = "https" #  https or https
+  website.configure()
+  ```
 
 - create 80 website
 
-```python
-website = nginx.websites.get("threefold_tech_website_80")
-website.port=80
-website.domain = "waleed.grid.tf"
-```
+  ```python
+  website = nginx.websites.get("threefold_tech_website_80")
+  website.port=80
+  website.domain = "waleed.grid.tf"
+  ```
 
 - create 80 location
 
-```python
-loc = website.locations.get("location_80")
-loc.path_url = "/" #  location path
-loc.path_location = "/root/js-ng/jumpscale/packages/threefold_tech/html/" #  alias for the location
-loc.index = "index.html"#  index of the location
-loc.location_type = "static" # static,spa,proxy type of location config
-loc.scheme = "http" #  https or https
-```
+  ```python
+  loc = website.locations.get("location_80")
+  loc.path_url = "/" #  location path
+  loc.path_location = "/root/js-ng/jumpscale/packages/  threefold_tech/html/" #  alias for the location
+  loc.index = "index.html"#  index of the location
+  loc.location_type = "static" # static,spa,proxy type of   location config
+  loc.scheme = "http" #  https or https
+  ```
 
 - Configure website and locations
 
-```python
-website.configure()
-```
+  ```python
+  website.configure()
+  ```
 
 - start nginx
 
   ```bash
-  nginx -c ~/sandbox/cfg/nginx/main/nginx.conf
+  nginx -c ~/sandbox/cfg/nginx/threefold_tech_nginx/nginx.conf
   ```
 
-Locations should be like the following
+- Locations should be like the following
 
-![cert](../images/location_custom.png)
+  ![cert](../images/location_custom.png)
 
-visit your domain to make sure you are ok and with https certificate
+- visit your domain to make sure you are ok and with https certificate
 
-![cert](../images/cert1.png)
+  ![cert](../images/cert1.png)
