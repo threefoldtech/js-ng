@@ -4,7 +4,7 @@ import sys
 import os
 from redis import Redis
 from enum import Enum
-from functools import partial
+from functools import partial, lru_cache
 from io import BytesIO
 from signal import SIGKILL, SIGTERM
 import json
@@ -19,6 +19,9 @@ from redis.connection import DefaultParser, Encoder
 from redis.exceptions import ConnectionError
 from .baseactor import BaseActor
 from .systemactor import CoreActor, SystemActor
+from nacl.signing import VerifyKey
+from nacl.public import Box, PublicKey
+import binascii
 
 
 def serialize(obj):
@@ -42,6 +45,9 @@ class GedisErrorTypes(Enum):
     BAD_REQUEST = 1
     ACTOR_ERROR = 3
     INTERNAL_SERVER_ERROR = 4
+
+
+GEDIS_AUTH_CMD = "gedis_auth"
 
 
 class RedisConnectionAdapter:
@@ -95,7 +101,6 @@ class ResponseEncoder:
 
     def error(self, msg):
         """Send an error."""
-        # print("###:%s" % msg)
         self._write_buffer("-ERR {}\r\n".format(msg))
         self._send()
 
@@ -127,6 +132,7 @@ class ResponseEncoder:
 
 SERIALIZABLE_TYPES = (str, int, float, list, tuple, dict, bool)
 RESERVED_ACTOR_NAMES = ("core", "system")
+EXPOSED_ACTORS = ["core"]
 
 
 class GedisServer(Base):
@@ -141,6 +147,8 @@ class GedisServer(Base):
         self._core_actor = CoreActor()
         self._system_actor = SystemActor()
         self._loaded_actors = {"core": self._core_actor}
+        self.nacl = j.core.identity.nacl
+        self.explorer = j.clients.explorer.get_default()
 
     @property
     def actors(self):
@@ -231,10 +239,45 @@ class GedisServer(Base):
 
         return response
 
+    @lru_cache(maxsize=128)
+    def get_user_verify_key(self, threebot_id):
+        try:
+            return VerifyKey(binascii.unhexlify(self.explorer.users.get(threebot_id).pubkey))
+        except j.exceptions.NotFound:
+            pass
+
+    def verify_data(self, data, response):
+        try:
+            data = json.loads(data)
+        except json.JSONDecodeError:
+            response["error"] = "Credentials not a valid json"
+            response["error_type"] = GedisErrorTypes.BAD_REQUEST.value
+            return response
+
+        threebot_id = data["threebot_id"]
+        user_verify_key = self.get_user_verify_key(threebot_id)
+        if not user_verify_key:
+            response["error"] = f"Couldn't find user: {threebot_id}"
+            response["error_type"] = GedisErrorTypes.BAD_REQUEST.value
+
+        pub_box = Box(self.nacl.private_key, user_verify_key.to_curve25519_public_key())
+        try:
+            decrypted_data = pub_box.decrypt(binascii.unhexlify(data["encrypted_data"]))
+            epoch = int(user_verify_key.verify(decrypted_data))
+            if epoch > j.data.time.now().timestamp + 20:
+                response["error"] = "Epoch data not correct"
+                response["error_type"] = GedisErrorTypes.BAD_REQUEST.value
+        except:
+            response["error"] = "Error verifying payload"
+            response["error_type"] = GedisErrorTypes.BAD_REQUEST.value
+
+        return response
+
     def _on_connection(self, socket, address):
         j.logger.info("New connection from {}", address)
         parser = DefaultParser(65536)
         connection = RedisConnectionAdapter(socket)
+        authenticated = False
         try:
             encoder = ResponseEncoder(socket)
             parser.on_connect(connection)
@@ -251,31 +294,41 @@ class GedisServer(Base):
                         response["error_type"] = GedisErrorTypes.BAD_REQUEST.value
 
                     else:
-                        actor_name = request.pop(0).decode()
-                        method_name = request.pop(0).decode()
-                        actor_object = self._loaded_actors.get(actor_name)
-
-                        if not actor_object:
-                            response["error"] = "actor not found"
-                            response["error_type"] = GedisErrorTypes.NOT_FOUND.value
-
-                        elif not hasattr(actor_object, method_name):
-                            response["error"] = "method not found"
-                            response["error_type"] = GedisErrorTypes.NOT_FOUND.value
-
+                        arg1 = request.pop(0).decode()
+                        arg2 = request.pop(0).decode()
+                        if arg1.lower() == GEDIS_AUTH_CMD:
+                            if not authenticated:
+                                response = self.verify_data(arg2, response)
+                                authenticated = response["error"] is None
+                        elif not authenticated and arg1.lower() not in EXPOSED_ACTORS:
+                            response["error"] = "User not authenticated"
+                            response["error_type"] = GedisErrorTypes.BAD_REQUEST.value
                         else:
-                            j.logger.info(
-                                "Executing method {} from actor {} to client {}", method_name, actor_name, address
-                            )
+                            actor_name = arg1
+                            method_name = arg2
+                            actor_object = self._loaded_actors.get(actor_name)
 
-                            if request:
-                                args, kwargs = json.loads(request.pop(0), object_hook=deserialize)
+                            if not actor_object:
+                                response["error"] = "actor not found"
+                                response["error_type"] = GedisErrorTypes.NOT_FOUND.value
+
+                            elif not hasattr(actor_object, method_name):
+                                response["error"] = "method not found"
+                                response["error_type"] = GedisErrorTypes.NOT_FOUND.value
+
                             else:
-                                args, kwargs = (), {}
+                                j.logger.info(
+                                    "Executing method {} from actor {} to client {}", method_name, actor_name, address
+                                )
 
-                            method = getattr(actor_object, method_name)
-                            result = self._execute(method, args, kwargs)
-                            response.update(result)
+                                if request:
+                                    args, kwargs = json.loads(request.pop(0), object_hook=deserialize)
+                                else:
+                                    args, kwargs = (), {}
+
+                                method = getattr(actor_object, method_name)
+                                result = self._execute(method, args, kwargs)
+                                response.update(result)
 
                 except ConnectionError:
                     j.logger.info("Client {} closed the connection", address)

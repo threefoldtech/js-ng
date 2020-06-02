@@ -73,6 +73,7 @@ from jumpscale.core import events
 from . import fields
 from .factory import Factory, StoredFactory, DuplicateError
 from .events import AttributeUpdateEvent
+import json
 
 
 def get_field_property(name: str, field: fields.Field) -> property:
@@ -411,3 +412,6 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
         instance = cls()
         instance._set_data(data)
         return instance
+
+    def __hash__(self):
+        return hash(json.dumps(self._get_data()))

@@ -16,11 +16,20 @@ class CoreActor(BaseActor):
     @actor_method
     def list_actors(self) -> list:
         """List available actors
-        
+
         Returns:
             list -- list of available actors
         """
         return list(self._server._loaded_actors.keys())
+
+    @actor_method
+    def get_pubkey(self) -> str:
+        """Get server nacl public key
+
+        Returns:
+            str: public key hex
+        """
+        return self._server.nacl.get_public_key_hex()
 
 
 class SystemActor(BaseActor):
@@ -33,11 +42,11 @@ class SystemActor(BaseActor):
     @actor_method
     def register_actor(self, actor_name: str, actor_path: str) -> bool:
         """Register new actor
-        
+
         Arguments:
             actor_name {str} -- actor name within gedis server.
             actor_path {str} -- actor path on gedis server machine.
-        
+
         Returns:
             bool -- True if registered.
         """
@@ -56,10 +65,10 @@ class SystemActor(BaseActor):
     @actor_method
     def unregister_actor(self, actor_name: str) -> bool:
         """Register actor
-        
+
         Arguments:
             actor_name {str} -- actor name
-        
+
         Returns:
             bool -- True if actors is unregistered
         """

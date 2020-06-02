@@ -12,10 +12,10 @@ Time helpers based on arrow
 >>> utc
 <Arrow [2013-05-11T20:23:58.970460+00:00]>
 
-JS-NG> j.data.time.now()                                                                                         
+JS-NG> j.data.time.now()
 <Arrow [2020-04-09T10:19:19.013636+02:00]>
 
-JS-NG> j.data.time.now().shift(hours=15)                                                                         
+JS-NG> j.data.time.now().shift(hours=15)
 <Arrow [2020-04-10T01:19:23.225311+02:00]>
 
 
@@ -86,3 +86,32 @@ JS-NG> j.data.time.now().shift(hours=15)
 """
 
 from arrow import *
+
+
+TIMES = {
+    "Y": 3600 * 24 * 365,
+    "M": int(3600 * 24 * 365 / 12),
+    "w": 3600 * 24 * 7,
+    "d": 3600 * 24,
+    "h": 3600,
+    "m": 60,
+    "s": 1,
+}
+
+
+def get_delta_time(txt):
+    """
+    only supported now is -3m, -3d and -3h (ofcourse 3 can be any int)
+    and an int which would be just be returned
+    means 3 days ago 3 hours ago
+    if 0 or '' then is now
+    """
+    txt = txt.strip()
+    seconds = 0
+    for txt in txt.split():
+        unit = txt[-1]
+        if txt[-1] not in list(TIMES.keys()):
+            raise RuntimeError("Cannot find time, needs to be in format have time indicator %s " % list(TIMES.keys()))
+        value = float(txt[:-1])
+        seconds += int(value * TIMES[unit])
+    return seconds
