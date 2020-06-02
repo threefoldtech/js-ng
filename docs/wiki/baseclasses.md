@@ -148,15 +148,122 @@ redis = StoredFactory(RedisClient)
 
 
 
-## Data updates
+## Data updates and computed fields
+Sometimes you may need to update any field's value based on some changes, or even re-create or re-initialize other related objects for your instance.
 
-In your instance, you can implement `_attr_updated` to handle attribute updates, but by default, an event of the type `AttributeUpdateEvent` is fired.
+We provide multiple ways for such cases, each of them can be used as needed:
 
-Using events here allow other components to handle events related to your base implementation too.
+- [Single field updates](#single-field-updates)
+- [Computed and non-stored fields](#computed-and-non-stored-fields)
+- [Attributes updates and events](#attributes-updates-and-events)
 
-An example of using `attr_updated` or events to re-create an inner client (redis):
+### Single field updates
 
-Using `_attr_updated`:
+If you need to do an action only when a single field is changed, You can use `on_update` for any field, which should be a callable that takes the instance and new value, see stellar client as an example:
+
+```python
+class Stellar(Client):
+    network = fields.Enum(Network)
+    address = fields.String()
+
+    def secret_updated(self, value):
+        self.address = stellar_sdk.Keypair.from_secret(value).public_key
+
+    secret = fields.String(on_update=secret_updated)
+```
+
+In this code, we set a new value for the address in case the secret is updated.
+
+### Computed and non-stored fields
+
+Sometimes you need a field to be computed from other multiple fields, in such case, you just need to provide a `compute` function which takes current instance and it should return the computed value, see the following example:
+
+```python
+class User(Base):
+    emails = fields.List(fields.String())
+    first_name = fields.String(default="")
+    last_name = fields.String(default="")
+
+    def get_full_name(self):
+        name = self.first_name
+        if self.last_name:
+            name += " " + self.last_name
+        return name
+
+    def get_unique_name(self):
+        return self.full_name.replace(" ", "") + ".user"
+
+    full_name = fields.String(compute=get_full_name)
+    unique_name = fields.String(compute=get_unique_name)
+
+
+users = StoredFactory(User)
+user1 = users.get("test1")
+
+print(user1.full_name)  #=> "ahmed mohamed"
+print(user1.unique_name)  #=> "ahmedmohaed.user"
+
+user1.first_name = "x"
+user1.last_name = "y"
+user1.save()
+```
+
+Note that, when saving the user object with this factory, the computed field will be saved too.
+
+In other cases, you need to create a non-stored computed fields, which also do not need any serialization, but only to be created and used at run-time, this can be done by passing `stored=False` to this field (which is `True` by default):
+
+```python
+class Greeter:
+    def __init__(self, name):
+        self.name = name
+
+    def say(self):
+        print("hello", self.name)
+
+
+class User(Base):
+    first_name = fields.String(default="")
+    last_name = fields.String(default="")
+
+    def get_full_name(self):
+        name = self.first_name
+        if self.last_name:
+            name += " " + self.last_name
+        return name
+
+    full_name = fields.String(compute=get_full_name)
+
+    def get_my_greeter(self):
+            return Greeter(self.full_name)
+
+    my_greeter = fields.Typed(Greeter, stored=False, compute=get_my_greeter)
+    ahmed_greeter = fields.Typed(Greeter, stored=False, default=Greeter("ahmed"))
+
+
+
+users = StoredFactory(User)
+user = users.get("test1")
+
+user.first_name = "abdo"
+user.last_name = "tester"
+user.my_greeter.say()  #=> "hello abdo tester"
+user.ahmed_greeter.say()  => "hello ahmed"
+user.save()
+```
+
+we created two `Typed` fields of `Greeter` class, and used them without any problems, when saving this instance, these fields won't be serialized nor stored.
+
+### Attributes updates and events
+
+A more advanced feature are events and `_attr_updated` method, in any instance, you can override `_attr_updated` to handle attribute updates, also by default, an event of the type `AttributeUpdateEvent` is fired.
+
+Using events can allow other components to handle events related to your base implementation, so it's not needed unless you need other people to know about your changes.
+
+In this way, the instance receives a call or an `AttributeUpdateEvent` for any attribute.
+
+An example of using `attr_updated` or events to re-create an inner client (redis), as the client need to re-created if any of `hostname` or `port` has been changed:
+
+__Using__ `_attr_updated`:
 
 ```python
 class RedisClient(Client):
@@ -176,7 +283,7 @@ class RedisClient(Client):
 
 ```
 
-Or using events (so, others can know of this change too):
+__Or using__ events (so, others can know of this change too):
 
 ```python
 class RedisClientAttributeUpdated(AttributeUpdateEvent):
