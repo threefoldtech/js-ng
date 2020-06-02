@@ -73,10 +73,20 @@ class ValidationError(Exception):
 
 
 class Field:
-    def __init__(self, default=None, required=False, indexed=False, readonly=False, validators=None, **kwargs):
+    def __init__(
+        self,
+        default=None,
+        required=False,
+        indexed=False,
+        readonly=False,
+        validators=None,
+        stored=True,
+        on_update=None,
+        compute=None,
+        **kwargs,
+    ):
         """
         Base field for all field types, have some common options that can be used any other field type too.
-
 
         Args:
             default (any, optional): default value. Defaults to None.
@@ -84,6 +94,9 @@ class Field:
             indexed (bool, optional): indexed or not. Defaults to False.
             readonly (bool, optional): can only get the value. Defaults to False.
             validators (list of function, optional): a list of functions that takes a value and raises ValidationError if not valid. Defaults to None.
+            stored (bool, optional): if the fields should be stored or not, useful for computed fields. Defaults to True.
+            on_update (callable, optional): a callable that takes the instance and new value on field updates. Defaults to None.
+            compute (callable, optional): a callable that takes the instance and returns a computed value for this field. `on_update` won't be called in this case. Defaults to None.
         """
         self.default = default
         self.required = required
@@ -95,9 +108,9 @@ class Field:
         if self.validators is None:
             self.validators = []
 
-        # self.validate = Schema({
-
-        # })
+        self.stored = stored
+        self.on_update = on_update
+        self.compute = compute
 
     def validate(self, value):
         """
@@ -138,6 +151,14 @@ class Field:
             any: a primitive raw value
         """
         return value
+
+    @property
+    def trigger_updates(self):
+        return callable(self.on_update)
+
+    @property
+    def computed(self):
+        return callable(self.compute)
 
 
 class Typed(Field):

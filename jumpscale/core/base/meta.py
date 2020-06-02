@@ -101,6 +101,10 @@ def get_field_property(name: str, field: fields.Field) -> property:
         Returns:
             any: the field value
         """
+        # if computed, return the computed value
+        if field.computed:
+            return field.compute(self)
+
         # if it's already defined, just return it
         if hasattr(self, inner_name):
             return getattr(self, inner_name)
@@ -141,7 +145,11 @@ def get_field_property(name: str, field: fields.Field) -> property:
 
         # se attribute
         setattr(self, inner_name, value)
+
+        # call _attr_updated and on_update handlers
         self._attr_updated(name, value)
+        if field.trigger_updates:
+            field.on_update(self, value)
 
     return property(fget=getter, fset=setter)
 
@@ -256,6 +264,15 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
         """
         return self._fields
 
+    def _get_computed_fields(self):
+        """
+        get current defined field objects with compute function
+
+        Returns:
+            dict: fields dict as {name: field object}
+        """
+        return {name: field for name, field in self._fields.items() if field.computed}
+
     def _get_factories(self):
         """
         get sub-factory objects, which are defined by `fields.Factory`
@@ -296,6 +313,9 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
         for name, field in self._get_fields().items():
             if isinstance(field, fields.Factory):
                 # skip for factories for now
+                continue
+            if not field.stored:
+                # skip non-stored fields too
                 continue
             value = getattr(self, name)
             raw_value = field.to_raw(value)
