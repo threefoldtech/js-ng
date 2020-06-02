@@ -29,6 +29,10 @@
   index = "index.html" # index location
   ```
 
+- Example package structure
+
+  ![cert](../images/package.png)
+
 - Get nginx and threebot server instances
 
   ```python
