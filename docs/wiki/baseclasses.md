@@ -155,7 +155,7 @@ We provide multiple ways for such cases, each of them can be used as needed:
 
 - [Single field updates](#single-field-updates)
 - [Computed and non-stored fields](#computed-and-non-stored-fields)
-- [Attributes updates and events](#attributes-updates-and-events)
+- [Attribute updates and events](#attribute-updates-and-events)
 
 ### Single field updates
 
@@ -253,7 +253,7 @@ user.save()
 
 we created two `Typed` fields of `Greeter` class, and used them without any problems, when saving this instance, these fields won't be serialized nor stored.
 
-### Attributes updates and events
+### Attribute updates and events
 
 A more advanced feature are events and `_attr_updated` method, in any instance, you can override `_attr_updated` to handle attribute updates, also by default, an event of the type `AttributeUpdateEvent` is fired.
 
