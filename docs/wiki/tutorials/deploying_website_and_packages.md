@@ -82,7 +82,7 @@
   ```python
   loc = website.locations.get("location_443")
   loc.path_url = "/" #  location path
-  loc.path_location = "/root/js-ng/jumpscale/packages/  threefold_tech/html/" #  alias for the location
+  loc.path_location = "/root/js-ng/jumpscale/packages/threefold_tech/html/" #  alias for the location
   loc.index = "index.html"#  index of the location
   loc.location_type = "static" # static,spa,proxy type of   location config
   loc.scheme = "https" #  https or https
@@ -102,7 +102,7 @@
   ```python
   loc = website.locations.get("location_80")
   loc.path_url = "/" #  location path
-  loc.path_location = "/root/js-ng/jumpscale/packages/  threefold_tech/html/" #  alias for the location
+  loc.path_location = "/root/js-ng/jumpscale/packages/threefold_tech/html/" #  alias for the location
   loc.index = "index.html"#  index of the location
   loc.location_type = "static" # static,spa,proxy type of   location config
   loc.scheme = "http" #  https or https
@@ -127,3 +127,7 @@
 - visit your domain to make sure you are ok and with https certificate
 
   ![cert](../images/cert1.png)
+
+### Troubleshooting
+
+- if you got 403 forbidden error this is due to permissions, make sure you using nginx with the correct user in nginx.conf file first line
