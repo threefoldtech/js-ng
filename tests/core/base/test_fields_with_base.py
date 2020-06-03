@@ -1,5 +1,5 @@
 """testing base with some fields, set/get,  validation and conversion from/to raw values"""
-
+import datetime
 import enum
 import unittest
 
@@ -18,6 +18,7 @@ class User(Base):
     permissions = fields.List(fields.Object(Permission))
     custom_config = fields.Typed(dict)
     rating = fields.Float()
+    time = fields.DateTime(default=datetime.datetime.now)
 
     def get_full_name(self):
         name = self.first_name
@@ -115,3 +116,11 @@ class TestBaseWithFields(unittest.TestCase):
 
         unique_name = f"{u.first_name}{u.last_name}.user"
         self.assertEqual(u.unique_name, unique_name)
+
+    def test_callable_defaults(self):
+        u = User()
+        # once accessed, the value is evaluated
+        time = u.time
+
+        self.assertEqual(type(u.time), datetime.datetime)
+        self.assertEqual(time, u.time)

@@ -106,12 +106,23 @@ def get_field_property(name: str, field: fields.Field) -> property:
             return field.compute(self)
 
         # if it's already defined, just return it
-        if hasattr(self, inner_name):
+        # we don't use hasattr here, because it uses getattr inside
+        # it causes an infinite recursion here if the attr is not found
+        # and also when __getattr__ is overridden
+        if inner_name in self.__dict__:
             return getattr(self, inner_name)
 
-        # if not, it will just return the default value of the field
+        # if default is callable, get it
+        if callable(field.default):
+            default = field.default()
+        else:
+            default = field.default
+
         # accept raw value as default too
-        return field.from_raw(field.default)
+        # use the actual name (not inner_name) to do validation...etc
+        default_value = field.from_raw(default)
+        setattr(self, name, default_value)
+        return default_value
 
     def setter(self, value):
         """
@@ -239,7 +250,6 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
         #   - factoires: we create an instance of this factory type
         #   - normal fields:
         #       - if a value is given in **values, we set it as it's set like x.attr = y
-        #       - if not, we set the field.default as the value, note that None is allowed
         #         so, we add it as an inner value, to escape validation and other stuff
         for name, field in self._get_fields().items():
             if isinstance(field, fields.Factory):
@@ -250,10 +260,6 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
                 if name in values:
                     # setting the attribute here would do validation, triggers...etc
                     setattr(self, name, field.from_raw(values[name]))
-                else:
-                    # we allow None, no need to do validation...etc
-                    # just set inner attribute
-                    setattr(self, f"__{name}", field.from_raw(field.default))
 
     def _get_fields(self):
         """
