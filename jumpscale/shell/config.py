@@ -103,6 +103,7 @@ def get_completions(self, document, complete_event):
                 c.name_with_symbols,
                 len(c.complete) - len(c.name_with_symbols),
                 display=c.name_with_symbols,
+                selected_style="bg:ansidarkgray",
                 style=get_style_for_completion(c),
             )
 
