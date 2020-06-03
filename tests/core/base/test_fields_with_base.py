@@ -12,10 +12,24 @@ class Permission(Base):
 
 class User(Base):
     id = fields.Integer()
+    first_name = fields.String(default="")
+    last_name = fields.String(default="")
     emails = fields.List(fields.String())
     permissions = fields.List(fields.Object(Permission))
     custom_config = fields.Typed(dict)
     rating = fields.Float()
+
+    def get_full_name(self):
+        name = self.first_name
+        if self.last_name:
+            name += " " + self.last_name
+        return name
+
+    def get_unique_name(self):
+        return self.full_name.replace(" ", "") + ".user"
+
+    full_name = fields.String(compute=get_full_name)
+    unique_name = fields.String(compute=get_unique_name)
 
 
 class Colors(enum.Enum):
@@ -88,3 +102,16 @@ class TestBaseWithFields(unittest.TestCase):
 
         data = user.to_dict()
         self.assertEqual(data["rating"], 11.2)
+
+    def test_computed_field(self):
+        u = User()
+        u.first_name = "ahmed"
+
+        self.assertEqual(u.full_name, u.first_name)
+        u.last_name = "mohamed"
+
+        full_name = f"{u.first_name} {u.last_name}"
+        self.assertEqual(u.full_name, full_name)
+
+        unique_name = f"{u.first_name}{u.last_name}.user"
+        self.assertEqual(u.unique_name, unique_name)
