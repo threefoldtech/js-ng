@@ -9,7 +9,7 @@ def load_python_module(module_path: str):
     Arguments:
         module_path {str} -- absolute path of the module
     """
-    module_name = os.path.dirname(module_path)
+    module_name = module_path[:-3]
     spec = importlib.util.spec_from_file_location(module_name, module_path)
 
     if spec.name in sys.modules:
