@@ -149,9 +149,10 @@ redis = StoredFactory(RedisClient)
 
 
 ## Data updates and computed fields
-Sometimes you may need to update any field's value based on some changes, or even re-create or re-initialize other related objects for your instance.
 
-We provide multiple ways for such cases, each of them can be used as needed:
+In your instance, you can handle data updates in many ways, from triggering a handler on single field updates, to event-based system.
+
+The following are three different ways to do it:
 
 - [Single field updates](#single-field-updates)
 - [Computed and non-stored fields](#computed-and-non-stored-fields)
