@@ -340,6 +340,8 @@ class StoredFactory(events.Handler, Factory):
         """
         instance.validate()
         self.store.save(instance.instance_name, instance._get_data())
+        if instance.parent and hasattr(instance.parent, "save"):
+            instance.parent.save()
 
     def _try_save_instance(self, instance):
         """
