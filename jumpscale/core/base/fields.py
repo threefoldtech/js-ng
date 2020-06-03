@@ -223,7 +223,7 @@ class Boolean(Typed):
 
 
 class Integer(Typed):
-    def __init__(self, default=0, min=None, **kwargs):
+    def __init__(self, default=0, min=None, max=None, **kwargs):
         """
         Intger field, the same as `Typed`, but with a type of `int`
 
@@ -235,10 +235,12 @@ class Integer(Typed):
 
         Args:
             default (int, optional): default value. Defaults to 0.
-            min (int, optional): minimum value. Defaults to None.
+            min (int, optional): minimum value (inclusive). Defaults to None.
+            max (int, optional): maximum value (inclusive). Defaults to None.
             kwargs: any keyword arguments supported by `Field`
         """
         self.min = min
+        self.max = max
         super().__init__(type_=int, default=default, min=min, **kwargs)
 
     def validate(self, value):
@@ -246,6 +248,10 @@ class Integer(Typed):
         if self.min is not None:
             if value < self.min:
                 raise ValidationError(f"cannot set values less than {self.min}")
+
+        if self.max is not None:
+            if value > self.max:
+                raise ValidationError(f"cannot set values greater than {self.max}")
 
     def from_raw(self, value):
         if isinstance(value, str):
@@ -637,6 +643,25 @@ class IPAddress(Field):
             ipaddress.ip_interface(value)
         except Exception:
             raise ValidationError(f"{value} is not a valid IP address")
+
+
+class Port(Integer):
+    def __init__(self, **kwargs):
+        """
+        ip address field, will validate the value of ip address (v4 and v6)
+
+        will be stored as a string.
+
+        Args:
+            kwargs: any keyword arguments supported by `Field`
+        """
+        super().__init__(min=0, max=65535, **kwargs)
+
+    def validate(self, value):
+        try:
+            super().validate(value)
+        except ValidationError:
+            raise ValidationError("value is not in range of 0-65535")
 
 
 class DateTimeMixin:

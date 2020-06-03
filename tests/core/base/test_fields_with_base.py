@@ -124,3 +124,7 @@ class TestBaseWithFields(unittest.TestCase):
 
         self.assertEqual(type(u.time), datetime.datetime)
         self.assertEqual(time, u.time)
+
+    def test_port_field(self):
+        # TODO:
+        pass
