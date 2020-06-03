@@ -23,7 +23,7 @@ from .systemactor import CoreActor, SystemActor
 
 def serialize(obj):
     if not isinstance(obj, (str, int, float, list, tuple, dict, bool)):
-        module = os.path.dirname(inspect.getmodule(obj).__file__)
+        module = inspect.getmodule(obj).__file__[:-3]
         return dict(__serialized__=True, module=module, type=obj.__class__.__name__, data=obj.to_dict())
     return obj
 
