@@ -25,6 +25,8 @@ __all__ = [
     "update_config",
     "Environment",
     "configure_threebot",
+    "get",
+    "set",
 ]
 
 
@@ -113,6 +115,28 @@ def update_config(data):
     """
     with open(config_path, "w") as f:
         toml.dump(data, f)
+
+
+def get(key):
+    """ Retrives value from jumpscale config
+
+    Arguments:
+        key {str} -- the key you wish to retrieve
+    """
+    conf = get_config()
+    return conf.get(key)
+
+
+def set(key, val):
+    """ Sets value in jumpscale config
+
+    Arguments:
+        key {str} -- the key you wish to update
+        val -- value to update with
+    """
+    conf = get_config()
+    conf[key] = val
+    update_config(conf)
 
 
 def migrate_config():
