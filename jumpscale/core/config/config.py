@@ -121,7 +121,7 @@ def get(key):
     """ Retrives value from jumpscale config
 
     Arguments:
-        key {str} -- the key you wish to retrieve
+        key (str): the key you wish to retrieve
     """
     conf = get_config()
     return conf.get(key)
@@ -131,8 +131,8 @@ def set(key, val):
     """ Sets value in jumpscale config
 
     Arguments:
-        key {str} -- the key you wish to update
-        val -- value to update with
+        key (str): the key you wish to update
+        val: value to update with
     """
     conf = get_config()
     conf[key] = val
