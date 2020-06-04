@@ -34,10 +34,8 @@ class GedisHTTPServer(Base):
         if not method:
             return abort(400, "method not found")
         
-        print("********************", request.params)
-        response = method(** request.params)
-
-        print(response)
+        kwargs = request.json or dict()
+        response = method(** kwargs)
 
         return json.dumps(response.result)
 
