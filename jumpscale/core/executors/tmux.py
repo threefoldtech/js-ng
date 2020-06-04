@@ -4,6 +4,7 @@
 import libtmux
 from jumpscale.god import j
 
+
 __all__ = ["execute_in_window"]
 
 server = libtmux.Server()
@@ -15,11 +16,13 @@ def create_session(session_name, kill_if_exists=False):
 
 
 def get_js_session():
-    s = server.find_where({"session_name": JS_SESSION_NAME})
-    if not s:
+    try:
+        s = server.find_where({"session_name": JS_SESSION_NAME})
+        if not s:
+            return create_session(JS_SESSION_NAME)
+    except libtmux.exc.LibTmuxException:
         return create_session(JS_SESSION_NAME)
-    else:
-        return s
+    return s
 
 
 def get_js_window(window_name):
