@@ -113,6 +113,13 @@ class Field:
         self.on_update = on_update
         self.compute = compute
 
+    def preprocess(self, value):
+        # TODO: make from/to raw methods only for serialization
+        # and let preprocess/validate do the cleanup/checking step
+        # and return the correct value that current field should hold
+        # so, from_raw and to_raw are used only for serialization
+        return value
+
     def validate(self, value):
         """
         validate value if required and call custom self.validators if any
@@ -126,6 +133,7 @@ class Field:
         if value is None:
             if self.required:
                 raise ValidationError("field is required")
+
         for validator in self.validators:
             validator(value)
 
@@ -165,7 +173,7 @@ class Field:
 class Typed(Field):
     def __init__(self, type_, **kwargs):
         """
-        base field for any type, value mus tof of `type_`
+        Base field for any type, it will hold values of `type_`
 
         Args:
             type_ (type): any type (class)
@@ -184,9 +192,9 @@ class Typed(Field):
 class Boolean(Typed):
     def __init__(self, default=False, **kwargs):
         """
-        Boolean fields to hold a bool value.
+        Boolean fields to hold a `bool` value.
 
-        values can be set using strings or numbers like:
+        values can be set using strings or numbers and will be converted to `bool` like:
 
         - "on", "off"
         - "yes", "no"
@@ -230,7 +238,7 @@ class Integer(Typed):
 
         It can have a minimum value, if min is not set, it will ignore it.
 
-        values can be set using strings like:
+        values can be set using strings like (will be converted to `int`):
 
         - "12", "1212  "
 
@@ -268,7 +276,7 @@ class Float(Typed):
         """
         Same as `Integer` field, but with a type of `float`.
 
-        values can be set using strings like:
+        values can be set using strings like (will be converted to `float`):
 
         - "12.3", " 1212.23  "
 
@@ -304,7 +312,7 @@ class String(Typed):
     def validate(self, value):
         super().validate(value)
         if self.maxlen is not None:
-            if len(value) > self.maxlen:
+            if value and len(value) > self.maxlen:
                 raise ValidationError(f"length of the string exceeds {self.maxlen}")
 
 
@@ -440,16 +448,20 @@ class List(Field):
 class Enum(Typed):
     def __init__(self, enum_type, **kwargs):
         """
-        enum field, to be used with `enum.Enum`.
+        Enum field, to be used with `enum.Enum`.
+
         Example:
 
         ```python
         class UserType(Enum):
             USER = "user"
             ADMIN = "admin"
+
+        class User(Base):
+            field = fields.Enum(UserType)
         ```
 
-        field = fields.Enum(UserType)
+        Will hold values of type `enum.Enum`.
 
         Args:
             enum_type (type): enum type (class)
@@ -492,7 +504,9 @@ class Enum(Typed):
 class Email(Field):
     def __init__(self, default="", **kwargs):
         """
-        email field, will validate the value of emails
+        Email field, will validate the value of emails
+
+        will hold string email values.
 
         Args:
             default (str, optional): default value. Defaults to ""
@@ -520,7 +534,9 @@ class Path(Field):
     # TODO: Validate that it is working on windows
     def __init__(self, default="", **kwargs):
         """
-        path field, will validate the value of file system paths
+        Path field, will validate the value of file system paths
+
+        Will hold string path values.
 
         Args:
             default (str, optional): default value. Defaults to ""
@@ -547,7 +563,9 @@ class Path(Field):
 class URL(Field):
     def __init__(self, default="", **kwargs):
         """
-        url field, will validate the value of urls
+        URL field, will validate the value of urls
+
+        Will hold string URLs.
 
         Args:
             default (str, optional): default value. Defaults to ""
@@ -575,9 +593,9 @@ class URL(Field):
 class Tel(Field):
     def __init__(self, default="", **kwargs):
         """
-        email field, will validate the value of telephone numbers
+        Telephone field, will validate the value of telephone numbers
 
-        will be stored as a string at the end.
+        Will hold telephone values as strings.
 
         It will strip any additional characters that are not numbers.
 
@@ -603,7 +621,7 @@ class Tel(Field):
             raise ValidationError(f"{value} is not a valid Telephone")
 
     def from_raw(self, value):
-        """clean the telephone function from unwanted signs like , - ( )"""
+        """clean the telephone value from unwanted signs like , - ( )"""
         if value is not None:
             value = value.replace(",", "")
             value = value.replace("-", "")
@@ -617,9 +635,9 @@ class Tel(Field):
 class IPAddress(Field):
     def __init__(self, default="", **kwargs):
         """
-        ip address field, will validate the value of ip address (v4 and v6)
+        IP address field, will validate the value of ip address (v4 and v6)
 
-        will be stored as a string.
+        Will hold string ip addresses.
 
         Args:
             default (str, optional): default value. Defaults to ""
@@ -649,9 +667,9 @@ class IPAddress(Field):
 class Port(Integer):
     def __init__(self, **kwargs):
         """
-        ip address field, will validate the value of ip address (v4 and v6)
+        Port field, will check if the given port is within the range of 0-65535.
 
-        will be stored as a string.
+        Will hold integers, but also accepts string values like `"8080"`.
 
         Args:
             kwargs: any keyword arguments supported by `Field`
@@ -668,7 +686,16 @@ class Port(Integer):
 class GUID(String):
     def __init__(self, **kwargs):
         """
-        UUID v4 field, will be auto-generated by default and stored as a string.
+        UUID v4 field, will be auto-generated by default.
+
+        Will hold the UUID as a string.
+
+        It accepts setting UUID value by many ways and converts them to strings:
+
+        - Strings like: `"12345678-1234-4678-9234-567812345678"`
+        - Bytes like: `b"\x12\x34\x56\x78" * 4`
+        - Integer like: `0x12345678123456781234567812345678`
+        - UUID objects of type uuid.UUID
 
         Args:
             kwargs: any keyword arguments supported by `Field`
@@ -801,7 +828,7 @@ class DateTime(DateTimeMixin, Typed):
     # maybe add something like auto_now and auto_today for date/time fields
     def __init__(self, default=None, format_=None, **kwargs):
         """
-        datetime field, stores datetime.datetime objects
+        datetime field, will hold datetime.datetime objects.
 
         values can be set using strings in the given `format_` too like "12/1/2020" or a utc timestamp,
         they will converted to objects.
@@ -820,7 +847,7 @@ class DateTime(DateTimeMixin, Typed):
 class Date(DateTimeMixin, Typed):
     def __init__(self, default=None, format_=None, **kwargs):
         """
-        date field, stores datetime.date objectsself.
+        date field, will hold datetime.date objects.
 
         values can be set using strings in the given `format_` too like "12/1/2020" or a utc timestamp,
         they will converted to objects.
@@ -839,7 +866,7 @@ class Date(DateTimeMixin, Typed):
 class Time(DateTimeMixin, Typed):
     def __init__(self, default=None, format_=None, **kwargs):
         """
-        time field, stores utc datetime.time objects
+        time field, will hold utc datetime.time objects
 
         values can be set using strings in the given `format_` too like "12:13" or a utc timestamp,
         they will converted to objects.
@@ -858,7 +885,7 @@ class Time(DateTimeMixin, Typed):
 class Bytes(Typed):
     def __init__(self, default=b"", encoding="utf-8", **kwargs):
         """
-        same as string field, but stored as `bytes`
+        same as string field, but will hold `bytes`.
 
         Args:
             default (b"", optional): default value. Defaults to b""
@@ -881,7 +908,6 @@ class Json(Field):
     def __init__(self, default="{}", encoding="utf-8", **kwargs):
         """
         json field, will validate the value of being a json loadable string.
-
         Args:
             default (str, optional): default value. Defaults to "{}"
             encoding: encoding to be used when serializing the value. Defaults to "utf-8"
@@ -893,10 +919,8 @@ class Json(Field):
     def validate(self, value):
         """
         check whether provided value is a valid json
-
         Args:
             value (str)
-
         Raises:
             ValidationError: in case the value isn't a valid json
         """
@@ -925,7 +949,7 @@ class Json(Field):
 
 
 class Factory(Field):
-    def __init__(self, type_, factory_type=None, stored=True, **kwargs):
+    def __init__(self, type_, factory_type=None, **kwargs):
         """
         A factory field for any `Base` type, also, you can specify your factory type/class
 
@@ -958,18 +982,18 @@ class Factory(Field):
         Args:
             type_ (Base): any base type to be used by the factory
             factory_type (`BaseFactory`, optional): factory class/type. Defaults to None.
-            stored (bool, optional): if it's stored or not, will be used if `factory_type` is not set. Defaults to True.
         """
         # value type will be factory
+        # make sure stored default value is True
+        kwargs["stored"] = kwargs.get("stored", True)
         super().__init__(readonly=True, **kwargs)
         # but we keep the type of any Base class
         # so, we can init a Factory with it
         self.type = type_
-        self.stored = stored
         if factory_type:
             self.factory_type = factory_type
         else:
-            if stored:
+            if self.stored:
                 self.factory_type = StoredFactory
             else:
                 self.factory_type = BaseFactory
