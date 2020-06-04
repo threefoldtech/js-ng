@@ -1,3 +1,8 @@
+"""
+this module mostly test creating/storing/reteriving objects/instances
+
+which makes sure every field is serialized correctly
+"""
 from enum import Enum
 import unittest
 
@@ -18,6 +23,8 @@ class Address(Base):
 class Wallet(Base):
     ID = fields.Integer()
     addresses = fields.Factory(Address)
+    key = fields.Bytes()
+    data = fields.Json()
 
 
 class Permission(Base):
@@ -74,6 +81,7 @@ class Client(Base):
 class TestStoredFactory(unittest.TestCase):
     def setUp(self):
         self.factory = StoredFactory(Client)
+        self.wallets_factory = StoredFactory(Wallet)
 
     def test_secret_field(self):
         cl = self.factory.get("test_secret")
@@ -231,6 +239,54 @@ class TestStoredFactory(unittest.TestCase):
         self.assertEqual(user.full_name, full_name)
         self.assertEqual(user.unique_name, unique_name)
 
+    def test_create_with_bytes_field(self):
+        wallet = self.wallets_factory.get("test_bytes")
+
+        # test convert str to bytes
+        wallet.key = "aaa"
+        self.assertEqual(wallet.key, b"aaa")
+
+        with self.assertRaises(fields.ValidationError):
+            wallet.key = 1212121
+
+        wallet.save()
+
+        # reset-factory for now, need to always get from store
+        self.factory = StoredFactory(Wallet)
+        ret_wallet = self.factory.get("test_bytes")
+        self.assertEqual(ret_wallet.key, b"aaa")
+
+    def test_create_with_json_field(self):
+        wallet = self.wallets_factory.get("test_json")
+
+        # test convert str to json
+        wallet.data = '{"context": "transfer", "id": null}'
+        self.assertEqual(wallet.data, {"context": "transfer", "id": None})
+        wallet.data = "[1, 2, 3, 4]"
+        self.assertEqual(wallet.data, [1, 2, 3, 4])
+
+        # test with list/dict
+        wallet.data = {"numbers": [1, 2, 3, 4]}
+        self.assertEqual(wallet.data, {"numbers": [1, 2, 3, 4]})
+
+        with self.assertRaises(fields.ValidationError):
+            # Base needs to_dict to be json-serializable
+            wallet.data = [Wallet]
+
+        with self.assertRaises(fields.ValidationError):
+            # bytes are not json serilizable
+            wallet.data = {"name": b"bytes name"}
+
+        wallet.save()
+
+        # reset-factory for now, need to always get from store
+        self.factory = StoredFactory(Wallet)
+        ret_wallet = self.factory.get("test_json")
+        self.assertEqual(ret_wallet.data, {"numbers": [1, 2, 3, 4]})
+
     def tearDown(self):
-        for name in self.factory.store.list_all():
+        for name in self.factory.list_all():
             self.factory.delete(name)
+
+        for name in self.wallets_factory.list_all():
+            self.wallets_factory.delete(name)

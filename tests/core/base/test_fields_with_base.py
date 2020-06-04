@@ -47,6 +47,7 @@ class Car(Base):
 class Server(Base):
     port = fields.Port()
     uid = fields.GUID()
+    key = fields.Bytes()
 
 
 class TestBaseWithFields(unittest.TestCase):

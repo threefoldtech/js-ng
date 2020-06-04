@@ -178,7 +178,7 @@ class Typed(Field):
         super().validate(value)
         if value is not None:
             if not isinstance(value, self.type):
-                raise ValidationError(f"value {value} is not of type {self.type}")
+                raise ValidationError(f"value {value} is not of type {self.type.__name__}")
 
 
 class Boolean(Typed):
@@ -855,41 +855,39 @@ class Time(DateTimeMixin, Typed):
         self.format = format_
 
 
-class Bytes(Field):
-    def __init__(self, default=b"", **kwargs):
+class Bytes(Typed):
+    def __init__(self, default=b"", encoding="utf-8", **kwargs):
         """
-        email field, will validate the value of emails
+        same as string field, but stored as `bytes`
 
         Args:
             default (b"", optional): default value. Defaults to b""
+            encoding: encoding to be used when serializing the value. Defaults to "utf-8"
             kwargs: any keyword arguments supported by `Field`
         """
-        super().__init__(default, **kwargs)
+        self.encoding = encoding
+        super().__init__(default=default, type_=bytes, **kwargs)
 
-    def validate(self, value):
-        """
-        check whether provided value is a valid email representation
+    def from_raw(self, value):
+        if isinstance(value, str):
+            return value.encode(self.encoding)
+        return value
 
-        Args:
-            value (str)
-
-        Raises:
-            ValidationError: in case the value is not a telephone
-        """
-        super().validate(value)
-        if isinstance(value, bytes):
-            raise ValidationError(f"{value} is not a bytes")
+    def to_raw(self, value):
+        return value.decode(self.encoding)
 
 
 class Json(Field):
-    def __init__(self, default="{}", **kwargs):
+    def __init__(self, default="{}", encoding="utf-8", **kwargs):
         """
         json field, will validate the value of being a json loadable string.
 
         Args:
-            default (b"", optional): default value. Defaults to b""
+            default (str, optional): default value. Defaults to "{}"
+            encoding: encoding to be used when serializing the value. Defaults to "utf-8"
             kwargs: any keyword arguments supported by `Field`
         """
+        self.encoding = encoding
         super().__init__(default, **kwargs)
 
     def validate(self, value):
@@ -903,15 +901,23 @@ class Json(Field):
             ValidationError: in case the value isn't a valid json
         """
         super().validate(value)
+
+        # if it's a string, try to load it
         if isinstance(value, (str, bytes, bytearray)):
             try:
-                json.loads(value)
+                json.loads(value, encoding=self.encoding)
             except Exception as e:
-                raise ValidationError(f"{value} isn't a valid json.") from e
+                raise ValidationError(f"{value} isn't a valid json, {e}") from e
+        else:
+            # otherwise, make sure it can be dumped later
+            try:
+                json.dumps(value)
+            except Exception as e:
+                raise ValidationError(f"{value} isn't a valid json, {e}") from e
 
     def from_raw(self, value):
-        if not isinstance(value, dict):
-            value = json.loads(value)
+        if isinstance(value, (str, bytes, bytearray)):
+            value = json.loads(value, encoding=self.encoding)
         return value
 
     def to_raw(self, value):
