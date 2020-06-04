@@ -14,8 +14,14 @@ class Application:
     def start(self, appname):
         self.appname = appname
         j.logger.appname = appname
+
+        if j.core.db:
+            j.core.db.sadd('applications', self.appname)
+
         j.logger.info("Application {} is started, process id: {}", self.appname, self.process_id)
 
     def stop(self):
         j.logger.info("Application {} is stopped", self.appname)
-        self.appname = DEFAULT_APP_NAME
+
+        if j.core.db:
+            j.core.db.srem('applications', self.appname)
