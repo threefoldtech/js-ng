@@ -261,13 +261,20 @@ class TestStoredFactory(unittest.TestCase):
 
         # test convert str to json
         wallet.data = '{"context": "transfer", "id": null}'
-        self.assertEqual(wallet.data, {"context": "transfer", "id": None})
-        wallet.data = "[1, 2, 3, 4]"
-        self.assertEqual(wallet.data, [1, 2, 3, 4])
+        self.assertEqual(wallet.data, '{"context": "transfer", "id": null}')
+        wallet.data = [1, 2, 3, 4]
+        self.assertEqual(wallet.data, "[1, 2, 3, 4]")
+
+        # test with strings
+        wallet.data = '"hamada"'
 
         # test with list/dict
-        wallet.data = {"numbers": [1, 2, 3, 4]}
-        self.assertEqual(wallet.data, {"numbers": [1, 2, 3, 4]})
+        wallet.data = '{"numbers": [1, 2, 3, 4]}'
+        self.assertEqual(wallet.data, '{"numbers": [1, 2, 3, 4]}')
+
+        with self.assertRaises(fields.ValidationError):
+            # not, it's note a json encoded string
+            wallet.data = "hamada"
 
         with self.assertRaises(fields.ValidationError):
             # Base needs to_dict to be json-serializable
@@ -282,7 +289,7 @@ class TestStoredFactory(unittest.TestCase):
         # reset-factory for now, need to always get from store
         self.factory = StoredFactory(Wallet)
         ret_wallet = self.factory.get("test_json")
-        self.assertEqual(ret_wallet.data, {"numbers": [1, 2, 3, 4]})
+        self.assertEqual(ret_wallet.data, '{"numbers": [1, 2, 3, 4]}')
 
     def tearDown(self):
         for name in self.factory.list_all():

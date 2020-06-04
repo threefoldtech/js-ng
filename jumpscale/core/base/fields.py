@@ -904,48 +904,55 @@ class Bytes(Typed):
         return value.decode(self.encoding)
 
 
-class Json(Field):
+class Json(String):
     def __init__(self, default="{}", encoding="utf-8", **kwargs):
         """
-        json field, will validate the value of being a json loadable string.
+        Json field, will check if the value is a valid json string.
+
+        It will hold json strings, if the value is not string, it will be converted.
+
         Args:
             default (str, optional): default value. Defaults to "{}"
             encoding: encoding to be used when serializing the value. Defaults to "utf-8"
-            kwargs: any keyword arguments supported by `Field`
+            kwargs: any keyword arguments supported by `String`
         """
         self.encoding = encoding
-        super().__init__(default, **kwargs)
+        super().__init__(default=default, **kwargs)
 
     def validate(self, value):
         """
         check whether provided value is a valid json
+
         Args:
             value (str)
+
         Raises:
             ValidationError: in case the value isn't a valid json
         """
         super().validate(value)
 
         # if it's a string, try to load it
-        if isinstance(value, (str, bytes, bytearray)):
-            try:
-                json.loads(value, encoding=self.encoding)
-            except Exception as e:
-                raise ValidationError(f"{value} isn't a valid json, {e}") from e
-        else:
-            # otherwise, make sure it can be dumped later
-            try:
-                json.dumps(value)
-            except Exception as e:
-                raise ValidationError(f"{value} isn't a valid json, {e}") from e
+        try:
+            json.loads(value, encoding=self.encoding)
+        except Exception as e:
+            raise ValidationError(f"{value} isn't a valid json, {e}") from e
 
     def from_raw(self, value):
-        if isinstance(value, (str, bytes, bytearray)):
-            value = json.loads(value, encoding=self.encoding)
-        return value
+        """
+        convert non-string values to json string
 
-    def to_raw(self, value):
-        return json.dumps(value)
+        Args:
+            value (any): non-string value
+
+        Returns:
+            str: a json string
+        """
+        if not isinstance(value, (str, bytes, bytearray)):
+            try:
+                value = json.dumps(value)
+            except:
+                pass
+        return value
 
 
 class Factory(Field):
