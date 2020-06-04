@@ -2,6 +2,7 @@
 import datetime
 import enum
 import unittest
+import uuid
 
 from jumpscale.core.base import Base, fields, ValidationError
 
@@ -41,6 +42,11 @@ class Colors(enum.Enum):
 
 class Car(Base):
     color = fields.Enum(Colors)
+
+
+class Server(Base):
+    port = fields.Port()
+    uid = fields.GUID()
 
 
 class TestBaseWithFields(unittest.TestCase):
@@ -126,5 +132,46 @@ class TestBaseWithFields(unittest.TestCase):
         self.assertEqual(time, u.time)
 
     def test_port_field(self):
-        # TODO:
-        pass
+        server = Server()
+        server.port = "9999"
+
+        self.assertEqual(server.port, 9999)
+
+        server.port = 21
+        self.assertEqual(server.port, 21)
+
+        with self.assertRaises(ValidationError):
+            server.port = -111
+
+        with self.assertRaises(ValidationError):
+            server.port = 928392832
+
+    def test_guid_field(self):
+        server = Server()
+
+        # auto generated uuid v4 str
+        self.assertEqual(type(server.uid), str)
+
+        str_uuid = "12345678-1234-4678-9234-567812345678"
+
+        # test with bytes
+        server.uid = b"\x12\x34\x56\x78" * 4
+        self.assertEqual(server.uid, str_uuid)
+
+        # test with int
+        server.uid = 0x12345678123456781234567812345678
+        self.assertEqual(server.uid, str_uuid)
+
+        # test with str too
+        server.uid = str_uuid.replace("-", "")
+        self.assertEqual(server.uid, str_uuid)
+
+        # test with UUID object
+        server.uid = uuid.UUID(int=0x12345678123456781234567812345678, version=4)
+        self.assertEqual(server.uid, str_uuid)
+
+        with self.assertRaises(ValidationError):
+            server.uid = -1234
+
+        with self.assertRaises(ValidationError):
+            server.uid = "aaaaaa"
