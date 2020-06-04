@@ -118,11 +118,9 @@ def get_field_property(name: str, field: fields.Field) -> property:
         else:
             default = field.default
 
-        # accept raw value as default too
         # use the actual name (not inner_name) to do validation...etc
-        default_value = field.from_raw(default)
-        setattr(self, name, default_value)
-        return default_value
+        setattr(self, name, default)
+        return getattr(self, name)
 
     def setter(self, value):
         """
@@ -131,7 +129,6 @@ def get_field_property(name: str, field: fields.Field) -> property:
         we do some checks and actions too, as we already know the field:
 
         - validation: using field.validate
-        - coversion: using field.from_raw
         - setting an attribute with inner_name in the base instance
         - call `_attr_updated` of the base instance with the name of this property/field
 
@@ -259,7 +256,7 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
             else:
                 if name in values:
                     # setting the attribute here would do validation, triggers...etc
-                    setattr(self, name, field.from_raw(values[name]))
+                    setattr(self, name, values[name])
 
     def _get_fields(self):
         """
