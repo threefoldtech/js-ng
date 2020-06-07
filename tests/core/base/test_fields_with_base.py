@@ -45,6 +45,8 @@ class Car(Base):
 
 
 class Server(Base):
+    host = fields.IPAddress()
+    network = fields.IPRange()
     port = fields.Port()
     uid = fields.GUID()
     key = fields.Bytes()
@@ -176,3 +178,25 @@ class TestBaseWithFields(unittest.TestCase):
 
         with self.assertRaises(ValidationError):
             server.uid = "aaaaaa"
+
+    def test_ip_address_field(self):
+        server = Server()
+        server.host = "localhost"
+        self.assertEqual(server.host, "127.0.0.1")
+        server.host = "192.168.1.1"
+
+        with self.assertRaises(ValidationError):
+            server.host = 0
+
+        with self.assertRaises(ValidationError):
+            server.host = "182.111.11"
+
+        with self.assertRaises(ValidationError):
+            server.host = "192.168.0.0/28"
+
+    def test_ip_range_field(self):
+        server = Server()
+        server.network = "192.168.0.0/28"
+
+        with self.assertRaises(ValidationError):
+            server.host = "192.168.1.1/24"

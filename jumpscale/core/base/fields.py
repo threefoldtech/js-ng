@@ -632,8 +632,79 @@ class Tel(Field):
         return value
 
 
-class IPAddress(Field):
-    def __init__(self, default="", **kwargs):
+class IPMixin:
+    def is_a(self, value, *types):
+        """
+        try creating any type of `types` from the given value
+
+        Args:
+            value (str)
+
+        Returns:
+            bool: `True` if any matched, `False` otherwise
+        """
+        matched = False
+
+        for type_ in types:
+            try:
+                type_(value)
+                matched |= True
+            except ValueError:
+                continue
+
+        return matched
+
+    def is_ipv4(self, value):
+        """
+        check if a given value is a v4 IP address
+
+        Args:
+            value (str): ip address
+
+        Returns:
+            bool: `True` if it's a valid v4 IP address
+        """
+        return self.is_a(value, ipaddress.IPv4Address)
+
+    def is_ipv6(self, value):
+        """
+        check if a given value is a v6 IP address
+
+        Args:
+            value (str): IP address
+
+        Returns:
+            bool: `True` if it's a valid v6 IP address
+        """
+        return self.is_a(value, ipaddress.IPv6Address)
+
+    def is_ip(self, value):
+        """
+        check if a given value is a v4/v6 IP address
+
+        Args:
+            value (str): IP address
+
+        Returns:
+            bool: `True` if it's a valid  v4/v6 IP address
+        """
+        return self.is_ipv4(value) or self.is_ipv6(value)
+
+    def is_iface(self, value):
+        """
+        check if a given value is an IP interface
+
+        Args:
+            value (str): IP interface
+
+        Returns:
+            bool: `True` if it's a valid v4/v6 IP interface
+        """
+        return self.is_a(value, ipaddress.IPv4Interface, ipaddress.IPv6Interface)
+
+
+class IPAddress(IPMixin, String):
+    def __init__(self, default="0.0.0.0", **kwargs):
         """
         IP address field, will validate the value of ip address (v4 and v6)
 
@@ -643,7 +714,42 @@ class IPAddress(Field):
             default (str, optional): default value. Defaults to ""
             kwargs: any keyword arguments supported by `Field`
         """
-        super().__init__(default, **kwargs)
+        super().__init__(default=default, **kwargs)
+
+    def validate(self, value):
+        """
+        check whether provided value is a valid IPaddress representation
+        including IPv4,IPv6 and network
+
+        Args:
+            value (str)
+
+        Raises:
+            ValidationError: in case the value is not an IPAddress
+        """
+        super().validate(value)
+        if not self.is_ip(value):
+            raise ValidationError(f"{value} is not a valid IP address")
+
+    def from_raw(self, value):
+        if isinstance(value, str):
+            if value.strip().lower() == "localhost":
+                value = "127.0.0.1"
+        return value
+
+
+class IPRange(IPMixin, String):
+    def __init__(self, default="::/128", **kwargs):
+        """
+        ip range field, will validate the value of ip ranges (v4 and v6)
+
+        will be stored as a string.
+
+        Args:
+            default (str, optional): default value. Defaults to ""
+            kwargs: any keyword arguments supported by `Field`
+        """
+        super().__init__(default=default, **kwargs)
 
     def validate(self, value):
         """
@@ -658,10 +764,8 @@ class IPAddress(Field):
         """
 
         super().validate(value)
-        try:
-            ipaddress.ip_interface(value)
-        except Exception:
-            raise ValidationError(f"{value} is not a valid IP address")
+        if not self.is_iface(value):
+            raise ValidationError(f"{value} is not a valid IP range/interface")
 
 
 class Port(Integer):
