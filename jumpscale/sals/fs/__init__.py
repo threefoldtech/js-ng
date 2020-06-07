@@ -873,7 +873,7 @@ def resolve(path: str) -> str:
     Returns:
         str: resolved path
     """
-    return pathlib.Path(path).resolve()
+    return str(pathlib.Path(path).resolve())
 
 
 def extension(path: str, include_dot=True):
