@@ -197,6 +197,11 @@ class TestBaseWithFields(unittest.TestCase):
     def test_ip_range_field(self):
         server = Server()
         server.network = "192.168.0.0/28"
+        server.network = "2001:db00::0/24"
+        server.network = "2001:db00::1/24"
 
         with self.assertRaises(ValidationError):
-            server.host = "192.168.1.1/24"
+            server.network = "192.168.23.300/28"
+
+        with self.assertRaises(ValidationError):
+            server.network = "2001:db00::0/ffff:ff00:"
