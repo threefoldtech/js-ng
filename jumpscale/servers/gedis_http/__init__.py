@@ -21,6 +21,7 @@ class GedisHTTPServer(Base):
     def client(self):
         if self._client is None:
             self._client = j.clients.gedis.get(self.instance_name)
+            self._client.disable_deserialization = True
         return self._client
 
     def handler(self, package, actor, method):

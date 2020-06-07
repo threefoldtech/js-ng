@@ -83,6 +83,7 @@ class GedisClient(Client):
     hostname = fields.String(default="localhost")
     port = fields.Integer(default=16000)
     raise_on_error = fields.Boolean(default=False)
+    disable_deserialization = fields.Boolean(default=False)
 
     def __init__(self):
         super().__init__()
@@ -146,7 +147,9 @@ class GedisClient(Client):
         """
         payload = json.dumps((args, kwargs), default=serialize)
         response = self.redis_client.execute_command(actor_name, actor_method, payload)
-        response = json.loads(response, object_hook=deserialize)
+
+        deserializer = deserialize if not self.disable_deserialization else None
+        response = json.loads(response, object_hook=deserializer)
 
         if not response["success"]:
             if die or self.raise_on_error:
