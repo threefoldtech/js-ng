@@ -101,6 +101,10 @@ def get_field_property(name: str, field: fields.Field) -> property:
         Returns:
             any: the field value
         """
+        # if computed, return the computed value
+        if field.computed:
+            return field.compute(self)
+
         # if it's already defined, just return it
         if hasattr(self, inner_name):
             return getattr(self, inner_name)
@@ -141,7 +145,11 @@ def get_field_property(name: str, field: fields.Field) -> property:
 
         # se attribute
         setattr(self, inner_name, value)
+
+        # call _attr_updated and on_update handlers
         self._attr_updated(name, value)
+        if field.trigger_updates:
+            field.on_update(self, value)
 
     return property(fget=getter, fset=setter)
 
@@ -227,17 +235,25 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
 
         self._factories = {}
 
+        # now we iterate over all fields and set their values for:
+        #   - factoires: we create an instance of this factory type
+        #   - normal fields:
+        #       - if a value is given in **values, we set it as it's set like x.attr = y
+        #       - if not, we set the field.default as the value, note that None is allowed
+        #         so, we add it as an inner value, to escape validation and other stuff
         for name, field in self._get_fields().items():
             if isinstance(field, fields.Factory):
-                # for factory fields, we need to create a new factory with the given factory_type
                 value = field.factory_type(field.type, name_=name, parent_instance_=self)
                 self._factories[name] = value
+                setattr(self, f"__{name}", value)
             else:
-                value = values.get(name, field.from_raw(field.default))
-
-            # accept raw as a default value
-            # and set inner value, so it should be availale from the start
-            setattr(self, f"__{name}", value)
+                if name in values:
+                    # setting the attribute here would do validation, triggers...etc
+                    setattr(self, name, field.from_raw(values[name]))
+                else:
+                    # we allow None, no need to do validation...etc
+                    # just set inner attribute
+                    setattr(self, f"__{name}", field.from_raw(field.default))
 
     def _get_fields(self):
         """
@@ -247,6 +263,15 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
             dict: fields dict as {name: field object}
         """
         return self._fields
+
+    def _get_computed_fields(self):
+        """
+        get current defined field objects with compute function
+
+        Returns:
+            dict: fields dict as {name: field object}
+        """
+        return {name: field for name, field in self._fields.items() if field.computed}
 
     def _get_factories(self):
         """
@@ -288,6 +313,9 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
         for name, field in self._get_fields().items():
             if isinstance(field, fields.Factory):
                 # skip for factories for now
+                continue
+            if not field.stored:
+                # skip non-stored fields too
                 continue
             value = getattr(self, name)
             raw_value = field.to_raw(value)

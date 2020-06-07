@@ -53,15 +53,11 @@ class TestGedis(unittest.TestCase):
 
         self.cl.reload()
 
-        import ipdb; ipdb.set_trace()
-
         jobs = []
         for i in range(COUNT):
             jobs.append(pool.spawn(execute, i))
 
         gevent.joinall(jobs)
-
-        self.assertEqual(self.cl.actors.memory.object_count('TestObject').result, COUNT)
 
         jobs = []
         for i in range(COUNT):
