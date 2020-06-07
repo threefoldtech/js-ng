@@ -141,6 +141,7 @@ class GedisServer(Base):
     enable_system_actor = fields.Boolean(default=True)
     run_async = fields.Boolean(default=True)
     _actors = fields.Typed(dict, default={})
+    use_auth = fields.Boolean(default=True)
 
     def __init__(self):
         super().__init__()
@@ -254,6 +255,14 @@ class GedisServer(Base):
             response["error_type"] = GedisErrorTypes.BAD_REQUEST.value
             return response
 
+        for key in ["threebot_id", "encrypted_data"]:
+            if key not in data:
+                response[
+                    "error"
+                ] = "Credentials not a valid json, needs to contain `threebot_id` and `encrypted_data` fields"
+                response["error_type"] = GedisErrorTypes.BAD_REQUEST.value
+                return response
+
         threebot_id = data["threebot_id"]
         user_verify_key = self.get_user_verify_key(threebot_id)
         if not user_verify_key:
@@ -277,7 +286,7 @@ class GedisServer(Base):
         j.logger.info("New connection from {}", address)
         parser = DefaultParser(65536)
         connection = RedisConnectionAdapter(socket)
-        authenticated = False
+        authenticated = not self.use_auth
         try:
             encoder = ResponseEncoder(socket)
             parser.on_connect(connection)

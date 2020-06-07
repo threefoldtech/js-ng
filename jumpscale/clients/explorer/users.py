@@ -52,10 +52,13 @@ class Users:
 
     def get(self, tid=None, name=None, email=None):
         if tid is not None:
-            resp = self._session.get(self._base_url + f"/users/{tid}")
-            return TfgridPhonebookUser1.from_dict(resp.json())
-
-        results = self.list(name=name, email=email)
-        if results:
-            return results[0]
+            try:
+                resp = self._session.get(self._base_url + f"/users/{tid}")
+                return TfgridPhonebookUser1.from_dict(resp.json())
+            except:
+                pass
+        else:
+            results = self.list(name=name, email=email)
+            if results:
+                return results[0]
         raise NotFound("user not found")

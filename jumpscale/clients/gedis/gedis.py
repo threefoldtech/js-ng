@@ -87,6 +87,7 @@ class GedisClient(Client):
     port = fields.Integer(default=16000)
     raise_on_error = fields.Boolean(default=False)
     server_tid = fields.Integer()
+    use_auth = fields.Boolean(default=True)
 
     def __init__(self):
         super().__init__()
@@ -108,13 +109,16 @@ class GedisClient(Client):
             pass
 
     def _auth_server(self):
-        server_pubkey = self._get_user_pubkey()
-        box = Box(self.identity.nacl.private_key, server_pubkey)
-        data = str(j.data.time.now().timestamp)
-        signed_data = self.identity.nacl.signing_key.sign(data.encode())
-        encrypted_data = binascii.hexlify(box.encrypt(signed_data)).decode()
-        password = j.data.serializers.json.dumps({"threebot_id": self.identity.tid, "encrypted_data": encrypted_data})
-        self.execute(GEDIS_AUTH_CMD, password, die=True)
+        if self.use_auth:
+            server_pubkey = self._get_user_pubkey()
+            box = Box(self.identity.nacl.private_key, server_pubkey)
+            data = str(j.data.time.now().timestamp)
+            signed_data = self.identity.nacl.signing_key.sign(data.encode())
+            encrypted_data = binascii.hexlify(box.encrypt(signed_data)).decode()
+            password = j.data.serializers.json.dumps(
+                {"threebot_id": self.identity.tid, "encrypted_data": encrypted_data}
+            )
+            self.execute(GEDIS_AUTH_CMD, password, die=True)
 
     @property
     def redis_client(self):
