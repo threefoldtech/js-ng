@@ -8,12 +8,12 @@ class ServerRack(Base):
         self._servers = dict()
         self._started = set()
 
-    def _start(self, server_name):
+    def _start(self, server_name: str):
         if server_name not in self._started:
             self._servers[server_name].start()
             self._started.add(server_name)
 
-    def _stop(self, server_name):
+    def _stop(self, server_name: str):
         if server_name in self._started:
             self._servers[server_name].stop()
             self._started.remove(server_name)
@@ -29,6 +29,21 @@ class ServerRack(Base):
             self._stop(server_name)
 
         self._servers[server_name] = server
+
+    def remove(self, server_name: str):
+        """Remove server (Stop it first if running)
+
+        Args:
+            server_name (str): server name
+        """
+        self._stop(server_name)
+
+        if server_name in self._servers:
+            self._servers.pop(server_name)
+        
+        if server_name in self._started:
+            self._started.remove(server_name)
+
 
     def start(self, server_name: str = None):
         """Start server by its name or start all servers
