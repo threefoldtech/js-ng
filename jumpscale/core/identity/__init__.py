@@ -93,10 +93,14 @@ class Identity:
         return self._threebot_data
 
     def add_admin(self, name):
+        if(name in self._threebot_data["admins"]):
+            raise j.exceptions.Value(f"Admin {name} already exists")
         self._threebot_data["admins"].append(name)
         j.core.config.set("threebot", self._threebot_data)
 
     def delete_admin(self, name):
+        if(name not in self._threebot_data["admins"]):
+            raise j.exceptions.Value(f"Admin {name} does not exist")
         self._threebot_data["admins"].remove(name)
         j.core.config.set("threebot", self._threebot_data)
 
