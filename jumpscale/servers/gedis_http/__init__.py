@@ -11,11 +11,11 @@ class GedisHTTPServer(Base):
     host = fields.String(default="127.0.0.1")
     port = fields.Integer(default=8000)
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._app = Bottle()
         self._client = None
-        self._app.route("/<package>/<actor>/<method>", ['GET', 'POST'], self.handler)
+        self._app.route("/<package>/<actor>/<method>", ["GET", "POST"], self.handler)
 
     @property
     def client(self):
@@ -34,9 +34,9 @@ class GedisHTTPServer(Base):
         method = getattr(actor, method, None)
         if not method:
             return abort(400, "method not found")
-        
+
         kwargs = request.json or dict()
-        response = method(** kwargs)
+        response = method(**kwargs)
 
         return json.dumps(response.result)
 
