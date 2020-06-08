@@ -124,7 +124,7 @@ class Factory:
             raise ValueError("{} is an internal attribute".format(name))
         return instance
 
-    def _create_instance(self, name, *args, **kwargs):
+    def _create_instance(self, instance_name, *args, **kwargs):
         """
         create a new instance, this method is only responsible for:
 
@@ -135,7 +135,7 @@ class Factory:
         - update the counter and trigger `_created`
 
         Args:
-            name (str): instance name
+            instance_name (str): instance name
 
         Raises:
             ValueError: in case the name is not a valid identifier (e.g contains spaces) or starts with "__"
@@ -143,14 +143,14 @@ class Factory:
         Returns:
             Base: instance
         """
-        if not name.isidentifier():
-            raise ValueError("{} is not a valid identifier".format(name))
+        if not instance_name.isidentifier():
+            raise ValueError("{} is not a valid identifier".format(instance_name))
 
-        if name.startswith("__"):
+        if instance_name.startswith("__"):
             raise ValueError("name cannot start with '__'")
 
         instance = self.type(*args, **kwargs)
-        instance._set_instance_name(name)
+        instance._set_instance_name(instance_name)
         # parent instance of this factory is a parent to all of its instances
         instance._set_parent(self.parent_instance)
 
