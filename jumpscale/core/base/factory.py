@@ -468,12 +468,17 @@ class StoredFactory(events.Handler, Factory):
             name (str): instance name
         """
         self.store.delete(name)
-        inner_name = f"__{name}"
-        if hasattr(self, inner_name):
+
+        class_prop = getattr(self.__class__, name, None)
+        if isinstance(class_prop, property):
             # created with a property descriptor inside the class, delete it
             delattr(self.__class__, name)
-            # delete the instance itself too
-            delattr(self, inner_name)
+
+            # check if the instance was actually created or not (if the property was accessed)
+            inner_name = f"__{name}"
+            if hasattr(self, inner_name):
+                # delete the instance itself too if it was accessed and created
+                delattr(self, inner_name)
         else:
             super()._delete_instance(name)
 

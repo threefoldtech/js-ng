@@ -291,6 +291,20 @@ class TestStoredFactory(unittest.TestCase):
         ret_wallet = self.factory.get("test_json")
         self.assertEqual(ret_wallet.data, '{"numbers": [1, 2, 3, 4]}')
 
+    def test_delete_lazy_loaded_before_access(self):
+        # create an instance
+        wallet = self.wallets_factory.get("test_d1")
+        wallet.save()
+
+        # reset factory
+        self.wallets_factory = StoredFactory(Wallet)
+        # now if we did get or accessed the name directly like
+        # self.wallets_factory.test_d1, it will be created
+        # but at this moment, it's just a property for wallets factory
+        # and the instance itself is not created yet
+        # and delete should work too
+        self.wallets_factory.delete("test_d1")
+
     def tearDown(self):
         for name in self.factory.list_all():
             self.factory.delete(name)
