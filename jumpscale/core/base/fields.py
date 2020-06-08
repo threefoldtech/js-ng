@@ -522,7 +522,7 @@ class Email(Field):
             ValidationError: in case the value is not a telephone
         """
         super().validate(value)
-        if not re.match(self.regex, value):
+        if value.strip() and not re.match(self.regex, value):
             raise ValidationError(f"{value} is not a valid Email address")
 
 
