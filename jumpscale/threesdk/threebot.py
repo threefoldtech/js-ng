@@ -4,8 +4,8 @@ class ThreeBot:
     """
 
     @staticmethod
-    def start(name):
+    def start(name="3bot", pull: bool = False):
         """
         Start your threebot
         """
-        print(f"Starting {name}")
+        print(f"Starting {name} {pull}")

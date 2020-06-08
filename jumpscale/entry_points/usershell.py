@@ -38,6 +38,17 @@ def print_error(error):
     )
 
 
+def partition_line(line):
+    def replacer(m):
+        return m.group().replace(" ", "\0").strip("\"'")
+
+    result = re.sub(r"""(['"]).*?\1""", replacer, line)
+    parts = []
+    for part in result.split():
+        parts.append(part.replace("\0", " "))
+    return parts
+
+
 def noexpert_error(error):
     reports_location = (
         f"{os.environ.get('HOME', os.environ.get('USERPROFILE', ''))}/sandbox/reports"
@@ -63,23 +74,27 @@ class Shell(Validator):
 
     def get_completions_async(self, document, complete_event):
         text = document.current_line_before_cursor
-        root, *more = text.split(" ")
+        parts = partition_line(text)
+        if not parts:
+            root = None
+            more = []
+        else:
+            root, more = parts[0], parts[1:]
         items = []
-        if not more:
+        if not root or not hasattr(threesdk, root):
             style = "bg:ansibrightblue"
             items += threesdk.__all__
             self.toolbarmsg = DEFAULT_TOOLBAR_MSG
         else:
             style = "bg:ansigreen"
-            obj = getattr(threesdk, root, None)
-            if not obj:
-                return
-            if not hasattr(obj, more[0]):
+            obj = getattr(threesdk, root)
+            if not more or not hasattr(obj, more[0]):
                 # complete object attributes
                 self.toolbarmsg = obj.__doc__.strip().splitlines()[0]
                 for name, member in inspect.getmembers(obj, inspect.isroutine):
                     if not name.startswith("_"):
                         items.append(name)
+                text = "" if not more else more[-1]
             else:
                 # complete arguments
                 func = getattr(obj, more[0])
@@ -90,7 +105,10 @@ class Shell(Validator):
                     if field in text:
                         continue
                     items.append(field)
-            text = more[-1]
+                if len(more) > 1:
+                    text = more[-1]
+                else:
+                    text = ""
 
         for item in items:
             if not item:
@@ -101,7 +119,7 @@ class Shell(Validator):
                 item = Completion(item, -len(text))
             regex = ".*".join(text)
             item.style = style
-            if re.search(regex, item.text):
+            if not text or re.search(regex, item.text):
                 yield AsyncGeneratorItem(item)
 
     def bottom_toolbar(self):
@@ -127,18 +145,26 @@ class Shell(Validator):
         return
 
     def get_func_kwargs(self, cmd):
-        root, *extra = cmd.split()
+        parts = partition_line(cmd)
+        root, extra = parts[0], parts[1:]
         module = getattr(threesdk, root)
         if inspect.isroutine(module):
-            return module, self.get_kwargs(*extra)
+            return module, self.get_kwargs(module, *extra)
         else:
             func = getattr(module, extra[0])
-            return func, self.get_kwargs(*extra[1:])
+            return func, self.get_kwargs(func, *extra[1:])
 
-    def get_kwargs(self, *args):
+    def get_kwargs(self, func, *args):
+        funcspec = inspect.getfullargspec(func)
         kwargs = {}
         for arg in args:
             key, val = arg.split("=", 1)
+            isbool = funcspec.annotations.get(key) is bool
+            if isbool:
+                if val:
+                    val = val.lower() in ["y", "yes", "1", "true"]
+                else:
+                    val = True
             kwargs[key] = val
         return kwargs
 
@@ -156,7 +182,7 @@ class Shell(Validator):
             try:
                 result = self.prompt([root])
                 self.execute(result)
-            except EOFError:
+            except (EOFError, KeyboardInterrupt):
                 sys.exit(0)
 
     def prompt(self, msg):
