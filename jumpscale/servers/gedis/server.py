@@ -136,8 +136,8 @@ class GedisServer(Base):
     run_async = fields.Boolean(default=True)
     _actors = fields.Typed(dict, default={})
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._core_actor = CoreActor()
         self._system_actor = SystemActor()
         self._loaded_actors = {"core": self._core_actor}

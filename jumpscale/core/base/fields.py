@@ -355,10 +355,7 @@ class Object(Typed):
             value (Base): object
         """
         super().validate(value)
-        try:
-            value.validate()
-        except AttributeError:
-            raise ValidationError("object of Base must have validate()")
+        value.validate()
 
     def to_raw(self, obj):
         """
@@ -383,9 +380,7 @@ class Object(Typed):
             Base: base object
         """
         if isinstance(data, dict):
-            obj = self.type()
-            obj._set_data(data)
-            return obj
+            return self.type(**data)
         return data
 
 

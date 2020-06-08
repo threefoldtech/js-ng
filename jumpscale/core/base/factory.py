@@ -432,8 +432,7 @@ class StoredFactory(events.Handler, Factory):
             if hasattr(factory, inner_name):
                 return getattr(factory, inner_name)
 
-            instance = factory._create_instance(name)
-            instance._set_data(factory.store.get(name))
+            instance = factory._create_instance(name, **factory.store.get(name))
             factory._init_save_and_sub_factories(instance)
             setattr(factory, inner_name, instance)
             return instance

@@ -149,7 +149,7 @@ def get_field_property(name: str, field: fields.Field) -> property:
 
         # set current instance as parent for embedded objects/instances
         if isinstance(field, fields.Object):
-            value.parent = self
+            value._set_parent(self)
 
         # se attribute
         setattr(self, inner_name, value)
@@ -243,20 +243,18 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
 
         self._factories = {}
 
-        # now we iterate over all fields and set their values for:
-        #   - factoires: we create an instance of this factory type
-        #   - normal fields:
-        #       - if a value is given in **values, we set it as it's set like x.attr = y
-        #         so, we add it as an inner value, to escape validation and other stuff
+        # now we create factories
         for name, field in self._get_fields().items():
             if isinstance(field, fields.Factory):
                 value = field.factory_type(field.type, name_=name, parent_instance_=self)
                 self._factories[name] = value
                 setattr(self, f"__{name}", value)
-            else:
+                # if provided in values, remove it, as it's not needed
                 if name in values:
-                    # setting the attribute here would do validation, triggers...etc
-                    setattr(self, name, values[name])
+                    values.pop(name)
+
+        # setting other values
+        self._set_data(values)
 
     def _get_fields(self):
         """
@@ -320,6 +318,7 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
             if not field.stored:
                 # skip non-stored fields too
                 continue
+
             value = getattr(self, name)
             raw_value = field.to_raw(value)
             if isinstance(field, fields.Secret):
@@ -336,10 +335,12 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
         Args:
             new_data (dict): field values mapping
         """
-        for name, field in self._get_fields().items():
-            if name in new_data and new_data[name] is not None:
+        fields = self._get_fields()
+
+        for name, value in new_data.items():
+            if name in fields and value is not None:
                 try:
-                    setattr(self, f"__{name}", field.from_raw(new_data[name]))
+                    setattr(self, name, value)
                 except (fields.ValidationError, ValueError):
                     # should at least log validation and value errors
                     # this can happen in case of e.g. fields type change
@@ -411,6 +412,4 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
         Returns:
             Base: an instance from current `Base` type
         """
-        instance = cls()
-        instance._set_data(data)
-        return instance
+        return cls(**data)
