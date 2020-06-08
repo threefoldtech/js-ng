@@ -1,4 +1,7 @@
-class ThreeBot:
+from .container import Container
+
+
+class ThreeBot(Container):
     """
     Manage your threebot
     """
