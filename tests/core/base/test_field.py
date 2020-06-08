@@ -106,7 +106,7 @@ class TestFields(unittest.TestCase):
 
     def test_ipaddress_network(self):
         """Success scenario for ipaddress network validation"""
-        ipaddress = fields.IPAddress("192.168.0.0/28")
+        ipaddress = fields.IPRange("192.168.0.0/28")
         self.assertEqual(ipaddress.default, "192.168.0.0/28")
         self.assertIsNone(ipaddress.validate("192.168.0.0/28"))
 
