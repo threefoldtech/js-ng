@@ -285,11 +285,14 @@ class Float(Typed):
         super().__init__(type_=float, default=default, min=min, **kwargs)
 
     def from_raw(self, value):
+
         if isinstance(value, str):
-            try:
-                value = float(value.strip())
-            except ValueError:
-                pass
+            value = value.strip()
+        try:
+            value = float(value)
+        except ValueError:
+            pass
+
         return value
 
 
