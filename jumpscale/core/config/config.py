@@ -56,6 +56,7 @@ def get_default_config():
         "threebot": {
             "name": "",
             "id": 0,
+            "admins": [],
             "explorer_url": "https://explorer.testnet.grid.tf/explorer",
             "private_key": "",
             "email": "",
@@ -90,6 +91,7 @@ def get_default_config():
         "threebot": {
             "name": "",
             "id": 0,
+            "admins": [],
             "explorer_url": "https://explorer.testnet.grid.tf/explorer",
             "private_key": "",
             "email": "",
@@ -188,7 +190,7 @@ def configure_threebot(name, email, wordsfile):
     config = get_config()
     default_config = get_default_config()
     config["threebot"] = default_config["threebot"]
-    config["threebot"].update({"private_key": priv_key, "name": name, "email": email})
+    config["threebot"].update({"private_key": priv_key, "name": name, "email": email, "admins": [name]})
     update_config(config)
 
 

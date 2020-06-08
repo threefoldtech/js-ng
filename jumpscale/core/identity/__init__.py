@@ -89,6 +89,22 @@ class Identity:
 
         return user.id
 
+    def get_threebot_config(self):
+        return self._threebot_data
+
+    def add_admin(self, name):
+        config = j.core.config.get_config()
+        config["threebot"]["admins"].append(name)
+        j.core.config.update_config(config)
+
+    def delete_admin(self, name):
+        config = j.core.config.get_config()
+        config["threebot"]["admins"].remove(name)
+        j.core.config.update_config(config)
+
+    def admins_list(self):
+        config = j.core.config.get_config()
+        return config["threebot"]["admins"]
 
 def get_identity():
     return Identity()
