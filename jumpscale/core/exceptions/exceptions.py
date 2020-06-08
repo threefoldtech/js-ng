@@ -20,7 +20,7 @@ Exceptions module provide a carefully picked list of exceptions to be used acros
 """
 
 
-class JSException(BaseException):
+class JSException(Exception):
     def __init__(self, message, category=None, level=None, context=None):
         super().__init__(message)
 
