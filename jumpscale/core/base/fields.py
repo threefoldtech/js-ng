@@ -184,7 +184,7 @@ class Typed(Field):
         super().validate(value)
         if value is not None:
             if not isinstance(value, self.type):
-                raise ValidationError(f"value {value} is not of type {self.type.__name__}")
+                raise ValidationError(f"value '{value}' is not of type {self.type.__name__}")
 
 
 class Boolean(Typed):
@@ -523,7 +523,7 @@ class Email(Field):
         """
         super().validate(value)
         if value.strip() and not re.match(self.regex, value):
-            raise ValidationError(f"{value} is not a valid Email address")
+            raise ValidationError(f"'{value}' is not a valid Email address")
 
 
 class Path(Field):
@@ -553,7 +553,7 @@ class Path(Field):
         """
         super().validate(value)
         if not re.match(self.regex, value):
-            raise ValidationError(f"{value} is not a valid Path")
+            raise ValidationError(f"'{value}' is not a valid Path")
 
 
 class URL(Field):
@@ -583,7 +583,7 @@ class URL(Field):
         super().validate(value)
         url = urlparse(value)
         if not url.scheme or not url.netloc:
-            raise ValidationError(f"{value} is not a valid URL address")
+            raise ValidationError(f"'{value}' is not a valid URL address")
 
 
 class Tel(Field):
@@ -614,7 +614,7 @@ class Tel(Field):
         """
         super().validate(value)
         if not re.search(self.regex, value):
-            raise ValidationError(f"{value} is not a valid Telephone")
+            raise ValidationError(f"'{value}' is not a valid Telephone")
 
     def from_raw(self, value):
         """clean the telephone value from unwanted signs like , - ( )"""
@@ -725,7 +725,7 @@ class IPAddress(IPMixin, String):
         """
         super().validate(value)
         if not self.is_ip(value):
-            raise ValidationError(f"{value} is not a valid IP address")
+            raise ValidationError(f"'{value}' is not a valid IP address")
 
     def from_raw(self, value):
         if isinstance(value, str):
@@ -761,7 +761,7 @@ class IPRange(IPMixin, String):
 
         super().validate(value)
         if not self.is_iface(value):
-            raise ValidationError(f"{value} is not a valid IP range/interface")
+            raise ValidationError(f"'{value}' is not a valid IP range/interface")
 
 
 class Port(Integer):
@@ -809,7 +809,7 @@ class GUID(String):
         try:
             uuid.UUID(value, version=4)
         except ValueError as valexc:
-            raise ValidationError(f"'{value}' is invalid, {valexc}") from valexc
+            raise ValidationError(f"''{value}'' is invalid, {valexc}") from valexc
 
     def from_raw(self, value):
         """
@@ -919,7 +919,7 @@ class DateTimeMixin:
     def validate(self, value):
         if isinstance(self.from_raw(value), str):
             # cannot convert from string, still an invalid format
-            raise ValidationError(f"{value} is not in the format of '{self.format}'")
+            raise ValidationError(f"'{value}' is not in the format of '{self.format}'")
 
         super().validate(value)
 
@@ -1035,7 +1035,7 @@ class Json(String):
         try:
             json.loads(value, encoding=self.encoding)
         except Exception as e:
-            raise ValidationError(f"{value} isn't a valid json, {e}") from e
+            raise ValidationError(f"'{value}' isn't a valid json, {e}") from e
 
     def from_raw(self, value):
         """
