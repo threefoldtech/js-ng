@@ -316,7 +316,7 @@ class String(Typed):
         super().validate(value)
 
         if not self.allow_empty and not value:
-            raise ValidationError("fields does not allow empty values")
+            raise ValidationError("field does not allow empty values")
 
         if self.maxlen is not None:
             if value and len(value) > self.maxlen:
