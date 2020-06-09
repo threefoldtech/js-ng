@@ -760,7 +760,7 @@ class IPRange(IPMixin, String):
         """
 
         super().validate(value)
-        if not self.is_iface(value):
+        if value and not self.is_iface(value):
             raise ValidationError(f"'{value}' is not a valid IP range/interface")
 
 
