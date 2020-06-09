@@ -338,7 +338,7 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
         fields = self._get_fields()
 
         for name, value in new_data.items():
-            if name in fields and value is not None:
+            if name in fields:
                 try:
                     setattr(self, name, value)
                 except (fields.ValidationError, ValueError):
@@ -413,3 +413,17 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
             Base: an instance from current `Base` type
         """
         return cls(**data)
+
+    def __eq__(self, other):
+        """
+        compare self to `other`, which must be of the same type.
+
+        this just compares the data of two objects.
+
+        Args:
+            other (Base): other object of the same type of `self`
+
+        Returns:
+            bool: `True` if equal, `False` otherwise
+        """
+        return type(self) == type(other) and self.to_dict() == other.to_dict()

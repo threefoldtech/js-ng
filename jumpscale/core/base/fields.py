@@ -252,11 +252,11 @@ class Integer(Typed):
 
     def validate(self, value):
         super().validate(value)
-        if self.min is not None:
+        if value and self.min is not None:
             if value < self.min:
                 raise ValidationError(f"cannot set values less than {self.min}")
 
-        if self.max is not None:
+        if value and self.max is not None:
             if value > self.max:
                 raise ValidationError(f"cannot set values greater than {self.max}")
 
@@ -297,7 +297,7 @@ class Float(Typed):
 
 
 class String(Typed):
-    def __init__(self, maxlen=None, **kwargs):
+    def __init__(self, maxlen=None, allow_empty=True, **kwargs):
         """
         Same as `Typed`, but with a type of `str`.
 
@@ -305,13 +305,19 @@ class String(Typed):
 
         Args:
             maxlen (int): maximum length allowed. Defaults to None
+            allow_empty (bool): if empty string values are allowed or not. Defaults to True
             kwargs: any keyword arguments supported by `Field`
         """
         super().__init__(type_=str, **kwargs)
         self.maxlen = maxlen
+        self.allow_empty = allow_empty
 
     def validate(self, value):
         super().validate(value)
+
+        if not self.allow_empty and not value:
+            raise ValidationError("fields does not allow empty values")
+
         if self.maxlen is not None:
             if value and len(value) > self.maxlen:
                 raise ValidationError(f"length of the string exceeds {self.maxlen}")
@@ -324,7 +330,6 @@ class Secret(String):
     Should be used with sensitive data.
 
     Args:
-        maxlen (int): maximum length allowed. Defaults to None
         kwargs: any keyword arguments supported by `String`
     """
 
@@ -356,7 +361,8 @@ class Object(Typed):
             value (Base): object
         """
         super().validate(value)
-        value.validate()
+        if value:
+            value.validate()
 
     def to_raw(self, obj):
         """
@@ -497,7 +503,7 @@ class Enum(Typed):
             return value
 
 
-class Email(Field):
+class Email(String):
     def __init__(self, default="", **kwargs):
         """
         Email field, will validate the value of emails
@@ -506,9 +512,9 @@ class Email(Field):
 
         Args:
             default (str, optional): default value. Defaults to ""
-            kwargs: any keyword arguments supported by `Field`
+            kwargs: other keyword arguments supported by `string`
         """
-        super().__init__(default, **kwargs)
+        super().__init__(default=default, **kwargs)
         self.regex = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
 
     def validate(self, value):
@@ -522,11 +528,11 @@ class Email(Field):
             ValidationError: in case the value is not a telephone
         """
         super().validate(value)
-        if value.strip() and not re.match(self.regex, value):
+        if value and not re.match(self.regex, value):
             raise ValidationError(f"'{value}' is not a valid Email address")
 
 
-class Path(Field):
+class Path(String):
     # TODO: Validate that it is working on windows
     def __init__(self, default="", **kwargs):
         """
@@ -536,7 +542,7 @@ class Path(Field):
 
         Args:
             default (str, optional): default value. Defaults to ""
-            kwargs: any keyword arguments supported by `Field`
+            kwargs: other keyword arguments supported by `Field`
         """
         super().__init__(default, **kwargs)
         self.regex = r"^(/[^/ ]*)+/?$"
@@ -552,11 +558,11 @@ class Path(Field):
             ValidationError: in case the value is not a telephone
         """
         super().validate(value)
-        if not re.match(self.regex, value):
+        if value and not re.match(self.regex, value):
             raise ValidationError(f"'{value}' is not a valid Path")
 
 
-class URL(Field):
+class URL(String):
     def __init__(self, default="", **kwargs):
         """
         URL field, will validate the value of urls
@@ -565,9 +571,9 @@ class URL(Field):
 
         Args:
             default (str, optional): default value. Defaults to ""
-            kwargs: any keyword arguments supported by `Field`
+            kwargs: other keyword arguments supported by `Field`
         """
-        super().__init__(default, **kwargs)
+        super().__init__(default=default, **kwargs)
         self.regex = r"^(https?|ftp)://[^\s/$.?#].[^\s]*$"
 
     def validate(self, value):
@@ -581,12 +587,13 @@ class URL(Field):
             ValidationError: in case the value is not a telephone
         """
         super().validate(value)
-        url = urlparse(value)
-        if not url.scheme or not url.netloc:
-            raise ValidationError(f"'{value}' is not a valid URL address")
+        if value:
+            url = urlparse(value)
+            if not url.scheme or not url.netloc:
+                raise ValidationError(f"'{value}' is not a valid URL address")
 
 
-class Tel(Field):
+class Tel(String):
     def __init__(self, default="", **kwargs):
         """
         Telephone field, will validate the value of telephone numbers
@@ -597,9 +604,9 @@ class Tel(Field):
 
         Args:
             default (str, optional): default value. Defaults to ""
-            kwargs: any keyword arguments supported by `Field`
+            kwargs: other keyword arguments supported by `String`
         """
-        super().__init__(default, **kwargs)
+        super().__init__(default=default, **kwargs)
         self.regex = r"^\+?[0-9]{6,15}(?:x[0-9]+)?$"
 
     def validate(self, value):
@@ -613,7 +620,7 @@ class Tel(Field):
             ValidationError: in case the value is not a telephone
         """
         super().validate(value)
-        if not re.search(self.regex, value):
+        if value and not re.search(self.regex, value):
             raise ValidationError(f"'{value}' is not a valid Telephone")
 
     def from_raw(self, value):
@@ -724,7 +731,7 @@ class IPAddress(IPMixin, String):
             ValidationError: in case the value is not an IPAddress
         """
         super().validate(value)
-        if not self.is_ip(value):
+        if value and not self.is_ip(value):
             raise ValidationError(f"'{value}' is not a valid IP address")
 
     def from_raw(self, value):
@@ -784,7 +791,7 @@ class Port(Integer):
 
 
 class GUID(String):
-    def __init__(self, **kwargs):
+    def __init__(self, default=None, **kwargs):
         """
         UUID v4 field, will be auto-generated by default.
 
@@ -798,13 +805,18 @@ class GUID(String):
         - UUID objects of type uuid.UUID
 
         Args:
-            kwargs: any keyword arguments supported by `Field`
+            default (str, optional): default value, will be auto-generated if None. Defaults to None
+            kwargs: other keyword arguments supported by `String`
         """
-        default = lambda: str(uuid.uuid4())
+        if not default:
+            default = lambda: str(uuid.uuid4())
         super().__init__(default=default, **kwargs)
 
     def validate(self, value):
         super().validate(value)
+
+        if not value:
+            return
 
         try:
             uuid.UUID(value, version=4)
@@ -1015,7 +1027,7 @@ class Json(String):
         Args:
             default (str, optional): default value. Defaults to "{}"
             encoding: encoding to be used when serializing the value. Defaults to "utf-8"
-            kwargs: any keyword arguments supported by `String`
+            kwargs: other keyword arguments supported by `String`
         """
         self.encoding = encoding
         super().__init__(default=default, **kwargs)
@@ -1031,6 +1043,9 @@ class Json(String):
             ValidationError: in case the value isn't a valid json
         """
         super().validate(value)
+
+        if not value:
+            return
 
         # if it's a string, try to load it
         try:
