@@ -167,3 +167,20 @@ class TestFields(unittest.TestCase):
         self.assertEqual(time.default, "12:30")
         with self.assertRaises(ValidationError):
             time.validate("2020-12-03")
+
+    def test_required_and_empty(self):
+        field1 = fields.Json(required=True)
+        field2 = fields.Json(required=True, allow_empty=True)
+        field3 = fields.Json(required=True, allow_empty=False)
+        field4 = fields.Json(required=False, allow_empty=False)
+
+        with self.assertRaises(ValidationError):
+            field1.validate(None)
+
+        field2.validate("")
+        field3.validate("null")
+
+        field4.validate(None)
+
+        with self.assertRaises(ValidationError):
+            field4.validate("")

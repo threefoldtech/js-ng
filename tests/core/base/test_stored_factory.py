@@ -21,10 +21,13 @@ class Address(Base):
 
 
 class Wallet(Base):
-    ID = fields.Integer()
+    ID = fields.Integer(required=True)
+    origin = fields.Typed(dict, default=dict)
     addresses = fields.Factory(Address)
     key = fields.Bytes()
-    data = fields.Json()
+    email = fields.Email()
+    url = fields.URL(required=False, allow_empty=True)
+    data = fields.Json(allow_empty=False)
 
 
 class Permission(Base):
@@ -304,6 +307,50 @@ class TestStoredFactory(unittest.TestCase):
         # and the instance itself is not created yet
         # and delete should work too
         self.wallets_factory.delete("test_d1")
+
+    def test_required_fields(self):
+        wallet = self.wallets_factory.get("test_required_fields")
+
+        # test required field, cannot set none
+        with self.assertRaises(fields.ValidationError):
+            wallet.ID = None
+
+        wallet.ID = 12
+
+        # test non-required field, should be able to set and save None
+        self.assertEqual(wallet.origin, {})
+        wallet.origin = None
+        wallet.save()
+
+        self.wallets_factory = StoredFactory(Wallet)
+        wallet = self.wallets_factory.get("test_required_fields")
+        self.assertEqual(wallet.ID, 12)
+        self.assertEqual(wallet.origin, None)
+
+    def test_empty_fields(self):
+        # by default, empty values are allowed for string based objects
+        wallet = self.wallets_factory.get("test_empty_fields")
+
+        # test setting empty fields
+        with self.assertRaises(fields.ValidationError):
+            wallet.url = "abcd"
+
+        wallet.url = ""
+        wallet.url = None
+
+        # test non-empty fields
+        with self.assertRaises(fields.ValidationError):
+            # default value is empty, should raise this when getting it
+            wallet.data = ""
+
+        wallet.data = '{"a": 1}'
+        wallet.save()
+
+        self.wallets_factory = StoredFactory(Wallet)
+        wallet = self.wallets_factory.get("test_empty_fields")
+
+        self.assertEqual(wallet.url, None)
+        self.assertEqual(wallet.data, '{"a": 1}')
 
     def tearDown(self):
         for name in self.factory.list_all():
