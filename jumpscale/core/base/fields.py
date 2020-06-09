@@ -914,7 +914,8 @@ class DateTimeMixin:
         Returns:
             int or float: utc timestamp
         """
-        return self.get_arrow_obj(dt_obj).to("utc").timestamp
+        if dt_obj:
+            return self.get_arrow_obj(dt_obj).to("utc").timestamp
 
     def validate(self, value):
         if isinstance(self.from_raw(value), str):
