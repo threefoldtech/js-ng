@@ -183,7 +183,7 @@ class DockerClient(Client):
         Returns:
             bool: True container deleted
         """
-        container = get(container_id)
+        container = self.get(container_id)
         container.remove(force=force)
         return True
 
@@ -196,7 +196,7 @@ class DockerClient(Client):
         Returns:
             bool: True container killed
         """
-        container = get(container_id)
+        container = self.get(container_id)
         container.kill(sig)
         return True
 
@@ -209,7 +209,7 @@ class DockerClient(Client):
         Returns:
             bool: True if container restarted
         """
-        container = get(container_id)
+        container = self.get(container_id)
         container.restart(timeout=timeout)
         return True
 
@@ -222,8 +222,21 @@ class DockerClient(Client):
         Returns:
             bool: True if container started
         """
-        container = get(container_id)
+        container = self.get(container_id)
         container.start()
+        return True
+
+    def stop(self, container_id):
+        """stops docker container
+        Args:
+            container_id (str): Id or name of the docker container
+            timeout (int): timeout to stop container before trying to kill
+
+        Returns:
+            bool: True if container started
+        """
+        container = self.get(container_id)
+        container.stop()
         return True
 
     def list(self, all=False):

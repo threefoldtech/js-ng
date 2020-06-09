@@ -19,6 +19,7 @@ class Identity(Base):
     email = fields.String()
     tname = fields.String()
     explorer_url = fields.String(on_update=_explorer_url_update)
+    admins = fields.List(fields.String())
 
     def __init__(self, tname=None, email=None, words=None, explorer_url=None, _tid=-1):
         """
@@ -75,6 +76,7 @@ class Identity(Base):
     def explorer(self):
         if self._explorer is None:
             from jumpscale.clients.explorer import export_module_as  # Import here to avoid circular imports
+
             ex_factory = export_module_as()
             if self.explorer_url:
                 self._explorer = ex_factory.get_by_url(self.explorer_url)
@@ -136,25 +138,8 @@ class IdentityFactory(StoredFactory):
 
     def new(self, name, tname=None, email=None, words=None, explorer_url=None, tid=-1):
         instance = super().new(name, tname=tname, email=email, words=words, explorer_url=explorer_url, _tid=tid)
+        instance.save()
         return instance
-
-    def add_admin(self, name):
-        # TODO: ALIGN WITH NEW IDENTITY
-        if(name in self._threebot_data["admins"]):
-            raise j.exceptions.Value(f"Admin {name} already exists")
-        self._threebot_data["admins"].append(name)
-        j.core.config.set("threebot", self._threebot_data)
-
-    def delete_admin(self, name):
-        # TODO: ALIGN WITH NEW IDENTITY
-        if(name not in self._threebot_data["admins"]):
-            raise j.exceptions.Value(f"Admin {name} does not exist")
-        self._threebot_data["admins"].remove(name)
-        j.core.config.set("threebot", self._threebot_data)
-
-    def list_admins(self):
-        # TODO: ALIGN WITH NEW IDENTITY
-        return self._threebot_data["admins"]
 
     @property
     def me(self):
