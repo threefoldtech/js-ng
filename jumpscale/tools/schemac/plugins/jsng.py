@@ -3,7 +3,6 @@
 """
 
 from .plugin import Plugin
-from jumpscale.god import j
 
 types_map = {
     "": "String",
@@ -20,11 +19,12 @@ types_map = {
     "E": "Enum",
     "D": "DateTime",
     "T": "Date",
+    "guid": "GUID",
     "email": "Email",
     "dict": "Object",
     "ipaddr": "IPAddress",
     "ipaddress": "IPAddress",
-    "iprange": "IPAddress",
+    "iprange": "IPRange",
     "json": "Json",
     "bytes": "Bytes",
     "I64": "Float",
@@ -50,9 +50,9 @@ def get_prop_line(prop):
     elif prop_type == "LO" and prop.defaultvalue and prop.defaultvalue != "[]":
         line += f"fields.List(fields.Object({prop.url_to_class_name}))"
     elif prop_type == "LO" and not prop.defaultvalue:
-        line += f"fields.List(fields.Object(Base))"
+        line += "fields.List(fields.Object(Base))"
     elif python_type == "L" and not prop.defaultvalue:
-        line += f" fields.List(fields.Object())"
+        line += " fields.List(fields.Object())"
     elif python_type == "L" and prop.defaultvalue:
         line += f" fields.List(fields.Object({prop.defaultvalue}))"
     elif len(prop_type) > 1 and prop_type[0] == "L":
@@ -66,19 +66,9 @@ def get_prop_line(prop):
     elif prop_type in ["T", "D"]:
         line += f"fields.{types_map[prop_type]}()"
     elif prop_type == "dict":
-        line += f"fields.Typed(dict)"
-    elif prop_type == "email":
-        line += f"fields.Email()"
+        line += "fields.Typed(dict)"
     elif prop_type in ["ipaddress", "ipaddr", "iprange"] and prop.defaultvalue:
-        line += f'fields.IPAddress(default="{prop.defaultvalue}")'
-    elif prop_type in ["ipaddress", "ipaddr", "iprange"] and not prop.defaultvalue:
-        line += f"fields.IPAddress()"
-    elif prop_type == "json":
-        line += f"fields.Json()"
-    elif prop_type == "bytes":
-        line += f"fields.Bytes()"
-    elif prop_type == "I64":
-        line += f"fields.Float()"
+        line += f'fields.{python_type}(default="{prop.defaultvalue}")'
     else:
         line += f"fields.{python_type}()"
 
