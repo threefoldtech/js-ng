@@ -148,7 +148,7 @@ def get_field_property(name: str, field: fields.Field) -> property:
         field.validate(value)
 
         # set current instance as parent for embedded objects/instances
-        if isinstance(field, fields.Object):
+        if isinstance(field, fields.Object) and value:
             value._set_parent(self)
 
         # se attribute
@@ -335,10 +335,10 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
         Args:
             new_data (dict): field values mapping
         """
-        fields = self._get_fields()
+        field_names = self._get_fields().keys()
 
         for name, value in new_data.items():
-            if name in fields:
+            if name in field_names:
                 try:
                     setattr(self, name, value)
                 except (fields.ValidationError, ValueError):

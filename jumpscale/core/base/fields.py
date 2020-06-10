@@ -374,7 +374,8 @@ class Object(Typed):
         Returns:
             dict: raw data
         """
-        return obj._get_data()
+        if obj:
+            return obj._get_data()
 
     def from_raw(self, data):
         """
@@ -484,7 +485,8 @@ class Enum(Typed):
         Returns:
             any: enum value
         """
-        return enum_obj.value
+        if enum_obj:
+            return enum_obj.value
 
     def from_raw(self, value):
         """
@@ -1014,7 +1016,8 @@ class Bytes(Typed):
         return value
 
     def to_raw(self, value):
-        return value.decode(self.encoding)
+        if value:
+            return value.decode(self.encoding)
 
 
 class Json(String):
