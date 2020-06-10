@@ -52,12 +52,12 @@ class Server(Base):
     key = fields.Bytes()
 
 
-class Host(Base):
+class Guest(Base):
     name = fields.String()
 
 
-class Guest:
-    host = fields.Object(Host)
+class Host(Base):
+    guest = fields.Object(Guest)
 
 
 class TestBaseWithFields(unittest.TestCase):
@@ -215,8 +215,18 @@ class TestBaseWithFields(unittest.TestCase):
             server.network = "2001:db00::0/ffff:ff00:"
 
     def test_object_field_default(self):
+        host1 = Host()
+        host2 = Host()
+
         guest1 = Guest()
         guest2 = Guest()
 
+        self.assertNotEqual(id(host1), id(host2))
         self.assertNotEqual(id(guest1), id(guest2))
-        self.assertNotEqual(id(guest1.host), id(guest2.host))
+
+        self.assertNotEqual(id(host1.guest), id(host2.guest))
+
+        host1.guest.name = "test1"
+        host2.guest.name = "test2"
+
+        self.assertNotEqual(host1.guest.name, host2.guest.name)
