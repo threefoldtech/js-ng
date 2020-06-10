@@ -50,7 +50,14 @@ class Server(Base):
     port = fields.Port()
     uid = fields.GUID()
     key = fields.Bytes()
-    user = fields.Object(User)
+
+
+class Host(Base):
+    name = fields.String()
+
+
+class Guest:
+    host = fields.Object(Host)
 
 
 class TestBaseWithFields(unittest.TestCase):
@@ -207,8 +214,9 @@ class TestBaseWithFields(unittest.TestCase):
         with self.assertRaises(ValidationError):
             server.network = "2001:db00::0/ffff:ff00:"
 
-    def test_object__field_default(self):
-        server1 = Server()
-        server2 = Server()
+    def test_object_field_default(self):
+        guest1 = Guest()
+        guest2 = Guest()
 
-        self.assertNotEqual(server1.user, server2.user)
+        self.assertNotEqual(id(guest1), id(guest2))
+        self.assertNotEqual(id(guest1.host), id(guest2.host))
