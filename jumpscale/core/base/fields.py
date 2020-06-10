@@ -211,7 +211,7 @@ class Boolean(Typed):
         get bool value from strings and numbers
 
         Args:
-            value (str or int or float or complex): valie
+            value (str or int or float or complex)
 
         Returns:
             bool: boolean value
@@ -351,7 +351,9 @@ class Object(Typed):
             self.type_kwargs = {}
 
         if not self.default:
-            self.default = self.type(**self.type_kwargs)
+            # make it callable to create different objects
+            # not a single one as a default for all
+            self.default = lambda: self.type(**self.type_kwargs)
 
     def validate(self, value):
         """
