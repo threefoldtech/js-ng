@@ -30,6 +30,7 @@ import signal
 import subprocess
 import sys
 import time
+import math
 
 from collections import defaultdict
 from subprocess import Popen
@@ -611,6 +612,31 @@ def get_processes():
         generator: for all processes
     """
     yield from psutil.process_iter()
+
+def get_processes_ifo():
+    """
+    get information for top 25 running processes sorted by memory usage
+    """
+    processes_list = []
+    for proc in get_processes():
+        try:
+            # Fetch process details as dict
+            pinfo = proc.as_dict(attrs=["pid", "name", "username"])
+            pinfo["rss"] = proc.memory_info().rss / (1024 * 1024)
+            pinfo['ports'] = []
+            try:
+                connections = proc.connections()
+            except psutil.Error:
+                continue
+            if connections:
+                for conn in connections:
+                    pinfo['ports'].append({'port':conn.laddr.port,'status':conn.status})
+            # Append dict to list
+            processes_list.append(pinfo)
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            pass
+    processes_list = sorted(processes_list, key=lambda procObj: procObj["rss"], reverse=True)
+    return processes_list[:25]
 
 
 def get_ports_mapping(status=psutil.CONN_LISTEN):
