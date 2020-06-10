@@ -615,7 +615,10 @@ def get_processes():
 
 def get_processes_ifo():
     """
-    get information for top 25 running processes sorted by memory usage
+    Get information for top 25 running processes sorted by memory usage
+
+    Returns:
+        [list(dict)] -- list of processes info
     """
     processes_list = []
     for proc in get_processes():
@@ -678,6 +681,20 @@ def get_ports_mapping(status=psutil.CONN_LISTEN):
 
     return ports
 
+
+def get_memory_usage():
+    """
+    Get memory status
+
+    Returns:
+        dict -- memory status info
+    """
+    memory_usage = {}
+    memory_data = dict(psutil.virtual_memory()._asdict())
+    memory_usage["total"] = math.ceil(memory_data.get("total") / (1024 * 1024 * 1024))
+    memory_usage["used"] = math.ceil(memory_data.get("used") / (1024 * 1024 * 1024))
+    memory_usage["percent"] = memory_data.get("percent")
+    return memory_usage
 
 def get_environ(pid):
     """Gets env vars for a specific process based on pid
