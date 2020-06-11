@@ -2,6 +2,9 @@
 
 """
 import libtmux
+
+from .command_builder import cmd_from_args
+
 from jumpscale.god import j
 
 
@@ -42,7 +45,15 @@ def get_window(window_name):
     return w
 
 
-def execute_in_window(window_name, cmd):
+@cmd_from_args
+def execute_in_window(cmd, window_name):
+    """
+    execute a command in a new tmux window
+
+    Args:
+        cmd (str or list): command as a string or an argument list, e.g. `"ls -la"` or `["ls", "la"]`
+        window_name (str): window name
+    """
     try:
         server.list_sessions()
     except:
