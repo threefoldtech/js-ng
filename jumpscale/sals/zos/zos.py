@@ -13,6 +13,7 @@ from jumpscale.data.nacl import payload_build
 from jumpscale.god import j
 from jumpscale.clients.explorer.models import TfgridWorkloadsReservation1
 from jumpscale.core import identity
+import binascii
 
 
 class Zosv2:
@@ -26,7 +27,7 @@ class Zosv2:
         self._zdb = ZDB(self._explorer)
         self._kubernetes = Kubernetes(self._explorer)
         self._billing = Billing()
-        self._gateway = Gateway()
+        self._gateway = Gateway(self._explorer)
 
     @property
     def network(self):
@@ -89,7 +90,6 @@ class Zosv2:
 
         if expiration_provisioning is None:
             expiration_provisioning = now().timestamp + (15 * 60)
-
         dr = reservation.data_reservation
         dr.currencies = currencies
 
@@ -158,13 +158,16 @@ class Zosv2:
         Returns:
             bool: true if the reservation has been cancelled successfully
         """
-        me = identity.get_identity()
+        me = j.core.identity
 
         reservation = self.reservation_get(reservation_id)
         payload = payload_build(reservation.id, reservation.json.encode())
+        payload = reservation_id.encode() + payload
         signature = me.nacl.sign_hex(payload)
 
-        return self._explorer.reservations.sign_delete(reservation_id=reservation_id, tid=me.tid, signature=signature)
+        return self._explorer.reservations.sign_delete(
+            reservation_id=reservation_id, tid=me.tid, signature=signature.decode()
+        )
 
     def reservation_list(self, tid=None, next_action=None):
         """List reservation of a threebot

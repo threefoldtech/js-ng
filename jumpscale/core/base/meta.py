@@ -148,7 +148,7 @@ def get_field_property(name: str, field: fields.Field) -> property:
         field.validate(value)
 
         # set current instance as parent for embedded objects/instances
-        if isinstance(field, fields.Object):
+        if isinstance(field, fields.Object) and value:
             value._set_parent(self)
 
         # se attribute
@@ -335,10 +335,10 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
         Args:
             new_data (dict): field values mapping
         """
-        fields = self._get_fields()
+        field_names = self._get_fields().keys()
 
         for name, value in new_data.items():
-            if name in fields and value is not None:
+            if name in field_names:
                 try:
                     setattr(self, name, value)
                 except (fields.ValidationError, ValueError):
@@ -413,3 +413,17 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
             Base: an instance from current `Base` type
         """
         return cls(**data)
+
+    def __eq__(self, other):
+        """
+        compare self to `other`, which must be of the same type.
+
+        this just compares the data of two objects.
+
+        Args:
+            other (Base): other object of the same type of `self`
+
+        Returns:
+            bool: `True` if equal, `False` otherwise
+        """
+        return type(self) == type(other) and self.to_dict() == other.to_dict()
