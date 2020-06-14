@@ -135,3 +135,6 @@ nosetests.xml
 
 # vscode workspace
 .vscode
+
+# rdb
+*.rdb

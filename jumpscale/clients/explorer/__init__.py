@@ -1,6 +1,6 @@
 from jumpscale.core.base import StoredFactory
 from .explorer import Explorer
-from jumpscale.core.config import get_config
+from jumpscale.god import j
 
 
 class ExplorerFactory(StoredFactory):
@@ -17,12 +17,16 @@ class ExplorerFactory(StoredFactory):
         return self.new(name, url, *args, **kwargs)
 
     def get_default(self):
-        return Explorer(get_config()["explorer"]["default_url"])
+        return Explorer(j.core.config.get("threebot")["explorer_url"])
 
     def get_by_url(self, url):
         return Explorer(url)
 
+    def default_addr_set(self, url):
+        threebot_cfg = j.core.config.get("threebot")
+        threebot_cfg["explorer_url"] = url
+        j.core.config.set("threebot", threebot_cfg)
+
 
 def export_module_as():
-
     return ExplorerFactory(Explorer)

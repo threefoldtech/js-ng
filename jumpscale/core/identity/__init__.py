@@ -105,6 +105,24 @@ class IdentityFactory(StoredFactory):
         instance = super().new(name, tid=tid, tname=tname, email=email, words=words, explorer=explorer)
         return instance
 
+    def add_admin(self, name):
+        # TODO: ALIGN WITH NEW IDENTITY
+        if(name in self._threebot_data["admins"]):
+            raise j.exceptions.Value(f"Admin {name} already exists")
+        self._threebot_data["admins"].append(name)
+        j.core.config.set("threebot", self._threebot_data)
+
+    def delete_admin(self, name):
+        # TODO: ALIGN WITH NEW IDENTITY
+        if(name not in self._threebot_data["admins"]):
+            raise j.exceptions.Value(f"Admin {name} does not exist")
+        self._threebot_data["admins"].remove(name)
+        j.core.config.set("threebot", self._threebot_data)
+
+    def list_admins(self):
+        # TODO: ALIGN WITH NEW IDENTITY
+        return self._threebot_data["admins"]
+
     @property
     def me(self):
         if not self._me:
