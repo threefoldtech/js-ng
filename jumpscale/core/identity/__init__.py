@@ -21,7 +21,7 @@ class Identity(Base):
     explorer_url = fields.String(on_update=_explorer_url_update)
     admins = fields.List(fields.String())
 
-    def __init__(self, tname=None, email=None, words=None, explorer_url=None, _tid=-1):
+    def __init__(self, tname=None, email=None, words=None, explorer_url=None, _tid=-1, admins=None):
         """
         Get Identity
 
@@ -37,7 +37,7 @@ class Identity(Base):
         Raises: NotFound incase tid is passed but does not exists on the explorer
         Raises: Input: when params are missing
         """
-        super().__init__(tname=tname, email=email, words=words, explorer_url=explorer_url, _tid=_tid)
+        super().__init__(tname=tname, email=email, words=words, explorer_url=explorer_url, _tid=_tid, admins=admins)
         self._nacl = None
         self._explorer = None
         self.verify_configuration()
@@ -136,8 +136,10 @@ def get_identity():
 class IdentityFactory(StoredFactory):
     _me = None
 
-    def new(self, name, tname=None, email=None, words=None, explorer_url=None, tid=-1):
-        instance = super().new(name, tname=tname, email=email, words=words, explorer_url=explorer_url, _tid=tid)
+    def new(self, name, tname=None, email=None, words=None, explorer_url=None, tid=-1, admins=None):
+        instance = super().new(
+            name, tname=tname, email=email, words=words, explorer_url=explorer_url, _tid=tid, admins=admins
+        )
         instance.save()
         return instance
 
@@ -160,7 +162,7 @@ class IdentityFactory(StoredFactory):
         config = get_config()
         config["default"] = name
         update_config(config)
-        self._me = None
+        self.__class__._me = None
 
 
 def export_module_as():
