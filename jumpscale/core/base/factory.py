@@ -429,7 +429,9 @@ class StoredFactory(events.Handler, Factory):
         inner_name = f"__{name}"
 
         def getter(factory):
-            if hasattr(factory, inner_name):
+            # we need to avoid AttributeError which hasattr swallows
+            # instead we check the internal __dict__
+            if inner_name in factory.__dict__:
                 return getattr(factory, inner_name)
 
             instance = factory._create_instance(name, **factory.store.get(name))
