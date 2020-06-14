@@ -12,9 +12,7 @@ import os
 import nacl.utils
 import nacl.encoding
 import pytoml as toml
-from jumpscale.data.encryption import mnemonic
-
-from nacl.public import PrivateKey, Box
+from nacl.public import PrivateKey
 
 
 __all__ = [
@@ -24,7 +22,6 @@ __all__ = [
     "get_config",
     "update_config",
     "Environment",
-    "configure_threebot",
     "get",
     "set",
 ]
@@ -38,29 +35,7 @@ def get_default_config():
     """retrieves default configurations for plain jumpscale
 
     Returns:
-        e.g return
-        ```
-        {
-        "debug": True,
-        "ssh_key_path": "",
-        "logging": {"handlers": []},
-        "log_to_redis": False,
-        "log_to_files": True,
-        "log_level": 15,
-        "private_key_path": "",
-        "stores": {
-            "redis": {"hostname": "localhost", "port": 6379},
-            "filesystem": {"path": os.path.expanduser(os.path.join(config_root, "secureconfig"))},
-        },
-        "store": "filesystem",
-        "threebot": {
-            "name": "",
-            "id": 0,
-            "explorer_url": "https://explorer.testnet.grid.tf/explorer",
-            "private_key": "",
-            "email": "",
-        },
-       }```
+        dict: default configuration
     """
     return {
         "debug": True,
@@ -88,12 +63,10 @@ def get_default_config():
         },
         "store": "filesystem",
         "threebot": {
-            "name": "",
-            "id": 0,
-            "explorer_url": "https://explorer.testnet.grid.tf/explorer",
-            "private_key": "",
-            "email": "",
-            "threebot_connect": True,
+            "default": "",
+        },
+        "explorer": {
+            "default_url": "https://explorer.testnet.grid.tf/explorer",
         },
     }
 
@@ -166,8 +139,6 @@ if not os.path.exists(config_path):
 
 
 def generate_key(basepath):
-    # seed = mnemonic.mnemonic_to_key(words)
-    # hsk = PrivateKey(seed)
     hsk = PrivateKey.generate()
     hpk = hsk.public_key
     skpath = basepath + ".priv"
@@ -177,20 +148,6 @@ def generate_key(basepath):
     with open(pkpath, "wb") as f:
         f.write(hpk.encode(nacl.encoding.Base64Encoder()))
     return skpath
-
-
-def configure_threebot(name, email, wordsfile):
-    with open(wordsfile) as wf:
-        words = wf.read()
-
-    seed = mnemonic.mnemonic_to_key(words.strip())
-    hsk = PrivateKey(seed)
-    priv_key = hsk.encode(nacl.encoding.Base64Encoder).decode()
-    config = get_config()
-    default_config = get_default_config()
-    config["threebot"] = default_config["threebot"]
-    config["threebot"].update({"private_key": priv_key, "name": name, "email": email})
-    update_config(config)
 
 
 class StoreTypeNotFound(Exception):

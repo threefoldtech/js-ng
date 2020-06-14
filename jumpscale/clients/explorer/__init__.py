@@ -17,7 +17,10 @@ class ExplorerFactory(StoredFactory):
         return self.new(name, url, *args, **kwargs)
 
     def get_default(self):
-        return self.get("default", url=get_config()["threebot"]["explorer_url"])
+        return Explorer(get_config()["explorer"]["default_url"])
+
+    def get_by_url(self, url):
+        return Explorer(url)
 
 
 def export_module_as():
