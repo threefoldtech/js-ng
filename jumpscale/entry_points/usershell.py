@@ -1,66 +1,204 @@
 import os
-import pathlib
-import docker
+import re
+import time
 import sys
+import traceback
 
-from jumpscale.god import j
-from jumpscale.shell import ptconfig
+import inspect
+import cgi
 
-from ptpython.repl import embed
+from prompt_toolkit import PromptSession
+from prompt_toolkit.completion import Completion
+from prompt_toolkit.shortcuts import print_formatted_text
+from prompt_toolkit.eventloop.async_generator import AsyncGeneratorItem
+from prompt_toolkit.validation import Validator, ValidationError
+from prompt_toolkit.styles import Style
+from prompt_toolkit.formatted_text import HTML
+from jumpscale import threesdk
+
 
 BASE_CONFIG_DIR = os.path.join(os.environ.get("HOME", "/root"), ".jsng")
 HISTORY_FILENAME = os.path.join(BASE_CONFIG_DIR, "history.txt")
 
+DEFAULT_TOOLBAR_MSG = "Welcome to 3sdk enter info for help"
 
-class Container:
-    def install(
-        self, name="jsng", image="threefoldtech/js-ng:latest", ports=None, volumes=None, devices=None, identity=None, mount_code=True
-    ):
-        """Creates a docker container with jsng installed on it and ready to use
-        
-        Keyword Arguments:
-            name {str} -- Name of the new docker container (default: {"jsng"})
-            image {str} -- which image you want to use (should be first contains docker) (default: {"threefoldtech/js-ng:latest"})
-            ports {dict} -- ports The port number, as an integer. For example, 
-                - {'2222/tcp': 3333} will expose port 2222 inside the container as port 3333 on the host. (default: {None})
-            volumes volumes (dict) –
-                A dictionary to configure volumes mounted inside the container. The key is either the host path or a volume name, and the value is a dictionary with the keys:
-                bind The path to mount the volume inside the container
-                mode Either rw to mount the volume read/write, or ro to mount it read-only.
-                example 
-                {'/home/user1/': {'bind': '/mnt/vol2', 'mode': 'rw'},
-                '/var/www': {'bind': '/mnt/vol1', 'mode': 'ro'}}
-            devices {list} –
-                Expose host devices to the container, as a list of strings in the form <path_on_host>:<path_in_container>:<cgroup_permissions>.
-                For example, /dev/sda:/dev/xvda:rwm allows the container to have read-write access to the host’s /dev/sda via a node named /dev/xvda inside the container.
-            identity {str} - string contains private key
-        
-        Raises:
-            j.exceptions.NotFound: [description]
+style = Style.from_dict(
+    {
+        # User input (default text).
+        "bottom-toolbar": "#ffffff bg:#333333",
+        "default": "#aaaaaa",
+        # Prompt.
+    }
+)
+
+
+def print_error(error):
+    print_formatted_text(
+        HTML("<ansired>{}</ansired>".format(cgi.html.escape(str(error))))
+    )
+
+
+def partition_line(line):
+    def replacer(m):
+        return m.group().replace(" ", "\0").strip("\"'")
+
+    result = re.sub(r"""(['"]).*?\1""", replacer, line)
+    parts = []
+    for part in result.split():
+        parts.append(part.replace("\0", " "))
+    return parts
+
+
+def noexpert_error(error):
+    reports_location = (
+        f"{os.environ.get('HOME', os.environ.get('USERPROFILE', ''))}/sandbox/reports"
+    )
+    error_file_location = (
+        f"{reports_location}/jsxreport_{time.strftime('%d%H%M%S')}.log"
+    )
+    if not os.path.exists(reports_location):
+        os.makedirs(reports_location)
+    with open(error_file_location, "w") as f:
+        f.write(str(error))
+    err_msg = f"""Something went wrong. Please contact support at https://support.grid.tf/
+Error report file has been created on your machine in this location: {error_file_location}
         """
-        client = j.clients.docker.get("container_install")
-        CODEDIR = j.core.dirs.CODEDIR
+    return err_msg
+
+
+class Shell(Validator):
+    def __init__(self):
+        self._prompt = PromptSession()
+        self.mode = None
+        self.toolbarmsg = DEFAULT_TOOLBAR_MSG
+
+    def get_completions_async(self, document, complete_event):
+        text = document.current_line_before_cursor
+        parts = partition_line(text)
+        if not parts:
+            root = None
+            more = []
+        else:
+            root, more = parts[0], parts[1:]
+        items = []
+        if not root or not hasattr(threesdk, root):
+            style = "bg:ansibrightblue"
+            items += threesdk.__all__
+            self.toolbarmsg = DEFAULT_TOOLBAR_MSG
+        else:
+            style = "bg:ansigreen"
+            obj = getattr(threesdk, root)
+            if not more or not hasattr(obj, more[0]):
+                # complete object attributes
+                self.toolbarmsg = obj.__doc__.strip().splitlines()[0]
+                for name, member in inspect.getmembers(obj, inspect.isroutine):
+                    if not name.startswith("_"):
+                        items.append(name)
+                text = "" if not more else more[-1]
+            else:
+                # complete arguments
+                func = getattr(obj, more[0])
+                self.toolbarmsg = func.__doc__.strip().splitlines()[0]
+                style = "bg:ansired"
+                for arg in inspect.getfullargspec(func).args:
+                    field = arg + "="
+                    if field in text:
+                        continue
+                    items.append(field)
+                if len(more) > 1:
+                    text = more[-1]
+                else:
+                    text = ""
+
+        for item in items:
+            if not item:
+                continue
+            if isinstance(item, Completion):
+                item.start_position = -len(text)
+            else:
+                item = Completion(item, -len(text))
+            regex = ".*".join(text)
+            item.style = style
+            if not text or re.search(regex, item.text):
+                yield AsyncGeneratorItem(item)
+
+    def bottom_toolbar(self):
+        return [("class:bottom-toolbar", self.toolbarmsg)]
+
+    def validate(self, document):
+        text = document.current_line_before_cursor
+        if not text:
+            return
+        root, *more = text.split(" ")
+        submodule = getattr(threesdk, root, None)
+        if not submodule:
+            raise ValidationError(message=f"No such subcommand {root}")
+        if not more and callable(submodule):
+            func = root
+        elif more:
+            func = getattr(submodule, more[0], None)
+            if not func:
+                raise ValidationError(message=f"{root} has no command called {more[0]}")
+        else:
+            raise ValidationError(message="Invalid command")
+        # TODO: validate args
+        return
+
+    def get_func_kwargs(self, cmd):
+        parts = partition_line(cmd)
+        root, extra = parts[0], parts[1:]
+        module = getattr(threesdk, root)
+        if inspect.isroutine(module):
+            return module, self.get_kwargs(module, *extra)
+        else:
+            func = getattr(module, extra[0])
+            return func, self.get_kwargs(func, *extra[1:])
+
+    def get_kwargs(self, func, *args):
+        funcspec = inspect.getfullargspec(func)
+        kwargs = {}
+        for arg in args:
+            key, val = arg.split("=", 1)
+            isbool = funcspec.annotations.get(key) is bool
+            if isbool:
+                if val:
+                    val = val.lower() in ["y", "yes", "1", "true"]
+                else:
+                    val = True
+            kwargs[key] = val
+        return kwargs
+
+    def execute(self, cmd):
         try:
-            if mount_code and j.sals.fs.exists(CODEDIR):
-                volumes = volumes or {}
-                volumes.update( {CODEDIR: {'bind': "/sandbox/code", 'mode': 'rw'}})    
-            cotainer = client.get(name)
-            raise j.exceptions.NotFound(f"docker with name: {name} already exists, try another name")
-        except docker.errors.NotFound:
-            pass
-        container = client.run(name, image, entrypoint="/sbin/my_init", ports=ports, volumes=volumes, devices=None)
-        if identity:
-            cmd = f"""/bin/sh -c 'echo "{identity}" > /root/.ssh/id_rsa ; chmod 600 /root/.ssh/id_rsa' """
-            container.exec_run(cmd)
+            func, kwargs = self.get_func_kwargs(cmd)
+            func(**kwargs)
+        except Exception:
+            # print_error(noexpert_error(traceback.format_exc()))
+            print_error(traceback.format_exc())
 
+    def make_prompt(self):
+        root = ("class:default", "3sdk>")
+        while True:
+            try:
+                result = self.prompt([root])
+                self.execute(result)
+            except (EOFError, KeyboardInterrupt):
+                sys.exit(0)
 
-container = Container()
+    def prompt(self, msg):
+        return self._prompt.prompt(
+            msg,
+            completer=self,
+            validator=self,
+            style=style,
+            bottom_toolbar=self.bottom_toolbar,
+        )
 
 
 def run():
-    os.makedirs(BASE_CONFIG_DIR, exist_ok=True)
-    pathlib.Path(HISTORY_FILENAME).touch()
-    if len(sys.argv) == 1:
-        sys.exit(embed(globals(), locals(), configure=ptconfig, history_filename=HISTORY_FILENAME))
-    else:
-        sys.exit(print(eval(sys.argv[1])))
+    shell = Shell()
+    shell.make_prompt()
+
+
+if __name__ == "__main__":
+    run()
