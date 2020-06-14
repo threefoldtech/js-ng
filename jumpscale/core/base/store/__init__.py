@@ -32,7 +32,8 @@ class Location:
     location name will be jumpscale.clients.redis.<type>
     """
 
-    def __init__(self, *name_list):
+    def __init__(self, *name_list, type_=None):
+        self.type = type_
         self.name_list = list(name_list)
 
     @property
@@ -230,7 +231,7 @@ class EncryptedConfigStore(ConfigStore, EncryptionMixin):
 
         for name in self.list_all():
             data = self.get(name)
-            for name, value in kwargs:
+            for name, value in kwargs.items():
                 if name in data:
                     target_value = data[name]
                     if isinstance(target_value, str):

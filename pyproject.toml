@@ -47,6 +47,7 @@ snakeviz = "^2.0.1"
 python-taiga = "^1.0.0"
 bottle = "^0.12.18"
 captcha = "^0.3"
+Whoosh= "^2.7.4"
 
 [tool.poetry.dev-dependencies]
 ipdb = "^0.12.1"

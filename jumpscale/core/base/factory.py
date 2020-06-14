@@ -331,7 +331,7 @@ class StoredFactory(events.Handler, Factory):
         type_location = Location.from_type(self.type)
         name_list += type_location.name_list
 
-        return Location(*name_list)
+        return Location(*name_list, type_=self.type)
 
     @property
     def store(self):
