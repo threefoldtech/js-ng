@@ -42,6 +42,11 @@ base58 = "^2.0.0"
 stellar-sdk = "^2.3.2"
 netaddr = "^0.7.19"
 prompt-toolkit = "<3.0.0"
+python-digitalocean = "^1.15.0"
+snakeviz = "^2.0.1"
+python-taiga = "^1.0.0"
+bottle = "^0.12.18"
+captcha = "^0.3"
 
 [tool.poetry.dev-dependencies]
 ipdb = "^0.12.1"

@@ -29,11 +29,9 @@ class ZDBClient(Client):
     mode = fields.Enum(Mode)
 
     def __init__(self, *args, **kwargs):
-        super().__init__()
+        super().__init__(*args, **kwargs)
         # if not self.secret_:
         #     self.secret_ = j.core.myenv.adminsecret
-
-        self._set_data(kwargs)
 
         assert len(self.secret_) > 5
 

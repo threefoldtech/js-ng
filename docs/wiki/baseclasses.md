@@ -15,8 +15,8 @@ class Address(Base):
     x = fields.Integer()
     name = fields.String()
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.x = 123
 
 
@@ -40,6 +40,20 @@ w.addresses.delete("another")
 ```
 
 Note that, these configuration is not yet stored or saved, you need to use a [stored factory](stored-factory) with this `Base` type.
+
+### Overriding constructor for Base sub-classes
+
+When you override the consturctor of `Base` sub-classes, you need to pass all arguments to super `Base`, you can simply use `super().__init__(*args, **kwargs)`, like:
+
+```python
+class Address(Base):
+    x = fields.Integer()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.x = 123
+```
+
 
 ## Stored factory
 

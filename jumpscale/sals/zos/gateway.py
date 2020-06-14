@@ -5,12 +5,16 @@ from jumpscale.clients.explorer.models import (
     TfgridWorkloadsReservationGatewaySubdomain1,
     TfgridWorkloadsReservationGatewayDelegate1,
     TfgridWorkloadsReservationGatewayProxy1,
-    TfgridWorkloadsReservationGatewayReserve_proxy1,
+    TfgridWorkloadsReservationGatewayReverse_proxy1,
     TfgridWorkloadsReservationGateway4to61,
 )
+from .crypto import encrypt_for_node
 
 
 class Gateway:
+    def __init__(self, explorer):
+        self._gateways = explorer.gateway
+
     def sub_domain(self, reservation, node_id, domain, ips):
         for ip in ips:
             if not _is_valid_ip(ip):
@@ -44,12 +48,13 @@ class Gateway:
         return p
 
     def tcp_proxy_reverse(self, reservation, node_id, domain, secret):
-        p = TfgridWorkloadsReservationGatewayReserve_proxy1()
+        p = TfgridWorkloadsReservationGatewayReverse_proxy1()
         p.node_id = node_id
         p.domain = domain
         p.workload_id = _next_workload_id(reservation)
-        p.secret = secret
-        reservation.data_reservation.reserve_proxies.append(p)
+        node = self._gateways.get(node_id)
+        p.secret = encrypt_for_node(node.public_key_hex, secret).decode()
+        reservation.data_reservation.reverse_proxies.append(p)
         return p
 
     def gateway_4to6(self, reservation, node_id, public_key):

@@ -1,10 +1,14 @@
 from .id import _next_workload_id
 from jumpscale.core.exceptions import Input
-from jumpscale.clients.explorer.models import TfgridWorkloadsReservationVolume1
+from jumpscale.clients.explorer.models import (
+    TfgridWorkloadsReservationVolume1,
+    DiskType,
+    TfgridWorkloadsReservationContainerMount1,
+)
 
 
 class Volumes:
-    def create(self, reservation, node_id, size=5, type="HDD"):
+    def create(self, reservation, node_id, size=5, type=DiskType.HDD):
         """add a volume to the reservation
 
         Args:
@@ -19,9 +23,6 @@ class Volumes:
         Returns:
             [type]: the newly created volume object
         """
-
-        if type not in ["SSD", "HDD"]:
-            raise Input("volume type can only be SSD or HDD")
 
         volume = TfgridWorkloadsReservationVolume1()
         volume.workload_id = _next_workload_id(reservation)
@@ -40,9 +41,10 @@ class Volumes:
             volume ([type]): Volume object that is returned from add_volume function
             mount_point (str): path where to mount the volume in the container
         """
-        vol = container.volumes.new()
+        vol = TfgridWorkloadsReservationContainerMount1()
         vol.volume_id = f"-{volume.workload_id}"
         vol.mountpoint = mount_point
+        container.volumes.append(vol)
 
     def attach_existing(self, container, volume_id, mount_point):
         """attach an existing volume to a container.
@@ -53,6 +55,7 @@ class Volumes:
             volume_id ([type]): the complete volume ID, format should be '{reservation.id}-{volume.workload_id}'
             mount_point (str): path where to mount the volume in the container
         """
-        vol = container.volumes.new()
+        vol = TfgridWorkloadsReservationContainerMount1()
         vol.volume_id = volume_id
         vol.mountpoint = mount_point
+        container.volumes.append(vol)

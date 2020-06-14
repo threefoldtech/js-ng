@@ -93,6 +93,7 @@ def get_default_config():
             "explorer_url": "https://explorer.testnet.grid.tf/explorer",
             "private_key": "",
             "email": "",
+            "threebot_connect": True,
         },
     }
 

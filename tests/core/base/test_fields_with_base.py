@@ -52,6 +52,14 @@ class Server(Base):
     key = fields.Bytes()
 
 
+class Guest(Base):
+    name = fields.String()
+
+
+class Host(Base):
+    guest = fields.Object(Guest)
+
+
 class TestBaseWithFields(unittest.TestCase):
     def test_integer_field(self):
         user = User()
@@ -205,3 +213,20 @@ class TestBaseWithFields(unittest.TestCase):
 
         with self.assertRaises(ValidationError):
             server.network = "2001:db00::0/ffff:ff00:"
+
+    def test_object_field_default(self):
+        host1 = Host()
+        host2 = Host()
+
+        guest1 = Guest()
+        guest2 = Guest()
+
+        self.assertNotEqual(id(host1), id(host2))
+        self.assertNotEqual(id(guest1), id(guest2))
+
+        self.assertNotEqual(id(host1.guest), id(host2.guest))
+
+        host1.guest.name = "test1"
+        host2.guest.name = "test2"
+
+        self.assertNotEqual(host1.guest.name, host2.guest.name)

@@ -10,6 +10,7 @@ from signal import SIGKILL, SIGTERM
 import json
 import better_exceptions
 import gevent
+from gevent.pool import Pool
 from gevent import time
 from gevent.server import StreamServer
 from jumpscale.core.base import Base, fields
@@ -25,6 +26,7 @@ def serialize(obj):
         module = inspect.getmodule(obj).__file__[:-3]
         return dict(__serialized__=True, module=module, type=obj.__class__.__name__, data=obj.to_dict())
     return obj
+
 
 def deserialize(obj):
     if isinstance(obj, dict) and obj.get("__serialized__"):
@@ -132,11 +134,10 @@ class GedisServer(Base):
     port = fields.Integer(default=16000)
     enable_system_actor = fields.Boolean(default=True)
     run_async = fields.Boolean(default=True)
-    _actors = fields.Typed(dict)
+    _actors = fields.Typed(dict, default={})
 
-    def __init__(self):
-        super().__init__()
-        self._actors = self._actors or {}
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._core_actor = CoreActor()
         self._system_actor = SystemActor()
         self._loaded_actors = {"core": self._core_actor}
@@ -144,7 +145,7 @@ class GedisServer(Base):
     @property
     def actors(self):
         """Lists saved actors
-        
+
         Returns:
             list -- List of saved actors
         """
@@ -152,11 +153,11 @@ class GedisServer(Base):
 
     def actor_add(self, actor_name: str, actor_path: str):
         """Adds an actor to the server
-        
+
         Arguments:
             actor_name {str} -- Actor name
             actor_path {str} -- Actor absolute path
-        
+
         Raises:
             j.exceptions.Value: raises if actor name is matched one of the reserved actor names
             j.exceptions.Value: raises if actor name is not a valid identifier
@@ -171,7 +172,7 @@ class GedisServer(Base):
 
     def actor_delete(self, actor_name: str):
         """Removes an actor from the server
-        
+
         Arguments:
             actor_name {str} -- Actor name
         """
@@ -198,9 +199,9 @@ class GedisServer(Base):
             self._system_actor.register_actor(actor_name, actor_path)
 
         # start the server
-        server = StreamServer((self.host, self.port), self._on_connection)
-        server.reuse_addr = True
-        server.serve_forever()
+        self._server = StreamServer((self.host, self.port), self._on_connection, spawn=Pool())
+        self._server.reuse_addr = True
+        self._server.start()
 
     def stop(self):
         """Stops the server
@@ -241,7 +242,9 @@ class GedisServer(Base):
             while True:
                 try:
                     request = parser.read_response()
-                    response = dict(success=True, result=None, error=None, error_type=None, is_async=False, task_id=None)
+                    response = dict(
+                        success=True, result=None, error=None, error_type=None, is_async=False, task_id=None
+                    )
 
                     if len(request) < 2:
                         response["error"] = "invalid request"
