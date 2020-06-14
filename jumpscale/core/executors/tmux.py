@@ -2,7 +2,7 @@
 
 """
 import libtmux
-from jumpscale.god import j
+from jumpscale.core.logging import export_module_as as logger
 
 
 __all__ = ["execute_in_window"]
@@ -46,7 +46,7 @@ def execute_in_window(window_name, cmd):
     try:
         server.list_sessions()
     except:
-        j.logger.error("tmux isn't running")
+        logger().error("tmux isn't running")
         server.new_session(JS_SESSION_NAME)
     w = get_window(window_name)
     w.attached_pane.send_keys(cmd)

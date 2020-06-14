@@ -1,21 +1,20 @@
 """This module used to manage your conatiners, create ,run, list, delete and exec commands on docker
-for example 
+for example
 ```
-#getting docker clinet 
-cl = j.clients.docker.get('test') 
-running docker 
-cl.run("container_name", "threefoldtech/js-ng") 
+#getting docker clinet
+cl = j.clients.docker.get('test')
+running docker
+cl.run("container_name", "threefoldtech/js-ng")
 # listing contaienrs
 cl.list(all=True) # lists all containers include stopped ones
 # getting container
 container = cl.get(<container_id or name>)
-executing commmands 
+executing commmands
 cl.exec("container_id", "ls /tmp")
 or container.exec_run("ls /tmp)
 ```
 """
 import docker
-from jumpscale.god import j
 from jumpscale.clients.base import Client
 from jumpscale.core.base import fields
 
@@ -36,7 +35,21 @@ class DockerClient(Client):
                 self.__client = docker.from_env()
         return self.__client
 
-    def create(self, name, image, command=None, environment=None, entrypoint=None, volumes=None, devices=None, detach=True, ports=None, privileged=False, auto_remove=False, hostname="js-ng"):
+    def create(
+        self,
+        name,
+        image,
+        command=None,
+        environment=None,
+        entrypoint=None,
+        volumes=None,
+        devices=None,
+        detach=True,
+        ports=None,
+        privileged=False,
+        auto_remove=False,
+        hostname="js-ng",
+    ):
         """Creates a docker container without starting it
 
         Args:
@@ -49,14 +62,14 @@ class DockerClient(Client):
                 A dictionary to configure volumes mounted inside the container. The key is either the host path or a volume name, and the value is a dictionary with the keys:
                 bind The path to mount the volume inside the container
                 mode Either rw to mount the volume read/write, or ro to mount it read-only.
-                example 
+                example
                 {'/home/user1/': {'bind': '/mnt/vol2', 'mode': 'rw'},
                 '/var/www': {'bind': '/mnt/vol1', 'mode': 'ro'}}
             devices (list) –
                 Expose host devices to the container, as a list of strings in the form <path_on_host>:<path_in_container>:<cgroup_permissions>.
                 For example, /dev/sda:/dev/xvda:rwm allows the container to have read-write access to the host’s /dev/sda via a node named /dev/xvda inside the container.
             detach (bool, optional): detach from container after running it.
-            ports The port number, as an integer. For example, 
+            ports The port number, as an integer. For example,
                 - {'2222/tcp': 3333} will expose port 2222 inside the container as port 3333 on the host.
                 - None, to assign a random host port. For example, {'2222/tcp': None}.
                 - A tuple of (address, port) if you want to specify the host interface. For example, {'1111/tcp': ('127.0.0.1', 1111)}.
@@ -67,10 +80,37 @@ class DockerClient(Client):
         Returns:
             container: container object
         """
-        docker = self.client.containers.create(name=name, image=image, command=command, environment=environment, entrypoint=entrypoint, volumes=volumes, devices=devices, detach=detach, ports=ports, privileged=privileged, auto_remove=auto_remove, hostname=hostname)
+        docker = self.client.containers.create(
+            name=name,
+            image=image,
+            command=command,
+            environment=environment,
+            entrypoint=entrypoint,
+            volumes=volumes,
+            devices=devices,
+            detach=detach,
+            ports=ports,
+            privileged=privileged,
+            auto_remove=auto_remove,
+            hostname=hostname,
+        )
         return docker
 
-    def run(self, name, image, command=None, environment=None, entrypoint=None, volumes=None, devices=None, detach=True, ports=None, privileged=False, auto_remove=False, hostname="js-ng"):
+    def run(
+        self,
+        name,
+        image,
+        command=None,
+        environment=None,
+        entrypoint=None,
+        volumes=None,
+        devices=None,
+        detach=True,
+        ports=None,
+        privileged=False,
+        auto_remove=False,
+        hostname="js-ng",
+    ):
         """Runs docker container
         Args:
             name (str): name of the docker container
@@ -82,14 +122,14 @@ class DockerClient(Client):
                 A dictionary to configure volumes mounted inside the container. The key is either the host path or a volume name, and the value is a dictionary with the keys:
                 bind The path to mount the volume inside the container
                 mode Either rw to mount the volume read/write, or ro to mount it read-only.
-                example 
+                example
                 {'/home/user1/': {'bind': '/mnt/vol2', 'mode': 'rw'},
                 '/var/www': {'bind': '/mnt/vol1', 'mode': 'ro'}}
             devices (list) –
                 Expose host devices to the container, as a list of strings in the form <path_on_host>:<path_in_container>:<cgroup_permissions>.
                 For example, /dev/sda:/dev/xvda:rwm allows the container to have read-write access to the host’s /dev/sda via a node named /dev/xvda inside the container.
             detach (bool, optional): detach from container after running it.
-            ports The port number, as an integer. For example, 
+            ports The port number, as an integer. For example,
                 - {'2222/tcp': 3333} will expose port 2222 inside the container as port 3333 on the host.
                 - None, to assign a random host port. For example, {'2222/tcp': None}.
                 - A tuple of (address, port) if you want to specify the host interface. For example, {'1111/tcp': ('127.0.0.1', 1111)}.
@@ -100,7 +140,20 @@ class DockerClient(Client):
         Returns:
             container: container object
         """
-        docker = self.client.containers.run(name=name, image=image, command=command, environment=environment, entrypoint=entrypoint, volumes=volumes, devices=devices, detach=detach, ports=ports, privileged=privileged, auto_remove=auto_remove, hostname=hostname)
+        docker = self.client.containers.run(
+            name=name,
+            image=image,
+            command=command,
+            environment=environment,
+            entrypoint=entrypoint,
+            volumes=volumes,
+            devices=devices,
+            detach=detach,
+            ports=ports,
+            privileged=privileged,
+            auto_remove=auto_remove,
+            hostname=hostname,
+        )
         return docker
 
     def get(self, container_id):
@@ -111,8 +164,15 @@ class DockerClient(Client):
         Returns:
             container: container object
         """
-        container= self.client.containers.get(container_id)
+        container = self.client.containers.get(container_id)
         return container
+
+    def exists(self, container_id):
+        try:
+            self.client.containers.get(container_id)
+            return True
+        except docker.errors.NotFound:
+            return False
 
     def delete(self, container_id, force=False):
         """Deletes docker container
@@ -123,7 +183,7 @@ class DockerClient(Client):
         Returns:
             bool: True container deleted
         """
-        container = get(container_id)
+        container = self.get(container_id)
         container.remove(force=force)
         return True
 
@@ -136,7 +196,7 @@ class DockerClient(Client):
         Returns:
             bool: True container killed
         """
-        container = get(container_id)
+        container = self.get(container_id)
         container.kill(sig)
         return True
 
@@ -149,7 +209,7 @@ class DockerClient(Client):
         Returns:
             bool: True if container restarted
         """
-        container = get(container_id)
+        container = self.get(container_id)
         container.restart(timeout=timeout)
         return True
 
@@ -162,8 +222,21 @@ class DockerClient(Client):
         Returns:
             bool: True if container started
         """
-        container = get(container_id)
+        container = self.get(container_id)
         container.start()
+        return True
+
+    def stop(self, container_id):
+        """stops docker container
+        Args:
+            container_id (str): Id or name of the docker container
+            timeout (int): timeout to stop container before trying to kill
+
+        Returns:
+            bool: True if container started
+        """
+        container = self.get(container_id)
+        container.stop()
         return True
 
     def list(self, all=False):
@@ -176,7 +249,23 @@ class DockerClient(Client):
         """
         return self.client.containers.list(all=all)
 
-    def exec(self, container_id, cmd, stdout=True, stderr=True, stdin=False, tty=False, privileged=False, user='', detach=False, stream=False, socket=False, environment=None, workdir=None, demux=True):
+    def exec(
+        self,
+        container_id,
+        cmd,
+        stdout=True,
+        stderr=True,
+        stdin=False,
+        tty=False,
+        privileged=False,
+        user="",
+        detach=False,
+        stream=False,
+        socket=False,
+        environment=None,
+        workdir=None,
+        demux=True,
+    ):
         """Executes command docker container
         Args:
             container_id (str): Id or name of the docker container
@@ -194,16 +283,30 @@ class DockerClient(Client):
             workdir (str) – Path to working directory for this exec session
             demux (bool) – Return stdout and stderr separately
 
-        Returns:	
+        Returns:
             A tuple of (exit_code, output)
             exit_code: (int):
             Exit code for the executed command or None if either stream or socket is True.
 
             output: (generator, bytes, or tuple):
-                If stream=True, a generator yielding response chunks. 
-                If socket=True, a socket object for the connection. 
-                If demux=True, a tuple of two bytes: stdout and stderr. 
+                If stream=True, a generator yielding response chunks.
+                If socket=True, a socket object for the connection.
+                If demux=True, a tuple of two bytes: stdout and stderr.
                 A bytestring containing response data otherwise.
         """
         docker = self.get(container_id)
-        return docker.exec_run(cmd=cmd, stdout=stdout, stderr=stderr, stdin=stdin, tty=tty, privileged=privileged, user=user, detach=detach, stream=stream, socket=socket, environment=environment, workdir=workdir, demux=demux)
+        return docker.exec_run(
+            cmd=cmd,
+            stdout=stdout,
+            stderr=stderr,
+            stdin=stdin,
+            tty=tty,
+            privileged=privileged,
+            user=user,
+            detach=detach,
+            stream=stream,
+            socket=socket,
+            environment=environment,
+            workdir=workdir,
+            demux=demux,
+        )
