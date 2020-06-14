@@ -33,9 +33,13 @@ from functools import partial
 from jumpscale.core import config, events
 
 from .events import AttributeUpdateEvent, InstanceCreateEvent, InstanceDeleteEvent
-from .store import Location, FileSystemStore, RedisStore
+from .store import Location
+from .store.filesystem import FileSystemStore
+from .store.redis import RedisStore
+from .store.whooshfts import WhooshStore
 
-STORES = {"filesystem": FileSystemStore, "redis": RedisStore}
+
+STORES = {"filesystem": FileSystemStore, "redis": RedisStore, "whoosh": WhooshStore}
 
 
 class DuplicateError(Exception):

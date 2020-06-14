@@ -9,9 +9,6 @@ read/write the config data in raw (string) format.
 
 
 import os
-import shutil
-
-import redis
 
 from abc import ABC, abstractmethod
 from enum import Enum
@@ -19,7 +16,6 @@ from enum import Enum
 from jumpscale.data.nacl import NACL
 from jumpscale.data.serializers import base64, json
 from jumpscale.core.config import Environment
-from jumpscale.sals.fs import read_file_binary, write_file_binary, rmtree
 
 
 class InvalidPrivateKey(Exception):
@@ -217,6 +213,39 @@ class EncryptedConfigStore(ConfigStore, EncryptionMixin):
         """
         config = json.loads(self.read(instance_name))
         return self._process_config(config, EncryptionMode.Decrypt)
+
+    def find(self, **kwargs):
+        """
+        a generic find, which do a linear search over all items
+
+        if you want a better way, use a store which provides search
+
+        Args:
+            kwargs: a mapping between field and value fo search by
+
+        Returns:
+            list of dict: list of found results
+        """
+        found = []
+
+        for name in self.list_all():
+            data = self.get(name)
+            for name, value in kwargs:
+                if name in data:
+                    target_value = data[name]
+                    if isinstance(target_value, str):
+                        # just a simple normalization
+                        value = str(value).lower()
+                        target_value = target_value.lower()
+
+                    try:
+                        if value in target_value:
+                            found.append(data)
+                    except TypeError:
+                        if value == target_value:
+                            found.append(data)
+
+        return found
 
     def save(self, instance_name, config):
         """
