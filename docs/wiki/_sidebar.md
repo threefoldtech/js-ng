@@ -34,8 +34,10 @@
     * [JS-NG Shell](./jsng_shell.md)
     * [API](generated_apis.md)
     * [Cookiecutter: standalone extensions](./project_based_on_jsng.md)
+    * [SchemaC: migrate JSX schemas](./schemac.md)
     * Builders
     * [Github actions](./githubactions.md)
+
     
 * [Specs](specs.md)
     * [Poetry](poetry.md)
