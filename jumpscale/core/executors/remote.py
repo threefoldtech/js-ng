@@ -3,15 +3,35 @@ Executor remote allows executing commands within specific env on the local machi
 
 ```
 JS-NG> with j.core.executors.RemoteExecutor(host="localhost", connect_kwargs={"key_filename":
-                                                                              "/home/xmonader/.ssh/id_rsa",}) as c: 
-            c.run("hostname")                           
+                                                                              "/home/xmonader/.ssh/id_rsa",}) as c:
+            c.run("hostname")
 xmonader-ThinkPad-E580
-JS-NG> 
-``` 
+JS-NG>
+```
 """
 
 
 import fabric
+
+from .command_builder import cmd_from_args
+
+
+@cmd_from_args
+def execute(cmd, command_ctx, connection_ctx):
+    """
+    execute a command on a remote context
+
+    Args:
+        cmd (str or list): command as a string or an argument list, e.g. `"ls -la"` or `["ls", "la"]`
+        command_ctx (dict): command runner context (the same as local `execute`)
+        connection_ctx (dict): context passed to fabric e.g. fabric.Connection(host, user=None, port=None, config=None, gateway=None, forward_agent=None, connect_timeout=None, connect_kwargs=None, inline_ssh_env=None)
+
+    Returns:
+        tuple: return code, stdout, stderr
+    """
+    with fabric.Connection(**connection_ctx) as c:
+        res = c.run(cmd, **command_ctx)
+        return res.return_code, res.stdout, res.stderr
 
 
 class RemoteExecutor:
@@ -33,15 +53,13 @@ class RemoteExecutor:
         return self.connection.sftp()
 
     def run(self, cmd, **command_ctx):
-        with fabric.Connection(**self._connection_ctx) as c:
-            res = c.run(cmd, **command_ctx)
-            return res.return_code, res.stdout, res.stderr
+        """
+        execute a command
 
+        Args:
+            cmd (str or list): "ls -la" or ["ls", "-la"]
 
-def execute(cmd, command_ctx, connection_ctx):
-    """
-    kwargs: fabric.Connection(host, user=None, port=None, config=None, gateway=None, forward_agent=None, connect_timeout=None, connect_kwargs=None, inline_ssh_env=None)
-    """
-    with fabric.Connection(**connection_ctx) as c:
-        res = c.run(cmd, **command_ctx)
-        return res.return_code, res.stdout, res.stderr
+        Returns:
+            tuple: return code, stdout, stderr
+        """
+        return execute(cmd, command_ctx, self._connection_ctx)
