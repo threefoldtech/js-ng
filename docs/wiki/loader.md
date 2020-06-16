@@ -64,7 +64,7 @@ js-ng
 ```
 
 ```
-js-ext
+js-sdk
 ├── jumpscale
 │   ├── clients
 │   │   └── gitlab

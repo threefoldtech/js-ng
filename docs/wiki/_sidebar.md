@@ -33,8 +33,10 @@
     * RPC
     * [JS-NG Shell](./jsng_shell.md)
     * [API](generated_apis.md)
+    * [Cookiecutter: standalone extensions](./project_based_on_jsng.md)
     * Builders
     * [Github actions](./githubactions.md)
+    
 * [Specs](specs.md)
     * [Poetry](poetry.md)
     * [God object and namespaces](god_object_namespaces_concepts.md)
