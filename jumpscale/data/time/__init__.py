@@ -1,6 +1,9 @@
 """
 Time helpers based on arrow
 
+# TODO: add more explanation here.
+
+```python
 >>> j.data.time.get('2013-05-11T21:23:58.970460+07:00')
 <Arrow [2013-05-11T21:23:58.970460+07:00]>
 
@@ -12,10 +15,10 @@ Time helpers based on arrow
 >>> utc
 <Arrow [2013-05-11T20:23:58.970460+00:00]>
 
-JS-NG> j.data.time.now()                                                                                         
+>>> j.data.time.now()                                                                                         
 <Arrow [2020-04-09T10:19:19.013636+02:00]>
 
-JS-NG> j.data.time.now().shift(hours=15)                                                                         
+>>> j.data.time.now().shift(hours=15)                                                                         
 <Arrow [2020-04-10T01:19:23.225311+02:00]>
 
 
@@ -83,6 +86,8 @@ JS-NG> j.data.time.now().shift(hours=15)
 
 >>> arw.shift(weeks=+3)
 <Arrow [2013-06-02T03:29:35.334214+00:00]>
+```
+
 """
 
 from arrow import *
