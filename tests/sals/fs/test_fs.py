@@ -47,7 +47,7 @@ class TestFS(BaseTests):
         with self.assertRaises(NotADirectoryError) as e:
             j.sals.fs.is_empty_dir('/etc/passwd')
 
-    @skip('https://github.com/js-next/js-ng/issues/117')
+    @skip('https://github.com/threefoldtech/js-ng/issues/117')
     def test003_rm_tree(self):
         random_dir_1 = self.generate_random_text()
         random_dir_2 = self.generate_random_text()

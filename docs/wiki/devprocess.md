@@ -1,6 +1,6 @@
-# Development process for any js-next projects
+# Development process for any threefoldtech projects
 
-Projects are defined in js-next/project tab in github
+Projects are defined in threefoldtech/project tab in github
 
 ## Branches
 

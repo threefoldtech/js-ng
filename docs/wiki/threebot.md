@@ -6,7 +6,7 @@
 
 ```
 s = j.servers.threebot.get("aa") 
-s.packages.add("/home/xmonader/wspace/js-next/js-ng/jumpscale/packages/foo")  
+s.packages.add("/home/xmonader/wspace/threefoldtech/js-ng/jumpscale/packages/foo")  
 s.save()
 s.start()
 
