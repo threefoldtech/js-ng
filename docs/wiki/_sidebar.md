@@ -9,6 +9,7 @@
     * [API](generated_apis.md)
 * Tutorials
     * [Interacting with Filesystem](./tutorials/salfs.md)
+    * [Platform information](./tutorials/platforminfo.md)
     * [Interacting with configurations](./configmgmt.md)
     * [Developing a SAL](./tutorials/developing_sal.md)
     * [Developing a client](./tutorials/developing_client.md)
