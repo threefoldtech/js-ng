@@ -30,7 +30,7 @@
     * [Logging](./logging.md)
     * [Exceptions](./exceptions.md)
     * [Errors](./errorhandling.md)
-    * RPC
+    * [RPC](./rpc.md)
     * [JS-NG Shell](./jsng_shell.md)
     * [API](generated_apis.md)
     * [Cookiecutter: standalone extensions](./project_based_on_jsng.md)
