@@ -124,7 +124,7 @@ class Factory:
             raise ValueError("{} is an internal attribute".format(name))
         return instance
 
-    def _create_instance(self, name, *args, **kwargs):
+    def _create_instance(self, name_, *args, **kwargs):
         """
         create a new instance, this method is only responsible for:
 
@@ -135,7 +135,7 @@ class Factory:
         - update the counter and trigger `_created`
 
         Args:
-            name (str): instance name
+            name_ (str): instance name
 
         Raises:
             ValueError: in case the name is not a valid identifier (e.g contains spaces) or starts with "__"
@@ -143,14 +143,14 @@ class Factory:
         Returns:
             Base: instance
         """
-        if not name.isidentifier():
-            raise ValueError("{} is not a valid identifier".format(name))
+        if not name_.isidentifier():
+            raise ValueError("{} is not a valid identifier".format(name_))
 
-        if name.startswith("__"):
+        if name_.startswith("__"):
             raise ValueError("name cannot start with '__'")
 
         instance = self.type(*args, **kwargs)
-        instance._set_instance_name(name)
+        instance._set_instance_name(name_)
         # parent instance of this factory is a parent to all of its instances
         instance._set_parent(self.parent_instance)
 
@@ -342,6 +342,8 @@ class StoredFactory(events.Handler, Factory):
         """
         instance.validate()
         self.store.save(instance.instance_name, instance._get_data())
+        if instance.parent and hasattr(instance.parent, "save"):
+            instance.parent.save()
 
     def _try_save_instance(self, instance):
         """
@@ -427,11 +429,12 @@ class StoredFactory(events.Handler, Factory):
         inner_name = f"__{name}"
 
         def getter(factory):
-            if hasattr(factory, inner_name):
+            # we need to avoid AttributeError which hasattr swallows
+            # instead we check the internal __dict__
+            if inner_name in factory.__dict__:
                 return getattr(factory, inner_name)
 
-            instance = factory._create_instance(name)
-            instance._set_data(factory.store.get(name))
+            instance = factory._create_instance(name, **factory.store.get(name))
             factory._init_save_and_sub_factories(instance)
             setattr(factory, inner_name, instance)
             return instance
@@ -467,12 +470,17 @@ class StoredFactory(events.Handler, Factory):
             name (str): instance name
         """
         self.store.delete(name)
-        inner_name = f"__{name}"
-        if hasattr(self, inner_name):
+
+        class_prop = getattr(self.__class__, name, None)
+        if isinstance(class_prop, property):
             # created with a property descriptor inside the class, delete it
             delattr(self.__class__, name)
-            # delete the instance itself too
-            delattr(self, inner_name)
+
+            # check if the instance was actually created or not (if the property was accessed)
+            inner_name = f"__{name}"
+            if hasattr(self, inner_name):
+                # delete the instance itself too if it was accessed and created
+                delattr(self, inner_name)
         else:
             super()._delete_instance(name)
 

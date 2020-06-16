@@ -19,27 +19,23 @@ j.sals.process.get_pid_by_port(8000)
 ```
 """
 
+
 import os
 import os.path
-import re
-import time
-import sys
-
-# import select
-# import threading
-# import queue
-import random
-
 import psutil
-import subprocess
-import signal
-from subprocess import Popen
+import random
+import re
 import select
-from jumpscale.god import j
+import signal
+import subprocess
+import sys
+import time
+import math
 
-# for execute
-from fcntl import fcntl, F_GETFL, F_SETFL
-from os import O_NONBLOCK, read
+from collections import defaultdict
+from subprocess import Popen
+
+from jumpscale.god import j
 
 
 def execute(
@@ -609,7 +605,101 @@ def get_defunct_processes():
     return llist
 
 
-def getEnviron(pid):
+def get_processes():
+    """
+    get an interator for all running processes
+
+    Yields:
+        generator: for all processes
+    """
+    yield from psutil.process_iter()
+
+
+def get_processes_info():
+    """
+    Get information for top 25 running processes sorted by memory usage
+
+    Returns:
+        [list(dict)] -- list of processes info
+    """
+    processes_list = []
+    for proc in get_processes():
+        try:
+            # Fetch process details as dict
+            pinfo = proc.as_dict(attrs=["pid", "name", "username"])
+            pinfo["rss"] = proc.memory_info().rss / (1024 * 1024)
+            pinfo["ports"] = []
+            try:
+                connections = proc.connections()
+            except psutil.Error:
+                continue
+            if connections:
+                for conn in connections:
+                    pinfo["ports"].append({"port": conn.laddr.port, "status": conn.status})
+            # Append dict to list
+            processes_list.append(pinfo)
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            pass
+    processes_list = sorted(processes_list, key=lambda procObj: procObj["rss"], reverse=True)
+    return processes_list[:25]
+
+
+def get_ports_mapping(status=psutil.CONN_LISTEN):
+    """
+    get a mapping for process to ports with a status filter
+
+    it will skip any process in case of errors (e.g. permission error)
+
+    example:
+
+    ```python
+    j.sals.process.get_ports_mapping(psutil.CONN_ESTABLISHED)
+    ```
+
+    or
+
+    ```
+    j.sals.process.get_ports_mapping("ESTABLISHED")
+    ```
+
+    Args:
+        status (psutil.CONN_CONSTANT): `psutil` CONN_* constant as a filter. Defaults to psutil.CONN_LISTEN.
+
+    Returns:
+        defaultdict: a mapping between process and ports
+    """
+    ports = defaultdict(list)
+
+    for process in get_processes():
+        try:
+            connections = process.connections()
+        except psutil.Error:
+            continue
+
+        if connections:
+            for conn in connections:
+                if conn.status == status:
+                    ports[process].append(conn.laddr.port)
+
+    return ports
+
+
+def get_memory_usage():
+    """
+    Get memory status
+
+    Returns:
+        dict -- memory status info
+    """
+    memory_usage = {}
+    memory_data = dict(psutil.virtual_memory()._asdict())
+    memory_usage["total"] = math.ceil(memory_data.get("total") / (1024 * 1024 * 1024))
+    memory_usage["used"] = math.ceil(memory_data.get("used") / (1024 * 1024 * 1024))
+    memory_usage["percent"] = memory_data.get("percent")
+    return memory_usage
+
+
+def get_environ(pid):
     """Gets env vars for a specific process based on pid
 
     Arguments:

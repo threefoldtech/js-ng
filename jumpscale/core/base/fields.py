@@ -184,7 +184,7 @@ class Typed(Field):
         super().validate(value)
         if value is not None:
             if not isinstance(value, self.type):
-                raise ValidationError(f"value {value} is not of type {self.type.__name__}")
+                raise ValidationError(f"value '{value}' is not of type {self.type.__name__}")
 
 
 class Boolean(Typed):
@@ -211,7 +211,7 @@ class Boolean(Typed):
         get bool value from strings and numbers
 
         Args:
-            value (str or int or float or complex): valie
+            value (str or int or float or complex)
 
         Returns:
             bool: boolean value
@@ -252,11 +252,11 @@ class Integer(Typed):
 
     def validate(self, value):
         super().validate(value)
-        if self.min is not None:
+        if value and self.min is not None:
             if value < self.min:
                 raise ValidationError(f"cannot set values less than {self.min}")
 
-        if self.max is not None:
+        if value and self.max is not None:
             if value > self.max:
                 raise ValidationError(f"cannot set values greater than {self.max}")
 
@@ -285,16 +285,19 @@ class Float(Typed):
         super().__init__(type_=float, default=default, min=min, **kwargs)
 
     def from_raw(self, value):
+
         if isinstance(value, str):
-            try:
-                value = float(value.strip())
-            except ValueError:
-                pass
+            value = value.strip()
+        try:
+            value = float(value)
+        except ValueError:
+            pass
+
         return value
 
 
 class String(Typed):
-    def __init__(self, maxlen=None, **kwargs):
+    def __init__(self, maxlen=None, allow_empty=True, **kwargs):
         """
         Same as `Typed`, but with a type of `str`.
 
@@ -302,13 +305,19 @@ class String(Typed):
 
         Args:
             maxlen (int): maximum length allowed. Defaults to None
+            allow_empty (bool): if empty string values are allowed or not. Defaults to True
             kwargs: any keyword arguments supported by `Field`
         """
         super().__init__(type_=str, **kwargs)
         self.maxlen = maxlen
+        self.allow_empty = allow_empty
 
     def validate(self, value):
         super().validate(value)
+
+        if not self.allow_empty and value == "":
+            raise ValidationError("field does not allow empty values")
+
         if self.maxlen is not None:
             if value and len(value) > self.maxlen:
                 raise ValidationError(f"length of the string exceeds {self.maxlen}")
@@ -321,7 +330,6 @@ class Secret(String):
     Should be used with sensitive data.
 
     Args:
-        maxlen (int): maximum length allowed. Defaults to None
         kwargs: any keyword arguments supported by `String`
     """
 
@@ -343,7 +351,9 @@ class Object(Typed):
             self.type_kwargs = {}
 
         if not self.default:
-            self.default = self.type(**self.type_kwargs)
+            # make it callable to create different objects
+            # not a single one as a default for all
+            self.default = lambda: self.type(**self.type_kwargs)
 
     def validate(self, value):
         """
@@ -353,10 +363,8 @@ class Object(Typed):
             value (Base): object
         """
         super().validate(value)
-        try:
+        if value:
             value.validate()
-        except AttributeError:
-            raise ValidationError("object of Base must have validate()")
 
     def to_raw(self, obj):
         """
@@ -368,7 +376,8 @@ class Object(Typed):
         Returns:
             dict: raw data
         """
-        return obj._get_data()
+        if obj:
+            return obj._get_data()
 
     def from_raw(self, data):
         """
@@ -381,9 +390,7 @@ class Object(Typed):
             Base: base object
         """
         if isinstance(data, dict):
-            obj = self.type()
-            obj._set_data(data)
-            return obj
+            return self.type(**data)
         return data
 
 
@@ -480,7 +487,8 @@ class Enum(Typed):
         Returns:
             any: enum value
         """
-        return enum_obj.value
+        if enum_obj:
+            return enum_obj.value
 
     def from_raw(self, value):
         """
@@ -499,7 +507,7 @@ class Enum(Typed):
             return value
 
 
-class Email(Field):
+class Email(String):
     def __init__(self, default="", **kwargs):
         """
         Email field, will validate the value of emails
@@ -508,9 +516,9 @@ class Email(Field):
 
         Args:
             default (str, optional): default value. Defaults to ""
-            kwargs: any keyword arguments supported by `Field`
+            kwargs: other keyword arguments supported by `string`
         """
-        super().__init__(default, **kwargs)
+        super().__init__(default=default, **kwargs)
         self.regex = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
 
     def validate(self, value):
@@ -524,11 +532,11 @@ class Email(Field):
             ValidationError: in case the value is not a telephone
         """
         super().validate(value)
-        if not re.match(self.regex, value):
-            raise ValidationError(f"{value} is not a valid Email address")
+        if value and not re.match(self.regex, value):
+            raise ValidationError(f"'{value}' is not a valid Email address")
 
 
-class Path(Field):
+class Path(String):
     # TODO: Validate that it is working on windows
     def __init__(self, default="", **kwargs):
         """
@@ -538,7 +546,7 @@ class Path(Field):
 
         Args:
             default (str, optional): default value. Defaults to ""
-            kwargs: any keyword arguments supported by `Field`
+            kwargs: other keyword arguments supported by `Field`
         """
         super().__init__(default, **kwargs)
         self.regex = r"^(/[^/ ]*)+/?$"
@@ -554,11 +562,11 @@ class Path(Field):
             ValidationError: in case the value is not a telephone
         """
         super().validate(value)
-        if not re.match(self.regex, value):
-            raise ValidationError(f"{value} is not a valid Path")
+        if value and not re.match(self.regex, value):
+            raise ValidationError(f"'{value}' is not a valid Path")
 
 
-class URL(Field):
+class URL(String):
     def __init__(self, default="", **kwargs):
         """
         URL field, will validate the value of urls
@@ -567,9 +575,9 @@ class URL(Field):
 
         Args:
             default (str, optional): default value. Defaults to ""
-            kwargs: any keyword arguments supported by `Field`
+            kwargs: other keyword arguments supported by `Field`
         """
-        super().__init__(default, **kwargs)
+        super().__init__(default=default, **kwargs)
         self.regex = r"^(https?|ftp)://[^\s/$.?#].[^\s]*$"
 
     def validate(self, value):
@@ -583,12 +591,13 @@ class URL(Field):
             ValidationError: in case the value is not a telephone
         """
         super().validate(value)
-        url = urlparse(value)
-        if not url.scheme or not url.netloc:
-            raise ValidationError(f"{value} is not a valid URL address")
+        if value:
+            url = urlparse(value)
+            if not url.scheme or not url.netloc:
+                raise ValidationError(f"'{value}' is not a valid URL address")
 
 
-class Tel(Field):
+class Tel(String):
     def __init__(self, default="", **kwargs):
         """
         Telephone field, will validate the value of telephone numbers
@@ -599,9 +608,9 @@ class Tel(Field):
 
         Args:
             default (str, optional): default value. Defaults to ""
-            kwargs: any keyword arguments supported by `Field`
+            kwargs: other keyword arguments supported by `String`
         """
-        super().__init__(default, **kwargs)
+        super().__init__(default=default, **kwargs)
         self.regex = r"^\+?[0-9]{6,15}(?:x[0-9]+)?$"
 
     def validate(self, value):
@@ -615,8 +624,8 @@ class Tel(Field):
             ValidationError: in case the value is not a telephone
         """
         super().validate(value)
-        if not re.search(self.regex, value):
-            raise ValidationError(f"{value} is not a valid Telephone")
+        if value and not re.search(self.regex, value):
+            raise ValidationError(f"'{value}' is not a valid Telephone")
 
     def from_raw(self, value):
         """clean the telephone value from unwanted signs like , - ( )"""
@@ -726,8 +735,8 @@ class IPAddress(IPMixin, String):
             ValidationError: in case the value is not an IPAddress
         """
         super().validate(value)
-        if not self.is_ip(value):
-            raise ValidationError(f"{value} is not a valid IP address")
+        if value and not self.is_ip(value):
+            raise ValidationError(f"'{value}' is not a valid IP address")
 
     def from_raw(self, value):
         if isinstance(value, str):
@@ -762,8 +771,8 @@ class IPRange(IPMixin, String):
         """
 
         super().validate(value)
-        if not self.is_iface(value):
-            raise ValidationError(f"{value} is not a valid IP range/interface")
+        if value and not self.is_iface(value):
+            raise ValidationError(f"'{value}' is not a valid IP range/interface")
 
 
 class Port(Integer):
@@ -786,7 +795,7 @@ class Port(Integer):
 
 
 class GUID(String):
-    def __init__(self, **kwargs):
+    def __init__(self, default=None, **kwargs):
         """
         UUID v4 field, will be auto-generated by default.
 
@@ -800,18 +809,23 @@ class GUID(String):
         - UUID objects of type uuid.UUID
 
         Args:
-            kwargs: any keyword arguments supported by `Field`
+            default (str, optional): default value, will be auto-generated if None. Defaults to None
+            kwargs: other keyword arguments supported by `String`
         """
-        default = lambda: str(uuid.uuid4())
+        if not default:
+            default = lambda: str(uuid.uuid4())
         super().__init__(default=default, **kwargs)
 
     def validate(self, value):
         super().validate(value)
 
+        if not value:
+            return
+
         try:
             uuid.UUID(value, version=4)
         except ValueError as valexc:
-            raise ValidationError(f"'{value}' is invalid, {valexc}") from valexc
+            raise ValidationError(f"''{value}'' is invalid, {valexc}") from valexc
 
     def from_raw(self, value):
         """
@@ -916,12 +930,13 @@ class DateTimeMixin:
         Returns:
             int or float: utc timestamp
         """
-        return self.get_arrow_obj(dt_obj).to("utc").timestamp
+        if dt_obj:
+            return self.get_arrow_obj(dt_obj).to("utc").timestamp
 
     def validate(self, value):
         if isinstance(self.from_raw(value), str):
             # cannot convert from string, still an invalid format
-            raise ValidationError(f"{value} is not in the format of '{self.format}'")
+            raise ValidationError(f"'{value}' is not in the format of '{self.format}'")
 
         super().validate(value)
 
@@ -1003,7 +1018,8 @@ class Bytes(Typed):
         return value
 
     def to_raw(self, value):
-        return value.decode(self.encoding)
+        if value:
+            return value.decode(self.encoding)
 
 
 class Json(String):
@@ -1016,7 +1032,7 @@ class Json(String):
         Args:
             default (str, optional): default value. Defaults to "{}"
             encoding: encoding to be used when serializing the value. Defaults to "utf-8"
-            kwargs: any keyword arguments supported by `String`
+            kwargs: other keyword arguments supported by `String`
         """
         self.encoding = encoding
         super().__init__(default=default, **kwargs)
@@ -1033,11 +1049,14 @@ class Json(String):
         """
         super().validate(value)
 
+        if not value:
+            return
+
         # if it's a string, try to load it
         try:
             json.loads(value, encoding=self.encoding)
         except Exception as e:
-            raise ValidationError(f"{value} isn't a valid json, {e}") from e
+            raise ValidationError(f"'{value}' isn't a valid json, {e}") from e
 
     def from_raw(self, value):
         """

@@ -48,8 +48,8 @@ class StartupCmd(Base):
     process_strings = fields.List(fields.String())
     process_strings_regex = fields.List(fields.String())
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._process = None
         self._pid = None
         self._cmd_path = None

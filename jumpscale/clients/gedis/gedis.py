@@ -83,9 +83,10 @@ class GedisClient(Client):
     hostname = fields.String(default="localhost")
     port = fields.Integer(default=16000)
     raise_on_error = fields.Boolean(default=False)
+    disable_deserialization = fields.Boolean(default=False)
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._redisclient = None
         self._loaded_actors = {}
         self._loaded_modules = []
@@ -109,7 +110,7 @@ class GedisClient(Client):
             actor_info = self._get_actor_info(actor_name)
             self._load_module(actor_info["path"])
             self._loaded_actors[actor_name] = ActorProxy(actor_name, actor_info, self)
-        
+
         self.actors = ActorsCollection(self._loaded_actors)
 
     def _get_actor_info(self, actor_name):
@@ -117,7 +118,7 @@ class GedisClient(Client):
 
     def list_actors(self) -> list:
         """List actors
-        
+
         Returns:
             list -- List of loaded actors
         """
@@ -130,23 +131,25 @@ class GedisClient(Client):
 
     def execute(self, actor_name: str, actor_method: str, *args, die: bool = False, **kwargs) -> ActorResult:
         """Execute actor's method
-        
+
         Arguments:
             actor_name {str} -- actor name
             actor_method {str} -- actor method
-        
+
         Keyword Arguments:
             die {bool} --  flag to raise an error when request fails (default: {False})
-        
+
         Raises:
             RemoteException: Raises if the request failed and raise_on_error flag is set
-        
+
         Returns:
             ActorResult -- request result
         """
         payload = json.dumps((args, kwargs), default=serialize)
         response = self.redis_client.execute_command(actor_name, actor_method, payload)
-        response = json.loads(response, object_hook=deserialize)
+
+        deserializer = deserialize if not self.disable_deserialization else None
+        response = json.loads(response, object_hook=deserializer)
 
         if not response["success"]:
             if die or self.raise_on_error:
