@@ -70,6 +70,7 @@ class WhooshStore(EncryptedConfigStore):
         schema_fields = {KEY_FIELD_NAME: fields.ID(unique=True, stored=True)}
 
         for name, field in type_fields.items():
+            # TODO: should check for fields.indexed?
             field_type_name = field.__class__.__name__
             if field_type_name in FIELD_MAP:
                 schema_fields[name] = FIELD_MAP[field_type_name]
