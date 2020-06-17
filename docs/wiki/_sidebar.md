@@ -17,6 +17,8 @@
     * [Using jsync](./tutorials/jsync.md)
     * [Using Startup Commands](./tutorials/startup_commands.md)
     * [Using Tmux](./tutorials/tmux.md)
+    * [Github Actions](./tutorials/githubactions-ci.md)
+    * [Docker Images](./tutorials/docker_images.md)
 * Developers
     * Structure
     * [Developer setup](./devsetup.md)
