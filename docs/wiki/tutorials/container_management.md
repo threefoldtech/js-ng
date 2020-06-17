@@ -41,7 +41,7 @@ dcl.restart(<container_id>, timeout=20)
 ```
 dcl.start(<container_id>)
 ```
-##
+## stopping docker
 ```
 dcl.stop(<container_id>)
 ```
