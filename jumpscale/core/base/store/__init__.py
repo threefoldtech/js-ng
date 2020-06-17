@@ -14,7 +14,7 @@ from abc import ABC, abstractmethod
 from enum import Enum
 
 from jumpscale.data.nacl import NACL
-from jumpscale.data.serializers import base64, json
+from jumpscale.data.serializers import base64
 from jumpscale.core.config import Environment
 
 
@@ -146,8 +146,19 @@ class ConfigStore(ABC):
 class EncryptedConfigStore(ConfigStore, EncryptionMixin):
     """the base class for any config store backend"""
 
-    def __init__(self, location):
+    def __init__(self, location, serializer):
+        """
+        the base for encrypted config store
+
+        Args:
+            location (Location)
+            serializer (Serializer)
+
+        Raises:
+            InvalidPrivateKey: in case the private key is not configured
+        """
         self.location = location
+        self.serializer = serializer
         self.config_env = Environment()
         self.priv_key = base64.decode(self.config_env.get_private_key())
         self.nacl = NACL(private_key=self.priv_key)
@@ -212,7 +223,7 @@ class EncryptedConfigStore(ConfigStore, EncryptionMixin):
         Returns:
             dict: instance config as dict
         """
-        config = json.loads(self.read(instance_name))
+        config = self.serializer.deserialize(self.read(instance_name))
         return self._process_config(config, EncryptionMode.Decrypt)
 
     def find(self, **kwargs):
@@ -260,4 +271,4 @@ class EncryptedConfigStore(ConfigStore, EncryptionMixin):
             bool: written or not
         """
         new_config = self._process_config(config, EncryptionMode.Encrypt)
-        return self.write(instance_name, json.dumps(new_config))
+        return self.write(instance_name, self.serializer.serialize(new_config))

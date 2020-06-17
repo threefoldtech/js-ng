@@ -488,6 +488,10 @@ class StoredFactory(events.Handler, Factory):
         else:
             super()._delete_instance(name)
 
+    def find(self, name_or_query):
+        # TODO: pass the query store if find does not return anything
+        return super().find(name_or_query)
+
     def list_all(self):
         """
         get all instance names (stored or not)

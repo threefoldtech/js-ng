@@ -1,6 +1,7 @@
 import redis
 
 from . import EncryptedConfigStore
+from .serializers import JsonSerializer
 
 
 class RedisStore(EncryptedConfigStore):
@@ -19,7 +20,7 @@ class RedisStore(EncryptedConfigStore):
         Args:
             location (Location)
         """
-        super().__init__(location)
+        super().__init__(location, JsonSerializer())
         redis_config = self.config_env.get_store_config("redis")
         self.redis_client = redis.Redis(redis_config["hostname"], redis_config["port"])
 

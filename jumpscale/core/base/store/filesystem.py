@@ -1,8 +1,9 @@
 import os
 
 from . import EncryptedConfigStore
+from .serializers import JsonSerializer
 
-from jumpscale.sals.fs import read_file_binary, write_file_binary, rmtree
+from jumpscale.sals.fs import make_path, read_file_binary, rmtree, write_file_binary
 
 
 class FileSystemStore(EncryptedConfigStore):
@@ -23,7 +24,7 @@ class FileSystemStore(EncryptedConfigStore):
         Args:
             location (Location): where config will be stored per instance
         """
-        super(FileSystemStore, self).__init__(location)
+        super(FileSystemStore, self).__init__(location, JsonSerializer())
         self.root = self.config_env.get_store_config("filesystem")["path"]
 
     @property
@@ -59,17 +60,6 @@ class FileSystemStore(EncryptedConfigStore):
             str: path
         """
         return os.path.join(self.get_instance_root(instance_name), "data")
-
-    def make_path(self, path):
-        """
-        to ensure the given path, create it if it does not exist
-
-        Args:
-            path (str): path
-        """
-        if not os.path.exists(path):
-            os.makedirs(os.path.dirname(path), exist_ok=True)
-            os.mknod(path)
 
     def read(self, instance_name):
         """
@@ -107,7 +97,7 @@ class FileSystemStore(EncryptedConfigStore):
             bool: written or not
         """
         path = self.get_path(instance_name)
-        self.make_path(path)
+        make_path(path)
         return write_file_binary(path, data.encode())
 
     def delete(self, instance_name):
