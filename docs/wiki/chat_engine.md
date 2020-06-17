@@ -1,11 +1,11 @@
 # Chatflow Engine
 
 
-Chatflows are an interactive communication bot that can be used to interactively ask the user some questions then perform actions based on the user's choices. think of serving a customer, handling invoices, buying items or in our case provisioning workloads on the grid.
+Chatflows are an interactive communication bot that can be used to interactively ask the user some questions then perform actions based on the user's choices. Think of serving a customer, handling invoices, buying items or in our case provisioning workloads on the grid.
 
 ## Usage
 
-it's very easy to define a new bot, you just need to make sure it's added in a package and that package is installed. The chatflow should be under the `/chatflows` directory in the package created.
+It's very easy to define a new bot, you just need to make sure it's added in a package and that package is installed. The chatflow should be under the `/chats` directory in the package created.
 
 Here is an example for a simple chatflow that will help you order a meal from one of your favorite restaurants
 
@@ -28,7 +28,7 @@ class Your_Order(GedisChatBot):
     }
 
     # Ask the user about his name
-    name = self.string_ask("Hello, What's your name?")
+    name = self.string_ask("Hello, What's your name?", default="Man")
 
     # display a dropdown containing your favourite Restaurants
     restaurant_name = self.drop_down_choice("Please select a Resturant", menus.keys())
@@ -39,7 +39,7 @@ class Your_Order(GedisChatBot):
     # ask about the mount (this accepts any integer)
     amount = self.int_ask("How many {} do you want".format(main_dish))
 
-    # ask about the side dishes (the user can choose multible side dishes)
+    # ask about the side dishes (the user can choose multiple side dishes)
     side_dish = self.multi_choice("what do you want with your order", menus[restaurant_name]["sides"])
 
     # Now you can add any logic you want here to send the order to the restaurant
@@ -78,6 +78,8 @@ class Your_Order(GedisChatBot):
 - loading_show
 - new_form
 - multi_values_ask
+
+### Slide steps:
 - chatflow_step
 
 ### Example of chatflow steps:
