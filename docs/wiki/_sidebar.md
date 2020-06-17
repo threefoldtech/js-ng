@@ -15,6 +15,8 @@
     * [Developing a client](./tutorials/developing_client.md)
     * Developing a Builder
     * [Using jsync](./tutorials/jsync.md)
+    * [Using Startup Commands](./tutorials/startup_commands.md)
+    * [Using Tmux](./tutorials/tmux.md)
 * Developers
     * Structure
     * [Developer setup](./devsetup.md)
