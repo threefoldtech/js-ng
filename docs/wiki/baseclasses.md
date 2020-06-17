@@ -96,7 +96,7 @@ user1.save()
 Fields of the config
 can have default value, required or optional, indexed or not, set of validators as well
 
-See a complete list of available fields at https://js-next.github.io/js-ng/api/jumpscale/core/base/fields.html.
+See a complete list of available fields at https://threefoldtech.github.io/js-ng/api/jumpscale/core/base/fields.html.
 
 
 ## Clients

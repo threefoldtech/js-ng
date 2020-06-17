@@ -50,24 +50,25 @@ def execute(
     die=False,
 ):
     """
-    execute a command
+    execute a command.
+
+    accepts command as a list too, with auto-escaping.
 
     Arguments:
-        cmd (str): command to be executed
+        cmd (str or list): command to be executed, e.g. `"ls -la"` or `["ls", "-la"]
 
     Keyword Arguments:
-        showout (bool): show stdout of the command (default: {False})
-        cwd (str): specify a working directory for the command (default: {None})
-        shell {str}: specify a shell to execute the command (default: {"/bin/bash"})
-        timeout {int}: timeout before kill the process (default: {600})
-        asynchronous {bool}: execute in asyncronous mode or not (default: {False})
-        env {dict}: add environment variables here (default: {{}})
-        replace_env {bool}: replace entire environment with env (default: {False})
-        die {bool}: die if command failed (default: {False})
-
+        showout (bool): show stdout of the command (default: False)
+        cwd (str): specify a working directory for the command (default: None)
+        shell (str): specify a shell to execute the command (default: "/bin/bash")
+        timeout (int): timeout before kill the process (default: 600)
+        asynchronous (bool): execute in asynchronous mode or not (default: False)
+        env (dict): add environment variables here (default: {})
+        replace_env (bool): replace entire environment with env (default: False)
+        die (bool): die if command failed (default: False)
 
     Returns:
-        [tuple] -- (rc, out, err)
+        tuple: (rc, out, err)
     """
     return j.core.executors.run_local(
         cmd=cmd,

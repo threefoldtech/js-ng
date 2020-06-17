@@ -1,4 +1,3 @@
-'''
 # schemac 
 
 Schemac is a tool used to convert (transpile) the schemas defined in jsx systems into the new objects definitions in js-ng
@@ -114,9 +113,3 @@ class DespiegkTest(Base):
     nrdefault3 = fields.Integer(default=0)
 
 ```
-'''
-
-def get_compiler(schema_text, lang="python"):
-    from .compiler import Compiler
-
-    return Compiler(lang, schema_text)

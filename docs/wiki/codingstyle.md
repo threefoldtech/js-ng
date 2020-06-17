@@ -74,7 +74,7 @@ One word for a package is the most preferable name
 ## Documentation
 
 ### Module
-- Every module starts with a docstring describing the module and its purpose and a little snippet of code of some of its use cases. check [fields](https://github.com/js-next/js-ng/blob/44b5b99373c3ef677aae721324ba5e8d5a042f80/jumpscale/core/base/fields.py#L1) module for inspiration
+- Every module starts with a docstring describing the module and its purpose and a little snippet of code of some of its use cases. check [fields](https://github.com/threefoldtech/js-ng/blob/44b5b99373c3ef677aae721324ba5e8d5a042f80/jumpscale/core/base/fields.py#L1) module for inspiration
 - Markdown is valid in the docstrings so you can make use of anything markdown.
 - When you want to reference something in the rest of your module use backticks around the identifier
 - If you want to reference with a fully qualified name write it in the docstring surrounded with backticks e.g `jumpscale.core.base.meta`.
