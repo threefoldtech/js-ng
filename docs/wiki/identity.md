@@ -18,7 +18,10 @@ me.tid
 # or
 j.core.identity.me.tid
 ```
-
+To register your identity in TFGrid
+```python
+me.register()
+```
 To change the default `me`
 ```python
 j.core.identity.set_default("othername")
