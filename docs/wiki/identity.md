@@ -14,12 +14,14 @@ me = j.core.identity.new("name", "threebot_name", "threebot_mail", "words")
 To access his threebot id:
 
 ```python
+
 me.tid
 # or
 j.core.identity.me.tid
 ```
 To register your identity in TFGrid
 ```python
+me.save()
 me.register()
 ```
 To change the default `me`

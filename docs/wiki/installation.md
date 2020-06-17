@@ -1,15 +1,16 @@
 # All in one installation
 Installation is as easy as `pip install js-ng`
 # Step-by-step installation
-## Install requierd packages 
+## Install requierd packages
 ```
 apt-get update
 apt-get install git python3-venv python3-pip
 pip3 install poetry
 ```
-## clone repo 
+## clone repo
 ```
 git clone https://github.com/js-next/js-ng.git
+cd js-ng
 ```
 ## User Installation
 ```
