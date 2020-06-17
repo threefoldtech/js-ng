@@ -13,6 +13,7 @@ import nacl.utils
 import nacl.encoding
 import pytoml as toml
 from nacl.public import PrivateKey
+import pkg_resources
 
 
 __all__ = [
@@ -24,11 +25,16 @@ __all__ = [
     "Environment",
     "get",
     "set",
+    "get_current_version",
 ]
 
 
 config_root = os.path.expanduser(os.path.join("~/.config", "jumpscale"))
 config_path = os.path.join(config_root, "config.toml")
+
+
+def get_current_version():
+    return pkg_resources.get_distribution("js-ng").version
 
 
 def get_default_config():
@@ -62,12 +68,8 @@ def get_default_config():
             "filesystem": {"path": os.path.expanduser(os.path.join(config_root, "secureconfig"))},
         },
         "store": "filesystem",
-        "threebot": {
-            "default": "",
-        },
-        "explorer": {
-            "default_url": "https://explorer.testnet.grid.tf/explorer",
-        },
+        "threebot": {"default": "",},
+        "explorer": {"default_url": "https://explorer.testnet.grid.tf/explorer",},
     }
 
 
