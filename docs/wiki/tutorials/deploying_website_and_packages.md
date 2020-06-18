@@ -8,7 +8,7 @@
 
 ## Requirments
 
-- [JS-NG](https://js-next.github.io/js-ng/wiki/#/./installation)
+- [JS-NG](https://threefoldtech.github.io/js-ng/wiki/#/./installation)
 - Redis (Install using: `apt install redis`)
 - Nginx (Install using: `apt install nginx`)
 - Certbot [Install](https://certbot.eff.org/lets-encrypt/ubuntuxenial-nginx.html)

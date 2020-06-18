@@ -8,4 +8,4 @@ TODO describe what can be done using js-ng
 
 ## API Docs
 
-[browsable](https://js-next.github.io/js-ng/api/jumpscale/) at [https://js-next.github.io/js-ng/api/jumpscale/](https://js-next.github.io/js-ng/api/jumpscale/)
+[browsable](https://threefoldtech.github.io/js-ng/api/jumpscale/) at [https://threefoldtech.github.io/js-ng/api/jumpscale/](https://threefoldtech.github.io/js-ng/api/jumpscale/)

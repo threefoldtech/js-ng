@@ -36,8 +36,7 @@ class Logger:
     def appname(self):
         return self._appname
 
-    @appname.setter
-    def appname(self, appname):
+    def set_appname(self, appname):
         self._appname = appname
         self._logger = self._logger.bind(appname=appname)
 

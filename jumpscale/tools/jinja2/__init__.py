@@ -1,3 +1,44 @@
+"""This module helps with the common operations of jinja2 and reduces the boilerplate around it
+
+
+## Getting environment
+
+```python
+from jinja2 import (
+    Environment,
+    FileSystemLoader,
+    select_autoescape,
+    StrictUndefined,
+    Template,
+)
+env = Environment(loader=FileSystemLoader(templates_path), autoescape=select_autoescape(["html", "xml"]),)
+
+```
+but you can easily get the Environment without worrying too much about the syntax with `j.tools.jinja2.get_env()` and that's it.
+
+
+## Getting a template from path or text
+and same for getting a specific template object from a text or a file, but you can easily do `get_template(template_path=...)` or `get_template(template_text=...)`
+
+
+## Rendering a template with data
+you can render from a file path or a text directly using `j.tools.jinja2.render_template` and pass `template_text` in case of a string or `template_path` in case of a file path.
+
+e.g
+
+```python
+        data = dict(
+            generated_class_name=schema.url_to_class_name,
+            generated_properties=schema.props,
+            types_map=self._types_map,
+            enums=schema.get_enums_required(),
+            classes=schema.get_classes_required(),
+            get_prop_line=self._get_prop_line,
+        )
+        return j.tools.jinja2.render_template(template_text=self._single_template, **data)
+```
+"""
+
 from jumpscale.god import j
 from jinja2 import (
     Environment,

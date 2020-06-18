@@ -1,4 +1,5 @@
 # -*- mode: python ; coding: utf-8 -*-
+import wcwidth
 
 block_cipher = None
 
@@ -6,7 +7,9 @@ block_cipher = None
 a = Analysis(['jumpscale/entry_points/usershell.py'],
              pathex=['/tmp'],
              binaries=[],
-             datas=[],
+             datas=[
+                 (os.path.dirname(wcwidth.__file__), 'wcwidth')
+                 ],
              hiddenimports = ["packaging.requirements", "pkg_resources.py2_warn", "pathlib", "_cffi_backend"],
              hookspath=[],
              runtime_hooks=[],
@@ -23,7 +26,7 @@ exe = EXE(pyz,
           a.zipfiles,
           a.datas,
           [],
-          name='usershell',
+          name='3sdk',
           debug=False,
           bootloader_ignore_signals=False,
           strip=True,

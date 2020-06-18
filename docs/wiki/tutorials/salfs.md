@@ -7,7 +7,7 @@ Manipulating filesystem is one of the most common things in the daily life of a 
 
 ```
 > j.sals.fs.cwd()
-'/home/xmonader/wspace/js-next/js-ng'
+'/home/xmonader/wspace/threefoldtech/js-ng'
 ```
 
 ### Get basename
@@ -19,9 +19,9 @@ Manipulating filesystem is one of the most common things in the daily life of a 
 ### Get Dir name
 ```
 > j.sals.fs.dirname(j.sals.fs.cwd())
-'/home/xmonader/wspace/js-next'
+'/home/xmonader/wspace/threefoldtech'
 > j.sals.fs.parent(j.sals.fs.cwd()) 
-'/home/xmonader/wspace/js-next'
+'/home/xmonader/wspace/threefoldtech'
 ```
 
 ### is dir

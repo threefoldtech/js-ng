@@ -27,7 +27,7 @@ we integrate [better_exceptions](https://github.com/Qix-/better-exceptions) for 
 JS-NG> j.data.serializers.base64.encode(obj)
 Traceback (most recent call last):
   File "<stdin>", line 1, in <module>
-  File "/home/xmonader/wspace/js-next/js-ng/jumpscale/data/serializers/base64.py", line 17, in encod
+  File "/home/xmonader/wspace/threefoldtech/js-ng/jumpscale/data/serializers/base64.py", line 17, in encod
 e
     return base64.b64encode(b)
            │                └ {'name': 'username', 'list': [1, 3, 4, 7], 'n': 5}

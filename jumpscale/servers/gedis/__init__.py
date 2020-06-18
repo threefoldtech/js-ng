@@ -4,7 +4,7 @@
 ```
 ~>  redis-cli -p 16000 greeter hi
 actor greeter isn't loaded
- ~>  redis-cli -p 16000 system register_actor greeter /home/ahmed/wspace/js-next/js-ng/jumpscale/servers/gedis/example_greeter.py
+ ~>  redis-cli -p 16000 system register_actor greeter /home/ahmed/wspace/threefoldtech/js-ng/jumpscale/servers/gedis/example_greeter.py
 (integer) -1
  ~>  redis-cli -p 16000 greeter hi
  hello world
@@ -15,7 +15,7 @@ actor greeter isn't loaded
 16000/tcp:           29331
  ~>  redis-cli -p 16000 greeter hi
  actor greeter isn't loaded
- ~>  redis-cli -p 16000 system register_actor greeter /home/ahmed/wspace/js-next/js-ng/jumpscale/servers/gedis/example_greeter.py
+ ~>  redis-cli -p 16000 system register_actor greeter /home/ahmed/wspace/threefoldtech/js-ng/jumpscale/servers/gedis/example_greeter.py
 (integer) -1
  ~>  redis-cli -p 16000 greeter hi
  hello world
