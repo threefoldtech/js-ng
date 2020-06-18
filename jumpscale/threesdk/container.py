@@ -1,6 +1,7 @@
 from jumpscale.clients.docker.docker import DockerClient
 from jumpscale.core.dirs.dirs import Dirs
 from jumpscale.core.exceptions import Value
+from jumpscale.core.executors.local import execute
 
 docker_client = DockerClient()
 
@@ -42,6 +43,21 @@ class Container:
         if not docker_client.exists(name):
             raise Value("Container with specified name doesn't exist")
         docker_client.start(name)
+
+    @staticmethod
+    def exec(name, cmd):
+        """Execute command in container
+
+        Args:
+            name (str): name of the container
+            cmd (str or list): command to execute
+        """
+        basecmd = ["docker", "exec", "-it", name]
+        if isinstance(cmd, str):
+            basecmd.append(cmd)
+        else:
+            basecmd += cmd
+        execute(basecmd, pty=True)
 
     @staticmethod
     def stop(name):
