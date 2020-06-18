@@ -3,20 +3,19 @@ this module mostly test creating/storing/reteriving objects/instances
 
 which makes sure every field is serialized correctly
 """
-from enum import Enum
 import unittest
-
+from enum import Enum
 
 # TODO: move fields to fields or types module
-from jumpscale.core.base import Base, Factory, StoredFactory, DuplicateError, fields
+from jumpscale.core.base import Base, DuplicateError, Factory, StoredFactory, fields
 
 
 class Address(Base):
     x = fields.Integer()
     name = fields.String()
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.x = 123
 
 

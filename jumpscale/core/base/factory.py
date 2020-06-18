@@ -33,7 +33,7 @@ from functools import partial
 from jumpscale.core import config, events
 
 from .events import AttributeUpdateEvent, InstanceCreateEvent, InstanceDeleteEvent
-from .store import Location
+from .store import KEY_FIELD_NAME, Location
 from .store.filesystem import FileSystemStore
 from .store.redis import RedisStore
 from .store.whooshfts import WhooshStore
@@ -290,6 +290,7 @@ class StoredFactory(events.Handler, Factory):
             parent_factory_ (Factory, optional): a parent `Factory`. Defaults to None.
         """
         super().__init__(type_, name_=name_, parent_instance_=parent_instance_, parent_factory_=parent_factory_)
+        self.__store = None
 
         if not parent_instance_:
             # no parent, then load all instance configurations
@@ -335,7 +336,9 @@ class StoredFactory(events.Handler, Factory):
 
     @property
     def store(self):
-        return self.STORE(self.location)
+        if not self.__store:
+            self.__store = self.STORE(self.location)
+        return self.__store
 
     def _validate_and_save_instance(self, instance):
         """
@@ -488,9 +491,30 @@ class StoredFactory(events.Handler, Factory):
         else:
             super()._delete_instance(name)
 
-    def find(self, name_or_query):
-        # TODO: pass the query store if find does not return anything
-        return super().find(name_or_query)
+    def find_many(self, cursor_=None, limit_=None, **query):
+        """
+        do a search against the store (not loaded objects) with this query.
+
+        queries can relate to current store backend used.
+
+        Keyword Args:
+            cursor_ (any, optional): an optional cursor, to start searching from. Defaults to None.
+            limit_ (int, optional): results limit. Defaults to None.
+            query: a mapping for field/query, e.g. first_name="aa"
+
+        Returns:
+            list: a list of objects as a result
+        """
+        found = []
+
+        for data in self.store.find(cursor_=cursor_, limit_=limit_, **query):
+            # name = data.pop(KEY_FIELD_NAME)
+            name = data[KEY_FIELD_NAME]
+            instance = self._create_instance(name, **data)
+            self._init_save_and_sub_factories(instance)
+            found.append(instance)
+
+        return found
 
     def list_all(self):
         """

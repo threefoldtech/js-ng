@@ -1,10 +1,10 @@
 from whoosh import fields
 from whoosh.index import create_in, exists_in, open_dir
+from whoosh.qparser import FuzzyTermPlugin, GtLtPlugin, MultifieldParser, PhrasePlugin
 from whoosh.writing import AsyncWriter
 
-from . import EncryptedConfigStore
+from . import EncryptedConfigStore, KEY_FIELD_NAME
 from .serializers import Serializer
-
 
 from jumpscale.sals.fs import join_paths, mkdirs
 
@@ -13,28 +13,24 @@ from jumpscale.sals.fs import join_paths, mkdirs
 # they will only be stored but not indexed
 FIELD_MAP = {
     "Boolean": fields.BOOLEAN(stored=True),
-    "Bytes": fields.TEXT(stored=True),
-    "Email": fields.TEXT(stored=True),
+    "Bytes": fields.NGRAM(stored=True),
+    "Email": fields.NGRAM(stored=True),
     "GUID": fields.TEXT(stored=True),
     "IPAddress": fields.TEXT(stored=True),
     "IPRange": fields.TEXT(stored=True),
     "Json": fields.TEXT(stored=True),
-    "Path": fields.TEXT(stored=True),
-    "String": fields.TEXT(stored=True),
-    "Tel": fields.TEXT(stored=True),
-    "URL": fields.TEXT(stored=True),
-    "Integer": fields.NUMERIC(stored=True),
-    "Float": fields.NUMERIC(stored=True),
-    "Port": fields.NUMERIC(stored=True),
-    "Enum": fields.IDLIST(stored=True),
-    "Date": fields.NUMERIC(stored=True),
-    "DateTime": fields.NUMERIC(stored=True),
-    "Time": fields.NUMERIC(stored=True),
+    "Path": fields.ID(stored=True),
+    "String": fields.NGRAM(stored=True),
+    "Tel": fields.NGRAM(stored=True),
+    "URL": fields.NGRAM(stored=True),
+    "Integer": fields.NUMERIC(bits=64, stored=True, sortable=True),
+    "Float": fields.NUMERIC(float, bits=64, stored=True, sortable=True),
+    "Port": fields.NUMERIC(stored=True, sortable=True),
+    "Enum": fields.ID(stored=True),
+    "Date": fields.NUMERIC(stored=True, sortable=True),
+    "DateTime": fields.NUMERIC(stored=True, sortable=True),
+    "Time": fields.NUMERIC(stored=True, sortable=True),
 }
-
-# we will use this as a key for indexed documents
-# will be added for every document
-KEY_FIELD_NAME = "instance_name_"
 
 
 class WhooshStore(EncryptedConfigStore):
@@ -56,7 +52,12 @@ class WhooshStore(EncryptedConfigStore):
         super().__init__(location, Serializer())
         config = self.config_env.get_store_config("whoosh")
         self.base_index_path = config["path"]
-        self.index = self.get_index()
+        self.schema = self.get_schema()
+        self.index = self.get_index(self.schema)
+
+        self.default_plugins = [FuzzyTermPlugin(), GtLtPlugin(), PhrasePlugin()]
+        self.default_pagenum = 1
+        self.default_pagelen = 20
 
     @property
     def index_path(self):
@@ -64,8 +65,7 @@ class WhooshStore(EncryptedConfigStore):
         mkdirs(path)
         return path
 
-    @property
-    def schema(self):
+    def get_schema(self):
         type_fields = self.location.type._fields
         schema_fields = {KEY_FIELD_NAME: fields.ID(unique=True, stored=True)}
 
@@ -79,10 +79,10 @@ class WhooshStore(EncryptedConfigStore):
 
         return fields.Schema(**schema_fields)
 
-    def get_index(self):
+    def get_index(self, schema):
         if exists_in(self.index_path):
-            return open_dir(self.index_path)
-        return create_in(self.index_path, self.schema)
+            return open_dir(self.index_path, schema=schema)
+        return create_in(self.index_path, schema=schema)
 
     def get_reader(self):
         return self.index.reader()
@@ -116,45 +116,24 @@ class WhooshStore(EncryptedConfigStore):
                 names.add(doc[KEY_FIELD_NAME])
         return names
 
-    def find(self, **queries):
-        # should search queries by given fields
-        # TODO: we need to decide if query will be given by caller/user
-        # or we would build it based fields/query mapping given
-        pass
+    def find(self, cursor_=None, limit_=None, **queries):
+        fields = queries.keys()
+        query_text = " ".join([f"{field}:{queries[field]}" for field in fields])
+
+        parser = MultifieldParser(fields, schema=self.schema)
+        parser.add_plugins(self.default_plugins)
+
+        query = parser.parse(query_text)
+        searcher = self.get_searcher()
+
+        if not cursor_:
+            cursor_ = self.default_pagenum
+        if not limit_:
+            limit_ = self.default_pagelen
+
+        return searcher.search_page(query, pagenum=cursor_, pagelen=limit_)
 
     def delete(self, instance_name):
         writer = self.get_writer()
         writer.delete_by_term(KEY_FIELD_NAME, instance_name)
         writer.commit()
-
-
-# # Boolean,
-# # Bytes,
-# # Date,
-# # DateTime,
-# # Email,
-# # Enum,
-# # Factory,
-# # Float,
-# # GUID,
-# # IPAddress,
-# # IPRange,
-# # Integer,
-# # Json,
-# # List,
-# # Object,
-# # Path,
-# # Permission,
-# # Port,
-# # Secret,
-# # Server,
-# # String,
-# # Tel,
-# # Time,
-# # Typed,
-# # URL,
-# # User,
-# # UserFactory,
-# # UserType,
-# # ValidationError,
-# # )

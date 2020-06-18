@@ -18,6 +18,10 @@ from jumpscale.data.serializers import base64
 from jumpscale.core.config import Environment
 
 
+# we will use this as a key field name to get it when searching
+KEY_FIELD_NAME = "instance_name_"
+
+
 class InvalidPrivateKey(Exception):
     """
     raised when the private key configured is invalid
@@ -139,6 +143,10 @@ class ConfigStore(ABC):
         pass
 
     @abstractmethod
+    def find(self, cursor_=None, limit_=None, **queries):
+        pass
+
+    @abstractmethod
     def delete(self, instance_name):
         pass
 
@@ -226,13 +234,15 @@ class EncryptedConfigStore(ConfigStore, EncryptionMixin):
         config = self.serializer.deserialize(self.read(instance_name))
         return self._process_config(config, EncryptionMode.Decrypt)
 
-    def find(self, **kwargs):
+    def find(self, cursor_=None, limit_=None, **kwargs):
         """
         a generic find, which do a linear search over all items
 
         if you want a better way, use a store which provides search
 
         Args:
+            cursor_ (any, optional): an optional cursor, to start searching from. Defaults to None.
+            limit_ (int, optional): results limit. Defaults to None.
             kwargs: a mapping between field and value fo search by
 
         Returns:
@@ -241,9 +251,16 @@ class EncryptedConfigStore(ConfigStore, EncryptionMixin):
         found = []
 
         for name in self.list_all():
+            if cursor_ and name != cursor_:
+                continue
+
+            if limit_ and limit_ >= len(found):
+                break
+
             data = self.get(name)
             for name, value in kwargs.items():
                 if name in data:
+                    data[KEY_FIELD_NAME] = name
                     target_value = data[name]
                     if isinstance(target_value, str):
                         # just a simple normalization
