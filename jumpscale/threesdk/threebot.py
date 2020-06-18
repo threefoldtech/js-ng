@@ -101,3 +101,21 @@ class ThreeBot(Container):
         if configure:
             container.exec_run(["jsng", f"j.core.identity.new('default', '{identity}', '{email}', '{words}')"])
             container.exec_run(["jsng", "j.core.identity.set_default('default')"])
+
+    @staticmethod
+    def jsng(name=DEFAULT_CONTAINER_NAME):
+        """Get's shell in threebot
+
+        Args:
+            name (str): name of the container
+        """
+        Container.exec(name, "jsng")
+
+    @staticmethod
+    def shell(name=DEFAULT_CONTAINER_NAME):
+        """Get's shell in threebot
+
+        Args:
+            name (str): name of the container
+        """
+        Container.exec(name, "bash")
