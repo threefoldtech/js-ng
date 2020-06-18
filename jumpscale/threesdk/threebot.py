@@ -2,6 +2,7 @@ import requests
 import os
 
 from .container import Container
+from . import settings
 
 from jumpscale.core.exceptions import Value
 from jumpscale.data.encryption import mnemonic
@@ -60,7 +61,7 @@ class ThreeBot(Container):
 
     @staticmethod
     def install(
-        name=None, image=None, identity=None, email=None, words=None, explorer=None, development: bool = False,
+        name=None, image=None, identity=None, email=None, words=None, explorer=None, development: bool = None,
     ):
         """Creates a threebot container
 
@@ -77,6 +78,8 @@ class ThreeBot(Container):
             Value: Container with specified name already exists
             Value: explorer not in mainnet, testnet, devnet
         """
+        if development is None:
+            development = settings.expert
         name = name or DEFAULT_CONTAINER_NAME
         current_version = get_current_version()
         image = image or f"{DEFAULT_IMAGE}:{current_version}"
