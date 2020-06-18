@@ -9,7 +9,7 @@ pip3 install poetry
 ```
 ## clone repo 
 ```
-git clone https://github.com/js-next/js-ng.git
+git clone https://github.com/threefoldtech/js-ng.git
 ```
 ## User Installation
 ```

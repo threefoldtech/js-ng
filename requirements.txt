@@ -38,7 +38,6 @@ ipython==7.14.0
 ipython-genutils==0.2.0
 jedi==0.17.0
 Jinja2==2.11.2
--e git+git@github.com:js-next/js-ng@ed42117f06e08de93957f7a163d568e56d2ee6ac#egg=js_ng
 jsonpickle==1.4.1
 libtmux==0.8.2
 loguru==0.3.2

@@ -3,6 +3,8 @@ import re
 import time
 import sys
 import traceback
+import argparse
+import requests
 
 import inspect
 import cgi
@@ -15,6 +17,9 @@ from prompt_toolkit.validation import Validator, ValidationError
 from prompt_toolkit.styles import Style
 from prompt_toolkit.formatted_text import HTML
 from jumpscale import threesdk
+from jumpscale.clients.docker.docker import DockerClient
+from jumpscale.threesdk.threebot import ThreeBot, DEFAULT_IMAGE
+from jumpscale.core.config import get_current_version
 
 
 BASE_CONFIG_DIR = os.path.join(os.environ.get("HOME", "/root"), ".jsng")
@@ -32,10 +37,36 @@ style = Style.from_dict(
 )
 
 
+def get_binary_link():
+    resp = requests.get("https://api.github.com/repos/threefoldtech/js-ng/releases/latest")
+    resp = resp.json()
+    # get versions
+    download_link = ""
+    version = resp["tag_name"]
+    for platform in resp["assets"]:
+        if sys.platform in platform["name"]:
+            download_link = platform["browser_download_url"]
+    return version, download_link
+
+
+def update():
+    print("checking for updates")
+    latest_version, binary_link = get_binary_link()
+    current_version = get_current_version()
+    if latest_version != current_version:
+        print(f"version: {latest_version} is available get it from {binary_link}")
+        return
+    docker_client = DockerClient()
+    print("Checking for new docker image")
+    docker_client.client.images.pull(f"{DEFAULT_IMAGE}:{latest_version}")
+    print("Starting 3sdk containers")
+    for container_name in os.listdir(os.path.expanduser("~/.config/jumpscale/containers")):
+        ThreeBot.delete(container_name)
+        ThreeBot.install(container_name)
+
+
 def print_error(error):
-    print_formatted_text(
-        HTML("<ansired>{}</ansired>".format(cgi.html.escape(str(error))))
-    )
+    print_formatted_text(HTML("<ansired>{}</ansired>".format(cgi.html.escape(str(error)))))
 
 
 def partition_line(line):
@@ -50,12 +81,8 @@ def partition_line(line):
 
 
 def noexpert_error(error):
-    reports_location = (
-        f"{os.environ.get('HOME', os.environ.get('USERPROFILE', ''))}/sandbox/reports"
-    )
-    error_file_location = (
-        f"{reports_location}/jsxreport_{time.strftime('%d%H%M%S')}.log"
-    )
+    reports_location = f"{os.environ.get('HOME', os.environ.get('USERPROFILE', ''))}/sandbox/reports"
+    error_file_location = f"{reports_location}/jsxreport_{time.strftime('%d%H%M%S')}.log"
     if not os.path.exists(reports_location):
         os.makedirs(reports_location)
     with open(error_file_location, "w") as f:
@@ -67,9 +94,10 @@ Error report file has been created on your machine in this location: {error_file
 
 
 class Shell(Validator):
-    def __init__(self):
+    def __init__(self, expert):
         self._prompt = PromptSession()
         self.mode = None
+        self.expert = expert
         self.toolbarmsg = DEFAULT_TOOLBAR_MSG
 
     def get_completions_async(self, document, complete_event):
@@ -90,7 +118,7 @@ class Shell(Validator):
             obj = getattr(threesdk, root)
             if not more or not hasattr(obj, more[0]):
                 # complete object attributes
-                self.toolbarmsg = obj.__doc__.strip().splitlines()[0]
+                self.toolbarmsg = threesdk._get_doc_line(obj.__doc__)
                 for name, member in inspect.getmembers(obj, inspect.isroutine):
                     if not name.startswith("_"):
                         items.append(name)
@@ -98,7 +126,7 @@ class Shell(Validator):
             else:
                 # complete arguments
                 func = getattr(obj, more[0])
-                self.toolbarmsg = func.__doc__.strip().splitlines()[0]
+                self.toolbarmsg = threesdk._get_doc_line(func.__doc__)
                 style = "bg:ansired"
                 for arg in inspect.getfullargspec(func).args:
                     field = arg + "="
@@ -169,12 +197,16 @@ class Shell(Validator):
         return kwargs
 
     def execute(self, cmd):
+        if not cmd.strip():
+            return
         try:
             func, kwargs = self.get_func_kwargs(cmd)
             func(**kwargs)
         except Exception:
-            # print_error(noexpert_error(traceback.format_exc()))
-            print_error(traceback.format_exc())
+            if self.expert:
+                print_error(noexpert_error(traceback.format_exc()))
+            else:
+                print_error(traceback.format_exc())
 
     def make_prompt(self):
         root = ("class:default", "3sdk>")
@@ -187,17 +219,21 @@ class Shell(Validator):
 
     def prompt(self, msg):
         return self._prompt.prompt(
-            msg,
-            completer=self,
-            validator=self,
-            style=style,
-            bottom_toolbar=self.bottom_toolbar,
+            msg, completer=self, validator=self, style=style, bottom_toolbar=self.bottom_toolbar,
         )
 
 
 def run():
-    shell = Shell()
-    shell.make_prompt()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--update", action="store_true", help="Update 3sdk")
+    parser.add_argument("--expert", action="store_true", help="Run 3sdk in expert mode")
+    args = parser.parse_args()
+
+    if args.update:
+        update()
+    else:
+        shell = Shell(args.expert)
+        shell.make_prompt()
 
 
 if __name__ == "__main__":

@@ -58,7 +58,7 @@ js-ng
 ├── README.md
 └── tests
     └── test_loads_j.py
-js-ext
+js-sdk
 ├── jumpscale
 │   ├── clients
 │   │   └── gitlab

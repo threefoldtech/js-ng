@@ -2,17 +2,17 @@
 Executor Local allows executing commands within specific env on the local machine. using the executor framework you can retrieve the stdout, stderr, and the return code as well.
 ```
 JS-NG> j.core.executors.run_local("echo $WHOME", env={'WHOME':'abc'}, ech
-     1 o=True)                                                           
+     1 o=True)
 echo $WHOME
 abc
 <Result cmd='echo $WHOME' exited=0>
 
-JS-NG> j.core.executors.run_local("uname", echo=True)                    
+JS-NG> j.core.executors.run_local("uname", echo=True)
 uname
 Linux
 <Result cmd='uname' exited=0>
 
-JS-NG> j.core.executors.run_local("uname", echo=False)                   
+JS-NG> j.core.executors.run_local("uname", echo=False)
 Linux
 <Result cmd='uname' exited=0>
 ```
@@ -21,7 +21,10 @@ Linux
 """
 import invoke
 
+from .command_builder import cmd_from_args
 
+
+@cmd_from_args
 def execute(cmd, **command_ctx):
     """
     :param str shell:

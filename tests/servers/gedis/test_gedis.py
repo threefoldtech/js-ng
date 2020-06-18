@@ -9,8 +9,8 @@ from tests.servers.gedis.test_actor import TestObject
 
 COUNT = 1000
 POOLS_COUNT = 100
-TEST_ACTOR_PATH = "/sandbox/code/github/js-next/js-ng/tests/servers/gedis/test_actor.py"
-MEMORY_ACTOR_PATH = "/sandbox/code/github/js-next/js-ng/tests/servers/gedis/memory_profiler.py"
+TEST_ACTOR_PATH = "/sandbox/code/github/threefoldtech/js-ng/tests/servers/gedis/test_actor.py"
+MEMORY_ACTOR_PATH = "/sandbox/code/github/threefoldtech/js-ng/tests/servers/gedis/memory_profiler.py"
 
 
 class TestGedis(unittest.TestCase):

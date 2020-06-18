@@ -10,15 +10,14 @@ class Container:
     """
 
     @staticmethod
-    def install(
-        name, image, expert: bool = False,
-    ):
+    def install(name, image, development: bool = False, volumes=None):
         """Creates a container
 
         Args:
             name (str): name of the container
             image (str): container image.
-            expert (bool, optional): if true will mount codedir. Defaults to False.
+            development (bool, optional): if true will mount codedir. Defaults to False.
+            volumes (dict, optional): paths to be mounted
 
         Raises:
             Value: Container with specified name already exists
@@ -26,8 +25,8 @@ class Container:
         if docker_client.exists(name):
             raise Value("Container with specified name already exists")
 
-        volumes = {}
-        if expert:
+        volumes = volumes or {}
+        if development:
             volumes = {Dirs.CODEDIR: {"bind": "/sandbox/code", "mode": "rw"}}
 
         print(f"Creating container {name}")
@@ -54,3 +53,8 @@ class Container:
         if not docker_client.exists(name):
             raise Value("Container with specified name doesn't exist")
         docker_client.stop(name)
+
+    @staticmethod
+    def delete(name):
+        Container.stop(name)
+        docker_client.delete(name)

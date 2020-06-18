@@ -50,24 +50,25 @@ def execute(
     die=False,
 ):
     """
-    execute a command
+    execute a command.
+
+    accepts command as a list too, with auto-escaping.
 
     Arguments:
-        cmd (str): command to be executed
+        cmd (str or list): command to be executed, e.g. `"ls -la"` or `["ls", "-la"]
 
     Keyword Arguments:
-        showout (bool): show stdout of the command (default: {False})
-        cwd (str): specify a working directory for the command (default: {None})
-        shell {str}: specify a shell to execute the command (default: {"/bin/bash"})
-        timeout {int}: timeout before kill the process (default: {600})
-        asynchronous {bool}: execute in asyncronous mode or not (default: {False})
-        env {dict}: add environment variables here (default: {{}})
-        replace_env {bool}: replace entire environment with env (default: {False})
-        die {bool}: die if command failed (default: {False})
-
+        showout (bool): show stdout of the command (default: False)
+        cwd (str): specify a working directory for the command (default: None)
+        shell (str): specify a shell to execute the command (default: "/bin/bash")
+        timeout (int): timeout before kill the process (default: 600)
+        asynchronous (bool): execute in asynchronous mode or not (default: False)
+        env (dict): add environment variables here (default: {})
+        replace_env (bool): replace entire environment with env (default: False)
+        die (bool): die if command failed (default: False)
 
     Returns:
-        [tuple] -- (rc, out, err)
+        tuple: (rc, out, err)
     """
     return j.core.executors.run_local(
         cmd=cmd,
@@ -613,7 +614,8 @@ def get_processes():
     """
     yield from psutil.process_iter()
 
-def get_processes_ifo():
+
+def get_processes_info():
     """
     Get information for top 25 running processes sorted by memory usage
 
@@ -626,14 +628,14 @@ def get_processes_ifo():
             # Fetch process details as dict
             pinfo = proc.as_dict(attrs=["pid", "name", "username"])
             pinfo["rss"] = proc.memory_info().rss / (1024 * 1024)
-            pinfo['ports'] = []
+            pinfo["ports"] = []
             try:
                 connections = proc.connections()
             except psutil.Error:
                 continue
             if connections:
                 for conn in connections:
-                    pinfo['ports'].append({'port':conn.laddr.port,'status':conn.status})
+                    pinfo["ports"].append({"port": conn.laddr.port, "status": conn.status})
             # Append dict to list
             processes_list.append(pinfo)
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
@@ -695,6 +697,7 @@ def get_memory_usage():
     memory_usage["used"] = math.ceil(memory_data.get("used") / (1024 * 1024 * 1024))
     memory_usage["percent"] = memory_data.get("percent")
     return memory_usage
+
 
 def get_environ(pid):
     """Gets env vars for a specific process based on pid

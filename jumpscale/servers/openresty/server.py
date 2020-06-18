@@ -127,7 +127,7 @@ class OpenRestyServer(Base):
         if reset or self.status == "init":
             # get weblib
             weblibs_path = j.tools.git.ensure_repo(
-                "https://github.com/js-next/js-weblibs"  # Place holder repo might be changed
+                "https://github.com/threefoldtech/js-weblibs"  # Place holder repo might be changed
             )
 
             # copy the templates to the right location
