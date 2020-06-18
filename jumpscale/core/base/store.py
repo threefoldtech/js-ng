@@ -19,7 +19,7 @@ from enum import Enum
 from jumpscale.data.nacl import NACL
 from jumpscale.data.serializers import base64, json
 from jumpscale.core.config import Environment
-from jumpscale.sals.fs import read_file_binary, write_file_binary, rmtree
+from jumpscale.sals.fs import read_file_binary, write_file_binary, rmtree, touch
 
 
 class InvalidPrivateKey(Exception):
@@ -297,7 +297,8 @@ class FileSystemStore(EncryptedConfigStore):
         """
         if not os.path.exists(path):
             os.makedirs(os.path.dirname(path), exist_ok=True)
-            os.mknod(path)
+            # don't use mknod https://github.com/js-next/js-ng/issues/182
+            touch(path)
 
     def read(self, instance_name):
         """
