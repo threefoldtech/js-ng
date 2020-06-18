@@ -106,3 +106,14 @@ where <arguments …> includes important information automatically set by the bi
 If your Dockerfile sets or inherits the Docker ENTRYPOINT instruction, the program specified as the ENTRYPOINT must exec the arguments passed by docker. Inherited Dockerfiles may unset the entrypoint with ENTRYPOINT [].
 
 #### For more information about dockerfile in binder [check](https://mybinder.readthedocs.io/en/latest/tutorials/dockerfile.html)
+
+### How to use binder ?
+after the docker file is ready place it in your repo. root
+
+1. Go to [mybinder](https://mybinder.org/)
+2. Enter github repository name or URL
+3. Enter Git branch, tag or commit
+4. Enter Path to notebook file
+5. press launch
+
+Then [mybinder] (https://mybinder.org/) will give you URL to share the Binder with others and it will build the image
