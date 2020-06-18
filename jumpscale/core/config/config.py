@@ -71,7 +71,6 @@ import nacl.utils
 import nacl.encoding
 import pytoml as toml
 from nacl.public import PrivateKey
-from jumpscale import __version__
 
 
 __all__ = [
@@ -85,6 +84,8 @@ __all__ = [
     "set",
     "get_current_version",
 ]
+
+__version__ = "0.1.0"
 
 
 config_root = os.path.expanduser(os.path.join("~/.config", "jumpscale"))
