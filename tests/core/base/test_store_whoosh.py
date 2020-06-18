@@ -45,6 +45,7 @@ def test_create_schema_and_search():
 
     print(factory.list_all())
     print(factory.find_many(first_name="te"))
+    print(factory.find_many(first_name="te", rating=1))
     print(factory.find_many(rating=1))
     print(factory.find_many(rating="[1 to]"))
 
