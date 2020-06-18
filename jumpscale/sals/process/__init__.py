@@ -367,7 +367,7 @@ def get_pids(process, match_predicate=None):
 
     if process is None:
         raise j.exceptions.RuntimeError("process cannot be None")
-    if j.data.platform.is_linux() or j.data.platform.is_osx():
+    if j.data.platform.is_unix():
 
         # Need to set $COLUMNS such that we can grep full commandline
         # Note: apparently this does not work on solaris
