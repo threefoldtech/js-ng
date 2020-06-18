@@ -1,14 +1,19 @@
 import requests
-import nacl.encoding
+import os
 
 from .container import Container
 
-from jumpscale.core.exceptions import NotFound, Value
+from jumpscale.core.exceptions import Value
 from jumpscale.data.encryption import mnemonic
 from jumpscale.data.encryption.exceptions import FailedChecksumError
 from jumpscale.data.nacl.jsnacl import NACL
 from jumpscale.tools.console import ask_string, ask_choice, printcolors, ask_yes_no
-from nacl.public import PrivateKey
+from jumpscale.core.config import get_current_version
+
+DEFAULT_CONTAINER_NAME = "3bot-ng"
+DEFAULT_IMAGE = "threefoldtech/js-ng"
+PERSISTENT_STORE = os.path.expanduser("~/.config/jumpscale/containers")
+
 
 NETWORKS = {"mainnet": "explorer.grid.tf", "testnet": "explorer.testnet.grid.tf", "devnet": "explorer.devnet.grid.tf"}
 
@@ -29,6 +34,7 @@ def check_identity(identity, email, words, explorer):
 
 
 def ensure_identity(identity, email, words, explorer):
+
     identity_data = ()
     while True:
         _identity = identity or ask_string("Please enter your threebot name(i,e name.3bot): ")
@@ -54,35 +60,41 @@ class ThreeBot(Container):
 
     @staticmethod
     def install(
-        name="3bot-ng",
-        image="threefoldtech/js-ng:latest",
-        expert: bool = False,
-        identity=None,
-        email=None,
-        words=None,
-        explorer=None,
+        name=None, image=None, identity=None, email=None, words=None, explorer=None, development: bool = False,
     ):
         """Creates a threebot container
 
         Args:
-            name (str): name of the container
+            name (str, optional): name of the container. Defaults to 3bot-ng
             image (str, optional): container image. Defaults to "threefoldtech/js-ng:latest".
-            expert (bool, optional): if true will mount codedir. Defaults to False.
             identity (str, optional): threebot name. Defaults to None.
             email (str, optional): threebot email. Defaults to None.
             words (str, optional): seed phrase of the user. Defaults to None.
             explorer (str, optional): which explorer network to use: mainnet, testnet, devnet. Defaults to None.
+            development (bool, optional): if true will mount codedir. Defaults to False.
 
         Raises:
             Value: Container with specified name already exists
             Value: explorer not in mainnet, testnet, devnet
         """
+        name = name or DEFAULT_CONTAINER_NAME
+        current_version = get_current_version()
+        image = image or f"{DEFAULT_IMAGE}:{current_version}"
         if explorer and explorer not in NETWORKS:
             raise Value(f"allowed explorer values are {','.join(NETWORKS)}")
 
-        identity, email, words, explorer = ensure_identity(identity, email, words, explorer)
+        pers_path = f"{PERSISTENT_STORE}/{name}"
+        configure = not os.path.exists(pers_path)
+        if configure:
+            identity_data = ensure_identity(identity, email, words, explorer)
+            if not identity_data:
+                raise Value("Installation aborted, please enter correct identity information")
+            identity, email, words, explorer = identity_data
 
-        container = Container.install(name, image, expert)
+        os.makedirs(PERSISTENT_STORE, exist_ok=True)
+        volumes = {pers_path: {"bind": "/root/.config/jumpscale", "mode": "rw"}}
+        container = Container.install(name, image, development, volumes)
 
-        container.exec_run(["jsng", f"j.core.identity.new('default', '{identity}', '{email}', '{words}')"])
-        container.exec_run(["jsng", "j.core.identity.set_default('default')"])
+        if configure:
+            container.exec_run(["jsng", f"j.core.identity.new('default', '{identity}', '{email}', '{words}')"])
+            container.exec_run(["jsng", "j.core.identity.set_default('default')"])
