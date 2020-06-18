@@ -96,7 +96,9 @@ class ThreeBot(Container):
 
         os.makedirs(PERSISTENT_STORE, exist_ok=True)
         volumes = {pers_path: {"bind": "/root/.config/jumpscale", "mode": "rw"}}
+
         container = Container.install(name, image, development, volumes)
+        container.exec_run(["redis-server", "--daemonize yes"])
 
         if configure:
             container.exec_run(["jsng", f"j.core.identity.new('default', '{identity}', '{email}', '{words}')"])
