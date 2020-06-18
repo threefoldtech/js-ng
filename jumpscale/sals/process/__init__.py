@@ -370,10 +370,22 @@ def get_pids(process_name, match_predicate=None):
     if j.data.platform.is_unix():
         pids = set()
         for process in get_processes():
-            name = process.name()
-            pid = process.pid
-            if isinstance(pid, int) and match_predicate(process_name, name):
-                pids.add(pid)
+            try:
+                pid = process.pid
+                if not isinstance(pid, int):
+                    continue
+                name = process.name()
+                if match_predicate(process_name, name):
+                    pids.add(pid)
+                elif match_predicate(process_name, process.exe()):
+                    pids.add(pid)
+                else:
+                    cmdline = process.cmdline()
+                    if cmdline and cmdline[0]:
+                        if match_predicate(process_name, cmdline[0]):
+                            pids.add(pid)
+            except psutil.Error:
+                continue
         return pids
     else:
         raise j.exceptions.NotImplemented("getProcessPid is only implemented for unix")
