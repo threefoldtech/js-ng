@@ -339,7 +339,7 @@ def check_stop(cmd, filterstr, retry=1, nrinstances=0):
         raise j.exceptions.RuntimeError("could not stop %s, found %s nr of instances." % (cmd, len(found)))
 
 
-def get_pids(process, match_predicate=None):
+def get_pids(process_name, match_predicate=None):
     """Get process ID(s) for a given process
 
     Arguments:
@@ -360,36 +360,20 @@ def get_pids(process, match_predicate=None):
     # default match predicate
     # why aren't we using psutil ??
     def default_predicate(given, target):
-        return given.find(target.strip()) != -1
+        return target.strip().lower() in given.lower()
 
     if match_predicate is None:
         match_predicate = default_predicate
 
-    if process is None:
+    if process_name is None:
         raise j.exceptions.RuntimeError("process cannot be None")
     if j.data.platform.is_unix():
-
-        # Need to set $COLUMNS such that we can grep full commandline
-        # Note: apparently this does not work on solaris
-        command = "bash -c 'env COLUMNS=300 ps -ef'"
-        (exitcode, output, err) = execute(command, die=False, showout=False)
-        pids = list()
-        co = re.compile(
-            "\s*(?P<uid>[a-z]+)\s+(?P<pid>[0-9]+)\s+(?P<ppid>[0-9]+)\s+(?P<cpu>[0-9]+)\s+(?P<stime>\S+)\s+(?P<tty>\S+)\s+(?P<time>\S+)\s+(?P<cmd>.+)"
-        )
-        for line in output.splitlines():
-            match = co.search(line)
-            if not match:
-                continue
-            gd = match.groupdict()
-            # print "%s"%line
-            # print gd["cmd"]
-            # print process
-            if isinstance(process, int) and gd["pid"] == process:
-                pids.append(gd["pid"])
-            elif match_predicate(gd["cmd"], process):
-                pids.append(gd["pid"])
-        pids = [int(item) for item in pids]
+        pids = set()
+        for process in get_processes():
+            name = process.name()
+            pid = process.pid
+            if isinstance(pid, int) and match_predicate(process_name, name):
+                pids.add(pid)
         return pids
     else:
         raise j.exceptions.NotImplemented("getProcessPid is only implemented for unix")
