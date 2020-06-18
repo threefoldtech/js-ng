@@ -359,7 +359,7 @@ def get_pids(process_name, match_predicate=None):
     """
     # default match predicate
     # why aren't we using psutil ??
-    def default_predicate(given, target):
+    def default_predicate(target, given):
         return target.strip().lower() in given.lower()
 
     if match_predicate is None:
@@ -386,7 +386,7 @@ def get_pids(process_name, match_predicate=None):
                             pids.add(pid)
             except psutil.Error:
                 continue
-        return pids
+        return list(pids)
     else:
         raise j.exceptions.NotImplemented("getProcessPid is only implemented for unix")
 
