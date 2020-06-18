@@ -329,7 +329,7 @@ class ZDBAdminClient(ZDBClient):
             self.redis.execute_command("NSSET", name, "password", secret)
             self.redis.execute_command("NSSET", name, "public", "no")
 
-        if maxsize is not 0:
+        if maxsize != 0:
             self.redis.execute_command("NSSET", name, "maxsize", maxsize)
 
         ns = j.clients.zdb.client_get(
