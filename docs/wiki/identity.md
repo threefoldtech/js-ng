@@ -8,12 +8,7 @@ Multiple identities can be configured. By default if only one is configured it w
 To configure your identity:
 
 ```python
-me = j.core.identity.new("name", "threebot_name", "threebot_mail", "words")
-```
-
-To access his threebot id:
-
-```python
+me = j.core.identity.new(name="default", tname="3BOT_NAME", email="3BOT_EMAIL", words="3BOT_WORDS")
 
 me.tid
 # or
