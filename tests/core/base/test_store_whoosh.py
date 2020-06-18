@@ -17,6 +17,7 @@ class User(Base):
     custom_config = fields.Typed(dict)
     rating = fields.Integer()
     created_time = fields.DateTime(default=datetime.datetime.now)
+    password = fields.Secret()
 
     def get_full_name(self):
         name = self.first_name
@@ -41,6 +42,7 @@ def test_create_schema_and_search():
     a.first_name = "test"
     a.last_name = "user"
     a.rating = 1
+    a.password = "aaa"
     a.save()
 
     print(factory.list_all())

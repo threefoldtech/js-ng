@@ -32,6 +32,8 @@ FIELD_MAP = {
     "Time": fields.NUMERIC(stored=True, sortable=True),
 }
 
+SECRET_FIELD_NAME = "Secret"
+
 
 class WhooshStore(EncryptedConfigStore):
     """
@@ -65,12 +67,15 @@ class WhooshStore(EncryptedConfigStore):
         mkdirs(path)
         return path
 
+    @property
+    def type_fields(self):
+        return self.location.type._fields.items()
+
     def get_schema(self):
-        type_fields = self.location.type._fields
         schema_fields = {KEY_FIELD_NAME: fields.ID(unique=True, stored=True)}
 
-        for name, field in type_fields.items():
-            # TODO: should check for fields.indexed?
+        for name, field in self.type_fields:
+            # TODO: should check for field.indexed?
             field_type_name = field.__class__.__name__
             if field_type_name in FIELD_MAP:
                 schema_fields[name] = FIELD_MAP[field_type_name]
@@ -101,11 +106,36 @@ class WhooshStore(EncryptedConfigStore):
     def read(self, instance_name):
         with self.get_searcher() as searcher:
             kw = {KEY_FIELD_NAME: instance_name}
-            return searcher.document(**kw)
+            doc = searcher.document(**kw)
+
+            for name, field in self.type_fields:
+                # whoosh does not store None values, so, we just set them
+                # if they are not set, that means when they're added, they'd the value of None
+                if name not in doc and field.stored:
+                    doc[name] = None
+
+                # add __ to field name by hand
+                # as we cannot add a field that starts with "__" in whoosh schema
+                if field.__class__.__name__ == SECRET_FIELD_NAME:
+                    name_with_prefix = f"__{name}"
+                    doc[name_with_prefix] = doc[name]
+                    doc.pop(name)
+
+            return doc
 
     def write(self, instance_name, data):
         data[KEY_FIELD_NAME] = instance_name
         writer = self.get_writer()
+
+        for name, field in self.type_fields:
+            if field.__class__.__name__ == SECRET_FIELD_NAME:
+                name_with_prefix = f"__{name}"
+                if name_with_prefix in data:
+                    # remove "__", as the whoosh field cannot start with it
+                    # the original field name is the one used in whoosh schema
+                    data[name] = data[name_with_prefix]
+                    data.pop(name_with_prefix)
+
         writer.update_document(**data)
         writer.commit()
 
@@ -134,6 +164,8 @@ class WhooshStore(EncryptedConfigStore):
         return searcher.search_page(query, pagenum=cursor_, pagelen=limit_)
 
     def delete(self, instance_name):
+        # FIXME: delete children data too
+        # maybe we need to store location for every document or parent instance location/name?
         writer = self.get_writer()
         writer.delete_by_term(KEY_FIELD_NAME, instance_name)
         writer.commit()
