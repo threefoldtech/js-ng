@@ -94,9 +94,10 @@ Error report file has been created on your machine in this location: {error_file
 
 
 class Shell(Validator):
-    def __init__(self):
+    def __init__(self, expert):
         self._prompt = PromptSession()
         self.mode = None
+        self.expert = expert
         self.toolbarmsg = DEFAULT_TOOLBAR_MSG
 
     def get_completions_async(self, document, complete_event):
@@ -117,7 +118,7 @@ class Shell(Validator):
             obj = getattr(threesdk, root)
             if not more or not hasattr(obj, more[0]):
                 # complete object attributes
-                self.toolbarmsg = obj.__doc__.strip().splitlines()[0]
+                self.toolbarmsg = threesdk._get_doc_line(obj.__doc__)
                 for name, member in inspect.getmembers(obj, inspect.isroutine):
                     if not name.startswith("_"):
                         items.append(name)
@@ -125,7 +126,7 @@ class Shell(Validator):
             else:
                 # complete arguments
                 func = getattr(obj, more[0])
-                self.toolbarmsg = func.__doc__.strip().splitlines()[0]
+                self.toolbarmsg = threesdk._get_doc_line(func.__doc__)
                 style = "bg:ansired"
                 for arg in inspect.getfullargspec(func).args:
                     field = arg + "="
@@ -196,12 +197,16 @@ class Shell(Validator):
         return kwargs
 
     def execute(self, cmd):
+        if not cmd.strip():
+            return
         try:
             func, kwargs = self.get_func_kwargs(cmd)
             func(**kwargs)
         except Exception:
-            # print_error(noexpert_error(traceback.format_exc()))
-            print_error(traceback.format_exc())
+            if self.expert:
+                print_error(noexpert_error(traceback.format_exc()))
+            else:
+                print_error(traceback.format_exc())
 
     def make_prompt(self):
         root = ("class:default", "3sdk>")
@@ -221,12 +226,13 @@ class Shell(Validator):
 def run():
     parser = argparse.ArgumentParser()
     parser.add_argument("--update", action="store_true", help="Update 3sdk")
+    parser.add_argument("--expert", action="store_true", help="Run 3sdk in expert mode")
     args = parser.parse_args()
 
     if args.update:
         update()
     else:
-        shell = Shell()
+        shell = Shell(args.expert)
         shell.make_prompt()
 
 
