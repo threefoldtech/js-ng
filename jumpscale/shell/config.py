@@ -36,7 +36,7 @@ def patched_handle_exception(self, e):
         tb = tb.tb_next
 
     # except hook does not work as expected
-    # sys.excepthook(t, v, last_stdin_tb)
+    sys.excepthook(t, v, last_stdin_tb)
     # just print formatted exception for now
     formatted = better_exceptions.format_exception(t, v, last_stdin_tb)
     print_formatted_text(ANSI(formatted))
