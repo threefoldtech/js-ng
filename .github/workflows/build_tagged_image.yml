@@ -5,7 +5,7 @@ on:
     tags:
       - '**'
 jobs:
-    build-docker:
+    build-tagged-docker:
         runs-on: ubuntu-latest
         steps:
         - uses: actions/checkout@v2
@@ -18,3 +18,8 @@ jobs:
             password: ${{ secrets.DOCKERHUB_PASSWORD }}
             dockerfile: jumpscale/install/Dockerfile
             tags: ${{ steps.tagName.outputs.tag }}
+        - name: upload to flist
+          run: |
+            apt-get install curl
+            docker save threefoldtech/js-ng:${{ steps.tagName.outputs.tag }} -o js-ng-${{ steps.tagName.outputs.tag }}.tar
+            curl -X POST  -H 'Authorization: bearer ${{secrets.ZEROHUB_TOKEN}}' ${{secrets.ZEROHUB_URL}}/api/flist/me/upload -F 'file=@js-ng-${{ steps.tagName.outputs.tag }}.tar'
