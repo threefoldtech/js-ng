@@ -98,7 +98,7 @@ zos.container.create(reservation=r,
                     flist='https://hub.grid.tf/tf-bootable/3bot-ubuntu-20.04.flist', # flist of the container you want to install
                     # interactive=True,         # True only if corex_connect required, default false
                     # env={},                   # field for parameters like config
-                    entrypoint='/start.sh')
+                    entrypoint='/bin/bash /start.sh')
 
 expiration = j.data.time.get().timestamp +3900
 # register the reservation
