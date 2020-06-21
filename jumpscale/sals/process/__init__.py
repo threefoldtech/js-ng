@@ -87,7 +87,7 @@ def is_alive(pid):
     """Checks if pid is Running
 
     Arguments:
-        pid {int} -- pid of the process to be checked
+        pid (int) -- pid of the process to be checked
 
     Returns:
         [bool] -- True if process is running
@@ -116,7 +116,7 @@ def kill(pid, sig=signal.SIGTERM.value):
     """Kill a process with a signal
 
     Arguments:
-        pid {int} -- pid of the process to be killed
+        pid (int) -- pid of the process to be killed
 
     Keyword Arguments:
         sig {int]} -- which signal you want to kill the process with (default: {signal.SIGTERM.value})
@@ -159,7 +159,7 @@ def kill_all(name, sig=signal.SIGKILL):
         name {str} -- process name
 
     Keyword Arguments:
-        sig {int} -- signal number (default: {signal.SIGKILL})
+        sig (int) -- signal number (default: {signal.SIGKILL})
     """
     sig = int(sig)
     for proc in psutil.process_iter():
@@ -274,9 +274,8 @@ def get_pids_filtered_by_regex(regex_list, excludes=None):
         if cmdline:
             name = " ".join(cmdline)
             for r in regex_list:
-                if name.strip() != "":
-                    if re.match(r, name):
-                        res.append(process.pid)
+                if name.strip() != "" and re.match(r, name):
+                    res.append(process.pid)
     return res
 
 
@@ -288,8 +287,8 @@ def check_start(cmd, filterstr, nrinstances=1, retry=1):
         filterstr {str} -- filter string
 
     Keyword Arguments:
-        instances {int} -- number of needed instances (default: {1})
-        retry {int} -- number of retries (default: {1})
+        instances (int) -- number of needed instances (default: {1})
+        retry (int) -- number of retries (default: {1})
 
     Raises:
         j.exceptions.RuntimeError: will be raised if we didn't reach number of required instances
@@ -316,8 +315,8 @@ def check_stop(cmd, filterstr, retry=1, nrinstances=0):
         filterstr {str} -- filter string
 
     Keyword Arguments:
-        retry {int} -- number of retries (default: {1})
-        nrinstances {int} -- number of instances after stop (default: {0})
+        retry (int) -- number of retries (default: {1})
+        nrinstances (int) -- number of instances after stop (default: {0})
 
     Raises:
         j.exceptions.RuntimeError: if nr of instances not matched
@@ -404,7 +403,7 @@ def get_process_object(pid, die=True):
     """Get Process object of a process id
 
     Arguments:
-        pid {int} -- pid of the process
+        pid (int) -- pid of the process
 
     Keyword Arguments:
         die {bool} -- die if process not found (default: {True})
@@ -474,7 +473,7 @@ def check_running(process, min=1):
         process {str} -- process name to be checked
 
     Keyword Arguments:
-        min {int} -- min number of instances required to be running (default: {1})
+        min (int) -- min number of instances required to be running (default: {1})
 
     Returns:
         [bool] -- true if process is running
@@ -490,7 +489,7 @@ def check_process_for_pid(pid, process_name):
     """Check whether a given pid actually does belong to a given process name.
 
     Arguments:
-        pid {int} -- process pid
+        pid (int) -- process pid
         process {str} -- process name
 
     Returns:
@@ -520,7 +519,7 @@ def get_pid_by_port(port):
     """Returns pids of the process that is listening on the given port
 
     Arguments:
-        port {int} -- port number
+        port (int) -- port number
 
     Returns:
         int -- pid of process that listen on that port
@@ -554,7 +553,7 @@ def kill_process_by_port(port):
     """Kill process by port
 
     Arguments:
-        port {int} -- port number
+        port (int) -- port number
     """
     port = int(port)
     for pid in get_pid_by_port(port):
@@ -566,6 +565,9 @@ def is_port_listenting(port):
 
     Args:
         port (int): port number
+
+    Returns:
+        Bool: True if port is used else False
     """
     pcons = [proc for proc in psutil.net_connections() if proc.laddr.port == port and proc.status == "LISTEN"]
     return any(pcons)
@@ -575,7 +577,7 @@ def get_process_by_port(port):
     """Returns the full name of the process that is listening on the given port
 
     Arguments:
-        port {int} -- the port for which to find the command
+        port (int) -- the port for which to find the command
 
     Raises:
         Runtime Error if the process is not accessible by the user
@@ -711,7 +713,7 @@ def get_environ(pid):
     """Gets env vars for a specific process based on pid
 
     Arguments:
-        pid {int} -- process pid
+        pid (int) -- process pid
 
     Returns:
         [dict] -- dict of env variables
