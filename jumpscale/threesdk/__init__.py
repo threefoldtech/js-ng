@@ -1,11 +1,11 @@
 from .threebot import ThreeBot as threebot
-from .simulator import Simulator as simulator
 import inspect
 import cgi
 from prompt_toolkit.formatted_text import HTML
 from prompt_toolkit.shortcuts import print_formatted_text
 
-__all__ = ["threebot", "simulator", "info"]
+__all__ = ["threebot", "info"]
+
 
 def info():
     print_formatted_text(HTML(_get_doc(__all__)))

@@ -82,11 +82,18 @@ __all__ = [
     "Environment",
     "get",
     "set",
+    "get_current_version",
 ]
+
+__version__ = "0.1.0"
 
 
 config_root = os.path.expanduser(os.path.join("~/.config", "jumpscale"))
 config_path = os.path.join(config_root, "config.toml")
+
+
+def get_current_version():
+    return __version__
 
 
 def get_default_config():
@@ -120,12 +127,8 @@ def get_default_config():
             "filesystem": {"path": os.path.expanduser(os.path.join(config_root, "secureconfig"))},
         },
         "store": "filesystem",
-        "threebot": {
-            "default": "",
-        },
-        "explorer": {
-            "default_url": "https://explorer.testnet.grid.tf/explorer",
-        },
+        "threebot": {"default": "",},
+        "explorer": {"default_url": "https://explorer.testnet.grid.tf/explorer",},
     }
 
 
