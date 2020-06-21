@@ -20,9 +20,9 @@ j.sals.process.get_pid_by_port(8000)
 """
 
 
+import math
 import os
 import os.path
-import psutil
 import random
 import re
 import select
@@ -30,10 +30,10 @@ import signal
 import subprocess
 import sys
 import time
-import math
-
 from collections import defaultdict
 from subprocess import Popen
+
+import psutil
 
 from jumpscale.god import j
 
@@ -275,7 +275,7 @@ def get_pids_filtered_by_regex(regex_list, excludes=None):
             name = " ".join(cmdline)
             for r in regex_list:
                 if name.strip() != "":
-                    if j.data.regex.match(r, name):
+                    if re.match(r, name):
                         res.append(process.pid)
     return res
 
@@ -561,23 +561,35 @@ def kill_process_by_port(port):
         kill(pid)
 
 
+def is_port_listenting(port):
+    """check if the port is being used by any process
+
+    Args:
+        port (int): port number
+    """
+    pcons = [proc for proc in psutil.net_connections() if proc.laddr.port == port and proc.status == "LISTEN"]
+    return any(pcons)
+
+
 def get_process_by_port(port):
     """Returns the full name of the process that is listening on the given port
 
     Arguments:
         port {int} -- the port for which to find the command
 
+    Raises:
+        Runtime Error if the process is not accessible by the user
+
     Returns:
         [psutil.Process] -- process object
+        None -- No process found
     """
-    for process in psutil.process_iter():
-        try:
-            cc = [con for con in process.connections() if con.status == psutil.CONN_LISTEN and con.laddr[1] == port]
-            if cc:
-                return process
-        except Exception as e:
-            pass
-    return None
+    pcons = [proc for proc in psutil.net_connections() if proc.laddr.port == port and proc.status == "LISTEN"]
+    if pcons:
+        pid = pcons[0].pid
+        if not pid:
+            raise j.exceptions.Runtime("No pid found maybe permission denied on the process")
+        return psutil.Process(pid)
 
 
 def get_defunct_processes():
