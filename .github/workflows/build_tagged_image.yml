@@ -20,6 +20,6 @@ jobs:
             tags: ${{ steps.tagName.outputs.tag }}
         - name: upload to flist
           run: |
-            apt-get install curl
+            sudo apt-get update && sudo apt-get install curl -y
             docker save threefoldtech/js-ng:${{ steps.tagName.outputs.tag }} -o js-ng-${{ steps.tagName.outputs.tag }}.tar
             curl -X POST  -H 'Authorization: bearer ${{secrets.ZEROHUB_TOKEN}}' ${{secrets.ZEROHUB_URL}}/api/flist/me/upload -F 'file=@js-ng-${{ steps.tagName.outputs.tag }}.tar'

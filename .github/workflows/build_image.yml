@@ -18,6 +18,6 @@ jobs:
             tags: latest
         - name: upload to flist
           run: |
-            apt-get install curl
+            sudo apt-get update && sudo apt-get install curl -y
             docker save threefoldtech/js-ng:latest -o js-ng-test.tar
             curl -X POST  -H 'Authorization: bearer ${{ secrets.ZEROHUB}}' ${{secrets.ZEROHUB_URL}}/api/flist/me/upload -F 'file=@js-ng-latest.tar'
