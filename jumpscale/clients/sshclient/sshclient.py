@@ -1,26 +1,52 @@
+"""
+
+SSHClient modules helps connecting to a remote machine and 
+
+
+## Create SSH Key
+```python
+JS-NG> xmonader = j.clients.sshkey.new("xmonader")
+JS-NG> xmonader.private_key_path = "/home/xmonader/.ssh/id_rsa"
+JS-NG>
+
+```
+
+## Creating sshclient using that key and executing commands
+
+```
+JS-NG> localconnection = j.clients.sshclient.new("localconnection")
+JS-NG> localconnection.sshkey = "xmonader"
+JS-NG> localconnection.run("hostname")
+(0, 'asgard\n', '')
+
+
+JS-NG> sshkey = j.clients.sshkey.get("xmonader")
+JS-NG> localclient = j.clients.sshclient.get("xmonader")
+JS-NG> localclient.sshclient.run("hostname")
+asgard
+(0, 'asgard\n', '')
+
+```
+"""
+
 from jumpscale.clients.base import Client
 from jumpscale.core.base import fields
 from jumpscale.god import j
 
-# """
-# JS-NG> xmonader = j.clients.sshkey.new("xmonader")
-# JS-NG> xmonader.private_key_path = "/home/xmonader/.ssh/id_rsa"
-# JS-NG>
-# JS-NG> localconnection = j.clients.sshclient.new("localconnection")
-# JS-NG> localconnection.sshkey = "xmonader"
-# JS-NG> localconnection.run("hostname")
-# (0, 'asgard\n', '')
 
-
-# JS-NG> sshkey = j.clients.sshkey.get("xmonader")
-# JS-NG> localclient = j.clients.sshclient.get("xmonader")
-# JS-NG> localclient.sshclient.run("hostname")
-# asgard
-# (0, 'asgard\n', '')
-
-# """
 
 class SSHClient(Client):
+    """
+    SSHClient has the following properties:
+    name (str): the name to assign to the client 
+    sshkey (str): sshkey to use within that client
+    host (str): host ip
+    user (str): user to connect as default: True
+    port (int): the port to use
+    forward_agent (bool):  forward agent or not (default True)
+    connect_timeout (int): timeout (default 10 seconds)
+
+    """
 
     name = fields.String()
     sshkey = fields.String()
