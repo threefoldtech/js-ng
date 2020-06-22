@@ -5,4 +5,7 @@ RUN mkdir -p /sandbox/code/github/threefoldtech
 RUN git clone https://github.com/threefoldtech/js-sdk.git /sandbox/code/github/threefoldtech/js-sdk -b development
 WORKDIR /sandbox/code/github/threefoldtech/js-sdk
 RUN poetry config virtualenvs.create false && poetry install
+RUN poetry shell
+COPY codeserver-install.py /tmp/
+RUN python3 /tmp/codeserver-install.py
 ENTRYPOINT ["/sbin/my_init"]
