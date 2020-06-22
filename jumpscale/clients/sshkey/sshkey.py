@@ -4,7 +4,6 @@ from jumpscale.god import j
 
 
 class SSHKeyClient(Client):
-    name = fields.String()
     public_key = fields.String()
     private_key = fields.Secret()
     private_key_path = fields.Secret()

@@ -50,12 +50,12 @@ class SSHClient(Client):
 
     host = fields.String(default="127.0.0.1", required=True)
     user = fields.String(default="root", required=True)
-    port = fields.Integer(required=True)
+    port = fields.Integer(default=22, required=True)
     forward_agent = fields.Boolean(default=True)
     connect_timeout = fields.Integer(default=10)
+    connection_kwargs = fields.Typed(dict, default={})
 
     # gateway = ?  FIXME: should help with proxyjumps. http://docs.fabfile.org/en/2.4/concepts/networking.html#ssh-gateways
-    # connect_kwargs = ? FIXME: how to pass dict?
     inline_ssh_env = fields.Boolean(
         default=True
     )  # whether to send environment variables “inline” as prefixes in front of command strings (export VARNAME=value && mycommand here), instead of trying to submit them through the SSH protocol itself (which is the default behavior). This is necessary if the remote server has a restricted AcceptEnv setting (which is the common default).
@@ -72,17 +72,17 @@ class SSHClient(Client):
     def sshclient(self):
         self.validate()
         if not self.__client:
+            self.connection_kwargs["key_filename"] = (self._sshkey.private_key_path,)
             connection_kwargs = dict(
                 host=self.host,
                 user=self.user,
                 port=self.port,
                 forward_agent=self.forward_agent,
                 connect_timeout=self.connect_timeout,
-                connect_kwargs={"key_filename": self._sshkey.private_key_path},
+                connect_kwargs=self.connection_kwargs,
             )
-            # FIXME: coredump here.
-            # if self._sshkey.passphrase:
-            #     connection_kwargs["connect_kwargs"]["passphrase"] = self._sshkey().passphrase
+            if self._sshkey.passphrase:
+                connection_kwargs["connect_kwargs"]["passphrase"] = self._sshkey.passphrase
 
             self.__client = j.core.executors.RemoteExecutor(**connection_kwargs)
 
