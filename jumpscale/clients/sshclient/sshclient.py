@@ -1,6 +1,6 @@
 """
 
-SSHClient modules helps connecting to a remote machine and 
+SSHClient modules helps connecting to a remote machine and
 
 
 ## Create SSH Key
@@ -34,11 +34,10 @@ from jumpscale.core.base import fields
 from jumpscale.god import j
 
 
-
 class SSHClient(Client):
     """
     SSHClient has the following properties:
-    name (str): the name to assign to the client 
+    name (str): the name to assign to the client
     sshkey (str): sshkey to use within that client
     host (str): host ip
     user (str): user to connect as default: True
@@ -59,25 +58,43 @@ class SSHClient(Client):
 
     # gateway = ?  FIXME: should help with proxyjumps. http://docs.fabfile.org/en/2.4/concepts/networking.html#ssh-gateways
     # connect_kwargs = ? FIXME: how to pass dict?
-    inline_ssh_env = fields.Boolean(default=True) # whether to send environment variables “inline” as prefixes in front of command strings (export VARNAME=value && mycommand here), instead of trying to submit them through the SSH protocol itself (which is the default behavior). This is necessary if the remote server has a restricted AcceptEnv setting (which is the common default).
+    inline_ssh_env = fields.Boolean(
+        default=True
+    )  # whether to send environment variables “inline” as prefixes in front of command strings (export VARNAME=value && mycommand here), instead of trying to submit them through the SSH protocol itself (which is the default behavior). This is necessary if the remote server has a restricted AcceptEnv setting (which is the common default).
 
     def __init__(self):
         super().__init__()
         self.__client = None
 
     def _sshkey(self):
+        """ Get sshkey client that you have loaded
+        e.g
+            JS-NG> localconnection = j.clients.sshclient.new("localconnection")
+            JS-NG> localconnection.sshkey = "xmonader"
+            JS-NG> localconnection._sshkey()  -> SHKeyClient(_Base__instance_name='xmonader', _Base__parent=None, ...
+        Returns:
+            Obj: It returns object of SSHkeyClient
+        """
         return j.clients.sshkey.get(self.sshkey)
-    
+
     @property
     def sshclient(self):
+        """ Get an object of remote executor
+        e.g
+            JS-NG> localconnection = j.clients.sshclient.new("localconnection")
+            JS-NG> localconnection.sshclient  ->  <jumpscale.core.executors.remote.RemoteExecutor object at 0x7fe90dd073c8>
+        Returns
+            obj: it returns object of RemoteExecutor
+        """
         if not self.__client:
             connection_kwargs = dict(
-                                    host=self.host, user=self.user, port=self.port,
-                                    forward_agent=self.forward_agent,
-                                    connect_timeout=self.connect_timeout,
-                                    connect_kwargs={
-                                            "key_filename": self._sshkey().private_key_path,
-            })
+                host=self.host,
+                user=self.user,
+                port=self.port,
+                forward_agent=self.forward_agent,
+                connect_timeout=self.connect_timeout,
+                connect_kwargs={"key_filename": self._sshkey().private_key_path,},
+            )
             # FIXME: coredump here.
             # if self._sshkey.passphrase:
             #     connection_kwargs["connect_kwargs"]["passphrase"] = self._sshkey().passphrase
@@ -87,6 +104,12 @@ class SSHClient(Client):
         return self.__client
 
     def reset_connection(self):
+        """ Reset the connection
+        e.g
+            localconnection = j.clients.sshclient.new("localconnection")
+            localconnection.reset_connection()
+
+        """
         self.__client = None
 
     def __getattr__(self, name):
