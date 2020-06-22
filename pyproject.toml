@@ -43,6 +43,8 @@ prompt-toolkit = "<3.0.0"
 snakeviz = "^2.0.1"
 bottle = "^0.12.18"
 captcha = "^0.3"
+pycparser = "^2.20"
+zipp = "^3.1.0"
 
 [tool.poetry.dev-dependencies]
 ipython = "^7.6"
