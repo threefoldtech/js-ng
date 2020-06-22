@@ -20,4 +20,4 @@ jobs:
           run: |
             sudo apt-get update && sudo apt-get install curl -y
             docker save threefoldtech/js-ng:latest | gzip > js-ng-latest.tar
-            curl -v -X POST  -H 'Authorization: bearer ${{ secrets.ZEROHUB}}' ${{secrets.ZEROHUB_URL}}/api/flist/me/upload -F 'file=@js-ng-latest.tar'
+            curl -v -X POST  -H 'Authorization: bearer ${{ secrets.ZEROHUB_TOKEN}}' ${{secrets.ZEROHUB_URL}}/api/flist/me/upload -F 'file=@js-ng-latest.tar'
