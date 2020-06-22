@@ -359,7 +359,10 @@ class StoredFactory(events.Handler, Factory):
         Args:
             instance (Base)
         """
-        # try to save instance if it's validated
+        # try to save instance if it's validated and have a name
+        if not instance.instance_name:
+            return
+
         try:
             self._validate_and_save_instance(instance)
         except:
