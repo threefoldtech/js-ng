@@ -4,5 +4,5 @@ from jumpscale.god import j
 
 factory = StoredFactory(ThreebotServer)
 threebot = factory.get("default")
-threebot.packages.add(j.packages.codeserver.__file__.rsplit("/", 1)[0])
+threebot.packages.add(j.sals.fs.parent(j.packages.codeserver.__file__))
 threebot.save()
