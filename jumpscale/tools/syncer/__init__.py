@@ -112,7 +112,7 @@ class Syncer(PatternMatchingEventHandler):
                     dest_dir = str(self._rewrite_path_for_dest(src_dir))
                     for cl in self._get_sshclients():
                         j.logger.debug("making dir {}".format(dest_dir))
-                        cl.run("mkdir -p {}".format(dest_dir))
+                        cl.sshclient.run("mkdir -p {}".format(dest_dir))
 
         def sync_file(e):
             """Sync single file to all registered sshclients
@@ -167,12 +167,12 @@ class Syncer(PatternMatchingEventHandler):
         j.logger.debug("will delete original in {}".format(self._rewrite_path_for_dest(event.src_path)))
         for cl in self._get_sshclients():
             if j.sals.fs.is_file(dest_path):
-                cl.sftp.mkdir(j.sals.fs.parent(dest_path))
-                cl.sftp.put(event.dest_path, dest_path)
+                cl.sshclient.sftp.mkdir(j.sals.fs.parent(dest_path))
+                cl.sshclient.sftp.put(event.dest_path, dest_path)
             else:
-                cl.sftp.mkdir(dest_path)
+                cl.sshclient.sftp.mkdir(dest_path)
 
-            cl.run("rm {}".format(self._rewrite_path_for_dest(event.src_path)))
+            cl.sshclient.run("rm {}".format(self._rewrite_path_for_dest(event.src_path)))
 
     def on_created(self, event):
         super().on_created(event)
@@ -184,10 +184,10 @@ class Syncer(PatternMatchingEventHandler):
 
         for cl in self._get_sshclients():
             if what == "directory":
-                cl.run("mkdir -p {}".format(dest_path))
+                cl.sshclient.run("mkdir -p {}".format(dest_path))
             else:
-                cl.sftp.mkdir(j.sals.fs.parent(dest_path))
-                cl.run("touch {}".format(dest_path))
+                cl.sshclient.sftp.mkdir(j.sals.fs.parent(dest_path))
+                cl.sshclient.run("touch {}".format(dest_path))
 
     def on_deleted(self, event):
         super().on_deleted(event)
@@ -198,7 +198,7 @@ class Syncer(PatternMatchingEventHandler):
         dest_path = self._rewrite_path_for_dest(event.src_path)
         j.logger.debug("will delete in {}".format(dest_path))
         for cl in self._get_sshclients():
-            cl.run("rm {}".format(dest_path))
+            cl.sshclient.run("rm {}".format(dest_path))
 
     def on_modified(self, event):
         super().on_modified(event)
