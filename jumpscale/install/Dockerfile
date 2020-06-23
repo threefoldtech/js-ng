@@ -6,6 +6,7 @@ RUN git clone https://github.com/threefoldtech/js-sdk.git /sandbox/code/github/t
 WORKDIR /sandbox/code/github/threefoldtech/js-sdk
 RUN poetry config virtualenvs.create false && poetry install
 RUN poetry shell
+RUN /etc/init.d/redis-server start
 COPY codeserver-install.py /tmp/
 RUN python3 /tmp/codeserver-install.py
 ENTRYPOINT ["/sbin/my_init"]
