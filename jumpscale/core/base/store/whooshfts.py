@@ -26,13 +26,16 @@ FIELD_MAP = {
     "Integer": fields.NUMERIC(bits=64, stored=True, sortable=True),
     "Float": fields.NUMERIC(float, bits=64, stored=True, sortable=True),
     "Port": fields.NUMERIC(stored=True, sortable=True),
-    "Enum": fields.ID(stored=True),
     "Date": fields.NUMERIC(stored=True, sortable=True),
     "DateTime": fields.NUMERIC(stored=True, sortable=True),
     "Time": fields.NUMERIC(stored=True, sortable=True),
 }
 
-SECRET_FIELD_NAME = "Secret"
+# enums and secret fields are special case,
+# for enum, it can be stored as int, bool, or str values...
+# for secret, it's field name prefixed with underscores is not valid in whoosh
+ENUM_FIELD = "Enum"
+SECRET_FIELD = "Secret"
 
 
 class WhooshStore(EncryptedConfigStore):
@@ -54,6 +57,7 @@ class WhooshStore(EncryptedConfigStore):
         super().__init__(location, Serializer())
         config = self.config_env.get_store_config("whoosh")
         self.base_index_path = config["path"]
+
         self.schema = self.get_schema()
         self.index = self.get_index(self.schema)
 
@@ -72,13 +76,26 @@ class WhooshStore(EncryptedConfigStore):
         return self.location.type._fields.items()
 
     def get_schema(self):
-        schema_fields = {KEY_FIELD_NAME: fields.ID(unique=True, stored=True)}
+        schema_fields = {
+            KEY_FIELD_NAME: fields.ID(unique=True, stored=True),
+        }
 
         for name, field in self.type_fields:
-            # TODO: should check for field.indexed?
             field_type_name = field.__class__.__name__
             if field_type_name in FIELD_MAP:
                 schema_fields[name] = FIELD_MAP[field_type_name]
+            elif field_type_name == ENUM_FIELD:
+                # enum is a special case, it depends on the type of enum values
+                # assuming enum types are all of the same type
+                enum_value_type = type(field.default)
+                if isinstance(enum_value_type, (str, bytes, bytearray)):
+                    schema_field = fields.TEXT(stored=True)
+                elif isinstance(enum_value_type, (int, float)):
+                    schema_field = fields.NUMERIC(stored=True)
+                else:
+                    schema_field = fields.STORED
+
+                schema_fields[name] = schema_field
             else:
                 schema_fields[name] = fields.STORED
 
@@ -116,7 +133,7 @@ class WhooshStore(EncryptedConfigStore):
 
                 # add __ to field name by hand
                 # as we cannot add a field that starts with "__" in whoosh schema
-                if field.__class__.__name__ == SECRET_FIELD_NAME:
+                if field.__class__.__name__ == SECRET_FIELD:
                     name_with_prefix = f"__{name}"
                     doc[name_with_prefix] = doc[name]
                     doc.pop(name)
@@ -125,10 +142,9 @@ class WhooshStore(EncryptedConfigStore):
 
     def write(self, instance_name, data):
         data[KEY_FIELD_NAME] = instance_name
-        writer = self.get_writer()
 
         for name, field in self.type_fields:
-            if field.__class__.__name__ == SECRET_FIELD_NAME:
+            if field.__class__.__name__ == SECRET_FIELD:
                 name_with_prefix = f"__{name}"
                 if name_with_prefix in data:
                     # remove "__", as the whoosh field cannot start with it
@@ -136,6 +152,7 @@ class WhooshStore(EncryptedConfigStore):
                     data[name] = data[name_with_prefix]
                     data.pop(name_with_prefix)
 
+        writer = self.get_writer()
         writer.update_document(**data)
         writer.commit()
 
@@ -164,8 +181,6 @@ class WhooshStore(EncryptedConfigStore):
         return searcher.search_page(query, pagenum=cursor_, pagelen=limit_)
 
     def delete(self, instance_name):
-        # FIXME: delete children data too
-        # maybe we need to store location for every document or parent instance location/name?
         writer = self.get_writer()
         writer.delete_by_term(KEY_FIELD_NAME, instance_name)
         writer.commit()

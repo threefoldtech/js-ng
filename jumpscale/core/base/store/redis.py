@@ -77,18 +77,6 @@ class RedisStore(EncryptedConfigStore):
         """
         return self._full_scan(f"{self.location.name}.*")
 
-    def get_instance_keys(self, instance_name):
-        """
-        get all instance related keys (scanned)
-
-        Args:
-            instance_name (str): name
-
-        Returns:
-            list: list of keys
-        """
-        return self._full_scan(f"{self.location.name}.{instance_name}*")
-
     def list_all(self):
         """
         get all names of instances (instance keys)
@@ -102,6 +90,7 @@ class RedisStore(EncryptedConfigStore):
         for key in keys:
             # remove location name part
             name = key.decode().replace(self.location.name, "").lstrip(".")
+            # if it does not contain a ".", then it's not a child
             if "." not in name:
                 names.append(name)
         return names
@@ -121,7 +110,7 @@ class RedisStore(EncryptedConfigStore):
 
     def delete(self, instance_name):
         """
-        delete all instance related keys
+        delete given instance
 
         Args:
             instance_name (str): name
@@ -129,7 +118,4 @@ class RedisStore(EncryptedConfigStore):
         Returns:
             bool
         """
-        keys = self.get_instance_keys(instance_name)
-        if keys:
-            return self.redis_client.delete(*keys)
-        return True
+        return self.redis_client.delete(self.get_key(instance_name))

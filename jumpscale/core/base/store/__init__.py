@@ -80,6 +80,12 @@ class Location:
 
     __repr__ = __str__
 
+    def __eq__(self, other):
+        return self.name == other.name
+
+    def __hash__(self):
+        return hash(self.name)
+
 
 class EncryptionMode(Enum):
     """

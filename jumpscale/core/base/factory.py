@@ -32,7 +32,7 @@ This will use current redis config (hostname: localhost, port: 6379).
 from functools import partial
 from jumpscale.core import config, events
 
-from .events import AttributeUpdateEvent, InstanceCreateEvent, InstanceDeleteEvent
+from .events import InstanceCreateEvent, InstanceDeleteEvent
 from .store import KEY_FIELD_NAME, Location
 from .store.filesystem import FileSystemStore
 from .store.redis import RedisStore
@@ -153,10 +153,9 @@ class Factory:
         if name_.startswith("__"):
             raise ValueError("name cannot start with '__'")
 
+        kwargs["instance_name_"] = name_
+        kwargs["parent_"] = self.parent_instance
         instance = self.type(*args, **kwargs)
-        instance._set_instance_name(name_)
-        # parent instance of this factory is a parent to all of its instances
-        instance._set_parent(self.parent_instance)
 
         self.count += 1
         self._created(instance)
@@ -297,7 +296,8 @@ class StoredFactory(events.Handler, Factory):
             # if it's a parent, it should trigger this loading
             self._load()
 
-        events.add_listenter(self, AttributeUpdateEvent)
+        # to handle when a parent instance is deleted
+        events.add_listenter(self, InstanceDeleteEvent)
 
     @property
     def parent_location(self):
@@ -352,32 +352,22 @@ class StoredFactory(events.Handler, Factory):
         if instance.parent and hasattr(instance.parent, "save"):
             instance.parent.save()
 
-    def _try_save_instance(self, instance):
-        """
-        try to save an instance, if failed, do nothing
-
-        Args:
-            instance (Base)
-        """
-        # try to save instance if it's validated and have a name
-        if not instance.instance_name:
-            return
-
-        try:
-            self._validate_and_save_instance(instance)
-        except:
-            pass
-
     def handle(self, ev):
         """
-        handle when data is updated for an instance
+        handle when the parent instance is deleted
 
         Args:
-            ev (AttributeUpdateEvent): attribute update event
+            ev (InstanceDeleteEvent): instance delete event
         """
-        instance = ev.instance
-        if instance.parent == self.parent_instance and isinstance(instance, self.type):
-            self._try_save_instance(instance)
+        # do nothing if this is a root factory
+        if not self.parent_instance or not self.parent_factory:
+            return
+
+        # handle deletion of children
+        if isinstance(ev, InstanceDeleteEvent):
+            if ev.factory == self.parent_factory and ev.name == self.parent_instance.instance_name:
+                for name in self.list_all():
+                    self.delete(name)
 
     def _load_sub_factories(self, instance):
         """
@@ -533,3 +523,9 @@ class StoredFactory(events.Handler, Factory):
         for value in vars(self).values():
             if isinstance(value, self.type):
                 yield value
+
+    def __eq__(self, other):
+        return self.location == other.location
+
+    def __hash__(self):
+        return hash(self.location)

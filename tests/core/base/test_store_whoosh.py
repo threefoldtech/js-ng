@@ -8,6 +8,10 @@ class Permission(Base):
     is_admin = fields.Boolean()
 
 
+class Machine(Base):
+    ip = fields.IPAddress()
+
+
 class User(Base):
     id = fields.Integer()
     first_name = fields.String(default="")
@@ -18,6 +22,7 @@ class User(Base):
     rating = fields.Integer()
     created_time = fields.DateTime(default=datetime.datetime.now)
     password = fields.Secret()
+    machines = fields.Factory(Machine)
 
     def get_full_name(self):
         name = self.first_name
@@ -38,6 +43,7 @@ class CustomFactory(StoredFactory):
 
 def test_create_schema_and_search():
     factory = CustomFactory(User)
+
     a = factory.get("test")
     a.first_name = "test"
     a.last_name = "user"
@@ -45,10 +51,17 @@ def test_create_schema_and_search():
     a.password = "aaa"
     a.save()
 
-    print(factory.list_all())
-    print(factory.find_many(first_name="te"))
-    print(factory.find_many(first_name="te", rating=1))
-    print(factory.find_many(rating=1))
-    print(factory.find_many(rating="[1 to]"))
+    m = a.machines.get("m1")
+    m.ip = "192.168.1.11"
+    m.save()
 
-    # factory.delete("test")
+    assert len(factory.list_all()) == 1
+    assert len(factory.find_many(first_name="te")) == 1
+    assert len(factory.find_many(first_name="te", rating=1)) == 1
+    assert len(factory.find_many(rating=1)) == 1
+    assert len(factory.find_many(rating="[1 to]")) == 1
+
+    factory.delete("test")
+
+    assert len(factory.list_all()) == 0
+    assert len(a.machines.list_all()) == 0

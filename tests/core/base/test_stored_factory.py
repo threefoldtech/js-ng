@@ -130,7 +130,7 @@ class TestStoredFactory(unittest.TestCase):
             w.addresses.new("mine")
 
         # create another instance
-        new_cl = Client()
+        new_cl = self.factory.get("another_client")
         self.assertEqual(new_cl.wallets.count, 0)
 
     def test_create_with_list_field(self):
