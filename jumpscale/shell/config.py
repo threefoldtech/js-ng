@@ -200,6 +200,7 @@ def ptconfig(repl):
         custom binding for pudb, to allow debugging a statement and also
         post-mortem debugging in case of any exception
         """
+        import time
         b = event.cli.current_buffer
         app = get_app()
         statements = b.document.text
