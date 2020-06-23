@@ -2,7 +2,7 @@
 Redis client
 """
 
-from redis import Redis
+from redis import Redis, exceptions
 
 from jumpscale.core import events
 
@@ -45,6 +45,12 @@ class RedisClient(Client):
                 self.__client = Redis(self.hostname, self.port)
 
         return self.__client
+    
+    def is_running(self):
+        try:
+            return self.redis_client.ping()
+        except exceptions.ConnectionError:
+            return False
 
     def __getattr__(self, k):
         # forward non found attrs to self.redis_client

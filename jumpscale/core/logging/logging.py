@@ -163,7 +163,7 @@ class RedisLogHandler(LogHandler):
         Arguments:
             message {str} -- message string
         """
-        if not self._db:
+        if not self._db.is_running():
             return
 
         record = self._process_message(message)

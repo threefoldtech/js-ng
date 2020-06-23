@@ -169,6 +169,9 @@ class AlertsHandler:
         Returns:
             Alert -- alert object
         """
+        if not self.db.is_running():
+            return
+
         identifier = _get_identifier(appname, message, public_message, category, alert_type)
         alert = self.get(identifier=identifier, die=False) or Alert()
 
