@@ -186,7 +186,7 @@ class Syncer(PatternMatchingEventHandler):
             if what == "directory":
                 cl.sshclient.run("mkdir -p {}".format(dest_path))
             else:
-                cl.sshclient.sftp.mkdir(j.sals.fs.parent(dest_path))
+                cl.sshclient.run("mkdir -p {}".format(j.sals.fs.parent(dest_path)))
                 cl.sshclient.run("touch {}".format(dest_path))
 
     def on_deleted(self, event):
