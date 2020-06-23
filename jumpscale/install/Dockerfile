@@ -7,6 +7,5 @@ WORKDIR /sandbox/code/github/threefoldtech/js-sdk
 RUN poetry config virtualenvs.create false && poetry install
 RUN poetry shell
 RUN /etc/init.d/redis-server start
-COPY codeserver-install.py /tmp/
-RUN python3 /tmp/codeserver-install.py
+RUN python3 /usr/src/js-ng/jumpscale/install/codeserver-install.py
 ENTRYPOINT ["/sbin/my_init"]
