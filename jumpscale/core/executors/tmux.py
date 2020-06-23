@@ -2,7 +2,6 @@
 
 """
 import libtmux
-from jumpscale.god import j
 from jumpscale.core.logging import export_module_as as logger
 
 from .command_builder import cmd_from_args

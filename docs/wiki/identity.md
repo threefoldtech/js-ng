@@ -8,18 +8,15 @@ Multiple identities can be configured. By default if only one is configured it w
 To configure your identity:
 
 ```python
-me = j.core.identity.new("name", "threebot_name", "threebot_mail", "words")
-```
+me = j.core.identity.new(name="default", tname="3BOT_NAME", email="3BOT_EMAIL", words="3BOT_WORDS")
 
-To access his threebot id:
-
-```python
 me.tid
 # or
 j.core.identity.me.tid
 ```
 To register your identity in TFGrid
 ```python
+me.save()
 me.register()
 ```
 To change the default `me`

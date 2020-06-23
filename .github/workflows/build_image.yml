@@ -2,7 +2,7 @@ name: Build docker image
 
 on:
   push:
-    branches: [ master ]
+    branches: [ development ]
 jobs:
     build-docker:
         runs-on: ubuntu-latest
@@ -16,3 +16,7 @@ jobs:
             password: ${{ secrets.DOCKERHUB_PASSWORD }}
             dockerfile: jumpscale/install/Dockerfile
             tags: latest
+        - name: upload to flist
+          run: |
+            docker save threefoldtech/js-ng:latest | gzip > js-ng-latest.tar.gz
+            curl -v -X POST  -H 'Authorization: bearer ${{ secrets.ZEROHUB_TOKEN}}' ${{secrets.ZEROHUB_URL}}/api/flist/me/upload -F 'file=@js-ng-latest.tar.gz'

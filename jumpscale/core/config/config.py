@@ -71,7 +71,6 @@ import nacl.utils
 import nacl.encoding
 import pytoml as toml
 from nacl.public import PrivateKey
-import pkg_resources
 
 
 __all__ = [
@@ -86,13 +85,15 @@ __all__ = [
     "get_current_version",
 ]
 
+__version__ = "0.1.0"
+
 
 config_root = os.path.expanduser(os.path.join("~/.config", "jumpscale"))
 config_path = os.path.join(config_root, "config.toml")
 
 
 def get_current_version():
-    return pkg_resources.get_distribution("js-ng").version
+    return __version__
 
 
 def get_default_config():

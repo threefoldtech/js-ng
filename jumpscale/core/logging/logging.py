@@ -36,8 +36,7 @@ class Logger:
     def appname(self):
         return self._appname
 
-    @appname.setter
-    def appname(self, appname):
+    def set_appname(self, appname):
         self._appname = appname
         self._logger = self._logger.bind(appname=appname)
 
@@ -164,7 +163,7 @@ class RedisLogHandler(LogHandler):
         Arguments:
             message {str} -- message string
         """
-        if not self._db:
+        if not self._db.is_running():
             return
 
         record = self._process_message(message)
