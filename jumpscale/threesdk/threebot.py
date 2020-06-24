@@ -2,6 +2,7 @@ import requests
 import os
 
 from .container import Container
+from . import settings
 
 from jumpscale.core.exceptions import Value
 from jumpscale.data.encryption import mnemonic
@@ -60,7 +61,7 @@ class ThreeBot(Container):
 
     @staticmethod
     def install(
-        name=None, image=None, identity=None, email=None, words=None, explorer=None, development: bool = False,
+        name=None, image=None, identity=None, email=None, words=None, explorer=None, development: bool = None,
     ):
         """Creates a threebot container
 
@@ -77,6 +78,8 @@ class ThreeBot(Container):
             Value: Container with specified name already exists
             Value: explorer not in mainnet, testnet, devnet
         """
+        if development is None:
+            development = settings.expert
         name = name or DEFAULT_CONTAINER_NAME
         current_version = get_current_version()
         image = image or f"{DEFAULT_IMAGE}:{current_version}"
@@ -93,8 +96,28 @@ class ThreeBot(Container):
 
         os.makedirs(PERSISTENT_STORE, exist_ok=True)
         volumes = {pers_path: {"bind": "/root/.config/jumpscale", "mode": "rw"}}
+
         container = Container.install(name, image, development, volumes)
+        container.exec_run(["redis-server", "--daemonize yes"])
 
         if configure:
             container.exec_run(["jsng", f"j.core.identity.new('default', '{identity}', '{email}', '{words}')"])
             container.exec_run(["jsng", "j.core.identity.set_default('default')"])
+
+    @staticmethod
+    def jsng(name=DEFAULT_CONTAINER_NAME):
+        """Get's shell in threebot
+
+        Args:
+            name (str): name of the container
+        """
+        Container.exec(name, "jsng")
+
+    @staticmethod
+    def shell(name=DEFAULT_CONTAINER_NAME):
+        """Get's shell in threebot
+
+        Args:
+            name (str): name of the container
+        """
+        Container.exec(name, "bash")

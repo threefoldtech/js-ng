@@ -6,7 +6,7 @@ The explorer exposes both a web UI and a REST API.
 - The web UI allows users to discover all the nodes and farms in the grid.
 - The API is used by nodes and users.
 
-# Explorer Client
+## Explorer Client
 
 - Get explorer client
 ```python
@@ -15,7 +15,7 @@ explorer = j.clients.explorer.get("explore_client","http://explorer.grid.tf/expl
 ### Users
 - List all users in explorer
 ```python
-explorer.users.list()
+explorer.users.list(name="3BOT_NAME", email="3BOT_EMAIL")
 ```
 - Get specific user
 ```python
@@ -43,10 +43,14 @@ explorer.farms.get(farm_id="ID", farm_name="NAME")
 ```
 -  Create new farm
 ```python
+from jumpscale.clients.explorer.models import TfgridDirectoryWallet_address1
 farm = explorer.farms.new()
 farm.name = "FARM_NAME"
 farm.email = "FARM_EMAIL"
-farm.wallet_addresses = "WALLET_ADDRESSESS"
+wallet = TfgridDirectoryWallet_address1()
+wallet.address= "WALLET_ADREESS"
+wallet.save()
+farm.wallet_addresses = [wallet]
 ```
 - Register new farm
 ```python

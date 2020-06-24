@@ -17,6 +17,8 @@ from prompt_toolkit.validation import Validator, ValidationError
 from prompt_toolkit.styles import Style
 from prompt_toolkit.formatted_text import HTML
 from jumpscale import threesdk
+from jumpscale.threesdk import settings
+from jumpscale.core.exceptions.exceptions import JSException
 from jumpscale.clients.docker.docker import DockerClient
 from jumpscale.threesdk.threebot import ThreeBot, DEFAULT_IMAGE
 from jumpscale.core.config import get_current_version
@@ -82,7 +84,7 @@ def partition_line(line):
 
 def noexpert_error(error):
     reports_location = f"{os.environ.get('HOME', os.environ.get('USERPROFILE', ''))}/sandbox/reports"
-    error_file_location = f"{reports_location}/jsxreport_{time.strftime('%d%H%M%S')}.log"
+    error_file_location = f"{reports_location}/jsngreport_{time.strftime('%d%H%M%S')}.log"
     if not os.path.exists(reports_location):
         os.makedirs(reports_location)
     with open(error_file_location, "w") as f:
@@ -94,10 +96,9 @@ Error report file has been created on your machine in this location: {error_file
 
 
 class Shell(Validator):
-    def __init__(self, expert):
+    def __init__(self):
         self._prompt = PromptSession()
         self.mode = None
-        self.expert = expert
         self.toolbarmsg = DEFAULT_TOOLBAR_MSG
 
     def get_completions_async(self, document, complete_event):
@@ -202,8 +203,13 @@ class Shell(Validator):
         try:
             func, kwargs = self.get_func_kwargs(cmd)
             func(**kwargs)
+        except JSException as e:
+            if not settings.expert:
+                print_error(str(e))
+            else:
+                print_error(traceback.format_exc())
         except Exception:
-            if self.expert:
+            if not settings.expert:
                 print_error(noexpert_error(traceback.format_exc()))
             else:
                 print_error(traceback.format_exc())
@@ -228,11 +234,12 @@ def run():
     parser.add_argument("--update", action="store_true", help="Update 3sdk")
     parser.add_argument("--expert", action="store_true", help="Run 3sdk in expert mode")
     args = parser.parse_args()
+    settings.expert = args.expert
 
     if args.update:
         update()
     else:
-        shell = Shell(args.expert)
+        shell = Shell()
         shell.make_prompt()
 
 

@@ -22,6 +22,11 @@ Two types of executor:
 
 You can attach to a running process by specufying correct `name`, `ports`, `process_strings`, `process_strings_regex`.
 If it matches any of the above you would be able to perform available on that process.
+
+
+- Special cases
+
+you can add cmd.ports, cmd.process_strings_regex or cmd.process_strings_regex to reach the process pid
 """
 from enum import Enum
 from jumpscale.god import j

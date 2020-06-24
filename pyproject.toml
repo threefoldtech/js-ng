@@ -44,6 +44,8 @@ snakeviz = "^2.0.1"
 bottle = "^0.12.18"
 captcha = "^0.3"
 Whoosh= "^2.7.4"
+pycparser = "^2.20"
+zipp = "^3.1.0"
 
 [tool.poetry.dev-dependencies]
 ipython = "^7.6"

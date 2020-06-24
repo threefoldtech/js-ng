@@ -23,6 +23,10 @@ True
 
 JS-NG> j.data.platform.is_osx()
 False
+
+JS-NG> j.data.platform.is_unix()
+True
+
 ```
 
 ## Get linux info
@@ -422,6 +426,10 @@ def is_linux():
 
 def is_osx():
     return sys.platform.lower() == "darwin"
+
+
+def is_unix():
+    return is_linux() or is_osx()
 
 
 if is_linux():

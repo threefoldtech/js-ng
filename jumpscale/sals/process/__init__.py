@@ -20,9 +20,9 @@ j.sals.process.get_pid_by_port(8000)
 """
 
 
+import math
 import os
 import os.path
-import psutil
 import random
 import re
 import select
@@ -30,10 +30,10 @@ import signal
 import subprocess
 import sys
 import time
-import math
-
 from collections import defaultdict
 from subprocess import Popen
+
+import psutil
 
 from jumpscale.god import j
 
@@ -87,7 +87,7 @@ def is_alive(pid):
     """Checks if pid is Running
 
     Arguments:
-        pid {int} -- pid of the process to be checked
+        pid (int) -- pid of the process to be checked
 
     Returns:
         [bool] -- True if process is running
@@ -116,7 +116,7 @@ def kill(pid, sig=signal.SIGTERM.value):
     """Kill a process with a signal
 
     Arguments:
-        pid {int} -- pid of the process to be killed
+        pid (int) -- pid of the process to be killed
 
     Keyword Arguments:
         sig {int]} -- which signal you want to kill the process with (default: {signal.SIGTERM.value})
@@ -159,7 +159,7 @@ def kill_all(name, sig=signal.SIGKILL):
         name {str} -- process name
 
     Keyword Arguments:
-        sig {int} -- signal number (default: {signal.SIGKILL})
+        sig (int) -- signal number (default: {signal.SIGKILL})
     """
     sig = int(sig)
     for proc in psutil.process_iter():
@@ -274,9 +274,8 @@ def get_pids_filtered_by_regex(regex_list, excludes=None):
         if cmdline:
             name = " ".join(cmdline)
             for r in regex_list:
-                if name.strip() != "":
-                    if j.data.regex.match(r, name):
-                        res.append(process.pid)
+                if name.strip() != "" and re.match(r, name):
+                    res.append(process.pid)
     return res
 
 
@@ -288,8 +287,8 @@ def check_start(cmd, filterstr, nrinstances=1, retry=1):
         filterstr {str} -- filter string
 
     Keyword Arguments:
-        instances {int} -- number of needed instances (default: {1})
-        retry {int} -- number of retries (default: {1})
+        instances (int) -- number of needed instances (default: {1})
+        retry (int) -- number of retries (default: {1})
 
     Raises:
         j.exceptions.RuntimeError: will be raised if we didn't reach number of required instances
@@ -316,8 +315,8 @@ def check_stop(cmd, filterstr, retry=1, nrinstances=0):
         filterstr {str} -- filter string
 
     Keyword Arguments:
-        retry {int} -- number of retries (default: {1})
-        nrinstances {int} -- number of instances after stop (default: {0})
+        retry (int) -- number of retries (default: {1})
+        nrinstances (int) -- number of instances after stop (default: {0})
 
     Raises:
         j.exceptions.RuntimeError: if nr of instances not matched
@@ -339,7 +338,7 @@ def check_stop(cmd, filterstr, retry=1, nrinstances=0):
         raise j.exceptions.RuntimeError("could not stop %s, found %s nr of instances." % (cmd, len(found)))
 
 
-def get_pids(process, match_predicate=None):
+def get_pids(process_name, match_predicate=None):
     """Get process ID(s) for a given process
 
     Arguments:
@@ -359,38 +358,34 @@ def get_pids(process, match_predicate=None):
     """
     # default match predicate
     # why aren't we using psutil ??
-    def default_predicate(given, target):
-        return given.find(target.strip()) != -1
+    def default_predicate(target, given):
+        return target.strip().lower() in given.lower()
 
     if match_predicate is None:
         match_predicate = default_predicate
 
-    if process is None:
+    if process_name is None:
         raise j.exceptions.RuntimeError("process cannot be None")
-    if j.data.platform.is_linux():
-
-        # Need to set $COLUMNS such that we can grep full commandline
-        # Note: apparently this does not work on solaris
-        command = "bash -c 'env COLUMNS=300 ps -ef'"
-        (exitcode, output, err) = execute(command, die=False, showout=False)
-        pids = list()
-        co = re.compile(
-            "\s*(?P<uid>[a-z]+)\s+(?P<pid>[0-9]+)\s+(?P<ppid>[0-9]+)\s+(?P<cpu>[0-9]+)\s+(?P<stime>\S+)\s+(?P<tty>\S+)\s+(?P<time>\S+)\s+(?P<cmd>.+)"
-        )
-        for line in output.splitlines():
-            match = co.search(line)
-            if not match:
+    if j.data.platform.is_unix():
+        pids = set()
+        for process in get_processes():
+            try:
+                pid = process.pid
+                if not isinstance(pid, int):
+                    continue
+                name = process.name()
+                if match_predicate(process_name, name):
+                    pids.add(pid)
+                elif match_predicate(process_name, process.exe()):
+                    pids.add(pid)
+                else:
+                    cmdline = process.cmdline()
+                    if cmdline and cmdline[0]:
+                        if match_predicate(process_name, cmdline[0]):
+                            pids.add(pid)
+            except psutil.Error:
                 continue
-            gd = match.groupdict()
-            # print "%s"%line
-            # print gd["cmd"]
-            # print process
-            if isinstance(process, int) and gd["pid"] == process:
-                pids.append(gd["pid"])
-            elif match_predicate(gd["cmd"], process):
-                pids.append(gd["pid"])
-        pids = [int(item) for item in pids]
-        return pids
+        return list(pids)
     else:
         raise j.exceptions.NotImplemented("getProcessPid is only implemented for unix")
 
@@ -408,7 +403,7 @@ def get_process_object(pid, die=True):
     """Get Process object of a process id
 
     Arguments:
-        pid {int} -- pid of the process
+        pid (int) -- pid of the process
 
     Keyword Arguments:
         die {bool} -- die if process not found (default: {True})
@@ -478,7 +473,7 @@ def check_running(process, min=1):
         process {str} -- process name to be checked
 
     Keyword Arguments:
-        min {int} -- min number of instances required to be running (default: {1})
+        min (int) -- min number of instances required to be running (default: {1})
 
     Returns:
         [bool] -- true if process is running
@@ -494,7 +489,7 @@ def check_process_for_pid(pid, process_name):
     """Check whether a given pid actually does belong to a given process name.
 
     Arguments:
-        pid {int} -- process pid
+        pid (int) -- process pid
         process {str} -- process name
 
     Returns:
@@ -524,7 +519,7 @@ def get_pid_by_port(port):
     """Returns pids of the process that is listening on the given port
 
     Arguments:
-        port {int} -- port number
+        port (int) -- port number
 
     Returns:
         int -- pid of process that listen on that port
@@ -558,30 +553,45 @@ def kill_process_by_port(port):
     """Kill process by port
 
     Arguments:
-        port {int} -- port number
+        port (int) -- port number
     """
     port = int(port)
     for pid in get_pid_by_port(port):
         kill(pid)
 
 
+def is_port_listenting(port):
+    """check if the port is being used by any process
+
+    Args:
+        port (int): port number
+
+    Returns:
+        Bool: True if port is used else False
+    """
+    pcons = [proc for proc in psutil.net_connections() if proc.laddr.port == port and proc.status == "LISTEN"]
+    return any(pcons)
+
+
 def get_process_by_port(port):
     """Returns the full name of the process that is listening on the given port
 
     Arguments:
-        port {int} -- the port for which to find the command
+        port (int) -- the port for which to find the command
+
+    Raises:
+        Runtime Error if the process is not accessible by the user
 
     Returns:
         [psutil.Process] -- process object
+        None -- No process found
     """
-    for process in psutil.process_iter():
-        try:
-            cc = [con for con in process.connections() if con.status == psutil.CONN_LISTEN and con.laddr[1] == port]
-            if cc:
-                return process
-        except Exception as e:
-            pass
-    return None
+    pcons = [proc for proc in psutil.net_connections() if proc.laddr.port == port and proc.status == "LISTEN"]
+    if pcons:
+        pid = pcons[0].pid
+        if not pid:
+            raise j.exceptions.Runtime("No pid found maybe permission denied on the process")
+        return psutil.Process(pid)
 
 
 def get_defunct_processes():
@@ -703,7 +713,7 @@ def get_environ(pid):
     """Gets env vars for a specific process based on pid
 
     Arguments:
-        pid {int} -- process pid
+        pid (int) -- process pid
 
     Returns:
         [dict] -- dict of env variables
