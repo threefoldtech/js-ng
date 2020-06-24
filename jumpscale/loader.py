@@ -26,32 +26,31 @@ def get_container_type(full_name: str) -> type:
     return type(cls_name, (object,), {"__fullname": full_name,})
 
 
-def get_new_property(name: str, module: types.ModuleType) -> property:
-    """
-    get a new property that returns this module, so, it is not loaded until it's accessed
-
-    Args:
-        name (str): module name
-        module (type): module
-
-    Returns:
-        property: a new property for this module
-    """
-    inner_name = f"__{name}"
-
+def get_lazy_import_property(name, root_module, container_type):
     def getter(self):
+        inner_name = f"__{name}"
         if hasattr(self, inner_name):
             return getattr(self, inner_name)
 
-        if hasattr(module, "export_module_as"):
-            new_module = module.export_module_as()
+        full_name = f"{root_module.__name__}.{name}"
+        mod = importlib.import_module(full_name)
+        if mod.__spec__.origin in ("namespace", None):
+            # if this module is a namespace, create a new container type
+            sub_container_type = get_container_type(full_name)
+            # expose all sub-modules of this imported module under this new type too
+            expose_all(mod, sub_container_type)
+            new_module = sub_container_type()
         else:
-            new_module = module
+            # if it's just a module
+            if hasattr(mod, "export_module_as"):
+                new_module = mod.export_module_as()
+            else:
+                new_module = mod
 
         setattr(self, inner_name, new_module)
         return new_module
 
-    return property(fget=getter)
+    return property(getter)
 
 
 def expose_all(root_module: types.ModuleType, container_type: type):
@@ -62,25 +61,14 @@ def expose_all(root_module: types.ModuleType, container_type: type):
         root_module (types.ModuleType): module
         ns_type (type): namepace type (class)
     """
+
     for path in root_module.__path__:
         for name in os.listdir(path):
             if not os.path.isdir(os.path.join(path, name)) or name == "__pycache__":
                 continue
 
-            full_name = f"{root_module.__name__}.{name}"
-            mod = importlib.import_module(full_name)
-            if mod.__spec__.origin in ("namespace", None):
-                # if this module is a namespace, create a new container type
-                # then do the same with it
-                sub_container_type = get_container_type(full_name)
-                expose_all(mod, sub_container_type)
-
-                # after that, just set an instance of this container type
-                # as an attribute
-                setattr(container_type, name, sub_container_type())
-            else:
-                # if it's just a module, set it as a property attribute
-                setattr(container_type, name, get_new_property(name, mod))
+            lazy_import_property = get_lazy_import_property(name, root_module, container_type)
+            setattr(container_type, name, lazy_import_property)
 
 
 Jumpscale = get_container_type("Jumpscale")
