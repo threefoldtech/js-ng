@@ -71,6 +71,23 @@ def expose_all(root_module: types.ModuleType, container_type: type):
             setattr(container_type, name, lazy_import_property)
 
 
-Jumpscale = get_container_type("Jumpscale")
-expose_all(jumpscale, Jumpscale)
-j = Jumpscale()
+class J:
+    @property
+    def logger(self):
+        return self.core.logging
+
+    @property
+    def application(self):
+        return self.core.application
+
+    @property
+    def config(self):
+        return self.core.config
+
+    @property
+    def exceptions(self):
+        return self.core.exceptions
+
+
+expose_all(jumpscale, J)
+j = J()
