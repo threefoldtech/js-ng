@@ -506,5 +506,7 @@ class StoredFactory(events.Handler, Factory):
                 instance_config = self.store.get(name)
             except FileNotFoundError:
                 return None
+            if not instance_config:
+                return None
             instance = self.type.from_dict(instance_config)
         return instance
