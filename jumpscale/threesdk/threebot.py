@@ -146,6 +146,7 @@ class IdentityManager:
                     )
                     if choice == "restart":
                         return False
+                    fill_words()
 
                 if hexkey != user["pubkey"]:
                     choice = ask_choice(
@@ -154,6 +155,7 @@ class IdentityManager:
                     )
                     if choice == "restart":
                         return False
+                    fill_words()
 
         while True:
             if _fill_identity_args(identity, explorer):
