@@ -127,12 +127,11 @@ class IdentityManager:
 
             print("Configured email for this identity is {}".format(self.email))
 
-            if not self.words:
-                fill_words()
-
             # time to do validation of words
             hexkey = None
             while True:
+                if not self.words:
+                    fill_words()
                 try:
                     seed = mnemonic.mnemonic_to_key(self.words.strip())
                     hexkey = NACL(seed).get_verify_key_hex()
@@ -147,7 +146,7 @@ class IdentityManager:
                     )
                     if choice == "restart":
                         return False
-                    fill_words()
+
                 if hexkey != user["pubkey"]:
                     choice = ask_choice(
                         f"\nUser with name: {identity} not registered with entered phrase.\nWhat would you like to do?\n",
@@ -155,7 +154,6 @@ class IdentityManager:
                     )
                     if choice == "restart":
                         return False
-                    fill_words()
 
         while True:
             if _fill_identity_args(identity, explorer):
