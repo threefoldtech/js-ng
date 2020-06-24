@@ -21,6 +21,10 @@ PERSISTENT_STORE = os.path.expanduser("~/.config/jumpscale/containers")
 
 NETWORKS = {"mainnet": "explorer.grid.tf", "testnet": "explorer.testnet.grid.tf", "devnet": "explorer.devnet.grid.tf"}
 
+RESTART_CHOICE = "Restart from the begining"
+REENTER_CHOICE = "Re-Enter your value"
+CHOICES = [RESTART_CHOICE, REENTER_CHOICE]
+
 
 class IdentityManager:
     def __init__(self, identity: str = "", email: str = None, words: str = None, explorer: str = None):
@@ -108,8 +112,8 @@ class IdentityManager:
                 try:
                     user, user_app = self._get_user()
                 except j.core.exceptions.Value as e:
-                    response = ask_choice(f"{e}. What would you like to do?", ["restart", "reenter"],)
-                    if response == "restart":
+                    response = ask_choice(f"{e}. What would you like to do?", CHOICES)
+                    if response == RESTART_CHOICE:
                         return False
 
             while not self.email:
@@ -119,10 +123,9 @@ class IdentityManager:
                 else:
                     self.email = None
                     response = ask_choice(
-                        "This email is currently associated with another identity. What would you like to do?",
-                        ["restart", "reenter"],
+                        "This email is currently associated with another identity. What would you like to do?", CHOICES,
                     )
-                    if response == "restart":
+                    if response == RESTART_CHOICE:
                         return False
 
             print("Configured email for this identity is {}".format(self.email))
@@ -141,10 +144,9 @@ class IdentityManager:
                         return True
                 except Exception:
                     choice = ask_choice(
-                        "\nSeems one or more more words entered is invalid.\nWhat would you like to do?\n",
-                        ["restart", "reenter"],
+                        "\nSeems one or more more words entered is invalid.\nWhat would you like to do?\n", CHOICES,
                     )
-                    if choice == "restart":
+                    if choice == RESTART_CHOICE:
                         return False
                     fill_words()
 
