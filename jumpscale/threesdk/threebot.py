@@ -12,8 +12,6 @@ DEFAULT_CONTAINER_NAME = "3bot-ng"
 DEFAULT_IMAGE = "threefoldtech/js-ng"
 PERSISTENT_STORE = os.path.expanduser("~/.config/jumpscale/containers")
 
-NETWORKS = {"mainnet": "explorer.grid.tf", "testnet": "explorer.testnet.grid.tf", "devnet": "explorer.devnet.grid.tf"}
-
 
 class ThreeBot(Container):
     """
@@ -44,8 +42,6 @@ class ThreeBot(Container):
         name = name or DEFAULT_CONTAINER_NAME
         current_version = get_current_version()
         image = image or f"{DEFAULT_IMAGE}:{current_version}"
-        if explorer and explorer not in NETWORKS:
-            raise Value(f"allowed explorer values are {','.join(NETWORKS)}")
 
         pers_path = f"{PERSISTENT_STORE}/{name}"
         configure = not os.path.exists(pers_path)
