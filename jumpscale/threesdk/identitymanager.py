@@ -103,7 +103,7 @@ class IdentityManager:
                 try:
                     user, user_app = self._get_user()
                 except j.core.exceptions.Value as e:
-                    response = ask_choice(f"{e}. What would you like to do? ", CHOICES)
+                    response = ask_choice(f"{e}What would you like to do? ", CHOICES)
                     if response == RESTART_CHOICE:
                         return False
 
