@@ -55,6 +55,7 @@ class IdentityManager:
             if not self._check_keys(users[0]["pubkey"], userdata):
                 raise j.core.exceptions.Value(
                     f"\nYour 3bot on {self.explorer} seems to have been previously registered with a different public key.\n"
+                    f"The identity of {self.identity} is mismatched with 3bot connect app"
                     "Please contact support.grid.tf to reset it.\n"
                     "Note: use the same email registered on the explorer to contact support otherwise we cannot reset the account.\n"
                 )
