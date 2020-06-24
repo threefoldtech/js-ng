@@ -28,7 +28,7 @@ def get_js_session():
 
 def get_js_window(window_name):
     s = get_js_session()
-    w = server.find_where({"window_name": window_name})
+    w = s.find_where({"window_name": window_name})
     if not w:
         w = s.new_window(window_name)
         w.rename_window(window_name)
