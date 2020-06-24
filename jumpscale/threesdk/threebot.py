@@ -64,7 +64,7 @@ class ThreeBot(Container):
         """Get's shell in threebot
 
         Args:
-            name (str): name of the container
+            name (str): name of the container (default: 3bot-ng)
         """
         Container.exec(name, "jsng")
 
@@ -73,6 +73,24 @@ class ThreeBot(Container):
         """Get's shell in threebot
 
         Args:
-            name (str): name of the container
+            name (str): name of the container (default: 3bot-ng)
         """
         Container.exec(name, "bash")
+
+    @staticmethod
+    def start(name=DEFAULT_CONTAINER_NAME):
+        """Start threebot server with the container
+
+        Args:
+            name (str): name of the container (default: 3bot-ng)
+        """
+        Container.exec(name, ["threebot", "start"])
+
+    @staticmethod
+    def stop(name=DEFAULT_CONTAINER_NAME):
+        """Start threebot installation with container
+
+        Args:
+            name (str): name of the container (default: 3bot-ng)
+        """
+        Container.exec(name, ["threebot", "stop"])

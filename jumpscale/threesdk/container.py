@@ -43,7 +43,6 @@ class Container:
         if not docker_client.exists(name):
             raise Value("Container with specified name doesn't exist")
         docker_client.start(name)
-        docker_client.exec(name, ["threebot, start"])
 
     @staticmethod
     def exec(name, cmd):
@@ -70,7 +69,6 @@ class Container:
         if not docker_client.exists(name):
             raise Value("Container with specified name doesn't exist")
         docker_client.stop(name)
-        docker_client.exec(name, ["threebot, stop"])
 
     @staticmethod
     def delete(name):
