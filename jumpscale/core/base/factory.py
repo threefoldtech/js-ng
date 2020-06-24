@@ -500,6 +500,18 @@ class StoredFactory(events.Handler, Factory):
                 yield value
 
     def find(self, name):
+        """
+        find an instance with the given name
+
+        Args:
+            name (str): instance name
+
+        Raises:
+            ValueError: in case the name is an internal attribute of this factory, like `get` or `new`.
+
+        Returns:
+            Base or NoneType: an instance or none
+        """
         instance = super().find(name)
         if not instance:
             try:
