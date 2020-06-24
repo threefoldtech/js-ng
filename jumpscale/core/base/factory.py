@@ -526,12 +526,8 @@ class StoredFactory(events.Handler, Factory):
         Returns:
             Base or NoneType: an instance or none
         """
-        try:
-            instance_config = self.store.get(name)
-        except FileNotFoundError:
-            return None
+        instance_config = self.store.get(name)
         if not instance_config:
             return None
-        instance = self.type.from_dict(instance_config)
-        setattr(self, name, instance)
+        instance = self._create_instance(name, **instance_config)
         return instance
