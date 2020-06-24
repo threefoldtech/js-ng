@@ -3,6 +3,7 @@ import os
 
 from jumpscale.core.config import get_current_version
 from jumpscale.core.exceptions import Value
+from jumpscale.clients.docker.docker import DockerClient
 
 from . import settings
 from .container import Container
@@ -11,6 +12,8 @@ from .identitymanager import IdentityManager
 DEFAULT_CONTAINER_NAME = "3bot-ng"
 DEFAULT_IMAGE = "threefoldtech/js-ng"
 PERSISTENT_STORE = os.path.expanduser("~/.config/jumpscale/containers")
+
+docker_client = DockerClient()
 
 
 class ThreeBot(Container):
@@ -79,18 +82,23 @@ class ThreeBot(Container):
 
     @staticmethod
     def start(name=DEFAULT_CONTAINER_NAME):
-        """Start threebot server with the container
+        """Start threebot container with threebot server
 
         Args:
             name (str): name of the container (default: 3bot-ng)
         """
+        Container.start(name)
         Container.exec(name, ["threebot", "start"])
 
     @staticmethod
     def stop(name=DEFAULT_CONTAINER_NAME):
-        """Start threebot installation with container
+        """Stop threebot installation with container
 
         Args:
             name (str): name of the container (default: 3bot-ng)
         """
-        Container.exec(name, ["threebot", "stop"])
+        if name not in docker_client.list():
+            Container.stop(name)
+            Container.exec(name, ["threebot", "stop"])
+        else:
+            print("Container is already stopped")
