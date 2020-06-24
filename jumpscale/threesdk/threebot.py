@@ -148,15 +148,14 @@ class IdentityManager:
                     if choice == "restart":
                         return False
                     fill_words()
-                    if hexkey != user["pubkey"]:
-                        choice = ask_choice(
-                            "\nUser with name: {identity} not registered with entered phrase.\nWhat would you like to do?\n",
-                            ["restart", "reenter"],
-                        )
-                        if choice == "restart":
-                            return False
-                        fill_words()
-                    continue
+                if hexkey != user["pubkey"]:
+                    choice = ask_choice(
+                        f"\nUser with name: {identity} not registered with entered phrase.\nWhat would you like to do?\n",
+                        ["restart", "reenter"],
+                    )
+                    if choice == "restart":
+                        return False
+                    fill_words()
 
         while True:
             if _fill_identity_args(identity, explorer):
