@@ -498,3 +498,13 @@ class StoredFactory(events.Handler, Factory):
         for value in vars(self).values():
             if isinstance(value, self.type):
                 yield value
+
+    def find(self, name):
+        instance = super().find(name)
+        if not instance:
+            try:
+                instance_config = self.store.get(name)
+            except FileNotFoundError:
+                return None
+            instance = self.type.from_dict(instance_config)
+        return instance
