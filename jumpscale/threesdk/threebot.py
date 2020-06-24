@@ -97,8 +97,18 @@ class ThreeBot(Container):
         Args:
             name (str): name of the container (default: 3bot-ng)
         """
-        if name not in docker_client.list():
-            Container.stop(name)
+        if name in docker_client.list():
             Container.exec(name, ["threebot", "stop"])
+            Container.stop(name)
         else:
             print("Container is already stopped")
+
+    @staticmethod
+    def restart(name=DEFAULT_CONTAINER_NAME):
+        """restart threebot installation with container
+
+        Args:
+            name (str): name of the container (default: 3bot-ng)
+        """
+        ThreeBot.stop(name=name)
+        ThreeBot.start(name=name)
