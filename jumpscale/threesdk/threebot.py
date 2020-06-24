@@ -1,57 +1,19 @@
-import requests
 import os
 
-from .container import Container
-from . import settings
 
-from jumpscale.core.exceptions import Value
-from jumpscale.data.encryption import mnemonic
-from jumpscale.data.encryption.exceptions import FailedChecksumError
-from jumpscale.data.nacl.jsnacl import NACL
-from jumpscale.tools.console import ask_string, ask_choice, printcolors, ask_yes_no
 from jumpscale.core.config import get_current_version
+from jumpscale.core.exceptions import Value
+from jumpscale.clients.docker.docker import DockerClient
+
+from . import settings
+from .container import Container
+from .identitymanager import IdentityManager
 
 DEFAULT_CONTAINER_NAME = "3bot-ng"
 DEFAULT_IMAGE = "threefoldtech/js-ng"
 PERSISTENT_STORE = os.path.expanduser("~/.config/jumpscale/containers")
 
-
-NETWORKS = {"mainnet": "explorer.grid.tf", "testnet": "explorer.testnet.grid.tf", "devnet": "explorer.devnet.grid.tf"}
-
-
-def check_identity(identity, email, words, explorer):
-    res = requests.get(f"https://{NETWORKS[explorer]}/explorer/users", params={"name": identity, "email": email}).json()
-    if not res:
-        return f"Couldn't find user with name: {identity} and email: {email} in explorer network: {explorer}"
-    user = res[0]
-    try:
-        seed = mnemonic.mnemonic_to_key(words.strip())
-        verify_key_hex = NACL(seed).get_verify_key_hex()
-    except FailedChecksumError:
-        return "Phrase words entered are not valid"
-
-    if verify_key_hex != user["pubkey"]:
-        return f"User with name: {identity} not registered with entered phrase"
-
-
-def ensure_identity(identity, email, words, explorer):
-
-    identity_data = ()
-    while True:
-        _identity = identity or ask_string("Please enter your threebot name(i,e name.3bot): ")
-        _email = email or ask_string("Please enter your threebot email: ")
-        _words = words or ask_string("Please enter your threebot phrase: ")
-        _explorer = explorer or ask_choice("Please choose your explorer network: ", list(NETWORKS))
-
-        error_message = check_identity(_identity, _email, _words, _explorer)
-        if error_message:
-            printcolors("{RED}Verifying identity data failed, error was: {RESET}" + error_message)
-            if ask_yes_no("Do you want to reenter the values? ([y,n])\n") == "y":
-                continue
-        else:
-            identity_data = (_identity, _email, _words, _explorer)
-        break
-    return identity_data
+docker_client = DockerClient()
 
 
 class ThreeBot(Container):
@@ -83,16 +45,12 @@ class ThreeBot(Container):
         name = name or DEFAULT_CONTAINER_NAME
         current_version = get_current_version()
         image = image or f"{DEFAULT_IMAGE}:{current_version}"
-        if explorer and explorer not in NETWORKS:
-            raise Value(f"allowed explorer values are {','.join(NETWORKS)}")
 
         pers_path = f"{PERSISTENT_STORE}/{name}"
         configure = not os.path.exists(pers_path)
         if configure:
-            identity_data = ensure_identity(identity, email, words, explorer)
-            if not identity_data:
-                raise Value("Installation aborted, please enter correct identity information")
-            identity, email, words, explorer = identity_data
+            identity = IdentityManager(identity, email, words, explorer)
+            identity, email, words, explorer = identity.ask_identity()
 
         os.makedirs(PERSISTENT_STORE, exist_ok=True)
         volumes = {pers_path: {"bind": "/root/.config/jumpscale", "mode": "rw"}}
@@ -109,7 +67,7 @@ class ThreeBot(Container):
         """Get's shell in threebot
 
         Args:
-            name (str): name of the container
+            name (str): name of the container (default: 3bot-ng)
         """
         Container.exec(name, "jsng")
 
@@ -118,6 +76,39 @@ class ThreeBot(Container):
         """Get's shell in threebot
 
         Args:
-            name (str): name of the container
+            name (str): name of the container (default: 3bot-ng)
         """
         Container.exec(name, "bash")
+
+    @staticmethod
+    def start(name=DEFAULT_CONTAINER_NAME):
+        """Start threebot container with threebot server
+
+        Args:
+            name (str): name of the container (default: 3bot-ng)
+        """
+        Container.start(name)
+        Container.exec(name, ["threebot", "start"])
+
+    @staticmethod
+    def stop(name=DEFAULT_CONTAINER_NAME):
+        """Stop threebot installation with container
+
+        Args:
+            name (str): name of the container (default: 3bot-ng)
+        """
+        if name in docker_client.list():
+            Container.exec(name, ["threebot", "stop"])
+            Container.stop(name)
+        else:
+            print("Container is already stopped")
+
+    @staticmethod
+    def restart(name=DEFAULT_CONTAINER_NAME):
+        """restart threebot installation with container
+
+        Args:
+            name (str): name of the container (default: 3bot-ng)
+        """
+        ThreeBot.stop(name=name)
+        ThreeBot.start(name=name)
