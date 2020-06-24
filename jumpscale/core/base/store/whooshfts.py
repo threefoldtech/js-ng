@@ -33,8 +33,10 @@ FIELD_MAP = {
 
 # enums and secret fields are special case,
 # for enum, it can be stored as int, bool, or str values...
-# for secret, it's field name prefixed with underscores is not valid in whoosh
+# so, the field type is selected based on enum values (assuming they're all of the same type)
 ENUM_FIELD = "Enum"
+# for secret, its field name prefixed with underscores is not valid in whoosh
+# they are handled when reading/writing the data
 SECRET_FIELD = "Secret"
 
 
@@ -85,8 +87,7 @@ class WhooshStore(EncryptedConfigStore):
             if field_type_name in FIELD_MAP:
                 schema_fields[name] = FIELD_MAP[field_type_name]
             elif field_type_name == ENUM_FIELD:
-                # enum is a special case, it depends on the type of enum values
-                # assuming enum types are all of the same type
+                # it depends on the type of enum values
                 enum_value_type = type(field.default)
                 if isinstance(enum_value_type, (str, bytes, bytearray)):
                     schema_field = fields.TEXT(stored=True)
@@ -157,11 +158,9 @@ class WhooshStore(EncryptedConfigStore):
         writer.commit()
 
     def list_all(self):
-        names = set()
         with self.get_reader() as reader:
-            for _, doc in reader.iter_docs():
-                names.add(doc[KEY_FIELD_NAME])
-        return names
+            for name, _ in reader.iter_field(KEY_FIELD_NAME):
+                yield name.decode()
 
     def find(self, cursor_=None, limit_=None, **queries):
         fields = queries.keys()
