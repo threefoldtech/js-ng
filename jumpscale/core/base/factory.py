@@ -514,11 +514,24 @@ class StoredFactory(events.Handler, Factory):
         """
         instance = super().find(name)
         if not instance:
-            try:
-                instance_config = self.store.get(name)
-            except FileNotFoundError:
-                return None
-            if not instance_config:
-                return None
-            instance = self.type.from_dict(instance_config)
+            instance = self.load_from_store(name)
+        return instance
+
+    def load_from_store(self, name):
+        """loads instance from store
+
+        Args:
+            name (str): instance name
+
+        Returns:
+            Base or NoneType: an instance or none
+        """
+        try:
+            instance_config = self.store.get(name)
+        except FileNotFoundError:
+            return None
+        if not instance_config:
+            return None
+        instance = self.type.from_dict(instance_config)
+        setattr(self, name, instance)
         return instance
