@@ -1,15 +1,18 @@
-import requests
+import binascii
 import os
 
-from .container import Container
-from . import settings
+import requests
 
+from jumpscale.core.config import get_current_version
 from jumpscale.core.exceptions import Value
 from jumpscale.data.encryption import mnemonic
 from jumpscale.data.encryption.exceptions import FailedChecksumError
 from jumpscale.data.nacl.jsnacl import NACL
-from jumpscale.tools.console import ask_string, ask_choice, printcolors, ask_yes_no
-from jumpscale.core.config import get_current_version
+from jumpscale.god import j
+from jumpscale.tools.console import ask_choice, ask_string, ask_yes_no, printcolors
+
+from . import settings
+from .container import Container
 
 DEFAULT_CONTAINER_NAME = "3bot-ng"
 DEFAULT_IMAGE = "threefoldtech/js-ng"
@@ -19,39 +22,145 @@ PERSISTENT_STORE = os.path.expanduser("~/.config/jumpscale/containers")
 NETWORKS = {"mainnet": "explorer.grid.tf", "testnet": "explorer.testnet.grid.tf", "devnet": "explorer.devnet.grid.tf"}
 
 
-def check_identity(identity, email, words, explorer):
-    res = requests.get(f"https://{NETWORKS[explorer]}/explorer/users", params={"name": identity, "email": email}).json()
-    if not res:
-        return f"Couldn't find user with name: {identity} and email: {email} in explorer network: {explorer}"
-    user = res[0]
-    try:
-        seed = mnemonic.mnemonic_to_key(words.strip())
-        verify_key_hex = NACL(seed).get_verify_key_hex()
-    except FailedChecksumError:
-        return "Phrase words entered are not valid"
+class IdentityManager:
+    def __init__(self, identity: str = "", email: str = None, words: str = None, explorer: str = None):
+        self.identity = identity
+        self.email = email
+        self.words = words
+        self.explorer = explorer
 
-    if verify_key_hex != user["pubkey"]:
-        return f"User with name: {identity} not registered with entered phrase"
+    def reset(self):
+        self.identity = ""
+        self.email = ""
+        self.words = ""
+        self.explorer = ""
 
+    def _check_keys(self, user_explorer_key, user_app):
+        if not user_app:
+            return True
+        pub_key_app = j.data.serializers.base64.decode(user_app["publicKey"])
+        if binascii.unhexlify(user_explorer_key) != pub_key_app:
+            return False
+        return True
 
-def ensure_identity(identity, email, words, explorer):
+    def _get_user(self):
+        response = requests.get(f"https://login.threefold.me/api/users/{self.identity}")
+        if response.status_code == 404:
+            raise j.core.exceptions.Value(
+                "\nThis identity does not exist in 3bot mobile app connect, Please create an idenity first using 3Bot Connect mobile Application\n"
+            )
+        userdata = response.json()
 
-    identity_data = ()
-    while True:
-        _identity = identity or ask_string("Please enter your threebot name(i,e name.3bot): ")
-        _email = email or ask_string("Please enter your threebot email: ")
-        _words = words or ask_string("Please enter your threebot phrase: ")
-        _explorer = explorer or ask_choice("Please choose your explorer network: ", list(NETWORKS))
-
-        error_message = check_identity(_identity, _email, _words, _explorer)
-        if error_message:
-            printcolors("{RED}Verifying identity data failed, error was: {RESET}" + error_message)
-            if ask_yes_no("Do you want to reenter the values? ([y,n])\n") == "y":
-                continue
+        resp = requests.get("https://{}/explorer/users".format(self.explorer), params={"name": self.identity})
+        if resp.status_code == 404 or resp.json() == []:
+            return None, userdata
         else:
-            identity_data = (_identity, _email, _words, _explorer)
-        break
-    return identity_data
+            users = resp.json()
+
+            if not self._check_keys(users[0]["pubkey"], userdata):
+                raise j.core.exceptions.Value(
+                    f"\nYour 3bot on {self.explorer} seems to have been previously registered with a different public key.\n"
+                    "Please contact support.grid.tf to reset it.\n"
+                    "Note: use the same email registered on the explorer to contact support otherwise we cannot reset the account.\n"
+                )
+
+            if users:
+                return (users[0], userdata)
+            return None, userdata
+
+    def _check_email(self, email):
+        resp = requests.get("https://{}/explorer/users".format(self.explorer), params={"email": email})
+        users = resp.json()
+        if users:
+            return True
+        return False
+
+    def ask_identity(self, identity=None, explorer=None):
+        def _fill_identity_args(identity, explorer):
+            def fill_words():
+                words = ask_string("Copy the phrase from your 3bot Connect app here.")
+                self.words = words
+
+            def fill_identity():
+                identity = ask_string("what is your threebot name (identity)?")
+                if "." not in identity:
+                    identity += ".3bot"
+                self.identity = identity
+
+            if identity:
+                if self.identity != identity and self.identity:
+                    self.reset()
+                self.identity = identity
+
+            if explorer:
+                self.explorer = explorer
+            elif not self.explorer:
+                response = ask_choice(
+                    "Which network would you like to register to? ", ["mainnet", "testnet", "devnet", "none"]
+                )
+                self.explorer = NETWORKS.get(response, None)
+            if not self.explorer:
+                return True
+
+            user, user_app = None, None
+            while not user:
+                fill_identity()
+                try:
+                    user, user_app = self._get_user()
+                except j.core.exceptions.Value as e:
+                    response = ask_choice(f"{e}. What would you like to do?", ["restart", "reenter"],)
+                    if response == "restart":
+                        return False
+
+            while not self.email:
+                self.email = ask_string("What is the email address associated with your identity?")
+                if self._check_email(self.email):
+                    break
+                else:
+                    self.email = None
+                    response = ask_choice(
+                        "This email is currently associated with another identity. What would you like to do?",
+                        ["restart", "reenter"],
+                    )
+                    if response == "restart":
+                        return False
+
+            print("Configured email for this identity is {}".format(self.email))
+
+            if not self.words:
+                fill_words()
+
+            # time to do validation of words
+            hexkey = None
+            while True:
+                try:
+                    seed = mnemonic.mnemonic_to_key(self.words.strip())
+                    hexkey = NACL(seed).get_verify_key_hex()
+                    if (user and hexkey != user["pubkey"]) or not self._check_keys(hexkey, user_app):
+                        raise Exception
+                    else:
+                        return True
+                except Exception:
+                    choice = ask_choice(
+                        "\nSeems one or more more words entered is invalid.\nWhat would you like to do?\n",
+                        ["restart", "reenter"],
+                    )
+                    if choice == "restart":
+                        return False
+                    fill_words()
+                    if hexkey != user["pubkey"]:
+                        choice = ask_choice(
+                            "\nUser with name: {identity} not registered with entered phrase.\nWhat would you like to do?\n",
+                            ["restart", "reenter"],
+                        )
+                        if choice == "restart":
+                            return False
+                        fill_words()
+                    continue
+
+        while True:
+            if _fill_identity_args(identity, explorer):
+                return self.identity, self.email, self.words, self.explorer
 
 
 class ThreeBot(Container):
@@ -89,10 +198,8 @@ class ThreeBot(Container):
         pers_path = f"{PERSISTENT_STORE}/{name}"
         configure = not os.path.exists(pers_path)
         if configure:
-            identity_data = ensure_identity(identity, email, words, explorer)
-            if not identity_data:
-                raise Value("Installation aborted, please enter correct identity information")
-            identity, email, words, explorer = identity_data
+            identity_data = IdentityManager(identity, email, words, explorer)
+            identity, email, words, explorer = identity_data.ask_identity()
 
         os.makedirs(PERSISTENT_STORE, exist_ok=True)
         volumes = {pers_path: {"bind": "/root/.config/jumpscale", "mode": "rw"}}
