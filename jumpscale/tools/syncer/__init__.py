@@ -113,6 +113,7 @@ class Syncer(PatternMatchingEventHandler):
                     for cl in self._get_sshclients():
                         j.logger.debug("making dir {}".format(dest_dir))
                         cl.sshclient.run("mkdir -p {}".format(dest_dir))
+                        self.observer.schedule(self, src_dir)
 
         def sync_file(e):
             """Sync single file to all registered sshclients
@@ -166,13 +167,16 @@ class Syncer(PatternMatchingEventHandler):
         j.logger.debug("will move to {}".format(dest_path))
         j.logger.debug("will delete original in {}".format(self._rewrite_path_for_dest(event.src_path)))
         for cl in self._get_sshclients():
-            if j.sals.fs.is_file(dest_path):
-                cl.sshclient.sftp.mkdir(j.sals.fs.parent(dest_path))
-                cl.sshclient.sftp.put(event.dest_path, dest_path)
+            if not event.is_directory:
+                try:
+                    # in case file is moved
+                    cl.sshclient.sftp.put(event.dest_path, dest_path)
+                    cl.sshclient.run("rm {}".format(self._rewrite_path_for_dest(event.src_path)))
+                except:
+                    j.logger.debug(f"File {dest_path} was not able to be moved")
             else:
-                cl.sshclient.sftp.mkdir(dest_path)
-
-            cl.sshclient.run("rm {}".format(self._rewrite_path_for_dest(event.src_path)))
+                # in case file is directory
+                cl.sshclient.sftp.posix_rename(self._rewrite_path_for_dest(event.src_path), dest_path)
 
     def on_created(self, event):
         super().on_created(event)
@@ -185,9 +189,13 @@ class Syncer(PatternMatchingEventHandler):
         for cl in self._get_sshclients():
             if what == "directory":
                 cl.sshclient.run("mkdir -p {}".format(dest_path))
+                self.observer.schedule(self, event.src_path)
             else:
-                cl.sshclient.run("mkdir -p {}".format(j.sals.fs.parent(dest_path)))
-                cl.sshclient.run("touch {}".format(dest_path))
+                try:
+                    cl.sshclient.run("mkdir -p {}".format(j.sals.fs.parent(dest_path)))
+                    cl.sshclient.run("touch {}".format(dest_path))
+                except:
+                    j.logger.debug(f"File {dest_path} was not able to be created")
 
     def on_deleted(self, event):
         super().on_deleted(event)
@@ -198,12 +206,27 @@ class Syncer(PatternMatchingEventHandler):
         dest_path = self._rewrite_path_for_dest(event.src_path)
         j.logger.debug("will delete in {}".format(dest_path))
         for cl in self._get_sshclients():
-            cl.sshclient.run("rm {}".format(dest_path))
+            if what == "directory":
+                cl.sshclient.run("rm -rf {}".format(dest_path))
+            else:
+                try:
+                    cl.sshclient.run("rm {}".format(dest_path))
+                except:
+                    j.logger.debug(f"File {dest_path} was not able to be deleted")
 
     def on_modified(self, event):
         super().on_modified(event)
-        # what = "directory" if event.is_directory else "file"
-        # j.logger.indebugfo("Modified {}: {}".format(what, event.src_path))
+        what = "directory" if event.is_directory else "file"
+        j.logger.debug("Modified {}: {}".format(what, event.src_path))
 
-        # dest_path = self._rewrite_path_for_dest(event.src_path)
-        # j.logger.debug("will modify in {}".format(dest_path))
+        dest_path = self._rewrite_path_for_dest(event.src_path)
+        j.logger.debug("will modify in {}".format(dest_path))
+
+        for cl in self._get_sshclients():
+            if what == "directory":
+                j.logger.debug("A new file has been created")
+            else:
+                try:
+                    cl.sshclient.sftp.put(event.src_path, dest_path)
+                except:
+                    j.logger.debug(f"File {dest_path} was not able to be modified")
