@@ -6,7 +6,7 @@ import os
 import pathlib
 import sys
 
-from jumpscale.loader import j
+from jumpscale.god import j
 from jumpscale.shell import ptconfig
 
 from ptpython.repl import embed
