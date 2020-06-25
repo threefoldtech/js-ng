@@ -720,3 +720,24 @@ def get_environ(pid):
     """
     pid = int(pid)
     return psutil.Process(pid).environ()
+
+
+def in_docker():
+    """will check if we are in a docker
+
+    Returns:
+        Bool: True if in docker - False if not
+    """
+    rc, out, _ = j.sals.process.execute("cat /proc/1/cgroup", die=False, showout=False)
+    if rc == 0 and "/docker/" in out:
+        return True
+    return False
+
+
+def in_host():
+    """will check if we are in a host
+
+    Returns:
+        Bool: True if in host - False if not
+    """
+    return not in_docker()

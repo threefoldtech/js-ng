@@ -56,6 +56,7 @@ class SSHClient(Client):
     connection_kwargs = fields.Typed(dict, default={})
 
     # gateway = ?  FIXME: should help with proxyjumps. http://docs.fabfile.org/en/2.4/concepts/networking.html#ssh-gateways
+
     inline_ssh_env = fields.Boolean(
         default=True
     )  # whether to send environment variables “inline” as prefixes in front of command strings (export VARNAME=value && mycommand here), instead of trying to submit them through the SSH protocol itself (which is the default behavior). This is necessary if the remote server has a restricted AcceptEnv setting (which is the common default).
@@ -66,6 +67,14 @@ class SSHClient(Client):
 
     @property
     def _sshkey(self):
+        """ Get sshkey client that you have loaded
+        e.g
+            JS-NG> localconnection = j.clients.sshclient.new("localconnection")
+            JS-NG> localconnection.sshkey = "xmonader"
+            JS-NG> localconnection._sshkey()  -> SHKeyClient(_Base__instance_name='xmonader', _Base__parent=None, ...
+        Returns:
+            Obj: It returns object of SSHkeyClient
+        """
         return j.clients.sshkey.get(self.sshkey)
 
     @property
@@ -84,9 +93,17 @@ class SSHClient(Client):
             if self._sshkey.passphrase:
                 connection_kwargs["connect_kwargs"]["passphrase"] = self._sshkey.passphrase
 
+
             self.__client = j.core.executors.RemoteExecutor(**connection_kwargs)
 
         return self.__client
 
     def reset_connection(self):
+        """ Reset the connection
+        e.g
+            localconnection = j.clients.sshclient.new("localconnection")
+            localconnection.reset_connection()
+
+        """
         self.__client = None
+

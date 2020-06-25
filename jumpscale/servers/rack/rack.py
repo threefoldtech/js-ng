@@ -1,3 +1,5 @@
+from gevent import event
+
 from jumpscale.core.base import Base
 
 
@@ -39,12 +41,11 @@ class ServerRack(Base):
 
         if server_name in self._servers:
             self._servers.pop(server_name)
-        
+
         if server_name in self._started:
             self._started.remove(server_name)
 
-
-    def start(self, server_name: str = None):
+    def start(self, server_name: str = None, wait: bool = False):
         """Start server by its name or start all servers
 
         Args:
@@ -55,6 +56,13 @@ class ServerRack(Base):
         else:
             for server_name in self._servers:
                 self._start(server_name)
+
+        if wait:
+            forever = event.Event()
+            try:
+                forever.wait()
+            except KeyboardInterrupt:
+                self.stop()
 
     def stop(self, server_name: str = None):
         """Stop server by its name or stop all running servers
