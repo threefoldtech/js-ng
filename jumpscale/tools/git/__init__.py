@@ -78,11 +78,15 @@ def clone_repo(url: str, dest: str, branch_or_tag="", depth=0, commit_id=""):
         cmd += f" -b {branch_or_tag}"
     if depth != 0:
         cmd += f" --depth={depth}"
-    j.core.executors.run_local(cmd)
+    rc, _, err = j.core.executors.run_local(cmd, warn=True)
+    if rc > 0:
+        raise j.exceptions.Runtime(err)
     repo_name = j.sals.fs.basename(url).split(".git")[0]
     if commit_id:
         prefix = f"cd {dest}/{repo_name} && "
-        j.core.executors.run_local(prefix + "git checkout {commit_id}")
+        rc, _, err = j.core.executors.run_local(prefix + f"git checkout {commit_id}", warn=True)
+        if rc > 0:
+            raise j.exceptions.Runtime(err)
     return repo_name
 
 
