@@ -1,6 +1,6 @@
 """
 
-SSHClient modules helps connecting to a remote machine and
+SSHClient modules helps connecting and executing commands to a remote machine.
 
 
 ## Create SSH Key

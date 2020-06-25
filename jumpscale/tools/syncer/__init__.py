@@ -62,7 +62,7 @@ class Syncer(PatternMatchingEventHandler):
         Returns:
             str -- path in remote machine
         """
-        j.logger.debug("paths: {} and path: {}".format(self.paths, src_path))
+        j.logger.debug(f"paths: {self.paths} and path: {src_path}")
 
         for path in self.paths.keys():
             if path.startswith(src_path):
@@ -80,7 +80,6 @@ class Syncer(PatternMatchingEventHandler):
         Returns:
             str -- rewritten path for remote
         """
-        # j.logger.debug("paths: {} and path: {}".format(self.paths, src_path))
         src_path = str(src_path)
         for path in self.paths.keys():
             if src_path.startswith(path):
@@ -101,7 +100,7 @@ class Syncer(PatternMatchingEventHandler):
         """Sync directory structure and files
 
         """
-        j.logger.debug("paths: {}".format(self.paths))
+        j.logger.debug(f"paths: {self.paths}")
 
         def ensure_dirs():
             """For every directory in watched paths we make sure it's full path exists on remote.
@@ -111,8 +110,8 @@ class Syncer(PatternMatchingEventHandler):
                 for src_dir in j.sals.fs.walk_dirs(path):
                     dest_dir = str(self._rewrite_path_for_dest(src_dir))
                     for cl in self._get_sshclients():
-                        j.logger.debug("making dir {}".format(dest_dir))
-                        cl.sshclient.run("mkdir -p {}".format(dest_dir))
+                        j.logger.debug(f"making dir {dest_dir}")
+                        cl.sshclient.run(f"mkdir -p {dest_dir}")
                         self.observer.schedule(self, src_dir)
 
         def sync_file(e):
@@ -122,10 +121,10 @@ class Syncer(PatternMatchingEventHandler):
                 e {str} -- file path
             """
             dest_path = self._rewrite_path_for_dest(e)
-            j.logger.debug("syncing {} to machines into {}".format(e, dest_path))
+            j.logger.debug(f"syncing {e} to machines into {dest_path}")
 
             for cl in self._get_sshclients():
-                cl.sshclient.run("mkdir -p {}".format(j.sals.fs.parent(dest_path)))
+                cl.sshclient.run(f"mkdir -p {j.sals.fs.parent(dest_path)}")
                 cl.sshclient.sftp.put(e, self._rewrite_path_for_dest(e))
 
         def filter_ignored(e):
@@ -162,18 +161,18 @@ class Syncer(PatternMatchingEventHandler):
         super().on_moved(event)
 
         what = "directory" if event.is_directory else "file"
-        j.logger.info("Moved {}: from {} to {}".format(what, event.src_path, event.dest_path))
+        j.logger.info(f"Moved {what}: from {event.src_path} to {event.dest_path}")
         dest_path = self._rewrite_path_for_dest(event.dest_path)
-        j.logger.debug("will move to {}".format(dest_path))
-        j.logger.debug("will delete original in {}".format(self._rewrite_path_for_dest(event.src_path)))
+        j.logger.debug(f"will move to {dest_path}")
+        j.logger.debug(f"will delete original in {self._rewrite_path_for_dest(event.src_path)}")
         for cl in self._get_sshclients():
             if not event.is_directory:
                 try:
                     # in case file is moved
                     cl.sshclient.sftp.put(event.dest_path, dest_path)
-                    cl.sshclient.run("rm {}".format(self._rewrite_path_for_dest(event.src_path)))
+                    cl.sshclient.run(f"rm {self._rewrite_path_for_dest(event.src_path)}")
                 except:
-                    j.logger.debug(f"File {dest_path} was not able to be moved")
+                    j.logger.debug(f"Ignoring {dest_path}. Path was not found during move event")
             else:
                 # in case file is directory
                 cl.sshclient.sftp.posix_rename(self._rewrite_path_for_dest(event.src_path), dest_path)
@@ -181,52 +180,52 @@ class Syncer(PatternMatchingEventHandler):
     def on_created(self, event):
         super().on_created(event)
         what = "directory" if event.is_directory else "file"
-        j.logger.debug("Created {}: {}".format(what, event.src_path))
+        j.logger.debug(f"Created {what}: {event.src_path}")
 
         dest_path = self._rewrite_path_for_dest(event.src_path)
-        j.logger.debug("will create in {}".format(dest_path))
+        j.logger.debug(f"will create in {dest_path}")
 
         for cl in self._get_sshclients():
             if what == "directory":
-                cl.sshclient.run("mkdir -p {}".format(dest_path))
+                cl.sshclient.run(f"mkdir -p {dest_path}")
                 self.observer.schedule(self, event.src_path)
             else:
                 try:
-                    cl.sshclient.run("mkdir -p {}".format(j.sals.fs.parent(dest_path)))
-                    cl.sshclient.run("touch {}".format(dest_path))
+                    cl.sshclient.run(f"mkdir -p {j.sals.fs.parent(dest_path)}")
+                    cl.sshclient.run(f"touch {dest_path}")
                 except:
-                    j.logger.debug(f"File {dest_path} was not able to be created")
+                    j.logger.debug(f"Ignoring {dest_path}. Path was not found during create event")
 
     def on_deleted(self, event):
         super().on_deleted(event)
 
         what = "directory" if event.is_directory else "file"
-        j.logger.debug("Deleted {}: {}".format(what, event.src_path))
+        j.logger.debug(f"Deleted {what}: {event.src_path}")
 
         dest_path = self._rewrite_path_for_dest(event.src_path)
-        j.logger.debug("will delete in {}".format(dest_path))
+        j.logger.debug(f"will delete in {dest_path}")
         for cl in self._get_sshclients():
             if what == "directory":
-                cl.sshclient.run("rm -rf {}".format(dest_path))
+                cl.sshclient.run(f"rm -rf {dest_path}")
             else:
                 try:
-                    cl.sshclient.run("rm {}".format(dest_path))
+                    cl.sshclient.run(f"rm {dest_path}")
                 except:
-                    j.logger.debug(f"File {dest_path} was not able to be deleted")
+                    j.logger.debug(f"Ignoring {dest_path}. Path was not found during delete event")
 
     def on_modified(self, event):
         super().on_modified(event)
         what = "directory" if event.is_directory else "file"
-        j.logger.debug("Modified {}: {}".format(what, event.src_path))
+        j.logger.debug(f"Modified {what}: {event.src_path}")
 
         dest_path = self._rewrite_path_for_dest(event.src_path)
-        j.logger.debug("will modify in {}".format(dest_path))
+        j.logger.debug(f"will modify in {dest_path}")
 
         for cl in self._get_sshclients():
             if what == "directory":
-                j.logger.debug("A new file has been created")
+                j.logger.debug(f"Folder {dest_path} was modified")
             else:
                 try:
                     cl.sshclient.sftp.put(event.src_path, dest_path)
                 except:
-                    j.logger.debug(f"File {dest_path} was not able to be modified")
+                    j.logger.debug(f"Ignoring {dest_path}. Path was not found during modify event")
