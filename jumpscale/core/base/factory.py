@@ -529,3 +529,36 @@ class StoredFactory(events.Handler, Factory):
 
     def __hash__(self):
         return hash(self.location)
+
+    def find(self, name):
+        """
+        find an instance with the given name
+        Args:
+            name (str): instance name
+        Raises:
+            ValueError: in case the name is an internal attribute of this factory, like `get` or `new`.
+        Returns:
+            Base or NoneType: an instance or none
+        """
+        instance = super().find(name)
+        if not instance:
+            instance = self.load_from_store(name)
+        return instance
+
+    def load_from_store(self, name):
+        """loads instance from store
+        Args:
+            name (str): instance name
+        Returns:
+            Base or NoneType: an instance or none
+        """
+        instance_config = None
+        try:
+            instance_config = self.store.get(name)
+        except:
+            pass
+        if not instance_config:
+            return None
+        instance = self._create_instance(name, **instance_config)
+        setattr(self, name, instance)
+        return instance
