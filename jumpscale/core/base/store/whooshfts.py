@@ -159,8 +159,8 @@ class WhooshStore(EncryptedConfigStore):
 
     def list_all(self):
         with self.get_reader() as reader:
-            for name, _ in reader.iter_field(KEY_FIELD_NAME):
-                yield name.decode()
+            for _, doc in reader.iter_docs():
+                yield doc[KEY_FIELD_NAME]
 
     def find(self, cursor_=None, limit_=None, **queries):
         fields = queries.keys()

@@ -56,10 +56,10 @@ def test_create_schema_and_search():
     m.save()
 
     assert len(factory.list_all()) == 1
-    assert len(factory.find_many(first_name="te")) == 1
-    assert len(factory.find_many(first_name="te", rating=1)) == 1
+    assert len(factory.find_many(first_name="test")) == 1
+    assert len(factory.find_many(first_name="te*", rating=1)) == 1
     assert len(factory.find_many(rating=1)) == 1
-    assert len(factory.find_many(rating="[1 to]")) == 1
+    assert len(factory.find_many(rating=">=1")) == 1
 
     factory.delete("test")
 
