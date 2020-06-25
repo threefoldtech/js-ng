@@ -31,7 +31,7 @@ asgard
 
 from jumpscale.clients.base import Client
 from jumpscale.core.base import fields
-from jumpscale.god import j
+from jumpscale.loader import j
 
 
 class SSHClient(Client):
@@ -93,7 +93,6 @@ class SSHClient(Client):
             if self._sshkey.passphrase:
                 connection_kwargs["connect_kwargs"]["passphrase"] = self._sshkey.passphrase
 
-
             self.__client = j.core.executors.RemoteExecutor(**connection_kwargs)
 
         return self.__client
@@ -106,4 +105,3 @@ class SSHClient(Client):
 
         """
         self.__client = None
-

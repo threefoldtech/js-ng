@@ -13,7 +13,7 @@ JS-NG> s.start()
 ```
 """
 
-from jumpscale.god import j
+from jumpscale.loader import j
 from watchdog.events import PatternMatchingEventHandler
 from watchdog.observers import Observer
 import gevent

@@ -22,8 +22,8 @@ impl.py
 
 class CoreImpl:
   ....
-  
-  
+
+
 core = CoreImpl()
 ```
 
@@ -97,7 +97,7 @@ for loader, module_name, is_pkg in pkgutil.walk_packages(__path__):
     globals()[module_name] = _module
 ```
 CHECK: lazyloader/import hooks  in stdpython
- https://docs.python.org/3/library/importlib.html#importlib.util.LazyLoader 
+ https://docs.python.org/3/library/importlib.html#importlib.util.LazyLoader
 # Problem 3: Singletons
 Solved by design using python modules
 
@@ -118,7 +118,7 @@ we have handcrafted imports for sal, tools, clients so their subpackages can be 
 ## How to register digitalme in the god object
 Do we generate `import jumpscale.digitalme`? is there a standard python way to do it? a reliable plugin system?
 
-## where would its module be registered? 
+## where would its module be registered?
 for instance there might be `digitalme.tools` should it be under `j.tools` directly or `j.digitalme.tools`? I prefer the latter for clarity and conflict resolution too
 
 # Example usage with jumpscale
@@ -128,41 +128,40 @@ for instance there might be `digitalme.tools` should it be under `j.tools` direc
 ```
 
 ```ipython
-In [1]: import jumpscale.god                                                                                     
+In [1]: import jumpscale.loader
 
-In [2]: jumpscale.sal.fs.copyfile('a', 'b')                                                                      
+In [2]: jumpscale.sal.fs.copyfile('a', 'b')
 copying file
 
-In [3]: jumpscale.tools.sync.sync()                                                                              
+In [3]: jumpscale.tools.sync.sync()
 sync tool
 
-In [4]: jumpscale.clients.github.get_githubclient?                                                               
+In [4]: jumpscale.clients.github.get_githubclient?
 Signature: jumpscale.clients.github.get_githubclient(username, password)
 Docstring: <no docstring>
 File:      ~/wspace/jumpscale-skeleton/projectclients/jumpscale/clients/github.py
 Type:      function
 
-In [5]: jumpscale.clients.github.get_githubclient('a', 'bb')                                                     
+In [5]: jumpscale.clients.github.get_githubclient('a', 'bb')
 getting client with a bb
 
-In [6]: jumpscale.clients.gogs.get_gogs('a', 'bbb') # uses jumpscale sal.fs in its code                          
+In [6]: jumpscale.clients.gogs.get_gogs('a', 'bbb') # uses jumpscale sal.fs in its code
 sync tool
 getting gogs client with a bbb
 ```
-                             
+
 
 # Example usage with `j`
 
 ```python
 
-In [1]: from jumpscale.god import j                                                                              
+In [1]: from jumpscale.loader import j
 
-In [2]: j.sal.fs.removefile('a')                                                                                 
+In [2]: j.sal.fs.removefile('a')
 removing file
 
-In [3]: j.clients.gogs.get_gogs('a', 'b')                                                                        
+In [3]: j.clients.gogs.get_gogs('a', 'b')
 sync tool
 getting gogs client with a b
-                                             
+
 ```
-                                                                                                             

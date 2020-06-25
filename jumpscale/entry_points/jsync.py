@@ -13,7 +13,7 @@
 """
 
 import click
-from jumpscale.god import j
+from jumpscale.loader import j
 
 
 @click.command()

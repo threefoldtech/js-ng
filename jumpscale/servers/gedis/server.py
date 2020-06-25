@@ -14,7 +14,7 @@ from gevent.pool import Pool
 from gevent import time
 from gevent.server import StreamServer
 from jumpscale.core.base import Base, fields
-from jumpscale.god import j
+from jumpscale.loader import j
 from redis.connection import DefaultParser, Encoder
 from redis.exceptions import ConnectionError
 from .baseactor import BaseActor

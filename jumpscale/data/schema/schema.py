@@ -1,5 +1,5 @@
 import re
-from jumpscale.god import j
+from jumpscale.loader import j
 
 
 def pascalify_name(name):

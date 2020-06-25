@@ -5,7 +5,7 @@ from collections import namedtuple
 
 from jumpscale.data.encryption import mnemonic
 from jumpscale.data.nacl.jsnacl import NACL
-from jumpscale.god import j
+from jumpscale.loader import j
 from jumpscale.tools.console import ask_choice, ask_string
 
 NETWORKS = {"mainnet": "explorer.grid.tf", "testnet": "explorer.testnet.grid.tf", "devnet": "explorer.devnet.grid.tf"}

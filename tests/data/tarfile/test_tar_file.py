@@ -1,6 +1,6 @@
 import tempfile
 import os.path
-from jumpscale.god import j
+from jumpscale.loader import j
 
 
 def test_compress():

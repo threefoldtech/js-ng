@@ -1,5 +1,5 @@
 from unittest import skip
-from jumpscale.god import j
+from jumpscale.loader import j
 from tests.base_tests import BaseTests
 
 

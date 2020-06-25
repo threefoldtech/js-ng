@@ -1,6 +1,6 @@
 def export_module_as():
 
-    from jumpscale.god import j
+    from jumpscale.loader import j
     from redis.exceptions import ConnectionError
 
     class DefaultRedisDB:
@@ -10,7 +10,7 @@ def export_module_as():
         @property
         def db(self):
             if not self._db:
-                self._db = j.clients.redis.get('main')
+                self._db = j.clients.redis.get("main")
             return self._db
 
     return DefaultRedisDB().db

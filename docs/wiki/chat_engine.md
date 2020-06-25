@@ -10,7 +10,7 @@ It's very easy to define a new bot, you just need to make sure it's added in a p
 Here is an example for a simple chatflow that will help you order a meal from one of your favorite restaurants
 
 ```python
-from jumpscale.god import j
+from jumpscale.loader import j
 
 from jumpscale.sals.chatflows.chatflows import GedisChatBot
 
@@ -85,7 +85,7 @@ class Your_Order(GedisChatBot):
 ### Example of chatflow steps:
 
 ```python
-from jumpscale.god import j
+from jumpscale.loader import j
 
 from jumpscale.sals.chatflows.chatflows import GedisChatBot, chatflow_step
 from jumpscale.sals.reservation_chatflow.models import SolutionType

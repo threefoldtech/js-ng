@@ -1,4 +1,4 @@
-from jumpscale.god import j
+from jumpscale.loader import j
 from enum import Enum
 from jumpscale.core.base import Base, fields
 from .location import Location

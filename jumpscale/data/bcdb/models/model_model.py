@@ -1,6 +1,7 @@
-from jumpscale.god import j
+from jumpscale.loader import j
 
 from .base import ModelBase, JSObjBase
+
 
 class ModelModel(ModelBase):
     _schema = """
@@ -8,4 +9,4 @@ class ModelModel(ModelBase):
     name* = "" (S)
     model_class = "" (S)
     """
-    _name = "model"    
+    _name = "model"

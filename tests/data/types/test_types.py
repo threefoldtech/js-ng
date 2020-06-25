@@ -1,5 +1,5 @@
 import pytest
-from jumpscale.god import j
+from jumpscale.loader import j
 
 
 def test_string_check():
@@ -107,4 +107,3 @@ def test_duration_check():
     d = j.data.types.Duration()
     assert d.check("22y 11m 4d")
     assert d.check("4d 22h 12m")
-

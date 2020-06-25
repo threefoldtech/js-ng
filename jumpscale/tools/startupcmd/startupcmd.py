@@ -29,7 +29,7 @@ If it matches any of the above you would be able to perform available on that pr
 you can add cmd.ports, cmd.process_strings_regex or cmd.process_strings_regex to reach the process pid
 """
 from enum import Enum
-from jumpscale.god import j
+from jumpscale.loader import j
 from jumpscale.core.base import Base, fields
 
 import time

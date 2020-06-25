@@ -4,7 +4,7 @@ import pylzma
 import msgpack
 import yaml
 import pickle
-from jumpscale.god import j
+from jumpscale.loader import j
 
 
 def test_base64():
@@ -12,7 +12,6 @@ def test_base64():
     assert j.data.serializers.base64.encode(b"omar") == base64.b64encode(b"omar")
     assert j.data.serializers.base64.decode("omar") == base64.b64decode("omar".encode())
     assert j.data.serializers.base64.decode(b"omar") == base64.b64decode(b"omar")
-
 
 
 def test_pickle():
@@ -62,7 +61,7 @@ def test_toml():
    userids = [
      "12345", "67890"
    ]
-   
+
    [feature2]
    enable = false
    """
@@ -74,7 +73,7 @@ def test_toml():
 def test_yaml():
     yamstr = """Section:
     heading: Heading 1
-    font: 
+    font:
         name: Times New Roman
         size: 22
         color_theme: ACCENT_2
@@ -97,4 +96,3 @@ Table:
     yamldict = j.data.serializers.yaml.loads(yamstr)
     assert isinstance(yamldict, dict)
     assert isinstance(j.data.serializers.yaml.dumps(yamldict), str)
-
