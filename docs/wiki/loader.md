@@ -160,7 +160,7 @@ j = J()
 
 Lazy imports are done via property access:
 
-```
+```python
 def get_lazy_import_property(name, root_module, container_type):
     def getter(self):
         inner_name = f"__{name}"
