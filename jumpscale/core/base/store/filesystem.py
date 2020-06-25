@@ -1,9 +1,9 @@
 import os
 
-from . import EncryptedConfigStore
+from . import ConfigNotFound, EncryptedConfigStore
 from .serializers import JsonSerializer
 
-from jumpscale.sals.fs import make_path, read_file_binary, rmtree, write_file_binary
+from jumpscale.sals.fs import exists, make_path, read_file_binary, rmtree, write_file_binary
 
 
 class FileSystemStore(EncryptedConfigStore):
@@ -72,6 +72,8 @@ class FileSystemStore(EncryptedConfigStore):
             str: data
         """
         path = self.get_path(instance_name)
+        if not exists(path):
+            raise ConfigNotFound(f"cannot find config for {instance_name} at {path}")
         return read_file_binary(path)
 
     def list_all(self):

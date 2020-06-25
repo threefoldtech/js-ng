@@ -1,6 +1,6 @@
 import redis
 
-from . import EncryptedConfigStore
+from . import ConfigNotFound, EncryptedConfigStore
 from .serializers import JsonSerializer
 
 
@@ -48,7 +48,10 @@ class RedisStore(EncryptedConfigStore):
         Returns:
             str: data
         """
-        return self.redis_client.get(self.get_key(instance_name))
+        key = self.get_key(instance_name)
+        if not self.redis_client.exists(key):
+            raise ConfigNotFound(f"cannot find config for {instance_name} at {key}")
+        return self.redis_client.get(key)
 
     def _full_scan(self, pattern):
         """

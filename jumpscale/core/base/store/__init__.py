@@ -28,6 +28,18 @@ class InvalidPrivateKey(Exception):
     """
 
 
+class StoreException(Exception):
+    """
+    raised by store backends
+    """
+
+
+class ConfigNotFound(Exception):
+    """
+    raised when a config is not found for an instance
+    """
+
+
 class Location:
     """
     dot-separated auto-location for any type

@@ -7,6 +7,7 @@ import unittest
 from enum import Enum
 
 # TODO: move fields to fields or types module
+
 from jumpscale.core.base import Base, DuplicateError, Factory, StoredFactory, fields
 
 
@@ -350,6 +351,17 @@ class TestStoredFactory(unittest.TestCase):
 
         self.assertEqual(wallet.url, None)
         self.assertEqual(wallet.data, '{"a": 1}')
+
+    def test_find(self):
+        name = "test_find_with_different_factory"
+        wallet = self.wallets_factory.get(name)
+        new_factory = StoredFactory(Wallet)
+
+        # not yet saved
+        self.assertIsNone(new_factory.find(name))
+
+        wallet.save()
+        self.assertIsNotNone(new_factory.find(name))
 
     def tearDown(self):
         for name in self.factory.list_all():
