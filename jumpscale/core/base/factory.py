@@ -552,11 +552,13 @@ class StoredFactory(events.Handler, Factory):
         Returns:
             Base or NoneType: an instance or none
         """
+        instance_config = None
         try:
             instance_config = self.store.get(name)
         except:
-            return None
+            pass
         if not instance_config:
             return None
         instance = self._create_instance(name, **instance_config)
+        setattr(self, name, instance)
         return instance
