@@ -56,10 +56,22 @@ def test_create_schema_and_search():
     m.save()
 
     assert len(factory.list_all()) == 1
-    assert len(factory.find_many(first_name="test")) == 1
-    assert len(factory.find_many(first_name="te*", rating=1)) == 1
-    assert len(factory.find_many(rating=1)) == 1
-    assert len(factory.find_many(rating=">=1")) == 1
+
+    _, total_count, result = factory.find_many(first_name="test")
+    assert total_count == 1
+    assert next(result).first_name == "test"
+
+    _, total_count, result = factory.find_many(first_name="te*")
+    assert total_count == 1
+    assert next(result).first_name == "test"
+
+    _, total_count, result = factory.find_many(rating=1)
+    assert total_count == 1
+    assert next(result).first_name == "test"
+
+    _, total_count, result = factory.find_many(rating=">=1")
+    assert total_count == 1
+    assert next(result).first_name == "test"
 
     factory.delete("test")
 

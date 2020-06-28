@@ -180,7 +180,14 @@ class WhooshStore(EncryptedConfigStore):
         if not limit_:
             limit_ = self.default_pagelen
 
-        return searcher.search_page(query, pagenum=cursor_, pagelen=limit_)
+        result = searcher.search_page(query, pagenum=cursor_, pagelen=limit_)
+
+        if result.is_last_page():
+            new_cursor = None
+        else:
+            new_cursor = result.pagenum + 1
+
+        return new_cursor, len(result), (config for config in result)
 
     def delete(self, instance_name):
         writer = self.get_writer()

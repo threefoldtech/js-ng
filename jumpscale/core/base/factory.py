@@ -397,6 +397,11 @@ class StoredFactory(events.Handler, Factory):
         instance.save = partial(self._validate_and_save_instance, instance)
         self._load_sub_factories(instance)
 
+    def _get_object_from_config(self, name, data):
+        instance = self._create_instance(name, **data)
+        self._init_save_and_sub_factories(instance)
+        return instance
+
     def _load_from_store(self, name):
         """
         loads instance from store
@@ -411,7 +416,7 @@ class StoredFactory(events.Handler, Factory):
         except ConfigNotFound:
             return
 
-        instance = self._create_instance(name, **instance_config)
+        instance = self._get_object_from_config(name, instance_config)
         setattr(self, name, instance)
         return instance
 
@@ -481,8 +486,7 @@ class StoredFactory(events.Handler, Factory):
             if inner_name in factory.__dict__:
                 return getattr(factory, inner_name)
 
-            instance = factory._create_instance(name, **factory.store.get(name))
-            factory._init_save_and_sub_factories(instance)
+            instance = self._get_object_from_config(name, factory.store.get(name))
             setattr(factory, inner_name, instance)
             return instance
 
@@ -543,18 +547,13 @@ class StoredFactory(events.Handler, Factory):
             query: a mapping for field/query, e.g. first_name="aa"
 
         Returns:
-            list: a list of objects as a result
+            tuple: the new cursor, total results count, and a list of objects as a result
         """
-        found = []
+        if not query:
+            raise ValueError("at least one query parameter is required, e.g. age=10")
 
-        for data in self.store.find(cursor_=cursor_, limit_=limit_, **query):
-            # name = data.pop(KEY_FIELD_NAME)
-            name = data[KEY_FIELD_NAME]
-            instance = self._create_instance(name, **data)
-            self._init_save_and_sub_factories(instance)
-            found.append(instance)
-
-        return found
+        new_cursor, count, result = self.store.find(cursor_=cursor_, limit_=limit_, **query)
+        return new_cursor, count, (self._get_object_from_config(data[KEY_FIELD_NAME], data) for data in result)
 
     def list_all(self):
         """

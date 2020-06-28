@@ -264,16 +264,27 @@ class EncryptedConfigStore(ConfigStore, EncryptionMixin):
             kwargs: a mapping between field and value fo search by
 
         Returns:
-            list of dict: list of found results
+            tuple: the new cursor, total result count and a generator for results
         """
+        all_names = self.list_all()
+        if not all_names:
+            # empty result
+            return cursor_, (name for name in all_names)
+
+        all_count = len(all_names)
+        if not limit_:
+            limit_ = all_count
+
+        start_search = not bool(cursor_)
         found = []
 
-        for name in self.list_all():
-            if cursor_ and name != cursor_:
-                continue
+        for index in range(all_count):
+            name = all_names[index]
+            if name == cursor_:
+                start_search = True
 
-            if limit_ and limit_ >= len(found):
-                break
+            if not start_search:
+                continue
 
             data = self.get(name)
             for name, value in kwargs.items():
@@ -285,14 +296,19 @@ class EncryptedConfigStore(ConfigStore, EncryptionMixin):
                         value = str(value).lower()
                         target_value = target_value.lower()
 
-                    try:
-                        if value in target_value:
-                            found.append(data)
-                    except TypeError:
-                        if value == target_value:
-                            found.append(data)
+                    if value == target_value and data not in found:
+                        found.append(data)
 
-        return found
+            if len(found) >= limit_:
+                break
+
+        if index == all_count - 1:
+            new_cursor = None
+        else:
+            new_cursor = all_names[index + 1]
+
+        # return the new cursor, total found and a generator
+        return new_cursor, len(found), (config for config in found)
 
     def save(self, instance_name, config):
         """
