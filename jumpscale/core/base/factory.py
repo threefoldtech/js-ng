@@ -272,7 +272,7 @@ class StoredFactory(events.Handler, Factory):
     to store all instance configurations.
     """
 
-    STORE = STORES[config.get_config()["store"]]
+    STORE = STORES[config.get("store")]
 
     def __init__(self, type_, name_=None, parent_instance_=None, parent_factory_=None):
         """
@@ -298,6 +298,9 @@ class StoredFactory(events.Handler, Factory):
 
         # to handle when a parent instance is deleted
         events.add_listenter(self, InstanceDeleteEvent)
+
+        # if we need to always reload the config from store when getting an instance
+        self.always_reload = config.get("factory").get("always_reload", False)
 
     @property
     def parent_location(self):
@@ -394,23 +397,10 @@ class StoredFactory(events.Handler, Factory):
         instance.save = partial(self._validate_and_save_instance, instance)
         self._load_sub_factories(instance)
 
-    def find(self, name):
+    def _load_from_store(self, name):
         """
-        find an instance with the given name
-        Args:
-            name (str): instance name
-        Raises:
-            ValueError: in case the name is an internal attribute of this factory, like `get` or `new`.
-        Returns:
-            Base or NoneType: an instance or none
-        """
-        instance = super().find(name)
-        if not instance:
-            instance = self.load_from_store(name)
-        return instance
+        loads instance from store
 
-    def load_from_store(self, name):
-        """loads instance from store
         Args:
             name (str): instance name
         Returns:
@@ -423,6 +413,32 @@ class StoredFactory(events.Handler, Factory):
 
         instance = self._create_instance(name, **instance_config)
         setattr(self, name, instance)
+        return instance
+
+    def find(self, name):
+        """
+        find an instance with the given name
+
+        Args:
+            name (str): instance name
+
+        Raises:
+            ValueError: in case the name is an internal attribute of this factory, like `get` or `new`.
+
+        Returns:
+            Base or NoneType: an instance or none
+        """
+        instance = super().find(name)
+        if instance:
+            if self.always_reload:
+                try:
+                    instance._set_data(self.store.get(name))
+                except ConfigNotFound:
+                    # no config is written, still not saved
+                    pass
+        else:
+            instance = self._load_from_store(name)
+
         return instance
 
     def new(self, name, *args, **kwargs):

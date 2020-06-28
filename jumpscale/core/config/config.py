@@ -127,6 +127,7 @@ def get_default_config():
             "filesystem": {"path": os.path.expanduser(os.path.join(config_root, "secureconfig"))},
             "whoosh": {"path": os.path.expanduser(os.path.join(config_root, "whoosh_indexes"))},
         },
+        "factory": {"always_reload": False},
         "store": "filesystem",
         "threebot": {"default": "",},
         "explorer": {"default_url": "https://explorer.testnet.grid.tf/explorer",},
