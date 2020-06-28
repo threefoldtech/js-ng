@@ -5,8 +5,8 @@
 
 
 ```
-s = j.servers.threebot.get("aa") 
-s.packages.add("/home/xmonader/wspace/threefoldtech/js-ng/jumpscale/packages/foo")  
+s = j.servers.threebot.get()
+s.packages.add("/home/xmonader/wspace/threefoldtech/js-ng/jumpscale/packages/foo")
 s.save()
 s.start()
 
@@ -15,6 +15,6 @@ s.start()
 
 ```
 ➜  js-ng git:(development_threebot) ✗ curl -XPOST localhost:80/foo/actors/myactor/hello
-"hello from foo's actor"%       
+"hello from foo's actor"%
 
 ```
