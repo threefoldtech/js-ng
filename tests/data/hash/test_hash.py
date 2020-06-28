@@ -4,7 +4,7 @@ import pytest
 import os
 import tempfile
 
-from jumpscale.god import j
+from jumpscale.loader import j
 
 
 @pytest.fixture
@@ -25,7 +25,7 @@ def make_list():
     ]
     return hashes_list
 
-    
+
 def test_hash_strings():
     test_string = "my company is codescalers"
     assert j.data.hash.md5(test_string) == hashlib.md5(test_string.encode()).hexdigest()
@@ -43,8 +43,9 @@ def test_hash_strings():
     assert j.data.hash.shake_128(test_string) == hashlib.shake_128(test_string.encode()).hexdigest(16)
     assert j.data.hash.shake_256(test_string) == hashlib.shake_256(test_string.encode()).hexdigest(16)
 
+
 def test_hash_bytes():
-    test_string = b'hi there'
+    test_string = b"hi there"
     assert j.data.hash.md5(test_string) == hashlib.md5(test_string).hexdigest()
     assert j.data.hash.sha1(test_string) == hashlib.sha1(test_string).hexdigest()
     assert j.data.hash.sha224(test_string) == hashlib.sha224(test_string).hexdigest()
@@ -62,7 +63,7 @@ def test_hash_bytes():
 
 
 def test_hash_files(make_list):
-    with tempfile.NamedTemporaryFile('w') as tf:
+    with tempfile.NamedTemporaryFile("w") as tf:
         tf.write("Your text goes here")
         tf.flush()
         for h in make_list:
@@ -73,7 +74,7 @@ def test_hash_files(make_list):
 
 def test_hash_dir(make_list):
     dir_path = tempfile.mkdtemp()
-    with tempfile.NamedTemporaryFile('w', dir=dir_path) as tf:
+    with tempfile.NamedTemporaryFile("w", dir=dir_path) as tf:
         tf.write("عربى english")
         tf.flush()
 

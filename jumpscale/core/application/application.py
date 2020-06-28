@@ -1,4 +1,4 @@
-from jumpscale.god import j
+from jumpscale.loader import j
 import sys
 
 DEFAULT_APP_NAME = "init"
@@ -18,7 +18,7 @@ class Application:
         j.logger.set_appname(appname)
 
         if j.core.db:
-            j.core.db.sadd('applications', self.appname)
+            j.core.db.sadd("applications", self.appname)
 
         j.logger.info("Application {} is started, process id: {}", self.appname, self.process_id)
 
@@ -26,4 +26,4 @@ class Application:
         j.logger.info("Application {} is stopped", self.appname)
 
         if j.core.db:
-            j.core.db.srem('applications', self.appname)
+            j.core.db.srem("applications", self.appname)

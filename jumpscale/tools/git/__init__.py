@@ -4,7 +4,7 @@
 """
 import urllib
 import re
-from jumpscale.god import j
+from jumpscale.loader import j
 
 SSH_URL_MATCH = "^(git@)(?P<netloc>.*?)(:|/)(?P<path>.*?)/?$"
 

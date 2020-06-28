@@ -1,6 +1,6 @@
 import unittest
 
-from jumpscale.god import j
+from jumpscale.loader import j
 
 
 class TestStartupCmd(unittest.TestCase):

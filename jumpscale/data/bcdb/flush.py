@@ -1,6 +1,6 @@
 def main():
     import os
-    from jumpscale.god import j
+    from jumpscale.loader import j
 
     with open("test_index.db", "w"):
         pass

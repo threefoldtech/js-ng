@@ -1,4 +1,4 @@
-from jumpscale.god import j
+from jumpscale.loader import j
 
 # a name is composed of two non-empty parts
 # separated by an underscore.

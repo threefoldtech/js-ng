@@ -2,7 +2,7 @@ import os
 import sys
 import json
 import inspect
-from jumpscale.god import j
+from jumpscale.loader import j
 from jumpscale.servers.gedis.baseactor import BaseActor, actor_method
 
 
@@ -16,7 +16,7 @@ class CoreActor(BaseActor):
     @actor_method
     def list_actors(self) -> list:
         """List available actors
-        
+
         Returns:
             list -- list of available actors
         """
@@ -33,11 +33,11 @@ class SystemActor(BaseActor):
     @actor_method
     def register_actor(self, actor_name: str, actor_path: str) -> bool:
         """Register new actor
-        
+
         Arguments:
             actor_name {str} -- actor name within gedis server.
             actor_path {str} -- actor path on gedis server machine.
-        
+
         Returns:
             bool -- True if registered.
         """
@@ -56,10 +56,10 @@ class SystemActor(BaseActor):
     @actor_method
     def unregister_actor(self, actor_name: str) -> bool:
         """Register actor
-        
+
         Arguments:
             actor_name {str} -- actor name
-        
+
         Returns:
             bool -- True if actors is unregistered
         """

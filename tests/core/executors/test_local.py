@@ -5,7 +5,7 @@ from invoke.exceptions import UnexpectedExit
 from parameterized import parameterized
 from unittest import TestCase
 
-from jumpscale.god import j
+from jumpscale.loader import j
 from tests.base_tests import BaseTests
 
 CMD_STR = "which ls"

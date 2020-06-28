@@ -39,7 +39,7 @@ e.g
 ```
 """
 
-from jumpscale.god import j
+from jumpscale.loader import j
 from jinja2 import (
     Environment,
     FileSystemLoader,

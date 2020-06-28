@@ -1,4 +1,4 @@
-from jumpscale.god import j
+from jumpscale.loader import j
 
 
 def _get_identifier(appname, message, public_message, category, alert_type):
@@ -59,12 +59,12 @@ class AlertsHandler:
 
     def get(self, alert_id: int = None, identifier: str = None, die: bool = True) -> Alert:
         """Get alert by its id or identifier
-        
+
         Keyword Arguments:
             alert_id {int} -- alert id (default: {None})
             identifier {str} -- alert identifier (default: {None})
             die {bool} -- flag to rasie exception if alert is not found (default: {True})
-        
+
         Raises:
             j.core.exceptions.NotFound: alert is not found
             j.core.exceptions.Value: invalid arguments
@@ -94,7 +94,7 @@ class AlertsHandler:
     ) -> Alert:
 
         """Find alerts
-        
+
         Keyword Arguments:
             appname {str} -- filter by allert app name (default: {""})
             category {str} -- filter by alert category (default: {""})
@@ -102,7 +102,7 @@ class AlertsHandler:
             pid {int} -- filter by process id (default: {None})
             start_time {int} -- filter by start time (default: {None})
             end_time {int} -- filter by end time (default: {None})
-        
+
         Returns:
             Alert -- alert object
         """
@@ -155,17 +155,17 @@ class AlertsHandler:
     ) -> Alert:
 
         """Raise a new alert
-        
+
         Arguments:
             message {str} -- alert message
-        
+
         Keyword Arguments:
             public_message {str} -- alert public message (default: {""})
             category {str} -- alert category (default: {""})
             alert_type {str} -- alert type (default: {"event_system"})
             level {int} -- alert level (default: {40})
             traceback {dict} -- alert traceback (default: {None})
-        
+
         Returns:
             Alert -- alert object
         """
@@ -203,7 +203,7 @@ class AlertsHandler:
 
     def count(self) -> int:
         """Gets alerts count
-        
+
         Returns:
             int -- total number of alerts
         """
@@ -211,7 +211,7 @@ class AlertsHandler:
 
     def _save(self, alert: Alert):
         """Saves alert object in db
-        
+
         Arguments:
             alert {Alert} -- alert object
         """
@@ -226,7 +226,7 @@ class AlertsHandler:
 
         Raises:
             j.core.exceptions.Value: invalid arguments
-        
+
         Keyword Arguments:
             alert_id {int} -- alert id (default: {None})
             identifier {str} -- alert identifier (default: {None})

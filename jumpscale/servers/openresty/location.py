@@ -1,4 +1,4 @@
-from jumpscale.god import j
+from jumpscale.loader import j
 from jumpscale.core.base import Base, fields
 from .utils import render_config_template
 

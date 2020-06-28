@@ -35,7 +35,7 @@ from subprocess import Popen
 
 import psutil
 
-from jumpscale.god import j
+from jumpscale.loader import j
 
 
 def execute(
