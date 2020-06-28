@@ -1,7 +1,5 @@
 import gevent
-from gevent import monkey, pool
 
-monkey.patch_all()
 import time
 import unittest
 from jumpscale.loader import j
