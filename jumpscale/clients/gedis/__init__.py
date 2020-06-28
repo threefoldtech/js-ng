@@ -9,7 +9,7 @@ JS-NG> gedis.list_actors()
 
 Registering actor
 ```
-JS-NG> gedis.register_actor("greeter", "/home/ahmed/wspace/threefoldtech/js-ng/jumpscale/servers/gedis/example_greeter.py")
+JS-NG> gedis.actors.system.register_actor("greeter", "/home/ahmed/wspace/threefoldtech/js-ng/jumpscale/servers/gedis/example_greeter.py")
 1
 ```
 
