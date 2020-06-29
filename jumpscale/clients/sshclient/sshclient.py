@@ -16,6 +16,7 @@ JS-NG>
 ```
 JS-NG> sshkey = j.clients.sshkey.get("xmonader")
 JS-NG> localclient = j.clients.sshclient.get("xmonader")
+JS-NG> localclient.host = "IP of the machine to access"
 JS-NG> localclient.sshclient.run("hostname")
 asgard
 (0, 'asgard\n', '')
