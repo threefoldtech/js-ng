@@ -145,7 +145,7 @@ def get_field_property(name: str, field: fields.Field) -> property:
         value = field.from_raw(value)
 
         # validate
-        field.validate(value)
+        field.validate_named(value, name)
 
         # set current instance as parent for embedded objects/instances
         if isinstance(field, fields.Object) and value:
