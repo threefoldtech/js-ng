@@ -14,12 +14,6 @@ JS-NG>
 ## Creating sshclient using that key and executing commands
 
 ```
-JS-NG> localconnection = j.clients.sshclient.new("localconnection")
-JS-NG> localconnection.sshkey = "xmonader"
-JS-NG> localconnection.run("hostname")
-(0, 'asgard\n', '')
-
-
 JS-NG> sshkey = j.clients.sshkey.get("xmonader")
 JS-NG> localclient = j.clients.sshclient.get("xmonader")
 JS-NG> localclient.sshclient.run("hostname")
