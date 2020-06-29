@@ -1,4 +1,4 @@
-from jumpscale.god import j
+from jumpscale.loader import j
 
 
 def test_schema():
@@ -11,10 +11,10 @@ def test_schema():
 
 
     obj = (O)!7mada.test
-    
+
     date_start = 0 (I)
-    
-    description* = "hello world"        
+
+    description* = "hello world"
     description2 ** = 'creature asd"asd ,xzc'(S)
     llist4*** = [1,2,3] (LI)
     llist5 = [1,2,3] (LI)

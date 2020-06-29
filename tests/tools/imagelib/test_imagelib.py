@@ -3,7 +3,7 @@ import os
 import tempfile
 
 from PIL import Image
-from jumpscale.god import j
+from jumpscale.loader import j
 
 
 def test_resize():

@@ -1,6 +1,6 @@
 import tempfile
 
-from jumpscale.god import j
+from jumpscale.loader import j
 
 
 tmp = tempfile.NamedTemporaryFile(suffix=".ini")
@@ -90,4 +90,3 @@ def test_get_boolen():
     foo.add_property("Licence", "access", "True")
     foo.write()
     assert foo.get_boolen("Licence", "access")
-

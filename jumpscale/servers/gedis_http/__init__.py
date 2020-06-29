@@ -1,5 +1,5 @@
 from jumpscale.core.base import Base, fields
-from jumpscale.god import j
+from jumpscale.loader import j
 from gevent.pool import Pool
 from bottle import Bottle, abort, request
 from gevent.pywsgi import WSGIServer

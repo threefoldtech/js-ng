@@ -2,7 +2,7 @@ import inspect
 import sys
 import traceback
 
-from jumpscale.god import j
+from jumpscale.loader import j
 
 
 class ErrorHandler:
@@ -71,10 +71,10 @@ class ErrorHandler:
         data: dict = None,
     ):
         """Hndler exception
-        
+
         Arguments:
             exception {Exception} -- the exception object to handle
-        
+
         Keyword Arguments:
             level {int} -- exception level (default: {40})
             die {bool} -- optional flag to exit after handling the exception (default: {True})
@@ -86,10 +86,10 @@ class ErrorHandler:
 
     def register_handler(self, handler: callable, level: int = 40):
         """Register new error handler
-        
+
         Arguments:
             handler {callable} -- error handler callable
-        
+
         Keyword Arguments:
             level {int} -- exception level (default: {40})
         """

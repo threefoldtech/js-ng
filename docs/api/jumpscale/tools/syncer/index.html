@@ -25,14 +25,14 @@ JS-NG&gt; xmonader = …" />
 <section id="section-intro">
 <p>Module to help syncing multiple machines with specific directories you have.
 used in the jsync tool.</p>
-<pre><code>JS-NG&gt; xmonader = j.clients.sshkey.new(&quot;xmonader&quot;)                                                                               
-JS-NG&gt; xmonader.private_key_path = &quot;/home/xmonader/.ssh/id_rsa&quot;                                                                  
-JS-NG&gt; xmonader.load_from_file_system()                                                                                          
-JS-NG&gt; xmonader.save()                                                                                                           
-JS-NG&gt; xmonader = j.clients.sshclient.new(&quot;xmonader&quot;)                                                                            
-JS-NG&gt; xmonader.sshkey = &quot;xmonader&quot;                                                                                              
-JS-NG&gt; s = j.tools.syncer.Syncer([&quot;xmonader&quot;], {&quot;/home/xmonader/wspace/tfchain-py&quot;:&quot;/tmp/tfchain-py&quot;}) 
-JS-NG&gt; s.start()                                                                                                                 
+<pre><code>JS-NG&gt; xmonader = j.clients.sshkey.new(&quot;xmonader&quot;)
+JS-NG&gt; xmonader.private_key_path = &quot;/home/xmonader/.ssh/id_rsa&quot;
+JS-NG&gt; xmonader.load_from_file_system()
+JS-NG&gt; xmonader.save()
+JS-NG&gt; xmonader = j.clients.sshclient.new(&quot;xmonader&quot;)
+JS-NG&gt; xmonader.sshkey = &quot;xmonader&quot;
+JS-NG&gt; s = j.tools.syncer.Syncer([&quot;xmonader&quot;], {&quot;/home/xmonader/wspace/tfchain-py&quot;:&quot;/tmp/tfchain-py&quot;})
+JS-NG&gt; s.start()
 2019-09-03T11:38:47.183394+0200 - paths: {'/home/xmonader/wspace/tfchain-py': '/tmp/tfchain-py'}
 </code></pre>
 <details class="source">
@@ -40,19 +40,19 @@ JS-NG&gt; s.start()
 <pre><code class="python">&#34;&#34;&#34;Module to help syncing multiple machines with specific directories you have.
 used in the jsync tool.
 ```
-JS-NG&gt; xmonader = j.clients.sshkey.new(&#34;xmonader&#34;)                                                                               
-JS-NG&gt; xmonader.private_key_path = &#34;/home/xmonader/.ssh/id_rsa&#34;                                                                  
-JS-NG&gt; xmonader.load_from_file_system()                                                                                          
-JS-NG&gt; xmonader.save()                                                                                                           
-JS-NG&gt; xmonader = j.clients.sshclient.new(&#34;xmonader&#34;)                                                                            
-JS-NG&gt; xmonader.sshkey = &#34;xmonader&#34;                                                                                              
-JS-NG&gt; s = j.tools.syncer.Syncer([&#34;xmonader&#34;], {&#34;/home/xmonader/wspace/tfchain-py&#34;:&#34;/tmp/tfchain-py&#34;}) 
-JS-NG&gt; s.start()                                                                                                                 
+JS-NG&gt; xmonader = j.clients.sshkey.new(&#34;xmonader&#34;)
+JS-NG&gt; xmonader.private_key_path = &#34;/home/xmonader/.ssh/id_rsa&#34;
+JS-NG&gt; xmonader.load_from_file_system()
+JS-NG&gt; xmonader.save()
+JS-NG&gt; xmonader = j.clients.sshclient.new(&#34;xmonader&#34;)
+JS-NG&gt; xmonader.sshkey = &#34;xmonader&#34;
+JS-NG&gt; s = j.tools.syncer.Syncer([&#34;xmonader&#34;], {&#34;/home/xmonader/wspace/tfchain-py&#34;:&#34;/tmp/tfchain-py&#34;})
+JS-NG&gt; s.start()
 2019-09-03T11:38:47.183394+0200 - paths: {&#39;/home/xmonader/wspace/tfchain-py&#39;: &#39;/tmp/tfchain-py&#39;}
 ```
 &#34;&#34;&#34;
 
-from jumpscale.god import j
+from jumpscale.loader import j
 from watchdog.events import PatternMatchingEventHandler
 from watchdog.observers import Observer
 import gevent

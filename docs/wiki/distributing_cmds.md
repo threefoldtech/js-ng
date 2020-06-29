@@ -19,7 +19,7 @@ first write your entry point script in `entry_points` directory
 
 ```python
 import click
-from jumpscale.god import j
+from jumpscale.loader import j
 
 
 @click.command()

@@ -6,7 +6,7 @@ from functools import partial
 
 from jumpscale.clients.base import Client
 from jumpscale.core.base import fields
-from jumpscale.god import j
+from jumpscale.loader import j
 from jumpscale.servers.gedis.server import GedisErrorTypes, deserialize, serialize
 from jumpscale.tools.codeloader import load_python_module
 

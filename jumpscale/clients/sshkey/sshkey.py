@@ -27,20 +27,20 @@ ssh_cl.write_to_filesystem()
 """
 from jumpscale.clients.base import Client
 from jumpscale.core.base import fields
-from jumpscale.god import j
+from jumpscale.loader import j
 
 
 class SSHKeyClient(Client):
-    name = fields.String()
     public_key = fields.String()
-    private_key = fields.String()  # should use secret.
-    private_key_path = fields.String()  # should use secret.
-    passphrase = fields.String(default="")  # should use secret.
+    private_key = fields.Secret()
+    private_key_path = fields.Secret()
+    passphrase = fields.Secret(default="")
     duration = fields.Integer()
     allow_agent = fields.Boolean()
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
         if self.private_key_path and j.sals.fs.exists(self.private_key_path):
             self.load_from_file_system()
 

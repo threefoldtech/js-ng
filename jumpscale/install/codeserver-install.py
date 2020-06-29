@@ -1,6 +1,6 @@
 from jumpscale.core.base import StoredFactory
 from jumpscale.servers.threebot.threebot import ThreebotServer
-from jumpscale.god import j
+from jumpscale.loader import j
 
 factory = StoredFactory(ThreebotServer)
 threebot = factory.get("default")

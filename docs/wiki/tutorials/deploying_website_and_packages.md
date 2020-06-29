@@ -39,7 +39,7 @@
   nginx = j.sals.nginx.get("main")
   nginx.configure()
   nginx.save()
-  server = j.servers.threebot.get("threefold_tech")
+  server = j.servers.threebot.get()
   server.packages.add("/root/js-ng/jumpscale/packages/threefold_tech")
   server.save()
   server.start()
