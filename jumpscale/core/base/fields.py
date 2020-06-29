@@ -134,7 +134,7 @@ class Field:
         try:
             self.validate(value)
         except ValidationError as e:
-            raise ValidationError(f"{name} : " + str(e))
+            raise ValidationError(f"{name}: " + str(e))
 
     def validate(self, value):
         """
