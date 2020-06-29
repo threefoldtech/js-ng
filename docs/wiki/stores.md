@@ -7,6 +7,8 @@ Content:
         * [Filesystem](#filesystem)
         * [Redis](#redis)
         * [Whoosh](#whoosh)
+    * [Factory options](#factory-options)
+        * [Always reload][#always-reload]
 * [Locations](#locations)
 * [Search](#search)
     * [Whoosh search](#whoosh-search)
@@ -88,6 +90,54 @@ Some known issues:
     * For `Float` fields, it has known issue, can be resolved by using integers (with compute function) or even a string for now.
 
 The path where whoosh indexes are created can be configured.
+
+### Factory options
+
+Factory options can be set in config file, only always reload option is available for now.
+
+### Always reload
+
+When you load an object from a factory, it will stay in memory for fast access, but sometimes, you need to always fetch the new data (this might be heavy but useful in e.g multi-process setup).
+
+In jumpscale configuration, you can set `always_load` in factory setting section:
+
+```
+[factory]
+always_reload = false
+```
+
+If se to true, the following example would work (from two different shells):
+
+First get an instance in the first shell:
+
+```python
+JS-NG> cl = j.clients.redis.get("aa")
+JS-NG> cl.hostname
+'localhost'
+```
+
+Also, get the same instance in the second shell:
+
+```python
+JS-NG> cl = j.clients.redis.get("aa")
+JS-NG> cl.hostname
+'localhost'
+```
+
+Update `hostname` in the first shell:
+
+```python
+JS-NG> cl.hostname = "172.17.0.2"
+JS-NG> cl.save()
+```
+
+If you try to get the same instance in the second shell again, it should get the latest stored data:
+
+```python
+JS-NG> cl = j.clients.redis.get("aa")
+JS-NG> cl.hostname
+'172.17.0.2'
+```
 
 ## Locations
 
