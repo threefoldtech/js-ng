@@ -120,7 +120,7 @@ class Field:
 
     def validate_with_name(self, value, name):
         """
-        validates the value using validate method and appends the field name
+        validates the value using validate method and prepends the field name
         in case an exception was thrown
 
         Args:
@@ -128,7 +128,7 @@ class Field:
             name  (str): the field name
 
         Raises:
-            ValidationError
+            ValidationError: The original validation error with the field name prepended to the message
 
         """
         try:
