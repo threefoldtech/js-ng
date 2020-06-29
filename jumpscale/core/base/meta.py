@@ -362,7 +362,7 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
         validate all fields of current instance
         """
         for name, field in self._get_fields().items():
-            field.validate_with_name(getattr(self, name))
+            field.validate_with_name(getattr(self, name), name)
 
     @property
     def parent(self):
