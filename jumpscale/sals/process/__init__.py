@@ -176,7 +176,7 @@ def get_pids_filtered_sorted(filterstr, sortkey=None):
     Keyword Arguments:
         sortkey {[str]} -- sort key for ps command (default: {None})
         sortkey can be one of the following:
-            %cpu           cpu utilization of the process in
+        %cpu           cpu utilization of the process in
         %mem           ratio of the process's resident set size  to the physical memory on the machine, expressed as a percentage.
         cputime        cumulative CPU time, "[DD-]hh:mm:ss" format.  (alias time).
         egid           effective group ID number of the process as a decimal integer.  (alias gid).
@@ -197,7 +197,7 @@ def get_pids_filtered_sorted(filterstr, sortkey=None):
         cmd = "ps aux --sort={sortkey} | grep '{filterstr}'".format(filterstr=filterstr, sortkey=sortkey)
     else:
         cmd = "ps ax | grep '{filterstr}'".format(filterstr=filterstr)
-    rcode, out, err = execute(cmd)
+    rc, out, err = execute(cmd)
     # print out
     found = []
     for line in out.split("\n"):
@@ -227,7 +227,7 @@ def get_filtered_pids(filterstr, excludes=None):
     """
     excludes = excludes or []
     cmd = "ps ax | grep '%s'" % filterstr
-    rcode, out, err = j.core.executors.run_local(cmd)
+    rc, out, err = j.core.executors.run_local(cmd)
     # print out
     found = []
 
@@ -434,7 +434,7 @@ def get_user_processes(user):
     """
     result = []
     for process in psutil.process_iter():
-        if process.username == user:
+        if process.username() == user:
             result.append(process.pid)
     return result
 
