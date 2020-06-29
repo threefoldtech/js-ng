@@ -118,22 +118,23 @@ class Field:
         # so, from_raw and to_raw are used only for serialization
         return value
 
-    def validate_named(self, value, name):
+    def validate_with_name(self, value, name):
         """
         validates the value using validate method and appends the field name
-        in case an exxception was thrown
+        in case an exception was thrown
 
         Args:
             value (any): in case value is not valid
             name  (str): the field name
+
         Raises:
-            ValidationError: [description]
+            ValidationError
 
         """
         try:
             self.validate(value)
         except ValidationError as e:
-            raise ValidationError(str(e) + f" for the field {name}")
+            raise ValidationError(f"{name} : " + str(e))
 
     def validate(self, value):
         """

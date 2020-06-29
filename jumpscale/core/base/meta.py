@@ -128,7 +128,7 @@ def get_field_property(name: str, field: fields.Field) -> property:
 
         we do some checks and actions too, as we already know the field:
 
-        - validation: using field.validate
+        - validation: using field.validate_with_name
         - setting an attribute with inner_name in the base instance
         - call `_attr_updated` of the base instance with the name of this property/field
 
@@ -145,7 +145,7 @@ def get_field_property(name: str, field: fields.Field) -> property:
         value = field.from_raw(value)
 
         # validate
-        field.validate_named(value, name)
+        field.validate_with_name(value, name)
 
         # set current instance as parent for embedded objects/instances
         if isinstance(field, fields.Object) and value:
@@ -362,7 +362,7 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
         validate all fields of current instance
         """
         for name, field in self._get_fields().items():
-            field.validate(getattr(self, name))
+            field.validate_with_name(getattr(self, name))
 
     @property
     def parent(self):
