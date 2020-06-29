@@ -8,7 +8,7 @@ Content:
         * [Redis](#redis)
         * [Whoosh](#whoosh)
     * [Factory options](#factory-options)
-        * [Always reload][#always-reload]
+        * [Always reload](#always-reload)
 * [Locations](#locations)
 * [Search](#search)
     * [Whoosh search](#whoosh-search)
