@@ -8,7 +8,7 @@ Content:
         * [Redis](#redis)
         * [Whoosh](#whoosh)
 * [Locations](#locations)
-* [Search][#search]
+* [Search](#search)
     * [Whoosh search](#whoosh-search)
 * [Writing a store backend](#writing-a-store-backend)
     * [Interface](#interface)
@@ -83,7 +83,9 @@ Stores configuration in whoosh indexes. it supports indexing/search for the foll
 * DateTime (as integers)
 * Time (as integers)
 
-For `Float` fields, it has known issue, can be resolved by using integers (with compute function) or even a string for now.
+Some known issues:
+    * Field names follow `whoosh` constraints, e.g. cannot start with underscore.
+    * For `Float` fields, it has known issue, can be resolved by using integers (with compute function) or even a string for now.
 
 The path where whoosh indexes are created can be configured.
 
