@@ -119,6 +119,17 @@ class Field:
         return value
 
     def validate_named(self, value, name):
+        """
+        validates the value using validate method and appends the field name
+        in case an exxception was thrown
+
+        Args:
+            value (any): in case value is not valid
+            name  (str): the field name
+        Raises:
+            ValidationError: [description]
+
+        """
         try:
             self.validate(value)
         except ValidationError as e:
