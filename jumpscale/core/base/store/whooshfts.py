@@ -187,7 +187,10 @@ class WhooshStore(EncryptedConfigStore):
         else:
             new_cursor = result.pagenum + 1
 
-        return new_cursor, len(result), (config for config in result)
+        if result.total >= limit_:
+            result = result[:limit_]
+
+        return new_cursor, len(result), (hit for hit in result)
 
     def delete(self, instance_name):
         writer = self.get_writer()

@@ -146,6 +146,7 @@ class ConfigStore(ABC):
     - `write(instance_name, data)`: writes the data of this instance
     - `list_all(instance_name)`: lists all instance names
     - `delete(instance_name)`: delete instance data
+    - `find(self, cursor_=None, limit_=None, **query)`: optional search method with query as field mapping
     """
 
     @abstractmethod
@@ -161,7 +162,7 @@ class ConfigStore(ABC):
         pass
 
     @abstractmethod
-    def find(self, cursor_=None, limit_=None, **queries):
+    def find(self, cursor_=None, limit_=None, **query):
         pass
 
     @abstractmethod
@@ -252,7 +253,7 @@ class EncryptedConfigStore(ConfigStore, EncryptionMixin):
         config = self.serializer.deserialize(self.read(instance_name))
         return self._process_config(config, EncryptionMode.Decrypt)
 
-    def find(self, cursor_=None, limit_=None, **kwargs):
+    def find(self, cursor_=None, limit_=None, **query):
         """
         a generic find, which do a linear search over all items
 
@@ -261,7 +262,7 @@ class EncryptedConfigStore(ConfigStore, EncryptionMixin):
         Args:
             cursor_ (any, optional): an optional cursor, to start searching from. Defaults to None.
             limit_ (int, optional): results limit. Defaults to None.
-            kwargs: a mapping between field and value fo search by
+            query: a mapping between field and value fo search by
 
         Returns:
             tuple: the new cursor, total result count and a generator for results
@@ -287,7 +288,7 @@ class EncryptedConfigStore(ConfigStore, EncryptionMixin):
                 continue
 
             data = self.get(name)
-            for name, value in kwargs.items():
+            for name, value in query.items():
                 if name in data:
                     data[KEY_FIELD_NAME] = name
                     target_value = data[name]

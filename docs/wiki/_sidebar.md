@@ -28,6 +28,7 @@
     * [Interacting with the development shell: jsng](./jsng_shell.md)
     * [Configuration Management](./configmgmt.md)
     * [Base Classes and Hierarchical Configurations](./baseclasses.md)
+    * [Store backend and search](./stores.md)
     * [Extending Jumpscale](./extend_j.md)
     * [Adding a new command](./distributing_cmds.md)
     * [Executors](./executors.md)
@@ -43,7 +44,7 @@
     * Builders
     * [Github actions](./githubactions.md)
 
-    
+
 * [Specs](specs.md)
     * [Poetry](poetry.md)
     * [God object and namespaces](god_object_namespaces_concepts.md)
