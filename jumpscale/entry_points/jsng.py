@@ -1,7 +1,7 @@
 from gevent import monkey
 
 monkey.patch_all(subprocess=False)
-
+import click
 import os
 import pathlib
 import sys
@@ -15,10 +15,13 @@ BASE_CONFIG_DIR = os.path.join(os.environ.get("HOME", "/root"), ".jsng")
 HISTORY_FILENAME = os.path.join(BASE_CONFIG_DIR, "history.txt")
 
 
-def run():
+@click.command()
+@click.argument("command", required=False)
+def run(command):
+    """Executes the passed command and initiates a jsng shell if no command is passed."""
     os.makedirs(BASE_CONFIG_DIR, exist_ok=True)
     pathlib.Path(HISTORY_FILENAME).touch()
-    if len(sys.argv) == 1:
+    if command is None:
         sys.exit(embed(globals(), locals(), configure=ptconfig, history_filename=HISTORY_FILENAME))
     else:
-        sys.exit(print(eval(sys.argv[1])))
+        sys.exit(print(eval(command)))
