@@ -20,6 +20,11 @@ class Address(Base):
         self.x = 123
 
 
+class Car(Base):
+    color = fields.String(required=True)
+    release_date = fields.DateTime()
+
+
 class Wallet(Base):
     ID = fields.Integer(required=True)
     origin = fields.Typed(dict, default=dict)
@@ -362,6 +367,15 @@ class TestStoredFactory(unittest.TestCase):
 
         wallet.save()
         self.assertIsNotNone(new_factory.find(name))
+
+    def test_field_name_in_exception(self):
+        cars = StoredFactory(Car)
+        bmw = cars.get("bmw")
+        with self.assertRaisesRegex(fields.ValidationError, "^color: *"):
+            bmw.save()
+
+        with self.assertRaisesRegex(fields.ValidationError, "^release_date: *"):
+            bmw.release_date = "qwe"
 
     def tearDown(self):
         for name in self.factory.list_all():
