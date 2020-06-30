@@ -3,20 +3,20 @@ this module mostly test creating/storing/reteriving objects/instances
 
 which makes sure every field is serialized correctly
 """
-from enum import Enum
 import unittest
-
+from enum import Enum
 
 # TODO: move fields to fields or types module
-from jumpscale.core.base import Base, Factory, StoredFactory, DuplicateError, fields
+
+from jumpscale.core.base import Base, DuplicateError, Factory, StoredFactory, fields
 
 
 class Address(Base):
     x = fields.Integer()
     name = fields.String()
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.x = 123
 
 
@@ -136,7 +136,7 @@ class TestStoredFactory(unittest.TestCase):
             w.addresses.new("mine")
 
         # create another instance
-        new_cl = Client()
+        new_cl = self.factory.get("another_client")
         self.assertEqual(new_cl.wallets.count, 0)
 
     def test_create_with_list_field(self):
@@ -356,6 +356,17 @@ class TestStoredFactory(unittest.TestCase):
 
         self.assertEqual(wallet.url, None)
         self.assertEqual(wallet.data, '{"a": 1}')
+
+    def test_find(self):
+        name = "test_find_with_different_factory"
+        wallet = self.wallets_factory.get(name)
+        new_factory = StoredFactory(Wallet)
+
+        # not yet saved
+        self.assertIsNone(new_factory.find(name))
+
+        wallet.save()
+        self.assertIsNotNone(new_factory.find(name))
 
     def test_field_name_in_exception(self):
         cars = StoredFactory(Car)

@@ -13,8 +13,8 @@ class Address(Base):
     x = fields.Integer()
     name = fields.String()
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.x = 123
 
 

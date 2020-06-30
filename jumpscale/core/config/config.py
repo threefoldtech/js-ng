@@ -125,7 +125,9 @@ def get_default_config():
         "stores": {
             "redis": {"hostname": "localhost", "port": 6379},
             "filesystem": {"path": os.path.expanduser(os.path.join(config_root, "secureconfig"))},
+            "whoosh": {"path": os.path.expanduser(os.path.join(config_root, "whoosh_indexes"))},
         },
+        "factory": {"always_reload": False},
         "store": "filesystem",
         "threebot": {"default": "",},
         "explorer": {"default_url": "https://explorer.testnet.grid.tf/explorer",},

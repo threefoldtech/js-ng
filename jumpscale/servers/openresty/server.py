@@ -47,8 +47,8 @@ class OpenRestyServer(Base):
     status = fields.Enum(Status)
     websites = fields.Factory(Website)
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self._cmd = None
         self._path_web = None
         self._path_cfg_dir = None
