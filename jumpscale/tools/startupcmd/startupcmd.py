@@ -196,6 +196,7 @@ class StartupCmd(Base):
 
         if self.is_running():
             self._soft_kill()
+            self.wait_for_stop(die=False, timeout=timeout)
 
         if force:
             self._hard_kill()
