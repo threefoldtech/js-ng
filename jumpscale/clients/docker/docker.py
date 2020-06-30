@@ -22,8 +22,8 @@ from jumpscale.core.base import fields
 class DockerClient(Client):
     base_url = fields.String()
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.__client = None
 
     @property
