@@ -10,6 +10,7 @@ class CoreActor(BaseActor):
     def __init__(self):
         super().__init__()
         self._server = None
+        self.path = __file__
 
     def set_server(self, server):
         self._server = server
@@ -28,6 +29,7 @@ class SystemActor(BaseActor):
     def __init__(self):
         super().__init__()
         self._server = None
+        self.path = __file__
 
     def set_server(self, server):
         self._server = server
