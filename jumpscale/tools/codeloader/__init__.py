@@ -31,15 +31,15 @@ def load_python_module(module_path: str):
     """
     from jumpscale.loader import j
 
+    module_uid = module_path[:-3]
     module_name = j.sals.fs.stem(module_path)
-
     spec = importlib.util.spec_from_file_location(module_name, module_path)
 
-    if spec.name in sys.modules:
-        return sys.modules[spec.name]
+    if module_uid in sys.modules:
+        return sys.modules[module_uid]
 
     module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
+    sys.modules[module_uid] = module
     spec.loader.exec_module(module)
 
     return module

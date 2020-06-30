@@ -8,6 +8,7 @@ from jumpscale.servers.gedis.baseactor import BaseActor, actor_method
 
 class CoreActor(BaseActor):
     def __init__(self):
+        super().__init__()
         self._server = None
 
     def set_server(self, server):
@@ -25,6 +26,7 @@ class CoreActor(BaseActor):
 
 class SystemActor(BaseActor):
     def __init__(self):
+        super().__init__()
         self._server = None
 
     def set_server(self, server):
@@ -43,6 +45,7 @@ class SystemActor(BaseActor):
         """
         module = j.tools.codeloader.load_python_module(actor_path)
         actor = module.Actor()
+        actor.path = actor_path
         result = actor.__validate_actor__()
 
         if not result["valid"]:

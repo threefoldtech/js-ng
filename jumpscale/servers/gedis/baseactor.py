@@ -33,10 +33,13 @@ def actor_method(func):
 
 
 class BaseActor:
+    def __init__(self):
+        self.path = None
+
     @actor_method
     def info(self) -> dict:
         info = {}
-        info["path"] = sys.modules[self.__class__.__module__].__file__
+        info["path"] = self.path
         info["methods"] = {}
 
         methods = inspect.getmembers(self, predicate=inspect.ismethod)
