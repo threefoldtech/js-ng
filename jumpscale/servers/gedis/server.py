@@ -240,11 +240,11 @@ class GedisServer(Base):
             parser.on_connect(connection)
 
             while True:
-                try:
+                response = dict(
+                    success=True, result=None, error=None, error_type=None, is_async=False, task_id=None
+                )
+                try:   
                     request = parser.read_response()
-                    response = dict(
-                        success=True, result=None, error=None, error_type=None, is_async=False, task_id=None
-                    )
 
                     if len(request) < 2:
                         response["error"] = "invalid request"
