@@ -7,8 +7,17 @@ import toml
 def decode_toml_value(s):
     try:
         return toml.TomlDecoder().load_value(s)[0]
-    except ValueError:
+    except Exception:
         return s
+
+
+def get_toml_value_type(s):
+    try:
+        print(s)
+        print(toml.TomlDecoder().load_value(s))
+        return toml.TomlDecoder().load_value(s)[1]
+    except Exception:
+        return "str"
 
 
 def encode_toml_value(s):
@@ -31,6 +40,13 @@ def print_dict(data, path):
             print(f"{path}{name} = {encoded}")
 
 
+def validate_type_homogeneity(a, b):
+    typea = type(a).__name__
+    typeb = type(b).__name__
+    if typea != typeb:
+        raise TypeError(f"Type mismatch: Expected {typea} found {typeb}.")
+
+
 def format_config(config):
     print_dict(config, "")
 
@@ -51,17 +67,20 @@ def config():
 
 @config.command()
 def defaults():
+    """list default configuration."""
     format_config(get_default_config())
 
 
 @config.command()
 def list_all():
+    """list all configurations."""
     format_config(get_config())
 
 
 @config.command()
 @click.argument("name")
 def get(name):
+    """get the key from the configuration, use dots to access nested values."""
     try:
         _, obj, prop = traverse_config(name)
         if not isinstance(obj, dict):
@@ -69,21 +88,26 @@ def get(name):
         value = obj[prop]
         click.echo(format_config_parameter(name, value))
     except KeyError:
-        click.echo("Key doens't exist")
+        click.echo('Key doens\'t exist. Type "jsctl config list-all" to see all valid configurations.')
 
 
 @config.command()
 @click.argument("name")
 @click.argument("value")
 def update(name, value):
+    """set the passed key by the corresponding toml value."""
     try:
         config, obj, prop = traverse_config(name)
         if not isinstance(obj, dict) or prop not in obj:
             raise KeyError()
-        obj[prop] = decode_toml_value(value)
+        value = decode_toml_value(value)
+        validate_type_homogeneity(obj[prop], value)
+        obj[prop] = value
         update_config(config)
     except KeyError:
-        click.echo("Key doen't exist")
+        click.echo('Key doens\'t exist. Type "jsctl config list-all" to see all valid configurations.')
+    except TypeError as e:
+        click.echo(str(e))
     else:
         click.echo("Updated.")
 
