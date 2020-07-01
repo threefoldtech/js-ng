@@ -11,22 +11,13 @@ def decode_toml_value(s):
         return s
 
 
-def get_toml_value_type(s):
-    try:
-        print(s)
-        print(toml.TomlDecoder().load_value(s))
-        return toml.TomlDecoder().load_value(s)[1]
-    except Exception:
-        return "str"
-
-
 def encode_toml_value(s):
     return toml.TomlEncoder().dump_value(s)
 
 
 def format_config_parameter(name, value):
     if isinstance(value, dict):
-        print_dict(value, "")
+        print_dict(value, f"{name}.")
     else:
         return "%s = %s" % (name, encode_toml_value(value))
 
@@ -40,7 +31,7 @@ def print_dict(data, path):
             print(f"{path}{name} = {encoded}")
 
 
-def validate_type_homogeneity(a, b):
+def validate_type(a, b):
     typea = type(a).__name__
     typeb = type(b).__name__
     if typea != typeb:
@@ -101,7 +92,7 @@ def update(name, value):
         if not isinstance(obj, dict) or prop not in obj:
             raise KeyError()
         value = decode_toml_value(value)
-        validate_type_homogeneity(obj[prop], value)
+        validate_type(obj[prop], value)
         obj[prop] = value
         update_config(config)
     except KeyError:
