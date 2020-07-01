@@ -104,6 +104,7 @@ def get_default_config():
     """
     return {
         "debug": True,
+        "shell": "ptpython",
         "logging": {
             "redis": {
                 "enabled": True,
