@@ -39,8 +39,6 @@ def traverse_config(name):
     path = name.split(".")
     config = get_config()
     prop = config
-    if name in config:
-        return config, prop, name
     for i, p in enumerate(path[:-1]):
         prop = prop[p]
     return config, prop, path[-1]
