@@ -18,7 +18,10 @@ Get all stores configurations:
 
 ```
 ✗ jsctl config get stores
-stores = {'redis': {'hostname': 'localhost', 'port': 6379}, 'filesystem': {'path': '/home/abom/.config/jumpscale/secureconfig'}}
+redis.hostname = "localhost"
+redis.port = 6379
+filesystem.path = "/home/abom/.config/jumpscale/secureconfig"
+whoosh.path = "/home/abom/.config/jumpscale/whoosh_indexes"
 ```
 
 For example, set current store to redis:
