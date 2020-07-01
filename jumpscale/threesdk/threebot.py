@@ -88,7 +88,7 @@ class ThreeBot(Container):
             name (str): name of the container (default: 3bot-ng)
         """
         Container.start(name)
-        Container.exec(name, ["threebot", "start"])
+        Container.exec(name, ["threebot", "start", "--background"])
 
     @staticmethod
     def stop(name=DEFAULT_CONTAINER_NAME):
