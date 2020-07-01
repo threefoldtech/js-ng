@@ -11,6 +11,15 @@ def format_config(config):
     return "\n".join([format_config_parameter(name, value) for name, value in config.items()])
 
 
+def traverse_config(name):
+    path = name.split(".")
+    config = get_config()
+    prop = config
+    for i, p in enumerate(path[:-1]):
+        prop = prop[p]
+    return config, prop, path[-1]
+
+
 @click.group()
 def config():
     pass
@@ -27,18 +36,20 @@ def list_all():
 
 
 @config.command()
-@click.option("--name")
+@click.argument("name")
 def get(name):
-    value = get_config()[name]
+    _, obj, prop = traverse_config(name)
+    value = obj[prop]
     click.echo(format_config_parameter(name, value))
 
 
 @config.command()
-@click.option("--name")
-@click.option("--value")
+@click.argument("name")
+@click.argument("value")
 def update(name, value):
-    config = get_config()
-    config[name] = value
+    config, obj, prop = traverse_config(name)
+    obj[prop] = value
+
     update_config(config)
 
     click.echo("Updated.")
