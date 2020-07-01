@@ -10,21 +10,21 @@ It is implemented using:
 Default store configured is file system, you can show current store config by doing:
 
 ```
-✗ jsctl config get --name store
+✗ jsctl config get store
 store = filesystem
 ```
 
 Get all stores configurations:
 
 ```
-✗ jsctl config get --name stores
+✗ jsctl config get stores
 stores = {'redis': {'hostname': 'localhost', 'port': 6379}, 'filesystem': {'path': '/home/abom/.config/jumpscale/secureconfig'}}
 ```
 
 For example, set current store to redis:
 
 ```
-jsctl config update --name store --value redis
+jsctl config update store redis
 ```
 
 This will use current redis config (hostname: localhost, port: 6379).
