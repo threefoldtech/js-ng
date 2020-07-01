@@ -57,10 +57,14 @@ def get(name):
 @click.argument("name")
 @click.argument("value")
 def update(name, value):
-    config, obj, prop = traverse_config(name)
-    obj[prop] = value
-
-    update_config(config)
+    try:
+        config, obj, prop = traverse_config(name)
+        obj[prop] = value
+        update_config(config)
+    except KeyError:
+        config = get_config()
+        config[name] = value
+        update_config(config)
 
     click.echo("Updated.")
 
