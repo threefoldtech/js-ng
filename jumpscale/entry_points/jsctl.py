@@ -7,14 +7,24 @@ def format_config_parameter(name, value):
     return "%s = %s" % (name, str(value))
 
 
+def print_dict(data, path):
+    for name, value in data.items():
+        if isinstance(value, dict):
+            print_dict(value, f"{path}{name}.")
+        else:
+            print(f"{path}{name} = {value}")
+
+
 def format_config(config):
-    return "\n".join([format_config_parameter(name, value) for name, value in config.items()])
+    print_dict(config, "")
 
 
 def traverse_config(name):
     path = name.split(".")
     config = get_config()
     prop = config
+    if name in config:
+        return config, prop, name
     for i, p in enumerate(path[:-1]):
         prop = prop[p]
     return config, prop, path[-1]
@@ -27,12 +37,12 @@ def config():
 
 @config.command()
 def defaults():
-    click.echo(format_config(get_default_config()))
+    format_config(get_default_config())
 
 
 @config.command()
 def list_all():
-    click.echo(format_config(get_config()))
+    format_config(get_config())
 
 
 @config.command()
