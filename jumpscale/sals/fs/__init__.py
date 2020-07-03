@@ -459,7 +459,8 @@ def make_path(path):
     """
     if not os.path.exists(path):
         os.makedirs(os.path.dirname(path), exist_ok=True)
-        os.mknod(path)
+        return pathlib.Path(path).touch()
+
 
 
 def parent(path: str) -> str:
