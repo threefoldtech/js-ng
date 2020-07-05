@@ -167,6 +167,12 @@ class StartupCmd(Base):
             exit_code, _, _ = j.sals.process.execute(cmd, die=False)
             self.reset()
             return exit_code == 0
+        elif self.process:
+            try:
+                self.process.terminate()
+                return True
+            except Exception:
+                pass
         return False
 
     def _hard_kill(self):
@@ -195,8 +201,8 @@ class StartupCmd(Base):
         timeout = timeout or self.timeout
 
         if self.is_running():
-            self._soft_kill()
-            self.wait_for_stop(die=False, timeout=timeout)
+            if self._soft_kill():
+                self.wait_for_stop(die=False, timeout=timeout)
 
         if force:
             self._hard_kill()
