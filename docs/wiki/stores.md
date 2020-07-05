@@ -32,7 +32,7 @@ We now support multiple storage backend, every backend stores the data different
 Selecting any of them can be done using the configuration file, or using `jsctl`:
 
 ```bash
-jsctl config update --name store --value redis
+jsctl config update store redis
 ```
 
 Each store have related configuration:

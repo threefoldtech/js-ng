@@ -176,7 +176,7 @@ There is a key that's auto-generated for you, to generate a new key, use `hush_k
 
 ```
 hush_keygen --name test
-jsctl config update --name=private_key_path --value="`pwd`/test.priv"
+jsctl config update private_key_path "`pwd`/test.priv"
 ```
 
 Only secret fields are encrypted by default, so, if you have a password field for example, it's better to use `fields.Secret` for it:
