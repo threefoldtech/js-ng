@@ -83,6 +83,15 @@ def get_field_property(name: str, field: fields.Field) -> property:
     as the field only describes the type and other validation/conversion options,
     but do not hold the value itself, the vale will be held in the base instance
 
+    the getter and setter will be called when an object is already created,
+    and any field is accessed:
+
+    ```python
+    car = Car()
+    print(car.color)  #=> getter will be called
+    car.color = "red"  #=> setter will be called
+    ```
+
     Args:
         name (str): field name
         field (fields.Field): field instance
@@ -90,47 +99,32 @@ def get_field_property(name: str, field: fields.Field) -> property:
     Returns:
         property: property descriptor (object)
     """
-    # in this property getter/setter method, we use an inner_name
-    # this inner name will be used with base instances
-    inner_name = f"__{name}"
 
     def getter(self):
         """
         getter method this property
 
+        will call `_get_value`, which would if the value is already defined
+        and will get the default value if not
+
         Returns:
             any: the field value
         """
-        # if computed, return the computed value
-        if field.computed:
-            return field.compute(self)
-
-        # if it's already defined, just return it
-        # we don't use hasattr here, because it uses getattr inside
-        # it causes an infinite recursion here if the attr is not found
-        # and also when __getattr__ is overridden
-        if inner_name in self.__dict__:
-            return getattr(self, inner_name)
-
-        # if default is callable, get it
-        if callable(field.default):
-            default = field.default()
-        else:
-            default = field.default
-
-        # use the actual name (not inner_name) to do validation...etc
-        setattr(self, name, default)
-        return getattr(self, name)
+        return self._get_value(name, field)
 
     def setter(self, value):
         """
         a setter method for this property
 
-        we do some checks and actions too, as we already know the field:
+        will call _set_value, which would do some checks:
 
         - validation: using field.validate_with_name
         - setting an attribute with inner_name in the base instance
-        - call `_attr_updated` of the base instance with the name of this property/field
+
+        if it's set correctly, we will:
+
+        - call `_attr_updated` of `self` with the name of this `field`
+        - call `on_update` of the `field` with `self`
 
         Args:
             value (any): a value to be set for this field
@@ -138,21 +132,7 @@ def get_field_property(name: str, field: fields.Field) -> property:
         Raises:
             fields.ValidationError: in case the value is not valid
         """
-        if field.readonly:
-            raise fields.ValidationError(f"'{name}' is a read only attribute")
-
-        # accept if this is a raw value too
-        value = field.from_raw(value)
-
-        # validate
-        field.validate_with_name(value, name)
-
-        # set current instance as parent for embedded objects/instances
-        if isinstance(field, fields.Object) and value:
-            value._set_parent(self)
-
-        # se attribute
-        setattr(self, inner_name, value)
+        self._set_value(name, field, value)
 
         # call _attr_updated and on_update handlers
         self._attr_updated(name, value)
@@ -292,6 +272,68 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
         """
         return [getattr(self, name) for name, field in self._get_fields().items() if isinstance(field, fields.Object)]
 
+    def _get_value(self, name, field):
+        """
+        get a field value
+
+        Args:
+            name (str): field name
+            field (fields.Field): field object
+
+        Returns:
+            any: field value
+        """
+        # if computed, return the computed value
+        if field.computed:
+            return field.compute(self)
+
+        # if it's already defined, just return it
+        # we don't use hasattr here, because it uses getattr inside
+        # it causes an infinite recursion here if the attr is not found
+        # and also when __getattr__ is overridden
+        inner_name = f"__{name}"
+        if inner_name in self.__dict__:
+            return getattr(self, inner_name)
+
+        # if default is callable, get it
+        if callable(field.default):
+            default = field.default()
+        else:
+            default = field.default
+
+        # use the actual name (not inner_name) to do validation and conversion...etc
+        self._set_value(name, field, default)
+        return self._get_value(name, field)
+
+    def _set_value(self, name, field, value):
+        """
+        set a field value
+
+        Args:
+            name (str): field name
+            field (fields.Field): field object
+            value (any): value
+
+        Raises:
+            fields.ValidationError: raised if the value is not valid
+        """
+        if field.readonly:
+            raise fields.ValidationError(f"'{name}' is a read only attribute")
+
+        # accept if this is a raw value too
+        value = field.from_raw(value)
+
+        # validate
+        field.validate_with_name(value, name)
+
+        # set current instance as parent for embedded objects/instances
+        if isinstance(field, fields.Object) and value:
+            value._set_parent(self)
+
+        # set as an internal attribute
+        inner_name = f"__{name}"
+        setattr(self, inner_name, value)
+
     def _get_data(self):
         """
         get a serializable dict from all values of all fields (except factories)
@@ -319,7 +361,7 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
                 # skip non-stored fields too
                 continue
 
-            value = getattr(self, name)
+            value = self._get_value(name, field)
             raw_value = field.to_raw(value)
             if isinstance(field, fields.Secret):
                 data[f"__{name}"] = raw_value
@@ -335,12 +377,12 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
         Args:
             new_data (dict): field values mapping
         """
-        field_names = self._get_fields().keys()
+        all_fields = self._get_fields()
 
         for name, value in new_data.items():
-            if name in field_names:
+            if name in all_fields:
                 try:
-                    setattr(self, name, value)
+                    self._set_value(name, all_fields[name], value)
                 except (fields.ValidationError, ValueError):
                     # should at least log validation and value errors
                     # this can happen in case of e.g. fields type change
