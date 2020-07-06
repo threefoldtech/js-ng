@@ -184,7 +184,7 @@ class GedisServer(Base):
         j.application.start("gedis")
 
         # handle signals
-        for signal_type in (SIGTERM, SIGTERM, SIGKILL):
+        for signal_type in (SIGTERM, SIGKILL):
             gevent.signal(signal_type, self.stop)
 
         # register system actor if enabled
@@ -206,7 +206,7 @@ class GedisServer(Base):
     def stop(self):
         """Stops the server
         """
-        j.logger.info("Shutting down ...")
+        j.logger.info("Shutting down...")
         self._server.stop()
 
     def _register_actor(self, actor_name: str, actor_module: BaseActor):
