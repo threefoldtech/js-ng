@@ -5,7 +5,8 @@ from collections import namedtuple
 
 from jumpscale.data.encryption import mnemonic
 from jumpscale.data.nacl.jsnacl import NACL
-from jumpscale.loader import j
+from jumpscale.data.serializers import base64
+from jumpscale.core import exceptions
 from jumpscale.tools.console import ask_choice, ask_string
 
 NETWORKS = {"mainnet": "explorer.grid.tf", "testnet": "explorer.testnet.grid.tf", "devnet": "explorer.devnet.grid.tf"}
@@ -33,7 +34,7 @@ class IdentityManager:
     def _check_keys(self, user_explorer_key, user_app):
         if not user_app:
             return True
-        pub_key_app = j.data.serializers.base64.decode(user_app["publicKey"])
+        pub_key_app = base64.decode(user_app["publicKey"])
         if binascii.unhexlify(user_explorer_key) != pub_key_app:
             return False
         return True
@@ -41,7 +42,7 @@ class IdentityManager:
     def _get_user(self):
         response = requests.get(f"https://login.threefold.me/api/users/{self.identity}")
         if response.status_code == 404:
-            raise j.core.exceptions.Value(
+            raise exceptions.Value(
                 "\nThis identity does not exist in 3bot mobile app connect, Please create an idenity first using 3Bot Connect mobile Application\n"
             )
         userdata = response.json()
@@ -53,7 +54,7 @@ class IdentityManager:
             users = resp.json()
 
             if not self._check_keys(users[0]["pubkey"], userdata):
-                raise j.core.exceptions.Value(
+                raise exceptions.Value(
                     f"\nYour 3bot on {self.explorer} seems to have been previously registered with a different public key.\n"
                     f"The identity of {self.identity} is mismatched with 3bot connect app"
                     "Please contact support.grid.tf to reset it.\n"
@@ -103,7 +104,7 @@ class IdentityManager:
                 fill_identity()
                 try:
                     user, user_app = self._get_user()
-                except j.core.exceptions.Value as e:
+                except exceptions.Value as e:
                     response = ask_choice(f"{e}What would you like to do? ", CHOICES)
                     if response == RESTART_CHOICE:
                         return False
