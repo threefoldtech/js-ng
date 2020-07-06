@@ -8,6 +8,7 @@ class ServerRack(Base):
         super().__init__()
         self._servers = dict()
         self._started = set()
+        self._running_event = event.Event()
 
     def _start(self, server_name: str):
         if server_name not in self._started:
@@ -51,6 +52,7 @@ class ServerRack(Base):
         Args:
             server_name (str, optional): server name, if None will start all the servers. Defaults to None.
         """
+        self._running_event.clear()
         if server_name:
             self._start(server_name)
         else:
@@ -58,9 +60,8 @@ class ServerRack(Base):
                 self._start(server_name)
 
         if wait:
-            forever = event.Event()
             try:
-                forever.wait()
+                self._running_event.wait()
             except KeyboardInterrupt:
                 self.stop()
 
@@ -75,6 +76,7 @@ class ServerRack(Base):
         else:
             for server_name in self._servers:
                 self._stop(server_name)
+        self._running_event.set()
 
     def is_running(self, server_name):
         return server_name in self._started
