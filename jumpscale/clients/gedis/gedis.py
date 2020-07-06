@@ -161,4 +161,8 @@ class GedisClient(Client):
 
 
 class RemoteException(Exception):
+    """
+    Remote Exception
+    """
+
     pass
