@@ -17,4 +17,4 @@ jobs:
             sudo pip3 install black docstr-coverage
             FILES="$(git diff --name-only --diff-filter=A --diff-filter=M "origin/${{github.base_ref}}" '*.py')"
             black --check $FILES
-            for FILE in $FILES; do echo $FILE; docstr-coverage $FILE or true; done
+            for FILE in $FILES; do echo $FILE; docstr-coverage $FILE | true; done
