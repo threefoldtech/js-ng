@@ -226,6 +226,7 @@ def get_js_type(type_str, default_value=None):
         "E": String,
         ## TODO: the following are totally wrong, but capturing them to be able to generate in python backend
         "email": String,
+        "guid": String,
         "T": String,
         "D": String,
         "dict": String,
