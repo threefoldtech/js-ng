@@ -1,8 +1,12 @@
 import os
 import hashlib
+import binascii
+import itertools
+import bisect
 
 from .wordlist import WORDS as wordlist
 from .exceptions import FailedChecksumError
+from jumpscale.core import exceptions
 
 
 def generate_mnemonic(strength=256, wordlist=wordlist):
@@ -45,49 +49,35 @@ def mnemonic_to_key(mnemonic, wordlist=wordlist):
         bytes: The key
     """
     words = mnemonic.split(" ")
-    indexes = list(map(lambda x: _word_index(x, wordlist), words))
-    total_length = len(indexes) * 11
-    strength = total_length * 32 // 33
-    binary_string = to_bin(indexes, 11)
-    data = binary_string[0:strength]
-    decrypted = bytes([int(data[i : i + 8], 2) for i in range(0, len(data), 8)])
-    if not _verify_checksum(decrypted, binary_string[strength:]):
-        raise FailedChecksumError("The received package is corrupt.")
-    return decrypted
-
-
-def _verify_checksum(data, checksum):
-    """Verify the passed checksum matches the data checksum
-
-    Args:
-        data (bytes): The data represented as bytes.
-        checksum (bytes): The checksum to be checked.
-
-    Returns:
-        bool: True if the checksum matches that of the data.
-    """
-    sha256_hash = hashlib.sha256(data).digest()
-    return to_bin(sha256_hash)[0 : len(data) * 8 // 32] == checksum
-
-
-def _word_index(word, wordlist=wordlist):
-    """Returns the index of the word in the wordlist
-
-    Args:
-        word (str): The word to be searched for.
-        wordlist (list[str], optional): The word list to be searched in. Defaults to wordlist.
-
-    Returns:
-        int: The index of the word.
-    """
-    lo, hi = 0, len(wordlist) - 1
-    while lo < hi:
-        mid = (lo + hi) // 2
-        if word <= wordlist[mid]:
-            hi = mid
-        else:
-            lo = mid + 1
-    return lo
+    concatLenBits = len(words) * 11
+    concatBits = [False] * concatLenBits
+    wordindex = 0
+    use_binary_search = True
+    for word in words:
+        # Find the words index in the wordlist
+        ndx = binary_search(wordlist, word) if use_binary_search else wordlist.index(word)
+        if ndx < 0:
+            raise exceptions.NotFound('Unable to find "%s" in word list.' % word)
+        # Set the next 11 bits to the value of the index.
+        for ii in range(11):
+            concatBits[(wordindex * 11) + ii] = (ndx & (1 << (10 - ii))) != 0
+        wordindex += 1
+    checksumLengthBits = concatLenBits // 33
+    entropyLengthBits = concatLenBits - checksumLengthBits
+    # Extract original entropy as bytes.
+    entropy = bytearray(entropyLengthBits // 8)
+    for ii in range(len(entropy)):
+        for jj in range(8):
+            if concatBits[(ii * 8) + jj]:
+                entropy[ii] |= 1 << (7 - jj)
+    # Take the digest of the entropy.
+    hashBytes = hashlib.sha256(entropy).digest()
+    hashBits = list(itertools.chain.from_iterable(([c & (1 << (7 - i)) != 0 for i in range(8)] for c in hashBytes)))
+    # Check all the checksum bits.
+    for i in range(checksumLengthBits):
+        if concatBits[entropyLengthBits + i] != hashBits[i]:
+            raise exceptions.Value("Failed checksum.")
+    return bytes(entropy)
 
 
 def key_to_mnemonic(key, wordlist=wordlist):
@@ -100,15 +90,17 @@ def key_to_mnemonic(key, wordlist=wordlist):
     Returns:
         str: A string of space separated words representing the mnemonic
     """
-    sha256_hash = hashlib.sha256(key).hexdigest().encode()
-    strength = len(key) * 8
-    checksum_length = strength // 32
-    total_length = strength + checksum_length
-    binary_string = (to_bin(key) + to_bin(sha256_hash)[0:checksum_length])[0:total_length]
-    sentence = ""
-    for i in range(total_length // 11):
-        sentence += " " + wordlist[int(binary_string[i * 11 : (i + 1) * 11], 2)]
-    return sentence[1:]
+    h = hashlib.sha256(key).hexdigest()
+    b = (
+        bin(int(binascii.hexlify(key), 16))[2:].zfill(len(key) * 8)
+        + bin(int(h, 16))[2:].zfill(256)[: len(key) * 8 // 32]
+    )
+    result = []
+    for i in range(len(b) // 11):
+        idx = int(b[i * 11 : (i + 1) * 11], 2)
+        result.append(wordlist[idx])
+    result_phrase = " ".join(result)
+    return result_phrase
 
 
 def to_bin(arr, bytelen=8):
@@ -125,3 +117,9 @@ def to_bin(arr, bytelen=8):
     for c in arr:
         result += ("0" * bytelen + bin(c)[2:])[-bytelen:]
     return result
+
+
+def binary_search(a, x, lo=0, hi=None):  # can't use a to specify default for hi
+    hi = hi if hi is not None else len(a)  # hi defaults to len(a)
+    pos = bisect.bisect_left(a, x, lo, hi)  # find insertion position
+    return pos if pos != hi and a[pos] == x else -1  # don't walk off the end
