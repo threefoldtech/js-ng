@@ -280,17 +280,17 @@ class EncryptedConfigStore(ConfigStore, EncryptionMixin):
         found = []
 
         for index in range(all_count):
-            name = all_names[index]
-            if name == cursor_:
+            instance_name = all_names[index]
+            if instance_name == cursor_:
                 start_search = True
 
             if not start_search:
                 continue
 
-            data = self.get(name)
+            data = self.get(instance_name)
             for name, value in query.items():
                 if name in data:
-                    data[KEY_FIELD_NAME] = name
+                    data[KEY_FIELD_NAME] = instance_name
                     target_value = data[name]
                     if isinstance(target_value, str):
                         # just a simple normalization
