@@ -86,6 +86,7 @@ Stores configuration in whoosh indexes. it supports indexing/search for the foll
 * Time (as integers)
 
 Some known issues:
+
     * Field names follow `whoosh` constraints, e.g. cannot start with underscore.
     * For `Float` fields, it has known issue, can be resolved by using integers (with compute function) or even a string for now.
 
