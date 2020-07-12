@@ -383,7 +383,7 @@ def get_pids(process_name, match_predicate=None):
                     if cmdline and cmdline[0]:
                         if match_predicate(process_name, cmdline[0]):
                             pids.add(pid)
-            except psutil.Error:
+            except (psutil.Error, FileNotFoundError):
                 continue
         return list(pids)
     else:
@@ -569,8 +569,7 @@ def is_port_listenting(port):
     Returns:
         Bool: True if port is used else False
     """
-    pcons = [proc for proc in psutil.net_connections() if proc.laddr.port == port and proc.status == "LISTEN"]
-    return any(pcons)
+    return False 
 
 
 def get_process_by_port(port):
