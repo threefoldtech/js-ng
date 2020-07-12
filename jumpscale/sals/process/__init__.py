@@ -34,7 +34,7 @@ from collections import defaultdict
 from subprocess import Popen
 
 import psutil
-
+import socket
 from jumpscale.loader import j
 
 
@@ -560,7 +560,7 @@ def kill_process_by_port(port):
         kill(pid)
 
 
-def is_port_listenting(port):
+def is_port_listening(port):
     """check if the port is being used by any process
 
     Args:
@@ -569,8 +569,9 @@ def is_port_listenting(port):
     Returns:
         Bool: True if port is used else False
     """
-    pcons = [proc for proc in psutil.net_connections() if proc.laddr.port == port and proc.status == "LISTEN"]
-    return any(pcons)
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        result = s.connect_ex(('127.0.0.1', port))
+    return result == 0
 
 
 def get_process_by_port(port):
