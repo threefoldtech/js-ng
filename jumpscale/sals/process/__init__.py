@@ -383,7 +383,7 @@ def get_pids(process_name, match_predicate=None):
                     if cmdline and cmdline[0]:
                         if match_predicate(process_name, cmdline[0]):
                             pids.add(pid)
-            except psutil.Error:
+            except (psutil.Error, FileNotFoundError):
                 continue
         return list(pids)
     else:
