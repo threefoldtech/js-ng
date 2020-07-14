@@ -7,7 +7,7 @@ from jumpscale.data.encryption import mnemonic
 from jumpscale.data.nacl.jsnacl import NACL
 from jumpscale.data.serializers import base64
 from jumpscale.core import exceptions
-from jumpscale.tools.console import ask_choice, ask_string
+from jumpscale.tools.console import ask_choice, ask_string, printcolors
 
 NETWORKS = {"mainnet": "explorer.grid.tf", "testnet": "explorer.testnet.grid.tf", "devnet": "explorer.devnet.grid.tf"}
 
@@ -49,7 +49,14 @@ class IdentityManager:
 
         resp = requests.get("https://{}/explorer/users".format(self.explorer), params={"name": self.identity})
         if resp.status_code == 404 or resp.json() == []:
-            return None, userdata
+            # creating new user
+            user = {}
+            user["name"] = userdata["doublename"]
+            user["pubkey"] = base64.decode(userdata["publicKey"]).hex()
+            printcolors(
+                f"\nWelcome {{CYAN}}{userdata['doublename']}{{WHITE}}. Creating a new record on {{CYAN}}{self.explorer}{{RESET}}.\n"
+            )
+            return user, userdata
         else:
             users = resp.json()
 
@@ -68,7 +75,7 @@ class IdentityManager:
     def _check_email(self, email):
         resp = requests.get("https://{}/explorer/users".format(self.explorer), params={"email": email})
         users = resp.json()
-        if users:
+        if users and users[0]["name"] == self.identity:
             return True
         return False
 
