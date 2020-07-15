@@ -75,9 +75,13 @@ class IdentityManager:
     def _check_email(self, email):
         resp = requests.get("https://{}/explorer/users".format(self.explorer), params={"email": email})
         users = resp.json()
-        if users and users[0]["name"] == self.identity:
+        if users:
+            if users[0]["name"] == self.identity:
+                return True
+            else:
+                return False
+        else:
             return True
-        return False
 
     def ask_identity(self, identity=None, explorer=None):
         def _fill_identity_args(identity, explorer):
