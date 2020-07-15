@@ -16,6 +16,10 @@ def create_session(session_name, kill_if_exists=False):
     return server.new_session(session_name, kill_session=kill_if_exists)
 
 
+def kill_session(session_name):
+    return server.kill_session(session_name)
+
+
 def get_js_session():
     try:
         s = server.find_where({"session_name": JS_SESSION_NAME})
