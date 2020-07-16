@@ -2,7 +2,7 @@
 name = "js-ng"
 packages = [{ include = "jumpscale" }]
 version = "11.0.0-alpha.1"
-description = ""
+description = "system automation, configuration management and RPC framework"
 authors = ["xmonader <xmonader@gmail.com>"]
 license = "MIT"
 
