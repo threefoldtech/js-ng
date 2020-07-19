@@ -6,8 +6,9 @@ from jumpscale.loader import j
 class TestLogging(TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.redis = j.tools.redis.get("test_logging")
-        cls.redis.start()
+        cls.cmd = j.tools.startupcmd.get("test_logging")
+        cls.cmd.start_cmd = "redis-server"
+        cls.cmd.start()
         j.application.start("test")
 
     def setUp(self):
@@ -18,9 +19,8 @@ class TestLogging(TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.redis.stop()
-        j.tools.redis.delete("test_logging")
-        j.core.executors.tmux.kill_session(j.core.executors.tmux.JS_SESSION_NAME)
+        cls.cmd.stop()
+        j.tools.startupcmd.delete("test_logging")
 
     def test01_redis_handler(self):
         test_records_count = j.logger.redis.max_size * 2

@@ -57,5 +57,5 @@ class TestStartupCmd(TestCase):
     def tearDown(self):
         for instance in self.instances:
             cmd = j.tools.startupcmd.find(instance)
+            cmd.stop()
             j.tools.startupcmd.delete(instance)
-        j.core.executors.tmux.kill_session(j.core.executors.tmux.JS_SESSION_NAME)
