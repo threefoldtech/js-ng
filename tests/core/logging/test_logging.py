@@ -1,10 +1,13 @@
-import unittest
+from unittest import TestCase
+
 from jumpscale.loader import j
 
 
-class TestLogging(unittest.TestCase):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+class TestLogging(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.redis = j.tools.redis.get("test_logging")
+        cls.redis.start()
         j.application.start("test")
 
     def setUp(self):
@@ -12,6 +15,12 @@ class TestLogging(unittest.TestCase):
 
     def tearDown(self):
         j.logger.redis.remove_all_records(j.application.appname)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.redis.stop()
+        j.tools.redis.delete("test_logging")
+        j.core.executors.tmux.kill_session(j.core.executors.tmux.JS_SESSION_NAME)
 
     def test01_redis_handler(self):
         test_records_count = j.logger.redis.max_size * 2
