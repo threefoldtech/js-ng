@@ -20,31 +20,30 @@ def kill_session(session_name):
     return server.kill_session(session_name)
 
 
-def get_js_session():
+def get_session(session_name):
     try:
-        s = server.find_where({"session_name": JS_SESSION_NAME})
-        if not s:
-            return create_session(JS_SESSION_NAME)
+        session = server.find_where({"session_name": session_name})
+        if not session:
+            return create_session(session_name)
     except libtmux.exc.LibTmuxException:
-        return create_session(JS_SESSION_NAME)
-    return s
+        return create_session(session_name)
+    return session
+
+
+def get_js_session():
+    return get_session(JS_SESSION_NAME)
 
 
 def get_js_window(window_name):
-    s = get_js_session()
-    w = s.find_where({"window_name": window_name})
-    if not w:
-        w = s.new_window(window_name)
-        w.rename_window(window_name)
-
-    return w
+    return get_window(session_name=JS_SESSION_NAME, window_name=window_name)
 
 
-def get_window(window_name):
-    w = server.find_where({"window_name": window_name})
-    if not w:
-        w = get_js_window(window_name)
-    return w
+def get_window(session_name, window_name):
+    session = get_session(session_name)
+    window = session.find_where({"window_name": window_name})
+    if not window:
+        window = session.new_window(window_name)
+    return window
 
 
 @cmd_from_args
@@ -56,10 +55,5 @@ def execute_in_window(cmd, window_name):
         cmd (str or list): command as a string or an argument list, e.g. `"ls -la"` or `["ls", "la"]`
         window_name (str): window name
     """
-    try:
-        server.list_sessions()
-    except:
-        logger().error("tmux isn't running")
-        server.new_session(JS_SESSION_NAME)
-    w = get_window(window_name)
-    w.attached_pane.send_keys(cmd)
+    window = get_js_window(window_name)
+    window.attached_pane.send_keys(cmd)
