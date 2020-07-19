@@ -21,11 +21,8 @@ jobs:
           sudo pip3 install poetry pytest
         
       - name: Install
-        uses: abatilo/actions-poetry@v1.5.0
-        with:
-          python_version: 3.6
-          poetry_version: 1.0.5
-          args: install
+        run: |
+          poetry install
       - name: Check tmux bin
         run: |
           which tmux
