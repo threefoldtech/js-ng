@@ -26,6 +26,10 @@ jobs:
           python_version: 3.6
           poetry_version: 1.0.5
           args: install
+      - name: Check tmux bin
+        run: |
+          which tmux
+          python3 -m pytest -sv tests/core/executors/test_tmux.py
       - name: Generate coverage report
         uses: abatilo/actions-poetry@v1.5.0
         with:
