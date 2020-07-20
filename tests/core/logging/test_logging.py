@@ -1,10 +1,15 @@
-import unittest
+from unittest import TestCase
+
 from jumpscale.loader import j
 
 
-class TestLogging(unittest.TestCase):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+class TestLogging(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.cmd = j.tools.startupcmd.get("test_logging")
+        cls.cmd.start_cmd = "redis-server"
+        cls.cmd.ports = [6379]
+        cls.cmd.start()
         j.application.start("test")
 
     def setUp(self):
@@ -12,6 +17,11 @@ class TestLogging(unittest.TestCase):
 
     def tearDown(self):
         j.logger.redis.remove_all_records(j.application.appname)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.cmd.stop()
+        j.tools.startupcmd.delete("test_logging")
 
     def test01_redis_handler(self):
         test_records_count = j.logger.redis.max_size * 2

@@ -1,7 +1,8 @@
-from jumpscale.loader import j
-from hypothesis import given
-from hypothesis.strategies import lists, integers
+from unittest import skip
 
+from hypothesis import given
+from hypothesis.strategies import integers, lists
+from jumpscale.loader import j
 
 schema = """
             @url = despiegk.test
@@ -143,6 +144,7 @@ end
 """
 
 
+@skip("https://github.com/threefoldtech/js-ng/issues/422")
 def test001_loading_schema_in_compiler():
     c = j.tools.schemac.get_compiler(schema, "python")
     assert c

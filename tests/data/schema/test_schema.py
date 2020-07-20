@@ -1,6 +1,9 @@
+from unittest import skip
+
 from jumpscale.loader import j
 
 
+@skip("https://github.com/threefoldtech/js-ng/issues/422")
 def test_schema():
     definition = """
     @url = despiegk.test

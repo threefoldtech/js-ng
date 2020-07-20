@@ -1,18 +1,19 @@
 import gevent
 
 import time
-import unittest
+from unittest import TestCase, skip
 from jumpscale.loader import j
 from tests.servers.gedis.test_actor import TestObject
 
 
 COUNT = 1000
 POOLS_COUNT = 100
-TEST_ACTOR_PATH = "/sandbox/code/github/threefoldtech/js-ng/tests/servers/gedis/test_actor.py"
-MEMORY_ACTOR_PATH = "/sandbox/code/github/threefoldtech/js-ng/tests/servers/gedis/memory_profiler.py"
+DIR_NAME = j.sals.fs.dirname(__file__)
+TEST_ACTOR_PATH = f"{DIR_NAME}/test_actor.py"
+MEMORY_ACTOR_PATH = f"{DIR_NAME}/memory_profiler.py"
 
 
-class TestGedis(unittest.TestCase):
+class TestGedis(TestCase):
     @classmethod
     def setUpClass(cls):
         server = j.servers.gedis.get("test")
@@ -64,6 +65,7 @@ class TestGedis(unittest.TestCase):
 
         self.assertEqual(self.cl.actors.memory.object_count("TestObject").result, 0)
 
+    @skip("https://github.com/threefoldtech/js-ng/issues/421")
     def test_basic(self):
         response = self.cl.actors.test.add_two_numbers(5, 15)
         self.assertEqual(response.result, 20)
