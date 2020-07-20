@@ -8,6 +8,7 @@ class TestLogging(TestCase):
     def setUpClass(cls):
         cls.cmd = j.tools.startupcmd.get("test_logging")
         cls.cmd.start_cmd = "redis-server"
+        cls.cmd.ports = [6379]
         cls.cmd.start()
         j.application.start("test")
 
