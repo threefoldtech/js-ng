@@ -17,8 +17,9 @@ jobs:
       - name: Gathering deps
         run: |
           sudo apt-get update
-          sudo apt-get install git python3-pip python3-venv python3-setuptools tmux -y
-          sudo pip3 install poetry pytest objgraph
+          sudo apt-get install -y git python3-pip python3-venv python3-setuptools tmux redis
+          sudo pip3 install poetry
+          poetry run pip3 install pytest objgraph
       - name: Install
         run: |
           poetry install
