@@ -21,7 +21,6 @@ jobs:
           sudo pip3 install poetry
       - name: Install
         run: |
-          sudo poetry update
           sudo poetry install
       - name: Generate coverage report and run tests
         run: |
