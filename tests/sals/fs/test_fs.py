@@ -47,7 +47,6 @@ class TestFS(BaseTests):
         with self.assertRaises(NotADirectoryError) as e:
             j.sals.fs.is_empty_dir("/etc/passwd")
 
-    @skip("https://github.com/threefoldtech/js-ng/issues/117")
     def test003_rm_tree(self):
         random_dir_1 = self.generate_random_text()
         random_dir_2 = self.generate_random_text()
@@ -62,7 +61,7 @@ class TestFS(BaseTests):
         j.sals.fs.rmtree("/tmp/{}".format(random_dir_1))
 
         self.info("Assert that the dir and the file have been deleted")
-        self.assertTrue(j.sals.fs.is_empty_dir("/tmp/{}".format(random_dir_1)))
+        self.assertFalse(j.sals.fs.exists("/tmp/{}".format(random_dir_1)))
 
     def test004_copy_stat(self):
         pass

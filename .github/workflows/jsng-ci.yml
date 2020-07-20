@@ -18,7 +18,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install git python3-pip python3-venv python3-setuptools tmux -y
-          sudo pip3 install poetry pytest
+          sudo pip3 install poetry pytest objgraph
       - name: Install
         run: |
           poetry install
