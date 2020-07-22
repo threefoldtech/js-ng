@@ -17,13 +17,11 @@ class TestGedis(TestCase):
     @classmethod
     def setUpClass(cls):
         server = j.servers.gedis.get("test")
+        server.actor_add("test", TEST_ACTOR_PATH)
+        server.actor_add("memory", MEMORY_ACTOR_PATH)
         gevent.spawn(server.start)
         time.sleep(3)
-
         cls.cl = j.clients.gedis.get("test")
-        cls.cl.actors.system.register_actor("test", TEST_ACTOR_PATH)
-        cls.cl.actors.system.register_actor("memory", MEMORY_ACTOR_PATH)
-        cls.cl.reload()
 
     def test01(self):
         pool = gevent.pool.Pool(POOLS_COUNT)

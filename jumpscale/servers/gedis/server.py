@@ -42,6 +42,14 @@ class GedisErrorTypes(Enum):
     BAD_REQUEST = 1
     ACTOR_ERROR = 3
     INTERNAL_SERVER_ERROR = 4
+    PERMISSION_ERROR = 5
+
+
+EXCEPTIONS_MAP = {
+    j.exceptions.Value: GedisErrorTypes.BAD_REQUEST.value,
+    j.exceptions.NotFound: GedisErrorTypes.NOT_FOUND.value,
+    j.exceptions.Permission: GedisErrorTypes.PERMISSION_ERROR.value,
+}
 
 
 class RedisConnectionAdapter:
@@ -220,14 +228,9 @@ class GedisServer(Base):
         try:
             response["result"] = method(*args, **kwargs)
 
-        except TypeError as e:
+        except Exception as e:
             response["error"] = str(e)
-            response["error_type"] = GedisErrorTypes.BAD_REQUEST.value
-
-        except:
-            ttype, tvalue, tb = sys.exc_info()
-            response["error"] = better_exceptions.format_exception(ttype, tvalue, tb)
-            response["error_type"] = GedisErrorTypes.ACTOR_ERROR.value
+            response["error_type"] = EXCEPTIONS_MAP.get(e.__class__, GedisErrorTypes.ACTOR_ERROR.value)
 
         return response
 
@@ -240,10 +243,8 @@ class GedisServer(Base):
             parser.on_connect(connection)
 
             while True:
-                response = dict(
-                    success=True, result=None, error=None, error_type=None, is_async=False, task_id=None
-                )
-                try:   
+                response = dict(success=True, result=None, error=None, error_type=None, is_async=False, task_id=None)
+                try:
                     request = parser.read_response()
 
                     if len(request) < 2:

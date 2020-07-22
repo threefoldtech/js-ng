@@ -1,3 +1,4 @@
+import json
 from jumpscale.core.base import Base, fields
 from jumpscale.loader import j
 from gevent.pool import Pool
@@ -5,7 +6,6 @@ from bottle import Bottle, abort, request, response
 from jumpscale.servers.gedis.server import GedisErrorTypes
 from gevent.pywsgi import WSGIServer
 from jumpscale.core.base import StoredFactory
-import json
 
 
 class GedisHTTPServer(Base):
@@ -27,7 +27,7 @@ class GedisHTTPServer(Base):
 
     def make_response(self, code, content):
         response.status = code
-        response.content_type = 'application/json'
+        response.content_type = "application/json"
         return json.dumps(content)
 
     def handler(self, package, actor, method):
@@ -51,6 +51,9 @@ class GedisHTTPServer(Base):
             elif response.error_type == GedisErrorTypes.BAD_REQUEST:
                 return self.make_response(400, {"error": response.error})
 
+            elif response.error_type == GedisErrorTypes.PERMISSION_ERROR:
+                return self.make_response(403, {"error": response.error})
+
             else:
                 return self.make_response(500, {"error": response.error})
 
@@ -59,6 +62,7 @@ class GedisHTTPServer(Base):
     @property
     def gevent_server(self):
         return WSGIServer((self.host, self.port), self._app, spawn=Pool())
+
 
 def export_module_as():
     return StoredFactory(GedisHTTPServer)
