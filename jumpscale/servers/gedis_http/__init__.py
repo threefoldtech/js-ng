@@ -27,7 +27,7 @@ class GedisHTTPServer(Base):
 
     def make_response(self, code, content):
         response.status = code
-        response.content_type = 'application/json'
+        response.content_type = "application/json"
         return json.dumps(content)
 
     def handler(self, package, actor, method):
@@ -40,9 +40,9 @@ class GedisHTTPServer(Base):
         method = getattr(actor, method, None)
         if not method:
             return self.make_response(400, {"error": "method not found"})
-    
+
         kwargs = request.json or dict()
-        response = method(** kwargs)
+        response = method(**kwargs)
 
         if not response.success:
             if response.error_type == GedisErrorTypes.NOT_FOUND:
@@ -50,7 +50,7 @@ class GedisHTTPServer(Base):
 
             elif response.error_type == GedisErrorTypes.BAD_REQUEST:
                 return self.make_response(400, {"error": response.error})
-            
+
             elif response.error_type == GedisErrorTypes.PERMISSION_ERROR:
                 return self.make_response(403, {"error": response.error})
 
@@ -62,6 +62,7 @@ class GedisHTTPServer(Base):
     @property
     def gevent_server(self):
         return WSGIServer((self.host, self.port), self._app, spawn=Pool())
+
 
 def export_module_as():
     return StoredFactory(GedisHTTPServer)

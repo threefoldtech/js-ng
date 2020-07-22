@@ -17,7 +17,7 @@ def actor_method(func):
         for name, value in bound.arguments.items():
             annotation = signature.parameters[name].annotation
             if annotation not in (None, inspect._empty) and not isinstance(value, annotation):
-                raise j.exceptions.Value (
+                raise j.exceptions.Value(
                     f"parameter ({name}) supposed to be of type ({annotation.__name__}), but found ({type(value).__name__})"
                 )
 
@@ -29,11 +29,10 @@ def actor_method(func):
             return_type = type(None)
 
         if not isinstance(result, return_type):
-            raise j.exceptions.Value(
-                f"method is supposed to return ({return_type}), but it returned ({type(result)})"
-            )
+            raise j.exceptions.Value(f"method is supposed to return ({return_type}), but it returned ({type(result)})")
 
         return result
+
     return wrapper
 
 

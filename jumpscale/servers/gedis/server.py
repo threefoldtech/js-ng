@@ -48,7 +48,7 @@ class GedisErrorTypes(Enum):
 EXCEPTIONS_MAP = {
     j.exceptions.Value: GedisErrorTypes.BAD_REQUEST.value,
     j.exceptions.NotFound: GedisErrorTypes.NOT_FOUND.value,
-    j.exceptions.Permission: GedisErrorTypes.PERMISSION_ERROR.value
+    j.exceptions.Permission: GedisErrorTypes.PERMISSION_ERROR.value,
 }
 
 
@@ -243,10 +243,8 @@ class GedisServer(Base):
             parser.on_connect(connection)
 
             while True:
-                response = dict(
-                    success=True, result=None, error=None, error_type=None, is_async=False, task_id=None
-                )
-                try:   
+                response = dict(success=True, result=None, error=None, error_type=None, is_async=False, task_id=None)
+                try:
                     request = parser.read_response()
 
                     if len(request) < 2:
