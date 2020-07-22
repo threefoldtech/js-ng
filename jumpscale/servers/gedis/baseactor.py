@@ -1,6 +1,7 @@
 import inspect
 import sys
 from functools import wraps
+from jumpscale.loader import j
 
 
 def actor_method(func):
@@ -8,11 +9,15 @@ def actor_method(func):
     def wrapper(*args, **kwargs):
         # verify args and kwargs types
         signature = inspect.signature(func)
-        bound = signature.bind(*args, **kwargs)
+        try:
+            bound = signature.bind(*args, **kwargs)
+        except TypeError as e:
+            raise j.exceptions.Value(str(e))
+
         for name, value in bound.arguments.items():
             annotation = signature.parameters[name].annotation
             if annotation not in (None, inspect._empty) and not isinstance(value, annotation):
-                raise TypeError(
+                raise j.exceptions.Value (
                     f"parameter ({name}) supposed to be of type ({annotation.__name__}), but found ({type(value).__name__})"
                 )
 
@@ -24,7 +29,7 @@ def actor_method(func):
             return_type = type(None)
 
         if not isinstance(result, return_type):
-            raise TypeError(
+            raise j.exceptions.Value(
                 f"method is supposed to return ({return_type}), but it returned ({type(result)})"
             )
 
