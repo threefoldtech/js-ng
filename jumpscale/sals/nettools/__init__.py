@@ -5,6 +5,7 @@ Docs for nettools
 # TODO: test *2
 
 import time
+import urllib3
 import socket
 import ipaddress
 import re
@@ -92,6 +93,28 @@ def wait_connection_test(ipaddr: str, port: int, timeout=5):
             return False
         if tcp_connection_test(ipaddr, port, timeout=2):
             return True
+
+
+def wait_http_test(url: str, timeout: int = 60) -> bool:
+    """Will wait until url is reachable
+
+    Args:
+        url (str): url
+        timeout (int, optional): how long to wait for the connection. Defaults to 60.
+
+    Returns:
+        bool: true if the test succeeds
+    """
+    for _ in range(timeout):
+        try:
+            if check_url_reachabel(url):
+                return True
+        except:
+            pass
+
+        time.sleep(1)
+    else:
+        return False
 
 
 def check_url_reachabel(url: str, timeout=5):
