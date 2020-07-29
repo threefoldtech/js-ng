@@ -6,6 +6,7 @@ and at the end, create an instance from this container class.
 """
 import importlib
 import os
+import sys
 import types
 
 import jumpscale
@@ -91,3 +92,12 @@ class J:
 
 expose_all(jumpscale, J)
 j = J()
+
+# if the alert system is enabled, register it as an error handler
+alerts_config = j.config.get("alerts")
+if alerts_config and alerts_config.get("enabled"):
+    level = alerts_config.get("level", 40)
+    j.tools.errorhandler.register_handler(j.tools.alerthandler.alert_raise, level=level)
+
+# Catch any exception and handle it using the error handler
+sys.excepthook = j.tools.errorhandler.excepthook
