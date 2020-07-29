@@ -33,7 +33,7 @@ JS-NG> config.set("level", 50)
 - `question`
 - `event_system`
 - `event_monitor`
-- `event_operato`
+- `event_operaton`
 
 
 ## APIs
