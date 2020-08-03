@@ -270,7 +270,7 @@ class EncryptedConfigStore(ConfigStore, EncryptionMixin):
         all_names = self.list_all()
         if not all_names:
             # empty result
-            return cursor_, (name for name in all_names)
+            return cursor_, 0, (name for name in all_names)
 
         all_count = len(all_names)
         if not limit_:
