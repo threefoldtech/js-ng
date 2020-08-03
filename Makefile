@@ -15,3 +15,6 @@ docs-serve:
 
 requirements.txt:
 	 poetry lock && poetry run pip freeze > $@
+
+loadtest:
+	locust --headless -u 2000 -r 20 --host https://localhost/admin/#/ -f ./examplescripts/loadtesting/admin.py
