@@ -200,15 +200,13 @@ def ptconfig(repl):
         custom binding for pudb, to allow debugging a statement and also
         post-mortem debugging in case of any exception
         """
-        import time
         b = event.cli.current_buffer
         app = get_app()
         statements = b.document.text
         if statements:
-            import linecache
-
-            linecache.cache["<string>"] = (len(statements), time.time(), statements.split("\n"), "<string>")
-            app.exit(pudb.runstatement(statements))
+            _globals = repl.get_globals()
+            _globals["_MODULE_SOURCE_CODE"] = statements
+            app.exit(pudb.runstatement(statements, globals=_globals, locals=repl.get_locals()))
             app.pre_run_callables.append(b.reset)
         else:
             pudb.pm()
