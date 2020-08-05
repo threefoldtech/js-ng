@@ -202,7 +202,8 @@ def ptconfig(repl):
         """
         b = event.cli.current_buffer
         app = get_app()
-        statements = b.document.text
+
+        statements = b.document.text.strip()
         if statements:
             _globals = repl.get_globals()
             _globals["_MODULE_SOURCE_CODE"] = statements
