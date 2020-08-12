@@ -1,6 +1,6 @@
 from random import randint
 from jumpscale.loader import j
-from .base_test import BaseTest
+from base_test import BaseTest
 
 
 class TestDockerClient(BaseTest):
@@ -47,11 +47,11 @@ class TestDockerClient(BaseTest):
         self.info("Try to get this container one time using container name")
 
         docker = self.client.get(self.DOCKER_NAME)
-        self.assertIn(output.decode(), docker.short_id)
+        self.assertIn(docker.short_id, output.decode())
 
         self.info("Try to get a container with a non valid name, and make sure that it raises an error")
-        with self.assertRaises(AttributeError) as error:
-            self.client.get(randint(1, 1000))
+        with self.assertRaises(Exception) as error:
+            self.client.get("test_docker").format(randint(1, 1000))
             self.assertTrue("No such container" in error.exception.args[0])
 
     def test02_docker_list(self):
@@ -80,10 +80,10 @@ class TestDockerClient(BaseTest):
         for i in range(len(docker_list)):
             if docker_list[i].short_id in output.decode():
                 docker_id = docker_list[i].short_id
-        self.assertIn(docker_id, output.decode())
+                self.assertIn(docker_id, output.decode())
 
         self.info("Create second container")
-        DOCKER_NAME_2 = "docker_{}".format(randint(1, 100))
+        DOCKER_NAME_2 = "docker_{}".format(randint(100, 10000))
         DOCKER_ID_2 = self.client.create(DOCKER_NAME_2, self.DOCKER_IMAGE).short_id
 
         self.info("Use list subcommand with option all=True to list all containers")
@@ -119,7 +119,7 @@ class TestDockerClient(BaseTest):
         self.assertIn("\"Running\": true", output.decode())
 
         self.info("Use start method to start docker with non exist name, should raise an error")
-        with self.assertRaises(AttributeError) as error:
+        with self.assertRaises(Exception) as error:
             self.client.start(randint(1, 1000))
             self.assertTrue("No such container" in error.exception.args[0])
 
@@ -142,7 +142,7 @@ class TestDockerClient(BaseTest):
         self.assertIn("\"Running\": false", output.decode())
 
         self.info("Use start method to start docker with non exist name, should raise an error")
-        with self.assertRaises(AttributeError) as error:
+        with self.assertRaises(Exception) as error:
             self.client.stop(randint(1, 1000))
             self.assertTrue("No such container" in error.exception.args[0])
 
@@ -162,7 +162,7 @@ class TestDockerClient(BaseTest):
         self.assertIn("exit_code=0", str(execute_command))
 
         self.info("check that file has been created correctly")
-        output, error = self.os_command("docker exec container_name  ls /tmp/")
+        output, error = self.os_command("docker exec {}  ls /tmp/".format(self.DOCKER_NAME))
         self.assertIn("test_exec", output.decode())
 
     def test06_docker_delete(self):
