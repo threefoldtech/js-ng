@@ -4,8 +4,7 @@ from base_test import BaseTest
 
 
 class TestDockerClient(BaseTest):
-
-    DOCKER_CLIENT = "docker_client_{}".format(randint(100, 10000))
+    DOCKER_CLIENT = "DOCKER_{}".format(randint(100, 10000))
     DOCKER_IMAGE = "threefoldtech/js-ng"
 
     @classmethod
@@ -21,9 +20,9 @@ class TestDockerClient(BaseTest):
         self.DOCKER_NAME = "docker_{}".format(randint(1, 100))
         self.client.run(self.DOCKER_NAME, self.DOCKER_IMAGE)
 
-    def TearDown(self):
-        self.info("Delete {} container".format(self.DOCKER_NAME))
-        self.client.delete(self.DOCKER_NAME)
+    def tearDown(self):
+        self.info("Remove all dockers which start with docker or DOCKER")
+        self.os_command("docker rm -f $(docker ps -aqf \"name=docker|DOCKER\")")
 
     @classmethod
     def tearDownClass(cls):
@@ -72,15 +71,14 @@ class TestDockerClient(BaseTest):
         output, error = self.os_command("docker ps -qf name={}".format(self.DOCKER_NAME))
         self.assertTrue(output)
 
-        self.info("Try to list this container using list subcommand with option all=False  \
-                   to list only the running container")
+        self.info("Try to list this container using list subcommand with option all=False to list only the running \
+        container")
         docker_list = self.client.list(all=False)
 
         self.info("Check the output of list command")
         for i in range(len(docker_list)):
             if docker_list[i].short_id in output.decode():
-                docker_id = docker_list[i].short_id
-                self.assertIn(docker_id, output.decode())
+                self.assertTrue(True)
 
         self.info("Create second container")
         DOCKER_NAME_2 = "docker_{}".format(randint(100, 10000))
@@ -89,12 +87,12 @@ class TestDockerClient(BaseTest):
         self.info("Use list subcommand with option all=True to list all containers")
         self.info("Check the output of list command and make sure that it lists the two containers")
         docker_list = self.client.list(all=True)
+        output, error = self.os_command("docker ps -qaf \"name=docker|DOCKER\"")
         for i in range(len(docker_list)):
             if docker_list[i].short_id in output.decode():
                 DOCKER_ID_1 = docker_list[i].short_id
                 self.assertIn(DOCKER_ID_1, output.decode())
             elif docker_list[i].short_id == DOCKER_ID_2:
-                output, error = self.os_command("docker ps -qaf name={}".format(self.DOCKER_NAME))
                 self.assertIn(DOCKER_ID_2, output.decode())
 
     def test03_docker_start(self):
@@ -209,3 +207,47 @@ class TestDockerClient(BaseTest):
             self.client.delete(DOCKER_NAME, force=False)
             self.assertTrue("Stop the container before attempting removal or force remove" in error.exception.args[0])
 
+    def test07_docker_run(self):
+        """
+        Test run docker.
+
+        **Test scenario**
+        #. Create a docker with run command. With those options:
+            1. Add hostname using hostname option.
+            2. Add environmental variable.
+        #. Check that the docker has been created correctly.
+        #. Check the environmental variable is created correctly.
+        #. Check that the hostname has been created correctly.
+        """
+
+        self.info("Create a docker with run command")
+        DOCKER_NAME = "DOCKER_{}".format(randint(150, 15000))
+        self.client.run(name=DOCKER_NAME, image=self.DOCKER_IMAGE, hostname="test_jsng", environment=["TEST=test"])
+
+        self.info("Check that the docker has been created correctly")
+        output, error = self.os_command("docker inspect {} | grep \"Running\"".format(DOCKER_NAME))
+        self.assertIn("\"Running\": true", output.decode())
+
+        self.info("Check the environmental variable is created correctly")
+        output, error = self.os_command("docker exec {} printenv | grep TEST".format(DOCKER_NAME))
+        self.assertIn("TEST=test", output.decode())
+
+        self.info("Check that the hostname has been created correctly")
+        output, error = self.os_command("docker exec {} hostname".format(DOCKER_NAME))
+        self.assertIn("test_jsng", output.decode())
+
+    def test08_docker_create(self):
+        """
+        Test run docker.
+
+        **Test scenario**
+        #. Create a docker with create method.
+        #. Check that docker has been create successfully.
+        """
+        self.info("Create a docker with create method")
+        DOCKER_NAME = "DOCKER_{}".format(randint(1000, 10000))
+        self.client.create(DOCKER_NAME, self.DOCKER_IMAGE)
+
+        self.info("Check that docker has been create successfully")
+        output, error = self.os_command("docker inspect {} | grep \"Running\"".format(DOCKER_NAME))
+        self.assertIn("\"Running\": false", output.decode())

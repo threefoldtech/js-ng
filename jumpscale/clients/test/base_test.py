@@ -15,4 +15,3 @@ class BaseTest(unittest.TestCase):
         process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         output, error = process.communicate()
         return output, error
-
