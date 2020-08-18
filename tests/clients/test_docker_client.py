@@ -25,7 +25,6 @@ class TestDockerClient(BaseTests):
 
     @classmethod
     def tearDownClass(cls):
-        cls.info("Remove Docker client")
         j.clients.docker.delete(cls.DOCKER_CLIENT_NAME)
 
     def docker_check_status(self, docker_name, status):
