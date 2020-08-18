@@ -60,7 +60,7 @@ class TestDockerClient(BaseTests):
         self.info("Try to get a container with a non valid name, and make sure that it raises an error")
         with self.assertRaises(Exception) as error:
             self.client.get("test_docker_{}".format(randint(100, 1000)))
-            self.assertTrue("No such container" in error.exception.args[0])
+            self.assertIn("No such container", error.exception.args[0])
 
     def test02_docker_list(self):
         """
@@ -98,11 +98,8 @@ class TestDockerClient(BaseTests):
         self.info("Use list subcommand with option all=True to list all containers")
         self.info("Check the output of list command and make sure that it lists the two containers")
         docker_list = self.client.list(all=True)
-        self.assertIn(
-            DOCKER_ID_1 and DOCKER_ID_2,
-            str(docker_list),
-            "{} and {} isn't in the docker list".format(DOCKER_NAME_2, self.DOCKER_NAME),
-        )
+        self.assertIn(DOCKER_ID_1, str(docker_list), "{} doesn't exist in the docker list".format(self.DOCKER_NAME))
+        self.assertIn(DOCKER_ID_2, str(docker_list), "{} doesn't exist in the docker list".format(DOCKER_NAME_2))
 
     def test03_docker_start(self):
         """
