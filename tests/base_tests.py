@@ -8,8 +8,8 @@ class BaseTests(TestCase):
     LOGGER = logger
 
     def setUp(self):
-        print('\t')
-        self.info('Test case : {}'.format(self._testMethodName))
+        print("\t")
+        self.info("Test case : {}".format(self._testMethodName))
 
     def tearDown(self):
         pass

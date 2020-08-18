@@ -21,7 +21,7 @@ class TestDockerClient(BaseTests):
 
     def tearDown(self):
         self.info("Remove all dockers which start with docker or DOCKER")
-        self.os_command("docker rm -f $(docker ps -aqf \"name=docker|DOCKER\")")
+        self.os_command('docker rm -f $(docker ps -aqf "name=docker|DOCKER")')
 
     @classmethod
     def tearDownClass(cls):
@@ -32,8 +32,8 @@ class TestDockerClient(BaseTests):
         Function to check docker status, if it's running or not.
         Returns: True if the status is correct, and False otherwise.
         """
-        output, error = self.os_command("docker inspect {} | grep \"Running\"".format(docker_name))
-        if "\"Running\": {}".format(status) in output:
+        output, error = self.os_command('docker inspect {} | grep "Running"'.format(docker_name))
+        if '"Running": {}'.format(status) in output:
             return True
         else:
             return False
@@ -98,8 +98,11 @@ class TestDockerClient(BaseTests):
         self.info("Use list subcommand with option all=True to list all containers")
         self.info("Check the output of list command and make sure that it lists the two containers")
         docker_list = self.client.list(all=True)
-        self.assertIn(DOCKER_ID_1 and DOCKER_ID_2, str(docker_list), "{} and {} isn't in the docker list"
-                      .format(DOCKER_NAME_2, self.DOCKER_NAME))
+        self.assertIn(
+            DOCKER_ID_1 and DOCKER_ID_2,
+            str(docker_list),
+            "{} and {} isn't in the docker list".format(DOCKER_NAME_2, self.DOCKER_NAME),
+        )
 
     def test03_docker_start(self):
         """
@@ -194,7 +197,7 @@ class TestDockerClient(BaseTests):
         self.assertTrue(self.client.delete(self.DOCKER_NAME, force=True))
 
         self.info("Check that the container has been deleted correctly")
-        output, error = self.os_command("docker ps -a | grep -w \"{}\"".format(self.DOCKER_NAME))
+        output, error = self.os_command('docker ps -a | grep -w "{}"'.format(self.DOCKER_NAME))
         self.assertFalse(output)
 
         self.info("Create a stopped container")
@@ -208,7 +211,7 @@ class TestDockerClient(BaseTests):
         self.assertTrue(self.client.delete(DOCKER_NAME, force=False))
 
         self.info("Check that the container has been deleted correctly")
-        output, error = self.os_command("docker ps -a | grep -w \"{}\"".format(DOCKER_NAME))
+        output, error = self.os_command('docker ps -a | grep -w "{}"'.format(DOCKER_NAME))
         self.assertFalse(output)
 
         self.info("Create a running container")
