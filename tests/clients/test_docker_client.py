@@ -1,6 +1,6 @@
 from random import randint
 from jumpscale.loader import j
-from base_test import BaseTests
+from tests.base_tests import BaseTests
 
 
 class TestDockerClient(BaseTests):
