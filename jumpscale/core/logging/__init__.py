@@ -1,6 +1,6 @@
 def export_module_as():
 
-    from jumpscale.god import j
+    from jumpscale.loader import j
     from .logging import Logger, RedisLogHandler, LogHandler
 
     logger = Logger()

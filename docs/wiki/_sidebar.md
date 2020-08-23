@@ -9,11 +9,16 @@
     * [API](generated_apis.md)
 * Tutorials
     * [Interacting with Filesystem](./tutorials/salfs.md)
+    * [Platform information](./tutorials/platforminfo.md)
     * [Interacting with configurations](./configmgmt.md)
     * [Developing a SAL](./tutorials/developing_sal.md)
     * [Developing a client](./tutorials/developing_client.md)
     * Developing a Builder
     * [Using jsync](./tutorials/jsync.md)
+    * [Using Startup Commands](./tutorials/startup_commands.md)
+    * [Using Tmux](./tutorials/tmux.md)
+    * [Github Actions](./tutorials/githubactions-ci.md)
+    * [Docker Images](./tutorials/docker_images.md)
 * Developers
     * Structure
     * [Developer setup](./devsetup.md)
@@ -23,6 +28,7 @@
     * [Interacting with the development shell: jsng](./jsng_shell.md)
     * [Configuration Management](./configmgmt.md)
     * [Base Classes and Hierarchical Configurations](./baseclasses.md)
+    * [Store backend and search](./stores.md)
     * [Extending Jumpscale](./extend_j.md)
     * [Adding a new command](./distributing_cmds.md)
     * [Executors](./executors.md)
@@ -33,8 +39,12 @@
     * [RPC](./rpc.md)
     * [JS-NG Shell](./jsng_shell.md)
     * [API](generated_apis.md)
+    * [Cookiecutter: standalone extensions](./project_based_on_jsng.md)
+    * [SchemaC: migrate JSX schemas](./schemac.md)
     * Builders
     * [Github actions](./githubactions.md)
+
+
 * [Specs](specs.md)
     * [Poetry](poetry.md)
     * [God object and namespaces](god_object_namespaces_concepts.md)

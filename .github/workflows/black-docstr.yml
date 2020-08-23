@@ -1,5 +1,5 @@
 
-name: jsng-ci
+name: black-docstr
 
 on: pull_request
 jobs:
@@ -8,6 +8,7 @@ jobs:
         steps:
         - uses: actions/checkout@v2
         - run: |
+            apt-get update && apt-get install git -y
             git fetch --no-tags --prune --depth=1 origin +refs/heads/*:refs/remotes/origin/*
         - name: Running black and docstr-coverage check
           run: |
@@ -15,5 +16,5 @@ jobs:
             sudo apt-get install git python3-pip -y
             sudo pip3 install black docstr-coverage
             FILES="$(git diff --name-only --diff-filter=A --diff-filter=M "origin/${{github.base_ref}}" '*.py')"
-            black --check $FILES
-            for FILE in $FILES; do echo $FILE; docstr-coverage $FILE; done
+            black --check -l 120 -t py37 --exclude 'templates' $FILES
+            for FILE in $FILES; do echo $FILE; docstr-coverage $FILE || true; done

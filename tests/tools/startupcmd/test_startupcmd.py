@@ -1,9 +1,10 @@
-import unittest
+from time import sleep
+from unittest import TestCase
 
-from jumpscale.god import j
+from jumpscale.loader import j
 
 
-class TestStartupCmd(unittest.TestCase):
+class TestStartupCmd(TestCase):
     def setUp(self):
         self.instances = []
         self.run_cmd = "python3 -m http.server 0"
@@ -21,10 +22,9 @@ class TestStartupCmd(unittest.TestCase):
 
     def test001_startup_cmd(self):
         cmd = self._get_instance()
-
         cmd.start_cmd = self.run_cmd
-
         cmd.start()
+        sleep(1)
 
         self.assertTrue(cmd.is_running())
         self.assertTrue(cmd.pid)
@@ -35,31 +35,27 @@ class TestStartupCmd(unittest.TestCase):
         self.assertTrue(cmd.is_running())
 
         cmd.stop()
-
         self.assertFalse(cmd.pid)
         self.assertFalse(cmd.process)
-
         self.assertFalse(cmd.is_running())
 
     def test002_attach_cmd(self):
         attached_cmd = self._get_instance()
-
         attached_cmd.start_cmd = self.run_cmd
-
         attached_cmd.start()
+        sleep(1)
 
         cmd = self._get_instance()
-
         cmd.ports = [self._get_port(attached_cmd.process)]
 
         self.assertTrue(cmd.is_running())
-
         self.assertTrue(cmd.process)
 
         cmd.stop()
-
         self.assertFalse(cmd.is_running())
 
     def tearDown(self):
         for instance in self.instances:
+            cmd = j.tools.startupcmd.find(instance)
+            cmd.stop()
             j.tools.startupcmd.delete(instance)

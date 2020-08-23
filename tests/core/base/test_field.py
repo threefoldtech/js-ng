@@ -106,7 +106,7 @@ class TestFields(unittest.TestCase):
 
     def test_ipaddress_network(self):
         """Success scenario for ipaddress network validation"""
-        ipaddress = fields.IPAddress("192.168.0.0/28")
+        ipaddress = fields.IPRange("192.168.0.0/28")
         self.assertEqual(ipaddress.default, "192.168.0.0/28")
         self.assertIsNone(ipaddress.validate("192.168.0.0/28"))
 
@@ -167,3 +167,20 @@ class TestFields(unittest.TestCase):
         self.assertEqual(time.default, "12:30")
         with self.assertRaises(ValidationError):
             time.validate("2020-12-03")
+
+    def test_required_and_empty(self):
+        field1 = fields.Json(required=True)
+        field2 = fields.Json(required=True, allow_empty=True)
+        field3 = fields.Json(required=True, allow_empty=False)
+        field4 = fields.Json(required=False, allow_empty=False)
+
+        with self.assertRaises(ValidationError):
+            field1.validate(None)
+
+        field2.validate("")
+        field3.validate("null")
+
+        field4.validate(None)
+
+        with self.assertRaises(ValidationError):
+            field4.validate("")

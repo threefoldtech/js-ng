@@ -1,4 +1,4 @@
-from jumpscale.god import j
+from jumpscale.loader import j
 from enum import Enum
 from jumpscale.core.base import Base, fields
 from .location import Location
@@ -47,8 +47,8 @@ class OpenRestyServer(Base):
     status = fields.Enum(Status)
     websites = fields.Factory(Website)
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self._cmd = None
         self._path_web = None
         self._path_cfg_dir = None
@@ -127,7 +127,7 @@ class OpenRestyServer(Base):
         if reset or self.status == "init":
             # get weblib
             weblibs_path = j.tools.git.ensure_repo(
-                "https://github.com/js-next/js-weblibs"  # Place holder repo might be changed
+                "https://github.com/threefoldtech/js-weblibs"  # Place holder repo might be changed
             )
 
             # copy the templates to the right location

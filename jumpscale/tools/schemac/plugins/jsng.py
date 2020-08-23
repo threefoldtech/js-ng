@@ -3,7 +3,6 @@
 """
 
 from .plugin import Plugin
-from jumpscale.god import j
 
 types_map = {
     "": "String",
@@ -19,22 +18,29 @@ types_map = {
     "LO": "List",
     "E": "Enum",
     "D": "DateTime",
-    "T": "Time",
+    "T": "Date",
+    "guid": "GUID",
     "email": "Email",
     "dict": "Object",
     "ipaddr": "IPAddress",
     "ipaddress": "IPAddress",
-    "iprange": "IPAddress",
+    "iprange": "IPRange",
     "json": "Json",
     "bytes": "Bytes",
+    "I64": "Float",
 }
 
 
 def get_prop_line(prop):
     prop_type = prop.prop_type
+    if prop_type == "B":
+        if prop.defaultvalue.lower() == "true":
+            prop.defaultvalue = "True"
+        elif prop.defaultvalue.lower() == "false":
+            prop.defaultvalue = "False"
+
     python_type = types_map.get(prop_type)
     line = f"{prop.name} = "
-
     # print(f"\n\n{prop.name} => {prop} \n\n")
     # primitive with a default or not.
     if prop_type == "E":
@@ -44,13 +50,13 @@ def get_prop_line(prop):
     elif prop_type == "LO" and prop.defaultvalue and prop.defaultvalue != "[]":
         line += f"fields.List(fields.Object({prop.url_to_class_name}))"
     elif prop_type == "LO" and not prop.defaultvalue:
-        line += f"fields.List(fields.Object(Base))"
+        line += "fields.List(fields.Object(Base))"
     elif python_type == "L" and not prop.defaultvalue:
-        line += f" fields.List(fields.Object())"
+        line += " fields.List(fields.Object())"
     elif python_type == "L" and prop.defaultvalue:
         line += f" fields.List(fields.Object({prop.defaultvalue}))"
-    elif len(prop_type) > 1 and prop_type[0] == "L" and prop_type[1] != "O":
-        line += f"fields.{python_type}(fields.{types_map[prop_type[1:]]}())"
+    elif len(prop_type) > 1 and prop_type[0] == "L":
+        line += f"fields.List(fields.{types_map[prop_type[1:]]}())"
     elif prop_type in ["I", "F", "B"] and not prop.defaultvalue:
         line += f"fields.{python_type}()"
     elif prop_type in ["I", "F", "B"] and prop.defaultvalue:
@@ -60,17 +66,9 @@ def get_prop_line(prop):
     elif prop_type in ["T", "D"]:
         line += f"fields.{types_map[prop_type]}()"
     elif prop_type == "dict":
-        line += f"fields.Typed(dict)"
-    elif prop_type == "email":
-        line += f"fields.Email()"
+        line += "fields.Typed(dict)"
     elif prop_type in ["ipaddress", "ipaddr", "iprange"] and prop.defaultvalue:
-        line += f"fields.IPAddress(default={prop.defaultvalue})"
-    elif prop_type in ["ipaddress", "ipaddr", "iprange"] and not prop.defaultvalue:
-        line += f"fields.IPAddress()"
-    elif prop_type == "json":
-        line += f"fields.Json()"
-    elif prop_type == "bytes":
-        line += f"fields.Bytes()"
+        line += f'fields.{python_type}(default="{prop.defaultvalue}")'
     else:
         line += f"fields.{python_type}()"
 

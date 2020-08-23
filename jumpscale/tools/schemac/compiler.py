@@ -2,7 +2,7 @@
 
 """
 
-from jumpscale.god import j
+from jumpscale.loader import j
 import re
 
 from .plugins import CrystalGenerator, JSNGGenerator

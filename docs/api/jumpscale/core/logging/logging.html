@@ -29,7 +29,7 @@ import json
 
 from abc import ABC, abstractmethod
 
-from jumpscale.god import j
+from jumpscale.loader import j
 
 
 LEVELS = {
@@ -184,7 +184,7 @@ class RedisLogHandler(LogHandler):
 
     def _handle(self, message: str, **kwargs):
         &#34;&#34;&#34;Logging handler
-        
+
         Arguments:
             message {str} -- message string
         &#34;&#34;&#34;
@@ -207,10 +207,10 @@ class RedisLogHandler(LogHandler):
 
     def records_count(self, appname: str = &#34;init&#34;) -&gt; int:
         &#34;&#34;&#34;Gets total number of the records of the app
-        
+
         Arguments:
             appname {str} -- app name
-        
+
         Returns:
             init -- total number of the records
         &#34;&#34;&#34;
@@ -221,11 +221,11 @@ class RedisLogHandler(LogHandler):
 
     def record_get(self, identifier: int, appname: str = &#34;init&#34;) -&gt; dict:
         &#34;&#34;&#34;Get app log record by its identifier
-        
+
         Arguments:
             identifier {int} -- record identifier
             appname {str} -- app name
-        
+
         Returns:
             dict -- requested log record
         &#34;&#34;&#34;
@@ -248,7 +248,7 @@ class RedisLogHandler(LogHandler):
 
     def remove_all_records(self, appname: str):
         &#34;&#34;&#34;Delete all app&#39;s log records
-        
+
         Arguments:
             appname {str} -- app name
         &#34;&#34;&#34;
@@ -260,17 +260,17 @@ class RedisLogHandler(LogHandler):
 
     def tail(self, appname: str = &#34;init&#34;, limit: int = None) -&gt; iter:
         &#34;&#34;&#34;Tail records
-        
+
         Keyword Arguments:
             appname (str) -- appname (default: {&#34;&#34;})
             limit (int) -- max number of record to be returned (default: {None})
-        
+
         Yields:
             iter -- iterator of the requested logs
         &#34;&#34;&#34;
         if limit:
             limit = limit - 1
-         
+
         records = self._db.lrange(self._rkey % appname, 0, limit or -1)
         for record in records:
             yield json.loads(record)</code></pre>
@@ -590,7 +590,7 @@ takes the same parameters of loguru.logger.add</p></section>
 
     def _handle(self, message: str, **kwargs):
         &#34;&#34;&#34;Logging handler
-        
+
         Arguments:
             message {str} -- message string
         &#34;&#34;&#34;
@@ -613,10 +613,10 @@ takes the same parameters of loguru.logger.add</p></section>
 
     def records_count(self, appname: str = &#34;init&#34;) -&gt; int:
         &#34;&#34;&#34;Gets total number of the records of the app
-        
+
         Arguments:
             appname {str} -- app name
-        
+
         Returns:
             init -- total number of the records
         &#34;&#34;&#34;
@@ -627,11 +627,11 @@ takes the same parameters of loguru.logger.add</p></section>
 
     def record_get(self, identifier: int, appname: str = &#34;init&#34;) -&gt; dict:
         &#34;&#34;&#34;Get app log record by its identifier
-        
+
         Arguments:
             identifier {int} -- record identifier
             appname {str} -- app name
-        
+
         Returns:
             dict -- requested log record
         &#34;&#34;&#34;
@@ -654,7 +654,7 @@ takes the same parameters of loguru.logger.add</p></section>
 
     def remove_all_records(self, appname: str):
         &#34;&#34;&#34;Delete all app&#39;s log records
-        
+
         Arguments:
             appname {str} -- app name
         &#34;&#34;&#34;
@@ -666,17 +666,17 @@ takes the same parameters of loguru.logger.add</p></section>
 
     def tail(self, appname: str = &#34;init&#34;, limit: int = None) -&gt; iter:
         &#34;&#34;&#34;Tail records
-        
+
         Keyword Arguments:
             appname (str) -- appname (default: {&#34;&#34;})
             limit (int) -- max number of record to be returned (default: {None})
-        
+
         Yields:
             iter -- iterator of the requested logs
         &#34;&#34;&#34;
         if limit:
             limit = limit - 1
-         
+
         records = self._db.lrange(self._rkey % appname, 0, limit or -1)
         for record in records:
             yield json.loads(record)</code></pre>
@@ -738,11 +738,11 @@ appname {str} &ndash; app name</p>
 <summary>Source code</summary>
 <pre><code class="python">def record_get(self, identifier: int, appname: str = &#34;init&#34;) -&gt; dict:
     &#34;&#34;&#34;Get app log record by its identifier
-    
+
     Arguments:
         identifier {int} -- record identifier
         appname {str} -- app name
-    
+
     Returns:
         dict -- requested log record
     &#34;&#34;&#34;
@@ -780,10 +780,10 @@ appname {str} &ndash; app name</p>
 <summary>Source code</summary>
 <pre><code class="python">def records_count(self, appname: str = &#34;init&#34;) -&gt; int:
     &#34;&#34;&#34;Gets total number of the records of the app
-    
+
     Arguments:
         appname {str} -- app name
-    
+
     Returns:
         init -- total number of the records
     &#34;&#34;&#34;
@@ -804,7 +804,7 @@ appname {str} &ndash; app name</p>
 <summary>Source code</summary>
 <pre><code class="python">def remove_all_records(self, appname: str):
     &#34;&#34;&#34;Delete all app&#39;s log records
-    
+
     Arguments:
         appname {str} -- app name
     &#34;&#34;&#34;
@@ -832,17 +832,17 @@ limit (int) &ndash; max number of record to be returned (default: {None})</p>
 <summary>Source code</summary>
 <pre><code class="python">def tail(self, appname: str = &#34;init&#34;, limit: int = None) -&gt; iter:
     &#34;&#34;&#34;Tail records
-    
+
     Keyword Arguments:
         appname (str) -- appname (default: {&#34;&#34;})
         limit (int) -- max number of record to be returned (default: {None})
-    
+
     Yields:
         iter -- iterator of the requested logs
     &#34;&#34;&#34;
     if limit:
         limit = limit - 1
-     
+
     records = self._db.lrange(self._rkey % appname, 0, limit or -1)
     for record in records:
         yield json.loads(record)</code></pre>

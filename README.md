@@ -1,8 +1,9 @@
 # js-ng
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/js-next/js-ng/development?filepath=docs%2Fnotebooks)
+
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/threefoldtech/js-ng/development?filepath=docs%2Fnotebooks)
 ![[https://pypi.python.org/pypi/js-ng](pypi)](https://img.shields.io/pypi/v/js-ng.svg)
-![[https://travis-ci.org/js-next/js-ng]](https://travis-ci.org/js-next/js-ng.png)
-![[https://codecov.io/gh/js-next/js-ng]](https://codecov.io/gh/js-next/js-ng/branch/development/graph/badge.svg)
+[![Actions Status](https://github.com/threefoldtech/js-ng/workflows/jsng-ci/badge.svg?query=branch%3Adevelopment)](https://github.com/threefoldtech/js-ng/actions?query=branch%3Adevelopment)
+![[https://codecov.io/gh/threefoldtech/js-ng]](https://codecov.io/gh/threefoldtech/js-ng/branch/development/graph/badge.svg)
 
 config management/automation framework
 
@@ -59,11 +60,11 @@ python3 -m pip install setuptools -U
 
 ## API Docs
 
-[browsable](https://js-next.github.io/js-ng/api/jumpscale/) at [https://js-next.github.io/js-ng/api/jumpscale/](https://js-next.github.io/js-ng/api/jumpscale/)
+[browsable](https://threefoldtech.github.io/js-ng/api/jumpscale/) at [https://threefoldtech.github.io/js-ng/api/jumpscale/](https://threefoldtech.github.io/js-ng/api/jumpscale/)
 
 ## Wiki
 
-We already prepared a docsify [wiki](https://js-next.github.io/js-ng/wiki) website 
+We already prepared a docsify [wiki](https://threefoldtech.github.io/js-ng/wiki) website
 
 ## Contribution
 

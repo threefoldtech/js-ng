@@ -83,6 +83,15 @@ def get_field_property(name: str, field: fields.Field) -> property:
     as the field only describes the type and other validation/conversion options,
     but do not hold the value itself, the vale will be held in the base instance
 
+    the getter and setter will be called when an object is already created,
+    and any field is accessed:
+
+    ```python
+    car = Car()
+    print(car.color)  #=> getter will be called
+    car.color = "red"  #=> setter will be called
+    ```
+
     Args:
         name (str): field name
         field (fields.Field): field instance
@@ -90,35 +99,32 @@ def get_field_property(name: str, field: fields.Field) -> property:
     Returns:
         property: property descriptor (object)
     """
-    # in this property getter/setter method, we use an inner_name
-    # this inner name will be used with base instances
-    inner_name = f"__{name}"
 
     def getter(self):
         """
         getter method this property
 
+        will call `_get_value`, which would if the value is already defined
+        and will get the default value if not
+
         Returns:
             any: the field value
         """
-        # if it's already defined, just return it
-        if hasattr(self, inner_name):
-            return getattr(self, inner_name)
-
-        # if not, it will just return the default value of the field
-        # accept raw value as default too
-        return field.from_raw(field.default)
+        return self._get_value(name, field)
 
     def setter(self, value):
         """
         a setter method for this property
 
-        we do some checks and actions too, as we already know the field:
+        will call _set_value, which would do some checks:
 
-        - validation: using field.validate
-        - coversion: using field.from_raw
+        - validation: using field.validate_with_name
         - setting an attribute with inner_name in the base instance
-        - call `_attr_updated` of the base instance with the name of this property/field
+
+        if it's set correctly, we will:
+
+        - call `_attr_updated` of `self` with the name of this `field`
+        - call `on_update` of the `field` with `self`
 
         Args:
             value (any): a value to be set for this field
@@ -126,22 +132,12 @@ def get_field_property(name: str, field: fields.Field) -> property:
         Raises:
             fields.ValidationError: in case the value is not valid
         """
-        if field.readonly:
-            raise fields.ValidationError(f"'{name}' is a read only attribute")
+        self._set_value(name, field, value)
 
-        # accept if this is a raw value too
-        value = field.from_raw(value)
-
-        # validate
-        field.validate(value)
-
-        # set current instance as parent for embedded objects/instances
-        if isinstance(field, fields.Object):
-            value.parent = self
-
-        # se attribute
-        setattr(self, inner_name, value)
+        # call _attr_updated and on_update handlers
         self._attr_updated(name, value)
+        if field.trigger_updates:
+            field.on_update(self, value)
 
     return property(fget=getter, fset=setter)
 
@@ -227,17 +223,18 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
 
         self._factories = {}
 
+        # now we create factories
         for name, field in self._get_fields().items():
             if isinstance(field, fields.Factory):
-                # for factory fields, we need to create a new factory with the given factory_type
                 value = field.factory_type(field.type, name_=name, parent_instance_=self)
                 self._factories[name] = value
-            else:
-                value = values.get(name, field.from_raw(field.default))
+                setattr(self, f"__{name}", value)
+                # if provided in values, remove it, as it's not needed
+                if name in values:
+                    values.pop(name)
 
-            # accept raw as a default value
-            # and set inner value, so it should be availale from the start
-            setattr(self, f"__{name}", value)
+        # setting other values
+        self._set_data(values)
 
     def _get_fields(self):
         """
@@ -247,6 +244,15 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
             dict: fields dict as {name: field object}
         """
         return self._fields
+
+    def _get_computed_fields(self):
+        """
+        get current defined field objects with compute function
+
+        Returns:
+            dict: fields dict as {name: field object}
+        """
+        return {name: field for name, field in self._fields.items() if field.computed}
 
     def _get_factories(self):
         """
@@ -265,6 +271,68 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
             list: list of `Base` objects
         """
         return [getattr(self, name) for name, field in self._get_fields().items() if isinstance(field, fields.Object)]
+
+    def _get_value(self, name, field):
+        """
+        get a field value
+
+        Args:
+            name (str): field name
+            field (fields.Field): field object
+
+        Returns:
+            any: field value
+        """
+        # if computed, return the computed value
+        if field.computed:
+            return field.compute(self)
+
+        # if it's already defined, just return it
+        # we don't use hasattr here, because it uses getattr inside
+        # it causes an infinite recursion here if the attr is not found
+        # and also when __getattr__ is overridden
+        inner_name = f"__{name}"
+        if inner_name in self.__dict__:
+            return getattr(self, inner_name)
+
+        # if default is callable, get it
+        if callable(field.default):
+            default = field.default()
+        else:
+            default = field.default
+
+        # use the actual name (not inner_name) to do validation and conversion...etc
+        self._set_value(name, field, default)
+        return self._get_value(name, field)
+
+    def _set_value(self, name, field, value):
+        """
+        set a field value
+
+        Args:
+            name (str): field name
+            field (fields.Field): field object
+            value (any): value
+
+        Raises:
+            fields.ValidationError: raised if the value is not valid
+        """
+        if field.readonly:
+            raise fields.ValidationError(f"'{name}' is a read only attribute")
+
+        # accept if this is a raw value too
+        value = field.from_raw(value)
+
+        # validate
+        field.validate_with_name(value, name)
+
+        # set current instance as parent for embedded objects/instances
+        if isinstance(field, fields.Object) and value:
+            value._set_parent(self)
+
+        # set as an internal attribute
+        inner_name = f"__{name}"
+        setattr(self, inner_name, value)
 
     def _get_data(self):
         """
@@ -289,7 +357,11 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
             if isinstance(field, fields.Factory):
                 # skip for factories for now
                 continue
-            value = getattr(self, name)
+            if not field.stored:
+                # skip non-stored fields too
+                continue
+
+            value = self._get_value(name, field)
             raw_value = field.to_raw(value)
             if isinstance(field, fields.Secret):
                 data[f"__{name}"] = raw_value
@@ -305,10 +377,12 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
         Args:
             new_data (dict): field values mapping
         """
-        for name, field in self._get_fields().items():
-            if name in new_data:
+        all_fields = self._get_fields()
+
+        for name, value in new_data.items():
+            if name in all_fields:
                 try:
-                    setattr(self, f"__{name}", field.from_raw(new_data[name]))
+                    self._set_value(name, all_fields[name], value)
                 except (fields.ValidationError, ValueError):
                     # should at least log validation and value errors
                     # this can happen in case of e.g. fields type change
@@ -330,7 +404,7 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
         validate all fields of current instance
         """
         for name, field in self._get_fields().items():
-            field.validate(getattr(self, name))
+            field.validate_with_name(getattr(self, name), name)
 
     @property
     def parent(self):
@@ -380,6 +454,18 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
         Returns:
             Base: an instance from current `Base` type
         """
-        instance = cls()
-        instance._set_data(data)
-        return instance
+        return cls(**data)
+
+    def __eq__(self, other):
+        """
+        compare self to `other`, which must be of the same type.
+
+        this just compares the data of two objects.
+
+        Args:
+            other (Base): other object of the same type of `self`
+
+        Returns:
+            bool: `True` if equal, `False` otherwise
+        """
+        return type(self) == type(other) and self.to_dict() == other.to_dict()

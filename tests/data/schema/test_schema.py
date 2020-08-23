@@ -1,6 +1,9 @@
-from jumpscale.god import j
+from unittest import skip
+
+from jumpscale.loader import j
 
 
+@skip("https://github.com/threefoldtech/js-ng/issues/422")
 def test_schema():
     definition = """
     @url = despiegk.test
@@ -11,10 +14,10 @@ def test_schema():
 
 
     obj = (O)!7mada.test
-    
+
     date_start = 0 (I)
-    
-    description* = "hello world"        
+
+    description* = "hello world"
     description2 ** = 'creature asd"asd ,xzc'(S)
     llist4*** = [1,2,3] (LI)
     llist5 = [1,2,3] (LI)

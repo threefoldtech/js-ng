@@ -13,11 +13,11 @@ from jumpscale.servers.gedis.baseactor import BaseActor
 class Example(BaseActor):
     def add_two_ints(self, x: int, y: int) -> int:
         """Adds two ints
-        
+
         Arguments:
             x {int} -- first int
             y {int} -- second int
-        
+
         Returns:
             int -- the sum of the two ints
         """
@@ -25,11 +25,11 @@ class Example(BaseActor):
 
     def concate_two_strings(self, x: str, y: str) -> str:
         """Concate two strings
-        
+
         Arguments:
             x {str} -- first string
             y {str} -- second string
-        
+
         Returns:
             str -- the concate of the two strings
         """
@@ -42,7 +42,7 @@ Actor = Example
 ### Starting the server and loading actors
 ``` python
 JS-NG> server = j.servers.gedis.get("main")
-JS-NG> server.actor_add("example", "/sandbox/code/github/js-next/js-ng/jumpscale/servers/gedis/example_actor.py")
+JS-NG> server.actor_add("example", "/sandbox/code/github/threefoldtech/js-ng/jumpscale/servers/gedis/example_actor.py")
 JS-NG> server.start()
 ```
 
@@ -65,7 +65,7 @@ Here is an example actor
 ```python
 from jumpscale.servers.gedis.baseactor import BaseActor
 from typing import Sequence
-from jumpscale.god import j
+from jumpscale.loader import j
 import inspect, sys
 
 class TestObject:
@@ -82,11 +82,11 @@ class TestObject:
 class Example(BaseActor):
     def add_two_ints(self, x: int, y: int) -> int:
         """Adds two ints
-        
+
         Arguments:
             x {int} -- first int
             y {int} -- second int
-        
+
         Returns:
             int -- the sum of the two ints
         """
@@ -94,11 +94,11 @@ class Example(BaseActor):
 
     def concate_two_strings(self, x: str, y: str) -> str:
         """Concate two strings
-        
+
         Arguments:
             x {str} -- first string
             y {str} -- second string
-        
+
         Returns:
             str -- the concate of the two strings
         """
@@ -109,7 +109,7 @@ class Example(BaseActor):
 
         Arguments:
             myobj {TestObject} -- the object to be modified
-        
+
         Returns:
             TestObject -- modified object
         """
@@ -119,27 +119,27 @@ class Example(BaseActor):
 Actor = Example
 
 ```
-This actor has `add_two_ints`, `concate_two_strings`, and `modify_objet` methods. The first two are pretty basic 
+This actor has `add_two_ints`, `concate_two_strings`, and `modify_objet` methods. The first two are pretty basic
 
-Let's do a walkthrough and check the invocation, and the errors 
+Let's do a walkthrough and check the invocation, and the errors
 
 ```
-JS-NG> ACTOR_PATH = "/home/xmonader/wspace/js-next/js-ng/jumpscale/servers/gedis/example_actor.py"
+JS-NG> ACTOR_PATH = "/home/xmonader/wspace/threefoldtech/js-ng/jumpscale/servers/gedis/example_actor.py"
 JS-NG> cl = j.clients.gedis.get("test")
-JS-NG> cl.actors.system.register_actor("test_actor", ACTOR_PATH) 
+JS-NG> cl.actors.system.register_actor("test_actor", ACTOR_PATH)
 True
 
 ```
 At this point we can do `cl.reload` to add `test_actor` into the client domain
 
 ```
-JS-NG> cl.reload()  
+JS-NG> cl.reload()
 ```
 ### Getting actor documentation and information from
 
 ```
-JS-NG> cl.actors.test_actor.info()                                                                
-{'module': '/home/xmonader/wspace/js-next/js-ng/jumpscale/servers/gedis', 'path': '/home/xmonader/wspace/js-next/js-ng/jumpscale/servers/gedis/example_actor.py', 'methods': {'add_two_ints': {'args': [['x', 'int'], ['y', 'int']], 'doc': 'Adds two ints\n        \n        Arguments:\n            x {int} -- first int\n            y {int} -- second int\n        \n        Returns:\n            int -- the sum of the two ints\n        ', 'response_type': None}, 'concate_two_strings': {'args': [['x', 'str'], ['y', 'str']], 'doc': 'Concate two strings\n        \n        Arguments:\n            x {str} -- first string\n            y {str} -- second string\n        \n        Returns:\n            str -- the concate of the two strings\n        ', 'response_type': None}, 'info': {'args': [], 'doc': '', 'response_type': None}, 'get_testobject': {'args': [['myobj', 'TestObject'], ['new_value', 'int']], 'doc': 'returns an object of type Test object with update attribute attr to `new_value`\n        \n        Arguments:\n            myobj {TestObject} -- the object to be modified\n        \n        Returns:\n            TestObject -- modified object\n        ', 'response_type': 'TestObject'}}}
+JS-NG> cl.actors.test_actor.info()
+{'module': '/home/xmonader/wspace/threefoldtech/js-ng/jumpscale/servers/gedis', 'path': '/home/xmonader/wspace/threefoldtech/js-ng/jumpscale/servers/gedis/example_actor.py', 'methods': {'add_two_ints': {'args': [['x', 'int'], ['y', 'int']], 'doc': 'Adds two ints\n        \n        Arguments:\n            x {int} -- first int\n            y {int} -- second int\n        \n        Returns:\n            int -- the sum of the two ints\n        ', 'response_type': None}, 'concate_two_strings': {'args': [['x', 'str'], ['y', 'str']], 'doc': 'Concate two strings\n        \n        Arguments:\n            x {str} -- first string\n            y {str} -- second string\n        \n        Returns:\n            str -- the concate of the two strings\n        ', 'response_type': None}, 'info': {'args': [], 'doc': '', 'response_type': None}, 'get_testobject': {'args': [['myobj', 'TestObject'], ['new_value', 'int']], 'doc': 'returns an object of type Test object with update attribute attr to `new_value`\n        \n        Arguments:\n            myobj {TestObject} -- the object to be modified\n        \n        Returns:\n            TestObject -- modified object\n        ', 'response_type': 'TestObject'}}}
 
 ```
 
@@ -153,17 +153,17 @@ JS-NG> cl.actors.test_actor.add_two_ints(4, 5)
 What if we pass a wrong type?
 
 ```
-JS-NG> cl.actors.test_actor.add_two_ints(4, "11")                                                 
+JS-NG> cl.actors.test_actor.add_two_ints(4, "11")
 Traceback (most recent call last):
   File "<stdin>", line 1, in <module>
-  File "/home/xmonader/wspace/js-next/js-ng/jumpscale/clients/gedis/gedis.py", line 57, in method
+  File "/home/xmonader/wspace/threefoldtech/js-ng/jumpscale/clients/gedis/gedis.py", line 57, in method
     response = self._gedis_client.execute(actor_name, actor_method, *args, **kwargs)
                │                          │           │              │       └ {}
                │                          │           │              └ (4, '11')
                │                          │           └ 'add_two_ints'
                │                          └ 'test_actor'
                └ <jumpscale.clients.gedis.gedis.ActorProxy object at 0x7fb434817390>
-  File "/home/xmonader/wspace/js-next/js-ng/jumpscale/clients/gedis/gedis.py", line 161, in execute
+  File "/home/xmonader/wspace/threefoldtech/js-ng/jumpscale/clients/gedis/gedis.py", line 161, in execute
     raise RemoteException(response_json['error'])
           │               └ {'success': False, 'error': 'parameter (y) supposed to be of type (int), but found (str)', 'result': None}
           └ <class 'jumpscale.clients.gedis.gedis.RemoteException'>
@@ -178,27 +178,27 @@ What if we pass more than the specified arguments?
 JS-NG> cl.actors.test_actor.add_two_ints(4, 2, 6)
 Traceback (most recent call last):
   File "<stdin>", line 1, in <module>
-  File "/home/xmonader/wspace/js-next/js-ng/jumpscale/clients/gedis/gedis.py", line 57, in method
+  File "/home/xmonader/wspace/threefoldtech/js-ng/jumpscale/clients/gedis/gedis.py", line 57, in method
     response = self._gedis_client.execute(actor_name, actor_method, *args, **kwargs)
                │                          │           │              │       └ {}
                │                          │           │              └ (4, 2, 6)
                │                          │           └ 'add_two_ints'
                │                          └ 'test_actor'
                └ <jumpscale.clients.gedis.gedis.ActorProxy object at 0x7fb434817390>
-  File "/home/xmonader/wspace/js-next/js-ng/jumpscale/clients/gedis/gedis.py", line 161, in execute
+  File "/home/xmonader/wspace/threefoldtech/js-ng/jumpscale/clients/gedis/gedis.py", line 161, in execute
     raise RemoteException(response_json['error'])
-          │               └ {'success': False, 'error': 'Traceback (most recent call last):\n  File "/home/xmonader/wspace/js-next/js-ng/jumpscale/servers/g...
+          │               └ {'success': False, 'error': 'Traceback (most recent call last):\n  File "/home/xmonader/wspace/threefoldtech/js-ng/jumpscale/servers/g...
           └ <class 'jumpscale.clients.gedis.gedis.RemoteException'>
 jumpscale.clients.gedis.gedis.RemoteException: Traceback (most recent call last):
-  File "/home/xmonader/wspace/js-next/js-ng/jumpscale/servers/gedis/server.py", line 210, in _exceute
+  File "/home/xmonader/wspace/threefoldtech/js-ng/jumpscale/servers/gedis/server.py", line 210, in _exceute
     args, kwargs = self._validate_method_arguments(method, args, kwargs)
     │     │        │                               │       │     └ {}
     │     │        │                               │       └ [4, 2, 6]
-    │     │        │                               └ <bound method Example.add_two_ints of </home/xmonader/wspace/js-next/js-ng/jumpscale/servers/gedis.Example object at 0x7f75132cf...
+    │     │        │                               └ <bound method Example.add_two_ints of </home/xmonader/wspace/threefoldtech/js-ng/jumpscale/servers/gedis.Example object at 0x7f75132cf...
     │     │        └ GedisServer(_Base__instance_name='test', _Base__parent=None, ___actors={}, __enable_system_actor=True, __host='127.0.0.1', __por...
     │     └ {}
     └ [4, 2, 6]
-  File "/home/xmonader/wspace/js-next/js-ng/jumpscale/servers/gedis/server.py", line 188, in _validate_method_arguments
+  File "/home/xmonader/wspace/threefoldtech/js-ng/jumpscale/servers/gedis/server.py", line 188, in _validate_method_arguments
     bound_arguments = signature.bind(*args, **kwargs)
                       │               │       └ {}
                       │               └ [4, 2, 6]
@@ -234,10 +234,10 @@ Any object with `to_dict` and `from_dict` is ok to use in actor methods for the 
 ```python
     def get_testobject(self, myobj: TestObject, new_value: int) -> TestObject:
         """Modify atrribute attr of the given object
-        
+
         Arguments:
             myobj {TestObject} -- the object to be modified
-        
+
         Returns:
             TestObject -- modified object
         """
@@ -247,24 +247,19 @@ Any object with `to_dict` and `from_dict` is ok to use in actor methods for the 
 Let's test it
 
 ```
-JS-NG> class TestObject: 
-     2     def __init__(self): 
-     3         self.attr = None 
-     4  
-     5     def to_dict(self): 
-     6         return self.__dict__ 
-     7  
-     8     def from_dict(self, ddict): 
-     9         self.__dict__ = ddict                                                              
+JS-NG> class TestObject:
+     2     def __init__(self):
+     3         self.attr = None
+     4
+     5     def to_dict(self):
+     6         return self.__dict__
+     7
+     8     def from_dict(self, ddict):
+     9         self.__dict__ = ddict
 JS-NG> obj = TestObject()
 JS-NG> res = cl.actors.test_actor.get_testobject(obj, 6)
 JS-NG> res.attr
 6
 JS-NG> obj.attr
-JS-NG>  
+JS-NG>
 ```
-
-
-
- 
-

@@ -22,9 +22,14 @@ Two types of executor:
 
 You can attach to a running process by specufying correct `name`, `ports`, `process_strings`, `process_strings_regex`.
 If it matches any of the above you would be able to perform available on that process.
+
+
+- Special cases
+
+you can add cmd.ports, cmd.process_strings_regex or cmd.process_strings_regex to reach the process pid
 """
 from enum import Enum
-from jumpscale.god import j
+from jumpscale.loader import j
 from jumpscale.core.base import Base, fields
 
 import time
@@ -48,8 +53,8 @@ class StartupCmd(Base):
     process_strings = fields.List(fields.String())
     process_strings_regex = fields.List(fields.String())
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._process = None
         self._pid = None
         self._cmd_path = None
@@ -162,6 +167,12 @@ class StartupCmd(Base):
             exit_code, _, _ = j.sals.process.execute(cmd, die=False)
             self.reset()
             return exit_code == 0
+        elif self.process:
+            try:
+                self.process.terminate()
+                return True
+            except Exception:
+                pass
         return False
 
     def _hard_kill(self):
@@ -190,7 +201,8 @@ class StartupCmd(Base):
         timeout = timeout or self.timeout
 
         if self.is_running():
-            self._soft_kill()
+            if self._soft_kill():
+                self.wait_for_stop(die=False, timeout=timeout)
 
         if force:
             self._hard_kill()

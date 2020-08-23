@@ -25,7 +25,7 @@ class Integer:
 
     def check(self, value):
         """Check whether provided string represent integer value
-        
+
         Arguments:
             value (str)
         """
@@ -37,7 +37,7 @@ class Integer:
 
     def from_str(self, value):
         """get integer value from tha string
-        
+
         Arguments:
             value (str)
         """
@@ -84,7 +84,7 @@ class Float:
 
     def check(self, value):
         """Check whether provided string represent integer value
-        
+
         Arguments:
             value (str)
         """
@@ -96,7 +96,7 @@ class Float:
 
     def from_str(self, value):
         """get integer value from tha string
-        
+
         Arguments:
             value (str)
         """
@@ -126,10 +126,10 @@ class List:
 
     def _deep_check(self, value):
         """Check that the value represents a list with proper elements of the specified subtype.
-        
+
         Args:
             value (list): The list to be checked.
-        
+
         Returns:
             Boolean: True if the list is valid.
         """
@@ -144,10 +144,10 @@ class List:
 
     def check(self, value):
         """Check that the value represents a list with proper elements of the specified subtype.
-        
+
         Args:
             value (list): The list to be checked.
-        
+
         Returns:
             Boolean: True if the list is valid.
         """
@@ -162,10 +162,10 @@ class List:
 
     def _deep_parse(self, value):
         """parses the subelements (if they are of different python type it's converted using the subtype parser)
-        
+
         Args:
             value (list): The list to be parsed.
-        
+
         Returns:
             list: The parsed list.
         """
@@ -180,17 +180,21 @@ class List:
 
     def from_str(self, value):
         """parses the string value into a list.
-        
+
         Args:
             value (str): The string to be parsed.
-        
+
         Returns:
             list: The parsed list.
         """
-        if isinstance(self.subtype, JSObject):
-            return value
-        else:
-            return self._deep_parse(ast.literal_eval(value))
+        # print(f"from str-> value {value}")
+        # print(f"subtype {self.subtype}")
+        return object()
+        # if isinstance(self.subtype, JSObject):
+        #     print("returning noww")
+        #     return object()
+        # else:
+        #     return self._deep_parse(ast.literal_eval(value))
 
 
 def get_js_type(type_str, default_value=None):
@@ -204,11 +208,11 @@ def get_js_type(type_str, default_value=None):
     5. "L.*" -> List with subtype .*
     6. "E" -> String
     7. "" -> empty defaults to String
-    
+
     Args:
         type_str (str): type description.
         default_value (any, optional): The default value. Defaults to None.
-    
+
     Returns:
         Object: A js type object.
     """
@@ -222,19 +226,23 @@ def get_js_type(type_str, default_value=None):
         "E": String,
         ## TODO: the following are totally wrong, but capturing them to be able to generate in python backend
         "email": String,
+        "guid": String,
         "T": String,
         "D": String,
         "dict": String,
         "ipaddr": String,
+        "ipaddress": String,
         "iprange": String,
         "bytes": String,
         "json": String,
+        "I64": Float,
     }
     if len(type_str) == 0 or type_str[0] != "L":
         return types[type_str](default_value)
     else:
         subtype = type_str[1:]
-        return List(default_value, get_js_type(subtype))
+        # print(subtype, default_value)
+        return List(default_value, object)
 
 
 class Email:

@@ -1,10 +1,19 @@
-import unittest
-from jumpscale.god import j
+from unittest import TestCase
+
+from jumpscale.loader import j
+
+REDIS_PORT = 6379
 
 
-class TestLogging(unittest.TestCase):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+class TestLogging(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.cmd = None
+        if not j.sals.nettools.tcp_connection_test("127.0.0.1", REDIS_PORT, 1):
+            cls.cmd = j.tools.startupcmd.get("test_logging")
+            cls.cmd.start_cmd = "redis-server"
+            cls.cmd.ports = [REDIS_PORT]
+            cls.cmd.start()
         j.application.start("test")
 
     def setUp(self):
@@ -12,6 +21,12 @@ class TestLogging(unittest.TestCase):
 
     def tearDown(self):
         j.logger.redis.remove_all_records(j.application.appname)
+
+    @classmethod
+    def tearDownClass(cls):
+        if cls.cmd:
+            cls.cmd.stop(wait_for_stop=False)
+            j.tools.startupcmd.delete("test_logging")
 
     def test01_redis_handler(self):
         test_records_count = j.logger.redis.max_size * 2

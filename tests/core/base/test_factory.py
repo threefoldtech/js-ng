@@ -13,8 +13,8 @@ class Address(Base):
     x = fields.Integer()
     name = fields.String()
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.x = 123
 
 
@@ -24,7 +24,10 @@ class Wallet(Base):
 
 
 class RichWallet(Wallet):
-    amount = fields.Integer(default=10000000)
+    def amount_updated(self, new_value):
+        print("got a new amount!", new_value)
+
+    amount = fields.Integer(default=10000000, on_update=amount_updated)
 
 
 class Client(Base):
@@ -48,8 +51,9 @@ class TestBaseFactory(unittest.TestCase):
     def test_create_with_different_instances(self):
         cl = Client()
         w = cl.wallets.get("aa")
+        w.amount = 1000
         self.assertEqual(cl.wallets.count, 1)
-        self.assertEqual(w.amount, 10000000)
+        self.assertEqual(w.amount, 1000)
 
         addr1 = w.addresses.new("mine")
         addr1.x = 456

@@ -5,7 +5,7 @@ import json
 
 from abc import ABC, abstractmethod
 
-from jumpscale.god import j
+from jumpscale.loader import j
 
 
 LEVELS = {
@@ -36,8 +36,7 @@ class Logger:
     def appname(self):
         return self._appname
 
-    @appname.setter
-    def appname(self, appname):
+    def set_appname(self, appname):
         self._appname = appname
         self._logger = self._logger.bind(appname=appname)
 
@@ -160,11 +159,11 @@ class RedisLogHandler(LogHandler):
 
     def _handle(self, message: str, **kwargs):
         """Logging handler
-        
+
         Arguments:
             message {str} -- message string
         """
-        if not self._db:
+        if not self._db.is_running():
             return
 
         record = self._process_message(message)
@@ -183,10 +182,10 @@ class RedisLogHandler(LogHandler):
 
     def records_count(self, appname: str = "init") -> int:
         """Gets total number of the records of the app
-        
+
         Arguments:
             appname {str} -- app name
-        
+
         Returns:
             init -- total number of the records
         """
@@ -197,11 +196,11 @@ class RedisLogHandler(LogHandler):
 
     def record_get(self, identifier: int, appname: str = "init") -> dict:
         """Get app log record by its identifier
-        
+
         Arguments:
             identifier {int} -- record identifier
             appname {str} -- app name
-        
+
         Returns:
             dict -- requested log record
         """
@@ -224,7 +223,7 @@ class RedisLogHandler(LogHandler):
 
     def remove_all_records(self, appname: str):
         """Delete all app's log records
-        
+
         Arguments:
             appname {str} -- app name
         """
@@ -236,17 +235,17 @@ class RedisLogHandler(LogHandler):
 
     def tail(self, appname: str = "init", limit: int = None) -> iter:
         """Tail records
-        
+
         Keyword Arguments:
             appname (str) -- appname (default: {""})
             limit (int) -- max number of record to be returned (default: {None})
-        
+
         Yields:
             iter -- iterator of the requested logs
         """
         if limit:
             limit = limit - 1
-         
+
         records = self._db.lrange(self._rkey % appname, 0, limit or -1)
         for record in records:
             yield json.loads(record)

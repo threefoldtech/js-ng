@@ -81,7 +81,7 @@ import subprocess
 import signal
 from subprocess import Popen
 import select
-from jumpscale.god import j
+from jumpscale.loader import j
 
 # for execute
 from fcntl import fcntl, F_GETFL, F_SETFL
@@ -133,10 +133,10 @@ def execute(
 
 def is_alive(pid):
     &#34;&#34;&#34;Checks if pid is Running
-    
+
     Arguments:
         pid {int} -- pid of the process to be checked
-    
+
     Returns:
         [bool] -- True if process is running
     &#34;&#34;&#34;
@@ -149,7 +149,7 @@ def is_installed(cmd):
     Checks if a specific command is available on system e.g. curl
     Arguments:
         cmd {str} -- command to be checked
-    
+
     Returns:
         [bool] -- True if command is installed
     &#34;&#34;&#34;
@@ -162,16 +162,16 @@ def is_installed(cmd):
 
 def kill(pid, sig=signal.SIGTERM.value):
     &#34;&#34;&#34;Kill a process with a signal
-    
+
     Arguments:
         pid {int} -- pid of the process to be killed
-    
+
     Keyword Arguments:
         sig {int]} -- which signal you want to kill the process with (default: {signal.SIGTERM.value})
-    
+
     Raises:
         j.exceptions.RuntimeError: in case killing process failed
-    
+
     Returns:
         [type] -- [description]
     &#34;&#34;&#34;
@@ -187,10 +187,10 @@ def kill(pid, sig=signal.SIGTERM.value):
 
 def ps_find(name):
     &#34;&#34;&#34;find process by name
-    
+
     Arguments:
         name {str} -- process name
-    
+
     Returns:
         [bool] -- True if process is found
     &#34;&#34;&#34;
@@ -202,10 +202,10 @@ def ps_find(name):
 
 def kill_all(name, sig=signal.SIGKILL):
     &#34;&#34;&#34;Kill all processes with a given name
-    
+
     Arguments:
         name {str} -- process name
-    
+
     Keyword Arguments:
         sig {int} -- signal number (default: {signal.SIGKILL})
     &#34;&#34;&#34;
@@ -217,10 +217,10 @@ def kill_all(name, sig=signal.SIGKILL):
 
 def get_pids_filtered_sorted(filterstr, sortkey=None):
     &#34;&#34;&#34;Get pids of process by a filter string and optionally sort by sortkey
-    
+
     Arguments:
         filterstr {[str]} -- filter string.
-    
+
     Keyword Arguments:
         sortkey {[str]} -- sort key for ps command (default: {None})
         sortkey can be one of the following:
@@ -237,7 +237,7 @@ def get_pids_filtered_sorted(filterstr, sortkey=None):
         psr            processor that process is currently assigned to.
         start_time     starting time or date of the process.
 
-    
+
     Returns:
         [list(int)] -- processes pids
     &#34;&#34;&#34;
@@ -263,13 +263,13 @@ def get_pids_filtered_sorted(filterstr, sortkey=None):
 
 def get_filtered_pids(filterstr, excludes=None):
     &#34;&#34;&#34;Get pids filtered by filterstr and execludes
-    
+
     Arguments:
         filterstr {str} -- filter string.
-    
+
     Keyword Arguments:
         excludes {list(str)} -- execlude list (default: {None})
-    
+
     Returns:
         [list(int)] -- pids
     &#34;&#34;&#34;
@@ -300,13 +300,13 @@ def get_filtered_pids(filterstr, excludes=None):
 
 def get_pids_filtered_by_regex(regex_list, excludes=None):
     &#34;&#34;&#34;get pids of a process filtered by Regex list
-    
+
     Arguments:
         regex_list {list(str)} -- list of regex expressions
-    
+
     Keyword Arguments:
         excludes {list(str)} -- list of excludes (default: {None})
-    
+
     Returns:
         [list(int)] -- list of pids
     &#34;&#34;&#34;
@@ -330,15 +330,15 @@ def get_pids_filtered_by_regex(regex_list, excludes=None):
 
 def check_start(cmd, filterstr, nrinstances=1, retry=1):
     &#34;&#34;&#34;Run command and check if it is started based on filterstr
-    
+
     Arguments:
         cmd {str} -- command to be executed
         filterstr {str} -- filter string
-    
+
     Keyword Arguments:
         instances {int} -- number of needed instances (default: {1})
         retry {int} -- number of retries (default: {1})
-    
+
     Raises:
         j.exceptions.RuntimeError: will be raised if we didn&#39;t reach number of required instances
     &#34;&#34;&#34;
@@ -358,15 +358,15 @@ def check_start(cmd, filterstr, nrinstances=1, retry=1):
 
 def check_stop(cmd, filterstr, retry=1, nrinstances=0):
     &#34;&#34;&#34;Executes a stop command and check if it is already stopped based on filterstr
-    
+
     Arguments:
         cmd {str} -- command to be executed
         filterstr {str} -- filter string
-    
+
     Keyword Arguments:
         retry {int} -- number of retries (default: {1})
         nrinstances {int} -- number of instances after stop (default: {0})
-    
+
     Raises:
         j.exceptions.RuntimeError: if nr of instances not matched
     &#34;&#34;&#34;
@@ -389,19 +389,19 @@ def check_stop(cmd, filterstr, retry=1, nrinstances=0):
 
 def get_pids(process, match_predicate=None):
     &#34;&#34;&#34;Get process ID(s) for a given process
-    
+
     Arguments:
         process {str} -- process name
-    
+
     Keyword Arguments:
-        match_predicate {callable} -- function that does matching between 
-        found processes and the targested process, the function should accept 
+        match_predicate {callable} -- function that does matching between
+        found processes and the targested process, the function should accept
         two arguments and return a boolean, defaults to None (default: {None})
-    
+
     Raises:
         j.exceptions.RuntimeError: [description]
         j.exceptions.NotImplemented: [description]
-    
+
     Returns:
         [list(int)] -- list of pids
     &#34;&#34;&#34;
@@ -445,7 +445,7 @@ def get_pids(process, match_predicate=None):
 
 def get_my_process():
     &#34;&#34;&#34;get process object of current process
-    
+
     Returns:
         [psutil.Process] -- process object
     &#34;&#34;&#34;
@@ -454,16 +454,16 @@ def get_my_process():
 
 def get_process_object(pid, die=True):
     &#34;&#34;&#34;Get Process object of a process id
-    
+
     Arguments:
         pid {int} -- pid of the process
-    
+
     Keyword Arguments:
         die {bool} -- die if process not found (default: {True})
-    
+
     Raises:
         psutil.NoSuchProcess: if process not found and die = True
-    
+
     Returns:
         [psutil.Process] -- process object
     &#34;&#34;&#34;
@@ -478,10 +478,10 @@ def get_process_object(pid, die=True):
 
 def get_user_processes(user):
     &#34;&#34;&#34;Get all process for a specific user
-    
+
     Arguments:
         user {str} -- username
-    
+
     Returns:
         [list(int)] -- list of process pids for that user
     &#34;&#34;&#34;
@@ -494,7 +494,7 @@ def get_user_processes(user):
 
 def kill_user_processes(user):
     &#34;&#34;&#34;Kill all processes for a specific user
-    
+
     Arguments:
         user {str} -- username
     &#34;&#34;&#34;
@@ -504,7 +504,7 @@ def kill_user_processes(user):
 
 def get_similar_processes():
     &#34;&#34;&#34;Gets similar processes to current process
-    
+
     Returns:
         [list(psutil.Process)] -- list of similar process
     &#34;&#34;&#34;
@@ -521,13 +521,13 @@ def get_similar_processes():
 
 def check_running(process, min=1):
     &#34;&#34;&#34;Checks if a process is running
-    
+
     Arguments:
         process {str} -- process name to be checked
-    
+
     Keyword Arguments:
         min {int} -- min number of instances required to be running (default: {1})
-    
+
     Returns:
         [bool] -- true if process is running
     &#34;&#34;&#34;
@@ -540,11 +540,11 @@ def check_running(process, min=1):
 
 def check_process_for_pid(pid, process_name):
     &#34;&#34;&#34;Check whether a given pid actually does belong to a given process name.
-    
+
     Arguments:
         pid {int} -- process pid
         process {str} -- process name
-    
+
     Returns:
         [bool] -- True if process_name matched process name of the pid
     &#34;&#34;&#34;
@@ -555,11 +555,11 @@ def check_process_for_pid(pid, process_name):
 
 def set_env_var(varnames, varvalues):
     &#34;&#34;&#34;Set the value of the environment variables C{varnames}. Existing variable are overwritten
-    
+
     Arguments:
         varnames {list(str)} --  A list of the names of all the environment variables to set
         varvalues {list(str)} -- A list of all values for the environment variables
-    
+
     &#34;&#34;&#34;
     try:
         for i in range(len(varnames)):
@@ -570,10 +570,10 @@ def set_env_var(varnames, varvalues):
 
 def get_pid_by_port(port):
     &#34;&#34;&#34;Returns pids of the process that is listening on the given port
-    
+
     Arguments:
         port {int} -- port number
-    
+
     Returns:
         int -- pid of process that listen on that port
     &#34;&#34;&#34;
@@ -586,14 +586,14 @@ def get_pid_by_port(port):
 
 def kill_process_by_name(name, sig=signal.SIGTERM.value, match_predicate=None):
     &#34;&#34;&#34;Kill all processes for a given command
-    
+
     Arguments:
         name {str} -- Name of the command that started the process(s)
-    
+
     Keyword Arguments:
         sig {bool} -- os signal to send to the process(s) (default: {signal.SIGTERM.value})
-        match_predicate {callable} -- function that does matching between 
-            found processes and the targested process, the function should accept 
+        match_predicate {callable} -- function that does matching between
+            found processes and the targested process, the function should accept
             two arguments and return a boolean (default: {None})
     &#34;&#34;&#34;
 
@@ -604,7 +604,7 @@ def kill_process_by_name(name, sig=signal.SIGTERM.value, match_predicate=None):
 
 def kill_process_by_port(port):
     &#34;&#34;&#34;Kill process by port
-    
+
     Arguments:
         port {int} -- port number
     &#34;&#34;&#34;
@@ -615,10 +615,10 @@ def kill_process_by_port(port):
 
 def get_process_by_port(port):
     &#34;&#34;&#34;Returns the full name of the process that is listening on the given port
-    
+
     Arguments:
         port {int} -- the port for which to find the command
-    
+
     Returns:
         [psutil.Process] -- process object
     &#34;&#34;&#34;
@@ -634,7 +634,7 @@ def get_process_by_port(port):
 
 def get_defunct_processes():
     &#34;&#34;&#34;Gets defunc processes
-    
+
     Returns:
         [list(int)] -- list of processes pids
     &#34;&#34;&#34;
@@ -655,10 +655,10 @@ def get_defunct_processes():
 
 def getEnviron(pid):
     &#34;&#34;&#34;Gets env vars for a specific process based on pid
-    
+
     Arguments:
         pid {int} -- process pid
-    
+
     Returns:
         [dict] -- dict of env variables
     &#34;&#34;&#34;
@@ -687,11 +687,11 @@ process {str} &ndash; process name</p>
 <summary>Source code</summary>
 <pre><code class="python">def check_process_for_pid(pid, process_name):
     &#34;&#34;&#34;Check whether a given pid actually does belong to a given process name.
-    
+
     Arguments:
         pid {int} -- process pid
         process {str} -- process name
-    
+
     Returns:
         [bool] -- True if process_name matched process name of the pid
     &#34;&#34;&#34;
@@ -715,13 +715,13 @@ min {int} &ndash; min number of instances required to be running (default: {1})<
 <summary>Source code</summary>
 <pre><code class="python">def check_running(process, min=1):
     &#34;&#34;&#34;Checks if a process is running
-    
+
     Arguments:
         process {str} -- process name to be checked
-    
+
     Keyword Arguments:
         min {int} -- min number of instances required to be running (default: {1})
-    
+
     Returns:
         [bool] -- true if process is running
     &#34;&#34;&#34;
@@ -752,15 +752,15 @@ retry {int} &ndash; number of retries (default: {1})</p>
 <summary>Source code</summary>
 <pre><code class="python">def check_start(cmd, filterstr, nrinstances=1, retry=1):
     &#34;&#34;&#34;Run command and check if it is started based on filterstr
-    
+
     Arguments:
         cmd {str} -- command to be executed
         filterstr {str} -- filter string
-    
+
     Keyword Arguments:
         instances {int} -- number of needed instances (default: {1})
         retry {int} -- number of retries (default: {1})
-    
+
     Raises:
         j.exceptions.RuntimeError: will be raised if we didn&#39;t reach number of required instances
     &#34;&#34;&#34;
@@ -798,15 +798,15 @@ nrinstances {int} &ndash; number of instances after stop (default: {0})</p>
 <summary>Source code</summary>
 <pre><code class="python">def check_stop(cmd, filterstr, retry=1, nrinstances=0):
     &#34;&#34;&#34;Executes a stop command and check if it is already stopped based on filterstr
-    
+
     Arguments:
         cmd {str} -- command to be executed
         filterstr {str} -- filter string
-    
+
     Keyword Arguments:
         retry {int} -- number of retries (default: {1})
         nrinstances {int} -- number of instances after stop (default: {0})
-    
+
     Raises:
         j.exceptions.RuntimeError: if nr of instances not matched
     &#34;&#34;&#34;
@@ -903,10 +903,10 @@ die {bool} &ndash; die if command failed (default: {False})</p>
 <summary>Source code</summary>
 <pre><code class="python">def getEnviron(pid):
     &#34;&#34;&#34;Gets env vars for a specific process based on pid
-    
+
     Arguments:
         pid {int} -- process pid
-    
+
     Returns:
         [dict] -- dict of env variables
     &#34;&#34;&#34;
@@ -925,7 +925,7 @@ die {bool} &ndash; die if command failed (default: {False})</p>
 <summary>Source code</summary>
 <pre><code class="python">def get_defunct_processes():
     &#34;&#34;&#34;Gets defunc processes
-    
+
     Returns:
         [list(int)] -- list of processes pids
     &#34;&#34;&#34;
@@ -959,13 +959,13 @@ excludes {list(str)} &ndash; execlude list (default: {None})</p>
 <summary>Source code</summary>
 <pre><code class="python">def get_filtered_pids(filterstr, excludes=None):
     &#34;&#34;&#34;Get pids filtered by filterstr and execludes
-    
+
     Arguments:
         filterstr {str} -- filter string.
-    
+
     Keyword Arguments:
         excludes {list(str)} -- execlude list (default: {None})
-    
+
     Returns:
         [list(int)] -- pids
     &#34;&#34;&#34;
@@ -1005,7 +1005,7 @@ excludes {list(str)} &ndash; execlude list (default: {None})</p>
 <summary>Source code</summary>
 <pre><code class="python">def get_my_process():
     &#34;&#34;&#34;get process object of current process
-    
+
     Returns:
         [psutil.Process] -- process object
     &#34;&#34;&#34;
@@ -1028,10 +1028,10 @@ excludes {list(str)} &ndash; execlude list (default: {None})</p>
 <summary>Source code</summary>
 <pre><code class="python">def get_pid_by_port(port):
     &#34;&#34;&#34;Returns pids of the process that is listening on the given port
-    
+
     Arguments:
         port {int} -- port number
-    
+
     Returns:
         int -- pid of process that listen on that port
     &#34;&#34;&#34;
@@ -1066,19 +1066,19 @@ two arguments and return a boolean, defaults to None (default: {None})</p>
 <summary>Source code</summary>
 <pre><code class="python">def get_pids(process, match_predicate=None):
     &#34;&#34;&#34;Get process ID(s) for a given process
-    
+
     Arguments:
         process {str} -- process name
-    
+
     Keyword Arguments:
-        match_predicate {callable} -- function that does matching between 
-        found processes and the targested process, the function should accept 
+        match_predicate {callable} -- function that does matching between
+        found processes and the targested process, the function should accept
         two arguments and return a boolean, defaults to None (default: {None})
-    
+
     Raises:
         j.exceptions.RuntimeError: [description]
         j.exceptions.NotImplemented: [description]
-    
+
     Returns:
         [list(int)] -- list of pids
     &#34;&#34;&#34;
@@ -1135,13 +1135,13 @@ excludes {list(str)} &ndash; list of excludes (default: {None})</p>
 <summary>Source code</summary>
 <pre><code class="python">def get_pids_filtered_by_regex(regex_list, excludes=None):
     &#34;&#34;&#34;get pids of a process filtered by Regex list
-    
+
     Arguments:
         regex_list {list(str)} -- list of regex expressions
-    
+
     Keyword Arguments:
         excludes {list(str)} -- list of excludes (default: {None})
-    
+
     Returns:
         [list(int)] -- list of pids
     &#34;&#34;&#34;
@@ -1209,10 +1209,10 @@ starting time or date of the process.</p>
 <summary>Source code</summary>
 <pre><code class="python">def get_pids_filtered_sorted(filterstr, sortkey=None):
     &#34;&#34;&#34;Get pids of process by a filter string and optionally sort by sortkey
-    
+
     Arguments:
         filterstr {[str]} -- filter string.
-    
+
     Keyword Arguments:
         sortkey {[str]} -- sort key for ps command (default: {None})
         sortkey can be one of the following:
@@ -1229,7 +1229,7 @@ starting time or date of the process.</p>
         psr            processor that process is currently assigned to.
         start_time     starting time or date of the process.
 
-    
+
     Returns:
         [list(int)] -- processes pids
     &#34;&#34;&#34;
@@ -1266,10 +1266,10 @@ starting time or date of the process.</p>
 <summary>Source code</summary>
 <pre><code class="python">def get_process_by_port(port):
     &#34;&#34;&#34;Returns the full name of the process that is listening on the given port
-    
+
     Arguments:
         port {int} -- the port for which to find the command
-    
+
     Returns:
         [psutil.Process] -- process object
     &#34;&#34;&#34;
@@ -1303,16 +1303,16 @@ die {bool} &ndash; die if process not found (default: {True})</p>
 <summary>Source code</summary>
 <pre><code class="python">def get_process_object(pid, die=True):
     &#34;&#34;&#34;Get Process object of a process id
-    
+
     Arguments:
         pid {int} -- pid of the process
-    
+
     Keyword Arguments:
         die {bool} -- die if process not found (default: {True})
-    
+
     Raises:
         psutil.NoSuchProcess: if process not found and die = True
-    
+
     Returns:
         [psutil.Process] -- process object
     &#34;&#34;&#34;
@@ -1336,7 +1336,7 @@ die {bool} &ndash; die if process not found (default: {True})</p>
 <summary>Source code</summary>
 <pre><code class="python">def get_similar_processes():
     &#34;&#34;&#34;Gets similar processes to current process
-    
+
     Returns:
         [list(psutil.Process)] -- list of similar process
     &#34;&#34;&#34;
@@ -1364,10 +1364,10 @@ die {bool} &ndash; die if process not found (default: {True})</p>
 <summary>Source code</summary>
 <pre><code class="python">def get_user_processes(user):
     &#34;&#34;&#34;Get all process for a specific user
-    
+
     Arguments:
         user {str} -- username
-    
+
     Returns:
         [list(int)] -- list of process pids for that user
     &#34;&#34;&#34;
@@ -1391,10 +1391,10 @@ die {bool} &ndash; die if process not found (default: {True})</p>
 <summary>Source code</summary>
 <pre><code class="python">def is_alive(pid):
     &#34;&#34;&#34;Checks if pid is Running
-    
+
     Arguments:
         pid {int} -- pid of the process to be checked
-    
+
     Returns:
         [bool] -- True if process is running
     &#34;&#34;&#34;
@@ -1419,7 +1419,7 @@ Checks if a specific command is available on system e.g. curl</p>
     Checks if a specific command is available on system e.g. curl
     Arguments:
         cmd {str} -- command to be checked
-    
+
     Returns:
         [bool] -- True if command is installed
     &#34;&#34;&#34;
@@ -1450,16 +1450,16 @@ sig {int]} &ndash; which signal you want to kill the process with (default: {sig
 <summary>Source code</summary>
 <pre><code class="python">def kill(pid, sig=signal.SIGTERM.value):
     &#34;&#34;&#34;Kill a process with a signal
-    
+
     Arguments:
         pid {int} -- pid of the process to be killed
-    
+
     Keyword Arguments:
         sig {int]} -- which signal you want to kill the process with (default: {signal.SIGTERM.value})
-    
+
     Raises:
         j.exceptions.RuntimeError: in case killing process failed
-    
+
     Returns:
         [type] -- [description]
     &#34;&#34;&#34;
@@ -1486,10 +1486,10 @@ sig {int} &ndash; signal number (default: {signal.SIGKILL})</p></section>
 <summary>Source code</summary>
 <pre><code class="python">def kill_all(name, sig=signal.SIGKILL):
     &#34;&#34;&#34;Kill all processes with a given name
-    
+
     Arguments:
         name {str} -- process name
-    
+
     Keyword Arguments:
         sig {int} -- signal number (default: {signal.SIGKILL})
     &#34;&#34;&#34;
@@ -1515,14 +1515,14 @@ two arguments and return a boolean (default: {None})</p></section>
 <summary>Source code</summary>
 <pre><code class="python">def kill_process_by_name(name, sig=signal.SIGTERM.value, match_predicate=None):
     &#34;&#34;&#34;Kill all processes for a given command
-    
+
     Arguments:
         name {str} -- Name of the command that started the process(s)
-    
+
     Keyword Arguments:
         sig {bool} -- os signal to send to the process(s) (default: {signal.SIGTERM.value})
-        match_predicate {callable} -- function that does matching between 
-            found processes and the targested process, the function should accept 
+        match_predicate {callable} -- function that does matching between
+            found processes and the targested process, the function should accept
             two arguments and return a boolean (default: {None})
     &#34;&#34;&#34;
 
@@ -1542,7 +1542,7 @@ two arguments and return a boolean (default: {None})</p></section>
 <summary>Source code</summary>
 <pre><code class="python">def kill_process_by_port(port):
     &#34;&#34;&#34;Kill process by port
-    
+
     Arguments:
         port {int} -- port number
     &#34;&#34;&#34;
@@ -1562,7 +1562,7 @@ two arguments and return a boolean (default: {None})</p></section>
 <summary>Source code</summary>
 <pre><code class="python">def kill_user_processes(user):
     &#34;&#34;&#34;Kill all processes for a specific user
-    
+
     Arguments:
         user {str} -- username
     &#34;&#34;&#34;
@@ -1583,10 +1583,10 @@ two arguments and return a boolean (default: {None})</p></section>
 <summary>Source code</summary>
 <pre><code class="python">def ps_find(name):
     &#34;&#34;&#34;find process by name
-    
+
     Arguments:
         name {str} -- process name
-    
+
     Returns:
         [bool] -- True if process is found
     &#34;&#34;&#34;
@@ -1609,11 +1609,11 @@ varvalues {list(str)} &ndash; A list of all values for the environment variables
 <summary>Source code</summary>
 <pre><code class="python">def set_env_var(varnames, varvalues):
     &#34;&#34;&#34;Set the value of the environment variables C{varnames}. Existing variable are overwritten
-    
+
     Arguments:
         varnames {list(str)} --  A list of the names of all the environment variables to set
         varvalues {list(str)} -- A list of all values for the environment variables
-    
+
     &#34;&#34;&#34;
     try:
         for i in range(len(varnames)):

@@ -1,3 +1,2 @@
-
 def test_loading_j():
-    from jumpscale.god import j
+    from jumpscale.loader import j

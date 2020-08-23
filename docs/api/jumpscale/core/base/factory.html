@@ -27,15 +27,18 @@
 <li><a title="jumpscale.core.base.factory.StoredFactory" href="#jumpscale.core.base.factory.StoredFactory"><code>StoredFactory</code></a>: a factory which stores and load configuration according to the current configured store backend.</li>
 </ul>
 <p>Default store configured is file system, you can show current store config by doing:</p>
-<pre><code>✗ jsctl config get --name store
+<pre><code>✗ jsctl config get store
 store = filesystem
 </code></pre>
 <p>Get all stores configurations:</p>
-<pre><code>✗ jsctl config get --name stores
-stores = {'redis': {'hostname': 'localhost', 'port': 6379}, 'filesystem': {'path': '/home/abom/.config/jumpscale/secureconfig'}}
+<pre><code>✗ jsctl config get stores
+redis.hostname = "localhost"
+redis.port = 6379
+filesystem.path = "/home/abom/.config/jumpscale/secureconfig"
+whoosh.path = "/home/abom/.config/jumpscale/whoosh_indexes"
 </code></pre>
 <p>For example, set current store to redis:</p>
-<pre><code>jsctl config update --name store --value redis
+<pre><code>jsctl config update store redis
 </code></pre>
 <p>This will use current redis config (hostname: localhost, port: 6379).</p>
 <details class="source">
@@ -52,21 +55,21 @@ It is implemented using:
 Default store configured is file system, you can show current store config by doing:
 
 ```
-✗ jsctl config get --name store
+✗ jsctl config get store
 store = filesystem
 ```
 
 Get all stores configurations:
 
 ```
-✗ jsctl config get --name stores
+✗ jsctl config get stores
 stores = {&#39;redis&#39;: {&#39;hostname&#39;: &#39;localhost&#39;, &#39;port&#39;: 6379}, &#39;filesystem&#39;: {&#39;path&#39;: &#39;/home/abom/.config/jumpscale/secureconfig&#39;}}
 ```
 
 For example, set current store to redis:
 
 ```
-jsctl config update --name store --value redis
+jsctl config update store redis
 ```
 
 This will use current redis config (hostname: localhost, port: 6379).

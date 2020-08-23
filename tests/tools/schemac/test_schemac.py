@@ -1,8 +1,8 @@
+from unittest import skip
 
-from jumpscale.god import j
 from hypothesis import given
-from hypothesis.strategies import lists, integers
-
+from hypothesis.strategies import integers, lists
+from jumpscale.loader import j
 
 schema = """
             @url = despiegk.test
@@ -13,14 +13,14 @@ schema = """
             now = (T)
             info = (dict)
             theemail = (email)
-            status = "on,off" (E) 
+            status = "on,off" (E)
             happy = "yes, no" (E)
             &nr    = 4
             obj = (O)!hamada.test
             lobjs = (LO) !hamada.test
 
             date_start = 0 (I)
-            description* = "hello world"        
+            description* = "hello world"
             description2 ** = 'a string' (S)
             llist4*** = [1,2,3] (LI)
             llist5 = [1,2,3] (LI)
@@ -37,7 +37,7 @@ schema = """
     """
 
 
-valid_generated_python= """
+valid_generated_python = """
 #GENERATED CLASS DONT EDIT
 from jumpscale.core.base import Base, fields
 from enum import Enum
@@ -144,6 +144,7 @@ end
 """
 
 
+@skip("https://github.com/threefoldtech/js-ng/issues/422")
 def test001_loading_schema_in_compiler():
     c = j.tools.schemac.get_compiler(schema, "python")
     assert c
@@ -152,7 +153,7 @@ def test001_loading_schema_in_compiler():
     assert c.lang == "python"
     assert c.generator
     parsed_schemas = c.parse()  # parse schema now
-    generated_python =c.generator.generate(parsed_schemas)
+    generated_python = c.generator.generate(parsed_schemas)
     print(generated_python)
 
     for line in valid_generated_python.splitlines():

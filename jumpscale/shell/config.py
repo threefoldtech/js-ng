@@ -36,7 +36,7 @@ def patched_handle_exception(self, e):
         tb = tb.tb_next
 
     # except hook does not work as expected
-    # sys.excepthook(t, v, last_stdin_tb)
+    sys.excepthook(t, v, last_stdin_tb)
     # just print formatted exception for now
     formatted = better_exceptions.format_exception(t, v, last_stdin_tb)
     print_formatted_text(ANSI(formatted))
@@ -103,6 +103,7 @@ def get_completions(self, document, complete_event):
                 c.name_with_symbols,
                 len(c.complete) - len(c.name_with_symbols),
                 display=c.name_with_symbols,
+                selected_style="bg:ansidarkgray",
                 style=get_style_for_completion(c),
             )
 
@@ -201,12 +202,12 @@ def ptconfig(repl):
         """
         b = event.cli.current_buffer
         app = get_app()
-        statements = b.document.text
-        if statements:
-            import linecache
 
-            linecache.cache["<string>"] = (len(statements), time.time(), statements.split("\n"), "<string>")
-            app.exit(pudb.runstatement(statements))
+        statements = b.document.text.strip()
+        if statements:
+            _globals = repl.get_globals()
+            _globals["_MODULE_SOURCE_CODE"] = statements
+            app.exit(pudb.runstatement(statements, globals=_globals, locals=repl.get_locals()))
             app.pre_run_callables.append(b.reset)
         else:
             pudb.pm()

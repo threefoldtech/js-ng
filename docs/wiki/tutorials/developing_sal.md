@@ -3,7 +3,7 @@
 SAL is an abbreviation for `System Abstraction Layer` It provides a higher level `DSL` to execute/manipulate certain functionality that has a dry or daunting interface with a simpler API
 
 ## Code structure
-Sals are a sub namespace in Jumpscale namespace, they exist in directory `jumpscale/sals`. To develop a new SAL you need to make a new package in `sals` directory in your `js-next` project.
+Sals are a sub namespace in Jumpscale namespace, they exist in directory `jumpscale/sals`. To develop a new SAL you need to make a new package in `sals` directory in your `threefoldtech` project.
 
 
 ```

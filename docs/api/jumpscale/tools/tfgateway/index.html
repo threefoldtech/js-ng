@@ -22,7 +22,7 @@
 <section id="section-intro">
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">from jumpscale.god import j
+<pre><code class="python">from jumpscale.loader import j
 
 from ipaddress import IPv4Address, IPv6Address
 
@@ -42,7 +42,7 @@ def addr_check(addr):
 
 &#34;&#34;&#34;
 j.tools.tf_gateway.tcpservice_register(&#34;bing&#34;, &#34;www.bing.com&#34;, &#34;122.124.214.21&#34;)
-j.tools.tf_gateway.domain_register_a(&#34;ahmed&#34;, &#34;bots.grid.tf.&#34;, &#34;123.3.23.54&#34;)  
+j.tools.tf_gateway.domain_register_a(&#34;ahmed&#34;, &#34;bots.grid.tf.&#34;, &#34;123.3.23.54&#34;)
 
 &#34;&#34;&#34;
 
@@ -52,7 +52,7 @@ def local_redis():
         local = j.clients.redis.get(&#39;local&#39;)
     except:
         local = j.clients.redis.new(&#39;local&#39;)
-    
+
     return local
 
 def tcpservice_register(service_name, domain, service_endpoint):
@@ -64,7 +64,7 @@ def tcpservice_register(service_name, domain, service_endpoint):
     :param domain: (Server Name Indicator SNI) (e.g www.facebook.com)
     :type domain: str
     :param service_endpoint: TLS endpoint 102.142.96.34:443 &#34;ip:port&#34;
-    :type service_endpoint: string 
+    :type service_endpoint: string
     &#34;&#34;&#34;
     service = {}
     service[&#34;Key&#34;] = &#34;/tcprouter/service/{}&#34;.format(service_name)
@@ -76,14 +76,14 @@ def tcpservice_register(service_name, domain, service_endpoint):
 
 def domain_register(threebot_name, bots_domain=&#34;bots.grid.tf.&#34;, record_type=&#34;a&#34;, records=None):
     &#34;&#34;&#34;registers domain in coredns (needs to be authoritative)
-    
+
     e.g: ahmed.bots.grid.tf
 
     requires nameserver on bots.grid.tf (authoritative)
     - ahmed is threebot_name
     - bots_domain is bots.grid.tf
-    
-    :param threebot_name: threebot_name 
+
+    :param threebot_name: threebot_name
     :type threebot_name: str
     :param bots_domain: str, defaults to &#34;bots.grid.tf.&#34;
     :type bots_domain: str, optional
@@ -106,13 +106,13 @@ def domain_register(threebot_name, bots_domain=&#34;bots.grid.tf.&#34;, record_t
 
 def domain_register_a(name, domain, record_ip):
     &#34;&#34;&#34;registers A domain in coredns (needs to be authoritative)
-    
+
     e.g: ahmed.bots.grid.tf
 
     requires nameserver on bots.grid.tf (authoritative)
     - ahmed is threebot_name
     - bots_domain is bots.grid.tf
-    
+
     :param threebot_name: myhost
     :type threebot_name: str
     :param bots_domain: str, defaults to &#34;grid.tf.&#34;
@@ -127,14 +127,14 @@ def domain_register_a(name, domain, record_ip):
 
 def domain_register_aaaa(threebot_name, bots_domain, record_ip):
     &#34;&#34;&#34;registers A domain in coredns (needs to be authoritative)
-    
+
     e.g: ahmed.bots.grid.tf
 
     requires nameserver on bots.grid.tf (authoritative)
     - ahmed is threebot_name
     - bots_domain is bots.grid.tf
-    
-    :param threebot_name: threebot_name 
+
+    :param threebot_name: threebot_name
     :type threebot_name: str
     :param bots_domain: str, defaults to &#34;bots.grid.tf.&#34;
     :type bots_domain: str, optional
@@ -201,14 +201,14 @@ def test():
 <summary>Source code</summary>
 <pre><code class="python">def domain_register(threebot_name, bots_domain=&#34;bots.grid.tf.&#34;, record_type=&#34;a&#34;, records=None):
     &#34;&#34;&#34;registers domain in coredns (needs to be authoritative)
-    
+
     e.g: ahmed.bots.grid.tf
 
     requires nameserver on bots.grid.tf (authoritative)
     - ahmed is threebot_name
     - bots_domain is bots.grid.tf
-    
-    :param threebot_name: threebot_name 
+
+    :param threebot_name: threebot_name
     :type threebot_name: str
     :param bots_domain: str, defaults to &#34;bots.grid.tf.&#34;
     :type bots_domain: str, optional
@@ -249,13 +249,13 @@ def test():
 <summary>Source code</summary>
 <pre><code class="python">def domain_register_a(name, domain, record_ip):
     &#34;&#34;&#34;registers A domain in coredns (needs to be authoritative)
-    
+
     e.g: ahmed.bots.grid.tf
 
     requires nameserver on bots.grid.tf (authoritative)
     - ahmed is threebot_name
     - bots_domain is bots.grid.tf
-    
+
     :param threebot_name: myhost
     :type threebot_name: str
     :param bots_domain: str, defaults to &#34;grid.tf.&#34;
@@ -288,14 +288,14 @@ def test():
 <summary>Source code</summary>
 <pre><code class="python">def domain_register_aaaa(threebot_name, bots_domain, record_ip):
     &#34;&#34;&#34;registers A domain in coredns (needs to be authoritative)
-    
+
     e.g: ahmed.bots.grid.tf
 
     requires nameserver on bots.grid.tf (authoritative)
     - ahmed is threebot_name
     - bots_domain is bots.grid.tf
-    
-    :param threebot_name: threebot_name 
+
+    :param threebot_name: threebot_name
     :type threebot_name: str
     :param bots_domain: str, defaults to &#34;bots.grid.tf.&#34;
     :type bots_domain: str, optional
@@ -321,7 +321,7 @@ def test():
         local = j.clients.redis.get(&#39;local&#39;)
     except:
         local = j.clients.redis.new(&#39;local&#39;)
-    
+
     return local</code></pre>
 </details>
 </dd>
@@ -347,7 +347,7 @@ def test():
     :param domain: (Server Name Indicator SNI) (e.g www.facebook.com)
     :type domain: str
     :param service_endpoint: TLS endpoint 102.142.96.34:443 &#34;ip:port&#34;
-    :type service_endpoint: string 
+    :type service_endpoint: string
     &#34;&#34;&#34;
     service = {}
     service[&#34;Key&#34;] = &#34;/tcprouter/service/{}&#34;.format(service_name)

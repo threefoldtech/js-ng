@@ -1,7 +1,7 @@
 # js-ng
 ![[https://pypi.python.org/pypi/js-ng](pypi)](https://img.shields.io/pypi/v/js-ng.svg)
-![[https://travis-ci.org/js-next/js-ng]](https://travis-ci.org/js-next/js-ng.png)
-![[https://codecov.io/gh/js-next/js-ng]](https://codecov.io/gh/js-next/js-ng/branch/development/graph/badge.svg)
+![[https://travis-ci.org/threefoldtech/js-ng]](https://travis-ci.org/threefoldtech/js-ng.png)
+![[https://codecov.io/gh/threefoldtech/js-ng]](https://codecov.io/gh/threefoldtech/js-ng/branch/development/graph/badge.svg)
 
 config management/automation framework
 
@@ -57,7 +57,7 @@ python3 -m pip install setuptools -U
 
 ## API Docs
 
-[browsable](https://js-next.github.io/js-ng/api/jumpscale/) at [https://js-next.github.io/js-ng/api/jumpscale/](https://js-next.github.io/js-ng/api/jumpscale/)
+[browsable](https://threefoldtech.github.io/js-ng/api/jumpscale/) at [https://threefoldtech.github.io/js-ng/api/jumpscale/](https://threefoldtech.github.io/js-ng/api/jumpscale/)
 
 
 ## Contribution

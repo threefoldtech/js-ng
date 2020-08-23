@@ -10,10 +10,11 @@ from signal import SIGKILL, SIGTERM
 import json
 import better_exceptions
 import gevent
+from gevent.pool import Pool
 from gevent import time
 from gevent.server import StreamServer
 from jumpscale.core.base import Base, fields
-from jumpscale.god import j
+from jumpscale.loader import j
 from redis.connection import DefaultParser, Encoder
 from redis.exceptions import ConnectionError
 from .baseactor import BaseActor
@@ -22,9 +23,10 @@ from .systemactor import CoreActor, SystemActor
 
 def serialize(obj):
     if not isinstance(obj, (str, int, float, list, tuple, dict, bool)):
-        module = os.path.dirname(inspect.getmodule(obj).__file__)
+        module = inspect.getmodule(obj).__file__[:-3]
         return dict(__serialized__=True, module=module, type=obj.__class__.__name__, data=obj.to_dict())
     return obj
+
 
 def deserialize(obj):
     if isinstance(obj, dict) and obj.get("__serialized__"):
@@ -40,6 +42,14 @@ class GedisErrorTypes(Enum):
     BAD_REQUEST = 1
     ACTOR_ERROR = 3
     INTERNAL_SERVER_ERROR = 4
+    PERMISSION_ERROR = 5
+
+
+EXCEPTIONS_MAP = {
+    j.exceptions.Value: GedisErrorTypes.BAD_REQUEST.value,
+    j.exceptions.NotFound: GedisErrorTypes.NOT_FOUND.value,
+    j.exceptions.Permission: GedisErrorTypes.PERMISSION_ERROR.value,
+}
 
 
 class RedisConnectionAdapter:
@@ -132,11 +142,10 @@ class GedisServer(Base):
     port = fields.Integer(default=16000)
     enable_system_actor = fields.Boolean(default=True)
     run_async = fields.Boolean(default=True)
-    _actors = fields.Typed(dict)
+    _actors = fields.Typed(dict, default={})
 
-    def __init__(self):
-        super().__init__()
-        self._actors = self._actors or {}
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._core_actor = CoreActor()
         self._system_actor = SystemActor()
         self._loaded_actors = {"core": self._core_actor}
@@ -144,7 +153,7 @@ class GedisServer(Base):
     @property
     def actors(self):
         """Lists saved actors
-        
+
         Returns:
             list -- List of saved actors
         """
@@ -152,11 +161,11 @@ class GedisServer(Base):
 
     def actor_add(self, actor_name: str, actor_path: str):
         """Adds an actor to the server
-        
+
         Arguments:
             actor_name {str} -- Actor name
             actor_path {str} -- Actor absolute path
-        
+
         Raises:
             j.exceptions.Value: raises if actor name is matched one of the reserved actor names
             j.exceptions.Value: raises if actor name is not a valid identifier
@@ -171,7 +180,7 @@ class GedisServer(Base):
 
     def actor_delete(self, actor_name: str):
         """Removes an actor from the server
-        
+
         Arguments:
             actor_name {str} -- Actor name
         """
@@ -183,7 +192,7 @@ class GedisServer(Base):
         j.application.start("gedis")
 
         # handle signals
-        for signal_type in (SIGTERM, SIGTERM, SIGKILL):
+        for signal_type in (SIGTERM, SIGKILL):
             gevent.signal(signal_type, self.stop)
 
         # register system actor if enabled
@@ -198,14 +207,14 @@ class GedisServer(Base):
             self._system_actor.register_actor(actor_name, actor_path)
 
         # start the server
-        server = StreamServer((self.host, self.port), self._on_connection)
-        server.reuse_addr = True
-        server.serve_forever()
+        self._server = StreamServer((self.host, self.port), self._on_connection, spawn=Pool())
+        self._server.reuse_addr = True
+        self._server.start()
 
     def stop(self):
         """Stops the server
         """
-        j.logger.info("Shutting down ...")
+        j.logger.info("Shutting down...")
         self._server.stop()
 
     def _register_actor(self, actor_name: str, actor_module: BaseActor):
@@ -219,14 +228,9 @@ class GedisServer(Base):
         try:
             response["result"] = method(*args, **kwargs)
 
-        except TypeError as e:
+        except Exception as e:
             response["error"] = str(e)
-            response["error_type"] = GedisErrorTypes.BAD_REQUEST.value
-
-        except:
-            ttype, tvalue, tb = sys.exc_info()
-            response["error"] = better_exceptions.format_exception(ttype, tvalue, tb)
-            response["error_type"] = GedisErrorTypes.ACTOR_ERROR.value
+            response["error_type"] = EXCEPTIONS_MAP.get(e.__class__, GedisErrorTypes.ACTOR_ERROR.value)
 
         return response
 
@@ -239,9 +243,9 @@ class GedisServer(Base):
             parser.on_connect(connection)
 
             while True:
+                response = dict(success=True, result=None, error=None, error_type=None, is_async=False, task_id=None)
                 try:
                     request = parser.read_response()
-                    response = dict(success=True, result=None, error=None, error_type=None, is_async=False, task_id=None)
 
                     if len(request) < 2:
                         response["error"] = "invalid request"

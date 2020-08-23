@@ -1,8 +1,8 @@
 # IDE/Editor setup
 
 ## VSCode
-[code.visualstudio.com/] is a very popular extensible code editor with many extensions to provide an IDE-like experience
 
+[VSCode](https://code.visualstudio.com) is a very popular extensible code editor with many extensions to provide an IDE-like experience
 
 
 ### Poetry integration
@@ -12,10 +12,10 @@ and make sure to select python interpreter (Ctrl+P then select interpreter)
 
 ### Recommended extensions
 
-- `autoDocString` to ensure correct docstrings. 
+- `autoDocString` to ensure correct docstrings.
 - `pyright` for static checking your code while writing in vscode.
 - `AREPL` for a realtime python scratch pad.
-- `BetterToml` toml config supported.
+- `Better TOML` toml config supported.
 - `GitLens` for boosted git experience.
 - `Git graph` view a graph of your repository.
 - `Prettify JSON`

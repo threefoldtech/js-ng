@@ -22,7 +22,7 @@
 <section id="section-intro">
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">from jumpscale.god import j
+<pre><code class="python">from jumpscale.loader import j
 
 
 def _get_identifier(appname, message, public_message, category, alert_type):
@@ -83,12 +83,12 @@ class AlertsHandler:
 
     def get(self, alert_id: int = None, identifier: str = None, die: bool = True) -&gt; Alert:
         &#34;&#34;&#34;Get alert by its id or identifier
-        
+
         Keyword Arguments:
             alert_id {int} -- alert id (default: {None})
             identifier {str} -- alert identifier (default: {None})
             die {bool} -- flag to rasie exception if alert is not found (default: {True})
-        
+
         Raises:
             j.core.exceptions.NotFound: alert is not found
             j.core.exceptions.Value: invalid arguments
@@ -118,7 +118,7 @@ class AlertsHandler:
     ) -&gt; Alert:
 
         &#34;&#34;&#34;Find alerts
-        
+
         Keyword Arguments:
             appname {str} -- filter by allert app name (default: {&#34;&#34;})
             category {str} -- filter by alert category (default: {&#34;&#34;})
@@ -126,7 +126,7 @@ class AlertsHandler:
             pid {int} -- filter by process id (default: {None})
             start_time {int} -- filter by start time (default: {None})
             end_time {int} -- filter by end time (default: {None})
-        
+
         Returns:
             Alert -- alert object
         &#34;&#34;&#34;
@@ -179,17 +179,17 @@ class AlertsHandler:
     ) -&gt; Alert:
 
         &#34;&#34;&#34;Raise a new alert
-        
+
         Arguments:
             message {str} -- alert message
-        
+
         Keyword Arguments:
             public_message {str} -- alert public message (default: {&#34;&#34;})
             category {str} -- alert category (default: {&#34;&#34;})
             alert_type {str} -- alert type (default: {&#34;event_system&#34;})
             level {int} -- alert level (default: {40})
             traceback {dict} -- alert traceback (default: {None})
-        
+
         Returns:
             Alert -- alert object
         &#34;&#34;&#34;
@@ -224,7 +224,7 @@ class AlertsHandler:
 
     def count(self) -&gt; int:
         &#34;&#34;&#34;Gets alerts count
-        
+
         Returns:
             int -- total number of alerts
         &#34;&#34;&#34;
@@ -232,7 +232,7 @@ class AlertsHandler:
 
     def _save(self, alert: Alert):
         &#34;&#34;&#34;Saves alert object in db
-        
+
         Arguments:
             alert {Alert} -- alert object
         &#34;&#34;&#34;
@@ -247,7 +247,7 @@ class AlertsHandler:
 
         Raises:
             j.core.exceptions.Value: invalid arguments
-        
+
         Keyword Arguments:
             alert_id {int} -- alert id (default: {None})
             identifier {str} -- alert identifier (default: {None})
@@ -403,12 +403,12 @@ def json(self):
 
     def get(self, alert_id: int = None, identifier: str = None, die: bool = True) -&gt; Alert:
         &#34;&#34;&#34;Get alert by its id or identifier
-        
+
         Keyword Arguments:
             alert_id {int} -- alert id (default: {None})
             identifier {str} -- alert identifier (default: {None})
             die {bool} -- flag to rasie exception if alert is not found (default: {True})
-        
+
         Raises:
             j.core.exceptions.NotFound: alert is not found
             j.core.exceptions.Value: invalid arguments
@@ -438,7 +438,7 @@ def json(self):
     ) -&gt; Alert:
 
         &#34;&#34;&#34;Find alerts
-        
+
         Keyword Arguments:
             appname {str} -- filter by allert app name (default: {&#34;&#34;})
             category {str} -- filter by alert category (default: {&#34;&#34;})
@@ -446,7 +446,7 @@ def json(self):
             pid {int} -- filter by process id (default: {None})
             start_time {int} -- filter by start time (default: {None})
             end_time {int} -- filter by end time (default: {None})
-        
+
         Returns:
             Alert -- alert object
         &#34;&#34;&#34;
@@ -499,17 +499,17 @@ def json(self):
     ) -&gt; Alert:
 
         &#34;&#34;&#34;Raise a new alert
-        
+
         Arguments:
             message {str} -- alert message
-        
+
         Keyword Arguments:
             public_message {str} -- alert public message (default: {&#34;&#34;})
             category {str} -- alert category (default: {&#34;&#34;})
             alert_type {str} -- alert type (default: {&#34;event_system&#34;})
             level {int} -- alert level (default: {40})
             traceback {dict} -- alert traceback (default: {None})
-        
+
         Returns:
             Alert -- alert object
         &#34;&#34;&#34;
@@ -544,7 +544,7 @@ def json(self):
 
     def count(self) -&gt; int:
         &#34;&#34;&#34;Gets alerts count
-        
+
         Returns:
             int -- total number of alerts
         &#34;&#34;&#34;
@@ -552,7 +552,7 @@ def json(self):
 
     def _save(self, alert: Alert):
         &#34;&#34;&#34;Saves alert object in db
-        
+
         Arguments:
             alert {Alert} -- alert object
         &#34;&#34;&#34;
@@ -567,7 +567,7 @@ def json(self):
 
         Raises:
             j.core.exceptions.Value: invalid arguments
-        
+
         Keyword Arguments:
             alert_id {int} -- alert id (default: {None})
             identifier {str} -- alert identifier (default: {None})
@@ -641,17 +641,17 @@ traceback {dict} &ndash; alert traceback (default: {None})</p>
 ) -&gt; Alert:
 
     &#34;&#34;&#34;Raise a new alert
-    
+
     Arguments:
         message {str} -- alert message
-    
+
     Keyword Arguments:
         public_message {str} -- alert public message (default: {&#34;&#34;})
         category {str} -- alert category (default: {&#34;&#34;})
         alert_type {str} -- alert type (default: {&#34;event_system&#34;})
         level {int} -- alert level (default: {40})
         traceback {dict} -- alert traceback (default: {None})
-    
+
     Returns:
         Alert -- alert object
     &#34;&#34;&#34;
@@ -699,7 +699,7 @@ traceback {dict} &ndash; alert traceback (default: {None})</p>
 <summary>Source code</summary>
 <pre><code class="python">def count(self) -&gt; int:
     &#34;&#34;&#34;Gets alerts count
-    
+
     Returns:
         int -- total number of alerts
     &#34;&#34;&#34;
@@ -726,7 +726,7 @@ identifier {str} &ndash; alert identifier (default: {None})</dd>
 
     Raises:
         j.core.exceptions.Value: invalid arguments
-    
+
     Keyword Arguments:
         alert_id {int} -- alert id (default: {None})
         identifier {str} -- alert identifier (default: {None})
@@ -782,7 +782,7 @@ end_time {int} &ndash; filter by end time (default: {None})</p>
 ) -&gt; Alert:
 
     &#34;&#34;&#34;Find alerts
-    
+
     Keyword Arguments:
         appname {str} -- filter by allert app name (default: {&#34;&#34;})
         category {str} -- filter by alert category (default: {&#34;&#34;})
@@ -790,7 +790,7 @@ end_time {int} &ndash; filter by end time (default: {None})</p>
         pid {int} -- filter by process id (default: {None})
         start_time {int} -- filter by start time (default: {None})
         end_time {int} -- filter by end time (default: {None})
-    
+
     Returns:
         Alert -- alert object
     &#34;&#34;&#34;
@@ -855,12 +855,12 @@ die {bool} &ndash; flag to rasie exception if alert is not found (default: {True
 <summary>Source code</summary>
 <pre><code class="python">def get(self, alert_id: int = None, identifier: str = None, die: bool = True) -&gt; Alert:
     &#34;&#34;&#34;Get alert by its id or identifier
-    
+
     Keyword Arguments:
         alert_id {int} -- alert id (default: {None})
         identifier {str} -- alert identifier (default: {None})
         die {bool} -- flag to rasie exception if alert is not found (default: {True})
-    
+
     Raises:
         j.core.exceptions.NotFound: alert is not found
         j.core.exceptions.Value: invalid arguments

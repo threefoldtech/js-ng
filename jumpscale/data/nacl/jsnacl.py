@@ -1,3 +1,4 @@
+import binascii
 import nacl.utils
 
 from nacl.public import PrivateKey, PublicKey, Box
@@ -16,11 +17,11 @@ class NACL:
             private_key (bytes, optional): The private key used to sign and encrypt the data. Generated randomly if not given.
             symmetric_key (bytes, optional): The key used for symmetric encryption. Generated randomly if not given.
         """
-        self.private_key = PrivateKey.generate() if private_key is None else PrivateKey(private_key)
-        private_key = self.get_private_key()
+        self.signing_key = SigningKey(private_key) if private_key else SigningKey.generate()
+        self.verify_key = self.signing_key.verify_key
+        self.private_key = self.signing_key.to_curve25519_private_key()
         self.public_key = self.private_key.public_key
         self.symmetric_key = nacl.utils.random(NACL.KEY_SIZE) if symmetric_key is None else symmetric_key
-        self.signing_key = SigningKey(private_key)
         self.symmetric_box = SecretBox(self.symmetric_key)
 
     def encrypt(self, message, reciever_public_key):
@@ -81,6 +82,19 @@ class NACL:
         signed = self.signing_key.sign(message)
         return message, signed.signature
 
+    def sign_hex(self, message):
+        """Sign the message and return the messsage and the signature.
+
+        Args:
+            message (bytes): The message to be signed
+
+        Returns:
+            bytes: The message and the signature.
+        """
+        signed = self.signing_key.sign(message)
+        signedhex = binascii.hexlify(signed.signature)
+        return signedhex
+
     def verify(self, message, signature, verification_key):
         """Verify that the signature using the verification key
 
@@ -112,7 +126,13 @@ class NACL:
         Returns:
             bytes: The verification key.
         """
-        return bytes(self.signing_key.verify_key)
+        return bytes(self.verify_key)
+
+    def get_verify_key_hex(self):
+        return binascii.hexlify(self.verify_key.encode()).decode()
+
+    def get_public_key_hex(self):
+        return binascii.hexlify(self.public_key.encode()).decode()
 
     def get_public_key(self):
         """Getter for the public key.
