@@ -56,11 +56,17 @@ class ProcessTests(TestCase):
         sleep(1)
 
     def get_process_pids(self, process_name):
-        info("Get process id.")
-        cmd = f"ps -aux | grep '{process_name}' | grep -v grep | awk '{{ print $2 }}'"
+        cmd = f"ps -aux | grep '{process_name}'"
         rc, output, error = execute(cmd)
         self.assertFalse(rc, error)
-        pids = list(map(int, output.splitlines()))
+        pids = []
+        for line in output.splitlines():
+            if "grep" in line or line.strip() == "":
+                continue
+            else:
+                pids.append(line.split()[1])
+
+        pids = list(map(int, pids))
         return pids
 
     def create_user(self, username, file_path):
