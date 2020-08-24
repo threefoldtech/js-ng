@@ -57,7 +57,7 @@ class ProcessTests(TestCase):
 
     def get_process_pids(self, process_name):
         info("Get process id.")
-        cmd = f"ps -aux | grep {process_name} | grep -v grep | awk '{{ print $2 }}'"
+        cmd = f"ps -aux | grep '{process_name}' | grep -v grep | awk '{{ print $2 }}'"
         rc, output, error = execute(cmd)
         self.assertFalse(rc, error)
         pids = list(map(int, output.splitlines()))
