@@ -57,7 +57,7 @@ class ProcessTests(TestCase):
 
     def get_process_pids(self, process_name):
         cmd = f"ps aux | grep '{process_name}'"
-        rc, output, error = execute(cmd)
+        rc, output, error = j.sals.process.execute(cmd)
         self.assertFalse(rc, error)
         pids = []
         for line in output.splitlines():
