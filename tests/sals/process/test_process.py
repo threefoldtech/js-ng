@@ -1,13 +1,13 @@
 import os
 import string
+from math import ceil
+from random import randint
 from subprocess import PIPE, run
 from time import sleep
 from unittest import TestCase
-from random import randint
-from math import ceil
 
-from parameterized import parameterized
 from jumpscale.loader import j
+from parameterized import parameterized
 
 SESSION_NAME = "testing_process"
 
@@ -57,7 +57,7 @@ class ProcessTests(TestCase):
 
     def get_process_pids(self, process_name):
         info("Get process id.")
-        cmd = f"ps -aux | grep -v grep | grep {process_name} | awk '{{ print $2 }}'"
+        cmd = f"ps -aux | grep {process_name} | grep -v grep | awk '{{ print $2 }}'"
         rc, output, error = execute(cmd)
         self.assertFalse(rc, error)
         pids = list(map(int, output.splitlines()))
@@ -308,7 +308,6 @@ class ProcessTests(TestCase):
         self.start_in_tmux(cmd)
 
         info("Check that the process has been started and get its pid.")
-        info(f"{j.sals.process.get_filtered_pids(process_name)}")
         pids = self.get_process_pids(process_name)
         self.assertEqual(len(pids), 2)
 
