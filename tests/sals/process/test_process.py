@@ -308,6 +308,7 @@ class ProcessTests(TestCase):
         self.start_in_tmux(cmd)
 
         info("Check that the process has been started and get its pid.")
+        info(f"{j.sals.process.get_filtered_pids(process_name)}")
         pids = self.get_process_pids(process_name)
         self.assertEqual(len(pids), 2)
 
@@ -455,11 +456,11 @@ class ProcessTests(TestCase):
         #. Check that any random name is not installed.
         """
         info("Check that a package should be installed with js-ng.")
-        j.sals.process.is_installed("tmux")
+        self.assertTrue(j.sals.process.is_installed("tmux"))
 
         info("Check that any random name is not installed.")
         unkown_package = randstr()
-        j.sals.process.is_installed(unkown_package)
+        self.assertFalse(j.sals.process.is_installed(unkown_package))
 
     def test_15_get_kill_process_by_pids(self):
         """Test case for getting and killing process by pids.
@@ -746,7 +747,6 @@ class ProcessTests(TestCase):
         user_pids[user_2] = int(output.strip())
 
         pids = self.get_process_pids(process_name)
-        self.assertEqual(len(pids), 5)
         pids.remove(user_pids[user_1])
         pids.remove(user_pids[user_2])
         user_pids[current_user] = pids
