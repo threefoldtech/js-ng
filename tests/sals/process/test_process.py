@@ -56,17 +56,10 @@ class ProcessTests(TestCase):
         sleep(1)
 
     def get_process_pids(self, process_name):
-        cmd = f"ps aux | grep '{process_name}'"
+        cmd = f"ps -aux | grep '{process_name}' | grep -v grep | awk '{{ print $2 }}'"
         rc, output, error = j.sals.process.execute(cmd)
         self.assertFalse(rc, error)
-        pids = []
-        for line in output.splitlines():
-            if "grep" in line or line.strip() == "":
-                continue
-            else:
-                pids.append(line.split()[1])
-
-        pids = list(map(int, pids))
+        pids = list(map(int, output.splitlines()))
         return pids
 
     def create_user(self, username, file_path):
