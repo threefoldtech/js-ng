@@ -37,7 +37,7 @@ class ProcessTests(TestCase):
     def tearDown(self):
         cmd = f"tmux kill-session -t {SESSION_NAME}"
         execute(cmd)
-        cmd = f"ps -aux | grep -v grep | grep tail | awk '{{ print $2 }}'"
+        cmd = f"ps aux | grep -v grep | grep tail | awk '{{ print $2 }}'"
         _, output, _ = execute(cmd)
         tail_processes = output.splitlines()
         if tail_processes:
@@ -56,7 +56,7 @@ class ProcessTests(TestCase):
         sleep(1)
 
     def get_process_pids(self, process_name):
-        cmd = f"ps -aux | grep '{process_name}'"
+        cmd = f"ps aux | grep '{process_name}'"
         rc, output, error = execute(cmd)
         self.assertFalse(rc, error)
         pids = []
