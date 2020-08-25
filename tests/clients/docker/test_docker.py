@@ -1,4 +1,5 @@
 from random import randint
+
 from jumpscale.loader import j
 from tests.base_tests import BaseTests
 
@@ -19,7 +20,7 @@ class TestDockerClient(BaseTests):
 
     def tearDown(self):
         self.info("Remove all dockers which start with docker or DOCKER")
-        j.core.executors.run_local('docker rm -f $(docker ps -aqf "name=docker|DOCKER")')
+        j.sals.process.execute('docker rm -f $(docker ps -aqf "name=docker|DOCKER")')
 
     @classmethod
     def tearDownClass(cls):
@@ -30,7 +31,7 @@ class TestDockerClient(BaseTests):
         Function to check docker status, if it's running or not.
         Returns: True if the status is correct, and False otherwise.
         """
-        _, output, _ = j.core.executors.run_local('docker inspect {} | grep "Running"'.format(docker_name))
+        _, output, _ = j.sals.process.execute('docker inspect {} | grep "Running"'.format(docker_name))
         if '"Running": {}'.format(status) in output:
             return True
         else:
@@ -47,7 +48,7 @@ class TestDockerClient(BaseTests):
         #. Try to get a container with a non valid name, and make sure that it raises an error.
         """
         self.info("Get container ID using container name")
-        _, output, _ = j.core.executors.run_local("docker ps -aqf name={}".format(self.DOCKER_NAME))
+        _, output, _ = j.sals.process.execute("docker ps -aqf name={}".format(self.DOCKER_NAME))
         self.assertTrue(output)
 
         self.info("Try to get this container one time using container name")
@@ -165,7 +166,7 @@ class TestDockerClient(BaseTests):
         self.assertIn("exit_code=0", str(execute_command))
 
         self.info("check that file has been created correctly")
-        _, output, _ = j.core.executors.run_local("docker exec {}  ls /tmp/".format(self.DOCKER_NAME))
+        _, output, _ = j.sals.process.execute("docker exec {}  ls /tmp/".format(self.DOCKER_NAME))
         self.assertIn("test_exec", output)
 
     def test06_docker_delete(self):
@@ -192,7 +193,7 @@ class TestDockerClient(BaseTests):
         self.assertTrue(self.client.delete(self.DOCKER_NAME, force=True))
 
         self.info("Check that the container has been deleted correctly")
-        _, output, _ = j.core.executors.run_local('docker ps -a | grep -w "{}"'.format(self.DOCKER_NAME))
+        _, output, _ = j.sals.process.execute('docker ps -a | grep -w "{}"'.format(self.DOCKER_NAME))
         self.assertFalse(output)
 
         self.info("Create a stopped container")
@@ -206,7 +207,7 @@ class TestDockerClient(BaseTests):
         self.assertTrue(self.client.delete(DOCKER_NAME, force=False))
 
         self.info("Check that the container has been deleted correctly")
-        _, output, _ = j.core.executors.run_local('docker ps -a | grep -w "{}"'.format(DOCKER_NAME))
+        _, output, _ = j.sals.process.execute('docker ps -a | grep -w "{}"'.format(DOCKER_NAME))
         self.assertFalse(output)
 
         self.info("Create a running container")
@@ -242,11 +243,11 @@ class TestDockerClient(BaseTests):
         self.assertTrue(self.docker_check_status(DOCKER_NAME, "true"))
 
         self.info("Check the environmental variable is created correctly")
-        _, output, _ = j.core.executors.run_local("docker exec {} printenv | grep TEST".format(DOCKER_NAME))
+        _, output, _ = j.sals.process.execute("docker exec {} printenv | grep TEST".format(DOCKER_NAME))
         self.assertIn("TEST=test", output)
 
         self.info("Check that the hostname has been created correctly")
-        _, output, _ = j.core.executors.run_local("docker exec {} hostname".format(DOCKER_NAME))
+        _, output, _ = j.sals.process.execute("docker exec {} hostname".format(DOCKER_NAME))
         self.assertIn("test_jsng", output)
 
     def test08_docker_create(self):
