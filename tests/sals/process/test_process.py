@@ -1,58 +1,38 @@
-import os
 import string
 from math import ceil
 from random import randint
-from subprocess import PIPE, run
 from time import sleep
-from unittest import TestCase
 
 from jumpscale.loader import j
 from parameterized import parameterized
+from tests.base_tests import BaseTests
 
 SESSION_NAME = "testing_process"
+TAIL_PROCESS_NAME = "tail"
+PYTHON_SERVER_NAME = "http.server"
 
 
-def info(msg):
-    j.logger.info(msg)
-
-
-def randstr():
-    return j.data.idgenerator.nfromchoices(10, string.ascii_letters)
-
-
-def execute(cmd):
-    response = run(cmd, stdout=PIPE, stderr=PIPE, shell=True, universal_newlines=True)
-    output = response.stdout
-    error = response.stderr
-    rc = response.returncode
-    return rc, output, error
-
-
-class ProcessTests(TestCase):
+class ProcessTests(BaseTests):
     def setUp(self):
         self.user_to_clear = []
-        cmd = f"tmux new-session -d -s {SESSION_NAME}"
-        execute(cmd)
+        j.core.executors.tmux.get_session(SESSION_NAME)
 
     def tearDown(self):
-        cmd = f"tmux kill-session -t {SESSION_NAME}"
-        execute(cmd)
-        cmd = f"ps aux | grep -v grep | grep tail | awk '{{ print $2 }}'"
-        _, output, _ = execute(cmd)
-        tail_processes = output.splitlines()
-        if tail_processes:
-            execute("pkill tail")
+        j.core.executors.tmux.kill_session(SESSION_NAME)
+        if self.get_process_pids(TAIL_PROCESS_NAME):
+            j.sals.process.kill_all(TAIL_PROCESS_NAME)
 
         for user in self.user_to_clear:
             cmd = f"""sudo userdel  {user};
             sudo rm -rf /home/{user}"""
-            execute(cmd)
+            j.sals.process.execute(cmd)
+
+    def randstr(self):
+        return j.data.idgenerator.nfromchoices(10, string.ascii_letters)
 
     def start_in_tmux(self, cmd):
-        window_name = randstr()
-        cmd = f"tmux new-window -d -t {SESSION_NAME} -n {window_name} '{cmd}'"
-        rc, _, error = execute(cmd)
-        self.assertFalse(rc, error)
+        window_name = self.randstr()
+        j.core.executors.tmux.execute_in_window(cmd, window_name, SESSION_NAME)
         sleep(1)
 
     def get_process_pids(self, process_name):
@@ -67,15 +47,15 @@ class ProcessTests(TestCase):
         sudo mkdir -p /home/{username};
         sudo touch {file_path};
         """
-        rc, _, error = execute(cmd)
+        rc, _, error = j.sals.process.execute(cmd)
         self.assertFalse(rc, error)
 
     def get_ports_mapping(self):
-        rc, output, error = execute("netstat -tlnp | tail -n+3 | awk '{{ print $4 }}'")  # ip:port
+        rc, output, error = j.sals.process.execute("netstat -tlnp | tail -n+3 | awk '{{ print $4 }}'")  # ip:port
         self.assertFalse(rc, error)
         ips_ports = output.splitlines()
 
-        rc, output, error = execute("netstat -tlnp | tail -n+3 | awk '{{ print $7 }}'")  # PID/process
+        rc, output, error = j.sals.process.execute("netstat -tlnp | tail -n+3 | awk '{{ print $7 }}'")  # PID/process
         self.assertFalse(rc, error)
         pids_processes = output.splitlines()
 
@@ -102,10 +82,10 @@ class ProcessTests(TestCase):
         #. Execute command.
         #. Check the command result.
         """
-        info("Execute command.")
+        self.info("Execute command.")
         rc, stdout, stderr = j.sals.process.execute("which ls")
 
-        info("Check the command result.")
+        self.info("Check the command result.")
         self.assertFalse(rc, stderr)
         self.assertIn("ls", stdout)
 
@@ -116,12 +96,12 @@ class ProcessTests(TestCase):
         #. Execute command with environment variable.
         #. Check that the environment varible is exist.
         """
-        info("Execute command with environment variable.")
-        env_name = randstr()
-        env_value = randstr()
+        self.info("Execute command with environment variable.")
+        env_name = self.randstr()
+        env_value = self.randstr()
         rc, stdout, stderr = j.sals.process.execute(f"echo ${env_name}", env={env_name: env_value})
 
-        info("Check that the environment varible is exist.")
+        self.info("Check that the environment varible is exist.")
         self.assertFalse(rc, stderr)
         self.assertIn(env_value, stdout.strip())
 
@@ -132,8 +112,8 @@ class ProcessTests(TestCase):
         #. Execute command with timeout.
         #. Make sure that the command will raise timeout error.
         """
-        info("Execute command with timeout.")
-        info("Make sure that the command will raise timeout error.")
+        self.info("Execute command with timeout.")
+        self.info("Make sure that the command will raise timeout error.")
         with self.assertRaises(Exception):
             j.sals.process.execute("sleep 3", timeout=1)
 
@@ -144,9 +124,9 @@ class ProcessTests(TestCase):
         #. Execute command with die.
         #. Make sure that the command will raise error.
         """
-        info("Execute command with die.")
-        info("Make sure that the command will raise error.")
-        dir_name = randstr()
+        self.info("Execute command with die.")
+        self.info("Make sure that the command will raise error.")
+        dir_name = self.randstr()
         with self.assertRaises(Exception):
             j.sals.process.execute(f"ls {dir_name}", die=True)
 
@@ -159,24 +139,23 @@ class ProcessTests(TestCase):
         #. Check that the command will run on the directory has been created.
         #. Delete created file and directory.
         """
-        info("Create a directory with one file.")
-        dir_name = randstr()
-        file_name = randstr()
-        dir_path = os.path.join("/tmp", dir_name)
-        file_path = os.path.join(dir_path, file_name)
-        os.mkdir(dir_path)
-        open(file_path, "w").close()
+        self.info("Create a directory with one file.")
+        dir_name = self.randstr()
+        file_name = self.randstr()
+        dir_path = j.sals.fs.join_paths("/tmp", dir_name)
+        file_path = j.sals.fs.join_paths(dir_path, file_name)
+        j.sals.fs.mkdir(dir_path)
+        j.sals.fs.touch(file_path)
 
-        info("Execute command in the directory has been created.")
+        self.info("Execute command in the directory has been created.")
         rc, stdout, stderr = j.sals.process.execute(f"ls {dir_path}")
 
-        info("Check that the command will run on the directory has been created.")
+        self.info("Check that the command will run on the directory has been created.")
         self.assertFalse(rc, stderr)
         self.assertIn(file_name, stdout.strip())
 
-        info("Delete created file and directory")
-        os.remove(file_path)
-        os.rmdir(dir_path)
+        self.info("Delete created file and directory")
+        j.sals.fs.rmtree(dir_path)
 
     def test_06_check_for_pid_process(self):
         """Test case for checking that the pid and process name are belong to the same process.
@@ -186,17 +165,16 @@ class ProcessTests(TestCase):
         #. Get process id.
         #. Check that the pid and process name are belong to the same process.
         """
-        info("Start a process in tmux.")
-        process_name = "tail"
-        cmd = f"{process_name} -f /dev/null"
+        self.info("Start a process in tmux.")
+        cmd = f"{TAIL_PROCESS_NAME} -f /dev/null"
         self.start_in_tmux(cmd)
 
-        info("Get process id.")
-        pids = self.get_process_pids(process_name)
+        self.info("Get process id.")
+        pids = self.get_process_pids(TAIL_PROCESS_NAME)
         self.assertEqual(len(pids), 1)
 
-        info("Check that the pid and process name are belong to the same process.")
-        self.assertTrue(j.sals.process.check_process_for_pid(pid=pids[0], process_name=process_name))
+        self.info("Check that the pid and process name are belong to the same process.")
+        self.assertTrue(j.sals.process.check_process_for_pid(pid=pids[0], process_name=TAIL_PROCESS_NAME))
 
     def test_07_check_running(self):
         """Test case for checking that process is running.
@@ -208,22 +186,21 @@ class ProcessTests(TestCase):
         #. Start another process in tmux.
         #. Check that the process is running with two minimum instance, should be True.
         """
-        info("Start a process in tmux.")
-        process_name = "tail"
-        cmd = f"{process_name} -f /dev/null"
+        self.info("Start a process in tmux.")
+        cmd = f"{TAIL_PROCESS_NAME} -f /dev/null"
         self.start_in_tmux(cmd)
 
-        info("Check that the process is running with one minimum instance, should be True.")
-        self.assertTrue(j.sals.process.check_running(process_name, min=1))
+        self.info("Check that the process is running with one minimum instance, should be True.")
+        self.assertTrue(j.sals.process.check_running(TAIL_PROCESS_NAME, min=1))
 
-        info("Check that the process is running with two minimum instance, should be False.")
-        self.assertFalse(j.sals.process.check_running(process_name, min=2))
+        self.info("Check that the process is running with two minimum instance, should be False.")
+        self.assertFalse(j.sals.process.check_running(TAIL_PROCESS_NAME, min=2))
 
-        info("Start another process in tmux.")
+        self.info("Start another process in tmux.")
         self.start_in_tmux(cmd)
 
-        info("Check that the process is running with two minimum instance, should be True.")
-        self.assertTrue(j.sals.process.check_running(process_name, min=2))
+        self.info("Check that the process is running with two minimum instance, should be True.")
+        self.assertTrue(j.sals.process.check_running(TAIL_PROCESS_NAME, min=2))
 
     def test_08_check_start_stop(self):
         """Test case for checking starting and stopping command.
@@ -235,27 +212,26 @@ class ProcessTests(TestCase):
         #. Check that the process has been stopped.
         #. Start a process again in tmux with nrinstances=2, should fail.
         """
-        info("Start a process in tmux with check_start.")
-        window_name = randstr()
-        process_name = "tail"
-        start_cmd = f"tmux new-window -d -t {SESSION_NAME} -n {window_name} '{process_name} -f /dev/null'"
-        j.sals.process.check_start(cmd=start_cmd, filterstr=process_name, nrinstances=1)
+        self.info("Start a process in tmux with check_start.")
+        window_name = self.randstr()
+        start_cmd = f"tmux new-window -d -t {SESSION_NAME} -n {window_name} '{TAIL_PROCESS_NAME} -f /dev/null'"
+        j.sals.process.check_start(cmd=start_cmd, filterstr=TAIL_PROCESS_NAME, nrinstances=1)
 
-        info("Check that the process has been started.")
-        pids = self.get_process_pids(process_name)
+        self.info("Check that the process has been started.")
+        pids = self.get_process_pids(TAIL_PROCESS_NAME)
         self.assertEqual(len(pids), 1)
 
-        info("Stop the process.")
+        self.info("Stop the process.")
         stop_cmd = f"tmux kill-window -t {window_name}"
-        j.sals.process.check_stop(stop_cmd, filterstr=process_name)
+        j.sals.process.check_stop(stop_cmd, filterstr=TAIL_PROCESS_NAME)
 
-        info("Check that the process has been stopped.")
-        pids = self.get_process_pids(process_name)
+        self.info("Check that the process has been stopped.")
+        pids = self.get_process_pids(TAIL_PROCESS_NAME)
         self.assertFalse(pids, "Process is not stopped")
 
-        info("Start a process again in tmux with nrinstances=2, should fail.")
+        self.info("Start a process again in tmux with nrinstances=2, should fail.")
         with self.assertRaises(Exception):
-            j.sals.process.check_start(cmd=start_cmd, filterstr=process_name, nrinstances=2)
+            j.sals.process.check_start(cmd=start_cmd, filterstr=TAIL_PROCESS_NAME, nrinstances=2)
 
     def test_09_get_process_environ(self):
         """Test case for getting process environment variables.
@@ -266,23 +242,22 @@ class ProcessTests(TestCase):
         #. Get this process environ with its pid.
         #. Check that the environment variable has been set is in process environ.
         """
-        info("Start a tail command with environment variable.")
-        process_name = "tail"
-        cmd = f"{process_name} -f /dev/null &> /dev/null &"
-        env_name = randstr()
-        env_val = randstr()
+        self.info("Start a tail command with environment variable.")
+        cmd = f"{TAIL_PROCESS_NAME} -f /dev/null &> /dev/null &"
+        env_name = self.randstr()
+        env_val = self.randstr()
         rc, _, error = j.sals.process.execute(cmd=cmd, env={env_name: env_val})
         self.assertFalse(rc, error)
         sleep(1)
 
-        info("Check that the process has been started and get its pid.")
-        pids = self.get_process_pids(process_name)
+        self.info("Check that the process has been started and get its pid.")
+        pids = self.get_process_pids(TAIL_PROCESS_NAME)
         self.assertEqual(len(pids), 1, "tail didn't start")
 
-        info("Get this process environ with its pid.")
+        self.info("Get this process environ with its pid.")
         env = j.sals.process.get_environ(pids[0])
 
-        info("Check that the environment variable has been set is in process environ.")
+        self.info("Check that the environment variable has been set is in process environ.")
         self.assertIn(env_name, env.keys())
         self.assertEqual(env[env_name], env_val)
 
@@ -297,30 +272,29 @@ class ProcessTests(TestCase):
         #. Get this process pid with its name and filtered with server port.
         #. Check that only one server is found.
         """
-        info("Start a tmux session with two python server process.")
-        process_name = "http.server"
+        self.info("Start a tmux session with two python server process.")
         port_1 = randint(1000, 2000)
         port_2 = randint(2001, 3000)
-        cmd = f"python3 -m {process_name} {port_1}"
+        cmd = f"python3 -m {PYTHON_SERVER_NAME} {port_1}"
         self.start_in_tmux(cmd)
-        cmd = f"python3 -m {process_name} {port_2}"
+        cmd = f"python3 -m {PYTHON_SERVER_NAME} {port_2}"
         self.start_in_tmux(cmd)
 
-        info("Check that the process has been started and get its pid.")
-        pids = self.get_process_pids(process_name)
+        self.info("Check that the process has been started and get its pid.")
+        pids = self.get_process_pids(PYTHON_SERVER_NAME)
         self.assertEqual(len(pids), 2)
 
-        info("Get this process pid with its name.")
-        server_pids = j.sals.process.get_filtered_pids(process_name)
+        self.info("Get this process pid with its name.")
+        server_pids = j.sals.process.get_filtered_pids(PYTHON_SERVER_NAME)
 
-        info("Check that there is two pids.")
+        self.info("Check that there is two pids.")
         self.assertEqual(len(server_pids), 2)
         self.assertEqual(sorted(pids), sorted(server_pids))
 
-        info("Get this process pid with its name and filtered with server port.")
-        server_pid = j.sals.process.get_filtered_pids(process_name, excludes=[str(port_1)])
+        self.info("Get this process pid with its name and filtered with server port.")
+        server_pid = j.sals.process.get_filtered_pids(PYTHON_SERVER_NAME, excludes=[str(port_1)])
 
-        info("Check that only one server is found.")
+        self.info("Check that only one server is found.")
         self.assertEqual(len(server_pid), 1)
         self.assertIn(server_pid[0], pids)
 
@@ -332,12 +306,12 @@ class ProcessTests(TestCase):
         #. Get memory usage from 'free' command.
         #. Check that memory usage from both ways almost the same.
         """
-        info("Get memory usage from SALS process.")
+        self.info("Get memory usage from SALS process.")
         memory_usage = j.sals.process.get_memory_usage()
 
-        info("Get memory usage from 'free' command.")
+        self.info("Get memory usage from 'free' command.")
         cmd = "free"
-        rc, output, error = execute(cmd)
+        rc, output, error = j.sals.process.execute(cmd)
         self.assertFalse(rc, error)
         self.assertTrue(output)
         names = output.splitlines()[0].split()
@@ -352,7 +326,7 @@ class ProcessTests(TestCase):
         available = ceil(memory_info["available"] / (1024 ** 2))
         percent = (total - available) / (total) * 100
 
-        info("Check that memory usage from both ways almost the same.")
+        self.info("Check that memory usage from both ways almost the same.")
         self.assertEqual(memory_usage["total"], total)
         self.assertAlmostEqual(memory_usage["used"], used, delta=1)
         self.assertAlmostEqual(memory_usage["percent"], percent, delta=5)
@@ -363,25 +337,24 @@ class ProcessTests(TestCase):
         *Test Scenario**
         #. Start python server in tmux.
         #. Check that the server has been started.
-        #. Get processes info using SALS process.
-        #. Check that the python server is in the processes info.
+        #. Get processes self.info using SALS process.
+        #. Check that the python server is in the processes self.info.
         #. Get the current process using SALS process.
-        #. Check that this process in processes info.
+        #. Check that this process in processes self.info.
         """
-        info("Start python server in tmux.")
-        process_name = "http.server"
+        self.info("Start python server in tmux.")
         port = randint(1000, 2000)
-        cmd = f"python3 -m {process_name} {port}"
+        cmd = f"python3 -m {PYTHON_SERVER_NAME} {port}"
         self.start_in_tmux(cmd)
 
-        info("Check that the server has been started.")
-        pids = self.get_process_pids(process_name)
+        self.info("Check that the server has been started.")
+        pids = self.get_process_pids(PYTHON_SERVER_NAME)
         self.assertEqual(len(pids), 1)
 
-        info("Get processes info using SALS process.")
+        self.info("Get processes self.info using SALS process.")
         processes_info = j.sals.process.get_processes_info()
 
-        info("Check that the python server is in the processes info.")
+        self.info("Check that the python server is in the processes self.info.")
         found = False
         for process_info in processes_info:
             if process_info["pid"] == pids[0]:
@@ -391,10 +364,10 @@ class ProcessTests(TestCase):
         self.assertEqual(process_info["name"], "python3")
         self.assertEqual(process_info["ports"], [{"port": port, "status": "LISTEN"}])
 
-        info("Get the current process using SALS process.")
+        self.info("Get the current process using SALS process.")
         my_process = j.sals.process.get_my_process()
 
-        info("Check that this process in processes info.")
+        self.info("Check that this process in processes self.info.")
         found = False
         for process_info in processes_info:
             if process_info["pid"] == my_process.pid:
@@ -415,34 +388,33 @@ class ProcessTests(TestCase):
         #. Kill the server by port.
         #. Check that the server pid is not exist.
         """
-        info("Start python server in tmux.")
-        process_name = "http.server"
+        self.info("Start python server in tmux.")
         port = randint(1000, 2000)
-        cmd = f"python3 -m {process_name} {port}"
+        cmd = f"python3 -m {PYTHON_SERVER_NAME} {port}"
         self.start_in_tmux(cmd)
 
-        info("Check that the server has been started.")
-        pids = self.get_process_pids(process_name)
+        self.info("Check that the server has been started.")
+        pids = self.get_process_pids(PYTHON_SERVER_NAME)
         self.assertEqual(len(pids), 1)
         self.assertTrue(j.sals.process.is_port_listening(port))
 
-        info("Get the process by port.")
+        self.info("Get the process by port.")
         process = j.sals.process.get_process_by_port(port)
 
-        info("Get pid of the process by port.")
+        self.info("Get pid of the process by port.")
         process_pid = j.sals.process.get_pid_by_port(port)
 
-        info("Check that the python server pid is the same one from SALS process.")
+        self.info("Check that the python server pid is the same one from SALS process.")
         self.assertEqual(process_pid, pids[0])
         self.assertEqual(process.pid, pids[0])
         self.assertEqual(process.name(), "python3")
 
-        info("Kill the server by port.")
+        self.info("Kill the server by port.")
         killed = j.sals.process.kill_process_by_port(port)
 
-        info("Check that the server pid is not exist.")
+        self.info("Check that the server pid is not exist.")
         self.assertTrue(killed)
-        pids = self.get_process_pids(process_name)
+        pids = self.get_process_pids(PYTHON_SERVER_NAME)
         self.assertFalse(pids)
         self.assertFalse(j.sals.process.is_port_listening(port))
 
@@ -453,11 +425,11 @@ class ProcessTests(TestCase):
         #. Check that a package should be installed with js-ng.
         #. Check that any random name is not installed.
         """
-        info("Check that a package should be installed with js-ng.")
+        self.info("Check that a package should be installed with js-ng.")
         self.assertTrue(j.sals.process.is_installed("tmux"))
 
-        info("Check that any random name is not installed.")
-        unkown_package = randstr()
+        self.info("Check that any random name is not installed.")
+        unkown_package = self.randstr()
         self.assertFalse(j.sals.process.is_installed(unkown_package))
 
     def test_15_get_kill_process_by_pids(self):
@@ -471,30 +443,29 @@ class ProcessTests(TestCase):
         #. Kill the process.
         #. Check that the process has been killed
         """
-        info("Start a tail process in tmux.")
-        process_name = "tail"
-        cmd = f"{process_name} -f /dev/null"
+        self.info("Start a tail process in tmux.")
+        cmd = f"{TAIL_PROCESS_NAME} -f /dev/null"
         self.start_in_tmux(cmd)
 
-        info("Check that the process has been started.")
-        pids = self.get_process_pids(process_name)
+        self.info("Check that the process has been started.")
+        pids = self.get_process_pids(TAIL_PROCESS_NAME)
         self.assertEqual(len(pids), 1)
 
-        info("Get the process pids.")
-        pids = j.sals.process.get_pids(process_name)
+        self.info("Get the process pids.")
+        pids = j.sals.process.get_pids(TAIL_PROCESS_NAME)
         self.assertTrue(pids)
 
-        info("Check that the process pid is alive.")
+        self.info("Check that the process pid is alive.")
         self.assertTrue(j.sals.process.is_alive(pids[0]))
 
-        info("Kill the process.")
+        self.info("Kill the process.")
         killed = j.sals.process.kill(pids[0])
         self.assertTrue(killed)
         sleep(1)
 
-        info("Check that the process has been killed.")
+        self.info("Check that the process has been killed.")
         self.assertFalse(j.sals.process.is_alive(pids[0]))
-        pids = j.sals.process.get_pids(process_name)
+        pids = j.sals.process.get_pids(TAIL_PROCESS_NAME)
         self.assertFalse(pids)
 
     @parameterized.expand(["kill_all", "kill_user_processes", "kill_process_by_name"])
@@ -511,40 +482,39 @@ class ProcessTests(TestCase):
         #. Check that the process is the new user process.
         #. Kill the user/killall process, and check that the target process killed.
         """
-        info("Start a tail process in tmux with the current user.")
-        process_name = "tail"
-        cmd = f"{process_name} -f /dev/null"
+        self.info("Start a tail process in tmux with the current user.")
+        cmd = f"{TAIL_PROCESS_NAME} -f /dev/null"
         self.start_in_tmux(cmd)
 
-        info("Check that the process has been started.")
-        pids = self.get_process_pids(process_name)
+        self.info("Check that the process has been started.")
+        pids = self.get_process_pids(TAIL_PROCESS_NAME)
         self.assertEqual(len(pids), 1)
 
-        info("Create a user.")
-        username = randstr()
-        file_path = os.path.join("/home", username, randstr())
+        self.info("Create a user.")
+        username = self.randstr()
+        file_path = j.sals.fs.join_paths("/home", username, self.randstr())
         self.create_user(username, file_path)
         self.user_to_clear.append(username)
 
-        info("Start another tail process in tmux with new user.")
-        cmd = f"sudo -u {username} {process_name} -f {file_path}"
+        self.info("Start another tail process in tmux with new user.")
+        cmd = f"sudo -u {username} {TAIL_PROCESS_NAME} -f {file_path}"
         self.start_in_tmux(cmd)
 
-        info("Check that the process has been started.")
+        self.info("Check that the process has been started.")
         cmd = f"ps -u {username} | grep tail | awk '{{ print $1 }}'"
-        rc, output, error = execute(cmd)
+        rc, output, error = j.sals.process.execute(cmd)
         self.assertFalse(rc, error)
         self.assertTrue(output)
         user_pid = int(output.strip())
 
-        info("Get the user process.")
+        self.info("Get the user process.")
         user_pids = j.sals.process.get_user_processes(username)
         self.assertEqual(len(user_pids), 1)
 
-        info("Check that the process is the new user process.")
+        self.info("Check that the process is the new user process.")
         self.assertIn(user_pid, user_pids)
 
-        info("Kill the user/killall process, and check that the target process killed.")
+        self.info("Kill the user/killall process, and check that the target process killed.")
 
         if kill_method == "kill_user_processes":
             j.sals.process.kill_user_processes(username)
@@ -553,7 +523,7 @@ class ProcessTests(TestCase):
             self.assertTrue(j.sals.process.is_alive(pids[0]))
         else:
             kill_method = getattr(j.sals.process, kill_method)
-            kill_method(process_name)
+            kill_method(TAIL_PROCESS_NAME)
             sleep(1)
             self.assertFalse(j.sals.process.is_alive(user_pid))
             self.assertFalse(j.sals.process.is_alive(pids[0]))
@@ -566,14 +536,14 @@ class ProcessTests(TestCase):
         #. Check if in docker/host with Sals.
         #. Check that the result from both ways are the same.
         """
-        info("Check if in docker/host with dockerenv file.")
-        in_docker = os.path.exists("/.dockerenv")
+        self.info("Check if in docker/host with dockerenv file.")
+        in_docker = j.sals.fs.exists("/.dockerenv")
 
-        info("Check if in docker/host with Sals.")
+        self.info("Check if in docker/host with Sals.")
         indocker = j.sals.process.in_docker()
         inhost = j.sals.process.in_host()
 
-        info("Check that the result from both ways are the same.")
+        self.info("Check that the result from both ways are the same.")
         self.assertEqual(indocker, in_docker)
         self.assertNotEqual(inhost, in_docker)
 
@@ -586,20 +556,19 @@ class ProcessTests(TestCase):
         #. Check that the process exists, should be found.
         #. Check for a random name, should not be found.
         """
-        info("Start a tail process.")
-        process_name = "tail"
-        cmd = f"{process_name} -f /dev/null"
+        self.info("Start a tail process.")
+        cmd = f"{TAIL_PROCESS_NAME} -f /dev/null"
         self.start_in_tmux(cmd)
 
-        info("Check that the process has been started.")
-        pids = self.get_process_pids(process_name)
+        self.info("Check that the process has been started.")
+        pids = self.get_process_pids(TAIL_PROCESS_NAME)
         self.assertEqual(len(pids), 1)
 
-        info("Check that the process exists, should be found.")
-        self.assertTrue(j.sals.process.ps_find(process_name))
+        self.info("Check that the process exists, should be found.")
+        self.assertTrue(j.sals.process.ps_find(TAIL_PROCESS_NAME))
 
-        info("Check for a random name, should not be found.")
-        self.assertFalse(j.sals.process.ps_find(randstr()))
+        self.info("Check for a random name, should not be found.")
+        self.assertFalse(j.sals.process.ps_find(self.randstr()))
 
     def test_19_set_env_var(self):
         """Test case for setting environment variable.
@@ -609,19 +578,19 @@ class ProcessTests(TestCase):
         #. Check that the environment variable is set.
         #. Set environment variable with non equal length, should fail.
         """
-        info("Set environment variable with SAL.")
-        names = [randstr() for i in range(5)]
-        values = [randstr() for i in range(5)]
+        self.info("Set environment variable with SAL.")
+        names = [self.randstr() for i in range(5)]
+        values = [self.randstr() for i in range(5)]
         j.sals.process.set_env_var(names, values)
 
-        info("Check that the environment variable is set.")
+        self.info("Check that the environment variable is set.")
         for i, name in enumerate(names):
-            _, output, _ = execute(f"echo ${name}")
+            _, output, _ = j.sals.process.execute(f"echo ${name}")
             self.assertEqual(output.strip(), values[i])
 
-        info("Set environment variable with non equal length, should fail.")
-        names = [randstr() for i in range(5)]
-        values = [randstr() for i in range(4)]
+        self.info("Set environment variable with non equal length, should fail.")
+        names = [self.randstr() for i in range(5)]
+        values = [self.randstr() for i in range(4)]
         with self.assertRaises(Exception):
             j.sals.process.set_env_var(names, values)
 
@@ -637,38 +606,37 @@ class ProcessTests(TestCase):
         #. Get port mapping with SAL.
         #. Check that the result from both ways are the same.
         """
-        info("Start python server.")
-        process_name = "http.server"
+        self.info("Start python server.")
         python_port = randint(1000, 2000)
-        cmd = f"python3 -m {process_name} {python_port}"
+        cmd = f"python3 -m {PYTHON_SERVER_NAME} {python_port}"
         self.start_in_tmux(cmd)
 
-        info("Check that the server has been started.")
-        python_server_pids = self.get_process_pids(process_name)
+        self.info("Check that the server has been started.")
+        python_server_pids = self.get_process_pids(PYTHON_SERVER_NAME)
         self.assertEqual(len(python_server_pids), 1)
 
-        info("Start redis server.")
+        self.info("Start redis server.")
         process_name = "redis-server"
         redis_port = randint(2001, 3000)
         cmd = f"{process_name} --port {redis_port}"
         self.start_in_tmux(cmd)
 
-        info("Check that the server has been started.")
+        self.info("Check that the server has been started.")
         j.sals.process.is_port_listening(redis_port)
 
-        info("Get port mapping with netstat command.")
+        self.info("Get port mapping with netstat command.")
         netstat_mapping = self.get_ports_mapping()
 
-        info("Get port mapping with SAL.")
+        self.info("Get port mapping with SAL.")
         process_ports_mapping = j.sals.process.get_ports_mapping()
         sal_mapping = {}
         for process in process_ports_mapping.keys():
             sal_mapping[process.pid] = process_ports_mapping[process]
 
-        info("Stop redis server.")
+        self.info("Stop redis server.")
         j.sals.process.kill_process_by_port(redis_port)
 
-        info("Check that the result from both ways are the same.")
+        self.info("Check that the result from both ways are the same.")
         self.assertEqual(sal_mapping, netstat_mapping)
 
     def test_21_get_defunct_processes(self):
@@ -680,20 +648,20 @@ class ProcessTests(TestCase):
         #. Get zombie processes with sal.
         #. Check that the both ways have the same result.
         """
-        info("Start a dummy zombie process.")
+        self.info("Start a dummy zombie process.")
         cmd = "sleep 1 & exec /bin/sleep 3"
         self.start_in_tmux(cmd)
 
-        info("Get zombie processes with ps command.")
+        self.info("Get zombie processes with ps command.")
         cmd = "ps aux | grep -w Z | grep -v grep | awk '{{ print $2 }}'"
-        rc, output, error = execute(cmd)
+        rc, output, error = j.sals.process.execute(cmd)
         self.assertFalse(rc, error)
         pids = list(map(int, output.splitlines()))
 
-        info("Get zombie processes with sal.")
+        self.info("Get zombie processes with sal.")
         sal_pids = j.sals.process.get_defunct_processes()
 
-        info("Check that the both ways have the same result.")
+        self.info("Check that the both ways have the same result.")
         self.assertEqual(sorted(sal_pids), pids)
 
     @parameterized.expand(["sorted", "regex"])
@@ -709,52 +677,51 @@ class ProcessTests(TestCase):
         #. Get tail pids with regex filter.
         #. Check that only pids that match the regex are returned.
         """
-        info("Start a tail process from the currnet user.")
+        self.info("Start a tail process from the currnet user.")
         user_pids = {}
-        current_user = os.path.expanduser("~").strip("/").strip("/home/")
-        process_name = "tail"
-        cmd = f"{process_name} -f /dev/null"
+        current_user = j.sals.fs.expanduser("~").strip("/").strip("/home/")
+        cmd = f"{TAIL_PROCESS_NAME} -f /dev/null"
         self.start_in_tmux(cmd)
 
-        info("Create two users and start tail process for each user.")
-        user_1 = randstr()
-        file_path_1 = os.path.join("/home", user_1, randstr())
+        self.info("Create two users and start tail process for each user.")
+        user_1 = self.randstr()
+        file_path_1 = j.sals.fs.join_paths("/home", user_1, self.randstr())
         self.create_user(user_1, file_path_1)
         self.user_to_clear.append(user_1)
-        cmd = f"sudo -u {user_1} {process_name} -f {file_path_1}"
+        cmd = f"sudo -u {user_1} {TAIL_PROCESS_NAME} -f {file_path_1}"
         self.start_in_tmux(cmd)
 
-        user_2 = randstr()
-        file_path_2 = os.path.join("/home", user_2, randstr())
+        user_2 = self.randstr()
+        file_path_2 = j.sals.fs.join_paths("/home", user_2, self.randstr())
         self.create_user(user_2, file_path_2)
         self.user_to_clear.append(user_2)
-        cmd = f"sudo -u {user_2} {process_name} -f {file_path_2}"
+        cmd = f"sudo -u {user_2} {TAIL_PROCESS_NAME} -f {file_path_2}"
         self.start_in_tmux(cmd)
 
-        info("Get each user pids.")
-        cmd = f"ps -u {user_1} | grep {process_name} | awk '{{ print $1 }}'"
-        rc, output, error = execute(cmd)
+        self.info("Get each user pids.")
+        cmd = f"ps -u {user_1} | grep {TAIL_PROCESS_NAME} | awk '{{ print $1 }}'"
+        rc, output, error = j.sals.process.execute(cmd)
         self.assertFalse(rc, error)
         self.assertTrue(output)
         user_pids[user_1] = int(output.strip())
 
-        cmd = f"ps -u {user_2} | grep {process_name} | awk '{{ print $1 }}'"
-        rc, output, error = execute(cmd)
+        cmd = f"ps -u {user_2} | grep {TAIL_PROCESS_NAME} | awk '{{ print $1 }}'"
+        rc, output, error = j.sals.process.execute(cmd)
         self.assertFalse(rc, error)
         self.assertTrue(output)
         user_pids[user_2] = int(output.strip())
 
-        pids = self.get_process_pids(process_name)
+        pids = self.get_process_pids(TAIL_PROCESS_NAME)
         pids.remove(user_pids[user_1])
         pids.remove(user_pids[user_2])
         user_pids[current_user] = pids
 
         if type_ == "sorted":
-            info("Get pids sorted with username.")
-            pids = j.sals.process.get_pids_filtered_sorted(process_name, sortkey="euser")
+            self.info("Get pids sorted with username.")
+            pids = j.sals.process.get_pids_filtered_sorted(TAIL_PROCESS_NAME, sortkey="euser")
         else:
-            info("Get tail pids with regex filter.")
-            pids = j.sals.process.get_pids_filtered_by_regex([f"{process_name}*"])
+            self.info("Get tail pids with regex filter.")
+            pids = j.sals.process.get_pids_filtered_by_regex([f"{TAIL_PROCESS_NAME}*"])
 
         users = sorted([current_user, user_1, user_2])
         sorted_pids = []
@@ -766,8 +733,8 @@ class ProcessTests(TestCase):
             else:
                 sorted_pids.append(user_pids[user])
         if type_ == "sorted":
-            info("Check that the pids are sorted.")
+            self.info("Check that the pids are sorted.")
             self.assertEqual(pids, sorted_pids)
         else:
-            info("Check that only pids that match the regex are returned.")
+            self.info("Check that only pids that match the regex are returned.")
             self.assertEqual(pids, sorted(sorted_pids))

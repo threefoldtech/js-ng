@@ -47,7 +47,7 @@ def get_window(session_name, window_name):
 
 
 @cmd_from_args
-def execute_in_window(cmd, window_name):
+def execute_in_window(cmd, window_name, session_name=None):
     """
     execute a command in a new tmux window
 
@@ -55,5 +55,8 @@ def execute_in_window(cmd, window_name):
         cmd (str or list): command as a string or an argument list, e.g. `"ls -la"` or `["ls", "la"]`
         window_name (str): window name
     """
-    window = get_js_window(window_name)
+    if session_name:
+        window = get_window(session_name, window_name)
+    else:
+        window = get_js_window(window_name)
     window.attached_pane.send_keys(cmd)
