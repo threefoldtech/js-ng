@@ -115,7 +115,7 @@ def wait_connection_test(ipaddr: str, port: int, timeout=5):
             return True
 
 
-def check_url_reachabel(url: str, timeout=5):
+def check_url_reachable(url: str, timeout=5):
     &#34;&#34;&#34;Check that given url is reachable
 
     Args:
@@ -472,8 +472,8 @@ def netrange_get(device, skip_begin=10, skip_end=10):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="jumpscale.sals.nettools.check_url_reachabel"><code class="name flex">
-<span>def <span class="ident">check_url_reachabel</span></span>(<span>url, timeout=5)</span>
+<dt id="jumpscale.sals.nettools.check_url_reachable"><code class="name flex">
+<span>def <span class="ident">check_url_reachable</span></span>(<span>url, timeout=5)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Check that given url is reachable</p>
@@ -496,7 +496,7 @@ def netrange_get(device, skip_begin=10, skip_end=10):
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def check_url_reachabel(url: str, timeout=5):
+<pre><code class="python">def check_url_reachable(url: str, timeout=5):
     &#34;&#34;&#34;Check that given url is reachable
 
     Args:
@@ -1199,7 +1199,7 @@ def netrange_get(device, skip_begin=10, skip_end=10):
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="jumpscale.sals.nettools.check_url_reachabel" href="#jumpscale.sals.nettools.check_url_reachabel">check_url_reachabel</a></code></li>
+<li><code><a title="jumpscale.sals.nettools.check_url_reachable" href="#jumpscale.sals.nettools.check_url_reachable">check_url_reachable</a></code></li>
 <li><code><a title="jumpscale.sals.nettools.download" href="#jumpscale.sals.nettools.download">download</a></code></li>
 <li><code><a title="jumpscale.sals.nettools.get_default_ip_config" href="#jumpscale.sals.nettools.get_default_ip_config">get_default_ip_config</a></code></li>
 <li><code><a title="jumpscale.sals.nettools.get_host_by_name" href="#jumpscale.sals.nettools.get_host_by_name">get_host_by_name</a></code></li>
