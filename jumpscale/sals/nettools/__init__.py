@@ -101,13 +101,15 @@ def wait_http_test(url: str, timeout: int = 60, verify: bool = True) -> bool:
     Args:
         url (str): url
         timeout (int, optional): how long to wait for the connection. Defaults to 60.
+        verify (bool, optional): boolean indication to verify the servers TLS certificate or not.
+
 
     Returns:
         bool: true if the test succeeds
     """
     for _ in range(timeout):
         try:
-            if check_url_reachabel(url, timeout, verify):
+            if check_url_reachable(url, timeout, verify):
                 return True
         except:
             pass
@@ -117,12 +119,13 @@ def wait_http_test(url: str, timeout: int = 60, verify: bool = True) -> bool:
         return False
 
 
-def check_url_reachabel(url: str, timeout=5, verify=True):
+def check_url_reachable(url: str, timeout=5, verify=True):
     """Check that given url is reachable
 
     Args:
         url (str): url to test
         timeout (int, optional): timeout of test. Defaults to 5.
+        verify (bool, optional): boolean indication to verify the servers TLS certificate or not.
 
     Raises:
         Input: raises if not correct url
