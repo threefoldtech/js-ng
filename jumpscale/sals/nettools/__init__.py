@@ -95,7 +95,7 @@ def wait_connection_test(ipaddr: str, port: int, timeout=5):
             return True
 
 
-def wait_http_test(url: str, timeout: int = 60) -> bool:
+def wait_http_test(url: str, timeout: int = 60, verify: bool = True) -> bool:
     """Will wait until url is reachable
 
     Args:
@@ -107,7 +107,7 @@ def wait_http_test(url: str, timeout: int = 60) -> bool:
     """
     for _ in range(timeout):
         try:
-            if check_url_reachabel(url):
+            if check_url_reachabel(url, timeout, verify):
                 return True
         except:
             pass
@@ -117,7 +117,7 @@ def wait_http_test(url: str, timeout: int = 60) -> bool:
         return False
 
 
-def check_url_reachabel(url: str, timeout=5):
+def check_url_reachabel(url: str, timeout=5, verify=True):
     """Check that given url is reachable
 
     Args:
@@ -131,7 +131,7 @@ def check_url_reachabel(url: str, timeout=5):
         bool: True if the test succeeds, False otherwise
     """
     try:
-        code = jumpscale.tools.http.get(url, timeout=timeout).status_code
+        code = jumpscale.tools.http.get(url, timeout=timeout, verify=verify).status_code
         return code == 200
     except jumpscale.tools.http.exceptions.MissingSchema:
         raise Input("Please specify correct url with correct scheme")
