@@ -87,12 +87,10 @@ class RedisStoreTests(BaseTests):
 
         self.info("Get the instance and check that all fields are stored.")
         stored_instance = self.factory.get(instance_name)
-        student_details = ["name", "age", "mobile", "grades"]
         for d in student_details:
-            self.assertEqual(getattr(stored_instance, d), eval(d))
-        address = ["country", "city", "street", "building"]
+            self.assertEqual(getattr(stored_instance, d), student_details[d])
         for a in address:
-            self.assertEqual(getattr(stored_instance.address, a), eval(a))
+            self.assertEqual(getattr(stored_instance.address, a), address[a])
 
     def test_02_create_more_instance(self):
         """Test for creating more than one instance models.
