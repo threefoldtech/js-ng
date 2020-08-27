@@ -104,16 +104,16 @@ class WhooshFactory(StoredFactory):
 
 
 @parameterized_class(
-    [{"store_class": FilesystemFactory}, {"store_class": RedisFactory}, {"store_class": WhooshFactory}]
+    [{"factory_class": FilesystemFactory}, {"factory_class": RedisFactory}, {"factory_class": WhooshFactory}]
 )
 class TestStoredFactory(unittest.TestCase):
 
-    store_class = StoredFactory
+    factory_class = StoredFactory
 
     @classmethod
     def setUpClass(cls):
         cls.cmd = None
-        if issubclass(cls.store_class, RedisFactory) and not j.sals.nettools.tcp_connection_test(
+        if issubclass(cls.factory_class, RedisFactory) and not j.sals.nettools.tcp_connection_test(
             "127.0.0.1", REDIS_PORT, 1
         ):
             cls.cmd = j.tools.startupcmd.get("test_store_factory")
@@ -128,8 +128,8 @@ class TestStoredFactory(unittest.TestCase):
             j.tools.startupcmd.delete("test_store_factory")
 
     def setUp(self):
-        self.factory = self.store_class(Client)
-        self.wallets_factory = self.store_class(Wallet)
+        self.factory = self.factory_class(Client)
+        self.wallets_factory = self.factory_class(Wallet)
 
     def test_secret_field(self):
         cl = self.factory.get("test_secret")
@@ -142,7 +142,7 @@ class TestStoredFactory(unittest.TestCase):
         cl.save()
 
         # get a new factory and check password
-        self.factory = self.store_class(Client)
+        self.factory = self.factory_class(Client)
         cl = self.factory.get("test_secret")
         user = cl.users.get("user_with_password")
         self.assertIsNone(user.password)
@@ -153,7 +153,7 @@ class TestStoredFactory(unittest.TestCase):
         cl.save()
 
         # get a new factory and check password again
-        self.factory = self.store_class(Client)
+        self.factory = self.factory_class(Client)
         cl = self.factory.get("test_secret")
         user = cl.users.get("user_with_password")
         self.assertEqual(user.password, "test124")
@@ -196,7 +196,7 @@ class TestStoredFactory(unittest.TestCase):
         cl.save()
 
         # reset-factory for now, need to always get from store
-        self.factory = self.store_class(Client)
+        self.factory = self.factory_class(Client)
         ret_cl = self.factory.get("test_list")
 
         self.assertNotEqual(cl, ret_cl)
@@ -218,7 +218,7 @@ class TestStoredFactory(unittest.TestCase):
         user.save()
         cl.save()
         # reset-factory for now, need to always get from store
-        self.factory = self.store_class(Client)
+        self.factory = self.factory_class(Client)
         ret_cl = self.factory.get("test_enum")
 
         self.assertNotEqual(cl, ret_cl)
@@ -246,7 +246,7 @@ class TestStoredFactory(unittest.TestCase):
         user.save()
         cl.save()
         # reset-factory for now, need to always get from store
-        self.factory = self.store_class(Client)
+        self.factory = self.factory_class(Client)
         ret_cl = self.factory.get("test_enum")
 
         self.assertNotEqual(cl, ret_cl)
@@ -279,7 +279,7 @@ class TestStoredFactory(unittest.TestCase):
         user.save()
         cl.save()
         # reset-factory for now, need to always get from store
-        self.factory = self.store_class(Client)
+        self.factory = self.factory_class(Client)
         ret_cl = self.factory.get("test_enum")
 
         self.assertNotEqual(cl, ret_cl)
@@ -300,7 +300,7 @@ class TestStoredFactory(unittest.TestCase):
         wallet.save()
 
         # reset-factory for now, need to always get from store
-        self.factory = self.store_class(Wallet)
+        self.factory = self.factory_class(Wallet)
         ret_wallet = self.factory.get("test_bytes")
         self.assertEqual(ret_wallet.key, b"aaa")
 
@@ -335,7 +335,7 @@ class TestStoredFactory(unittest.TestCase):
         wallet.save()
 
         # reset-factory for now, need to always get from store
-        self.factory = self.store_class(Wallet)
+        self.factory = self.factory_class(Wallet)
         ret_wallet = self.factory.get("test_json")
         self.assertEqual(ret_wallet.data, '{"numbers": [1, 2, 3, 4]}')
 
@@ -345,7 +345,7 @@ class TestStoredFactory(unittest.TestCase):
         wallet.save()
 
         # reset factory
-        self.wallets_factory = self.store_class(Wallet)
+        self.wallets_factory = self.factory_class(Wallet)
         # now if we did get or accessed the name directly like
         # self.wallets_factory.test_d1, it will be created
         # but at this moment, it's just a property for wallets factory
@@ -367,7 +367,7 @@ class TestStoredFactory(unittest.TestCase):
         wallet.origin = None
         wallet.save()
 
-        self.wallets_factory = self.store_class(Wallet)
+        self.wallets_factory = self.factory_class(Wallet)
         wallet = self.wallets_factory.get("test_required_fields")
         self.assertEqual(wallet.ID, 12)
         self.assertEqual(wallet.origin, None)
@@ -391,7 +391,7 @@ class TestStoredFactory(unittest.TestCase):
         wallet.data = '{"a": 1}'
         wallet.save()
 
-        self.wallets_factory = self.store_class(Wallet)
+        self.wallets_factory = self.factory_class(Wallet)
         wallet = self.wallets_factory.get("test_empty_fields")
 
         self.assertEqual(wallet.url, None)
@@ -400,7 +400,7 @@ class TestStoredFactory(unittest.TestCase):
     def test_find(self):
         name = "test_find_with_different_factory"
         wallet = self.wallets_factory.get(name)
-        new_factory = self.store_class(Wallet)
+        new_factory = self.factory_class(Wallet)
 
         # not yet saved
         self.assertIsNone(new_factory.find(name))
@@ -409,7 +409,7 @@ class TestStoredFactory(unittest.TestCase):
         self.assertIsNotNone(new_factory.find(name))
 
     def test_field_name_in_exception(self):
-        cars = self.store_class(Car)
+        cars = self.factory_class(Car)
         bmw = cars.get("bmw")
         with self.assertRaisesRegex(fields.ValidationError, "^color: *"):
             bmw.save()
