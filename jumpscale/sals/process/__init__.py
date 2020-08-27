@@ -556,8 +556,9 @@ def kill_process_by_port(port):
         port (int) -- port number
     """
     port = int(port)
-    for pid in get_pid_by_port(port):
-        kill(pid)
+    pid = get_pid_by_port(port)
+    if pid:
+        return kill(pid)
 
 
 def is_port_listening(port):
@@ -570,7 +571,7 @@ def is_port_listening(port):
         Bool: True if port is used else False
     """
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        result = s.connect_ex(('127.0.0.1', port))
+        result = s.connect_ex(("127.0.0.1", port))
     return result == 0
 
 
