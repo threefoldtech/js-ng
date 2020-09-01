@@ -35,7 +35,7 @@ class ProcessTests(BaseTests):
         window_name = self.randstr()
         j.core.executors.tmux.execute_in_window(cmd, window_name, SESSION_NAME)
         if "tail" in cmd:
-            sleep(0.2)
+            sleep(0.3)
 
     def get_process_pids(self, process_name):
         cmd = f"ps -aux | grep '{process_name}' | grep -v grep | awk '{{ print $2 }}'"
@@ -250,7 +250,7 @@ class ProcessTests(BaseTests):
         env_val = self.randstr()
         rc, _, error = j.sals.process.execute(cmd=cmd, env={env_name: env_val})
         self.assertFalse(rc, error)
-        sleep(0.1)
+        sleep(0.3)
 
         self.info("Check that the process has been started and get its pid.")
         pids = self.get_process_pids(TAIL_PROCESS_NAME)
