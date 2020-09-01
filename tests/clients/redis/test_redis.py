@@ -15,6 +15,7 @@ class RedisTests(BaseTests):
         self.cmd.stop(wait_for_stop=False)
         j.tools.startupcmd.delete("test_redis")
         j.clients.redis.delete("test_redis")
+        j.sals.fs.rmtree("/tmp/redis.conf")
 
     def randstr(self):
         return j.data.idgenerator.nfromchoices(10, string.ascii_letters)
