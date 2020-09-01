@@ -35,7 +35,7 @@ class ProcessTests(BaseTests):
         window_name = self.randstr()
         j.core.executors.tmux.execute_in_window(cmd, window_name, SESSION_NAME)
         if "tail" in cmd:
-            sleep(0.1)
+            sleep(0.2)
 
     def get_process_pids(self, process_name):
         cmd = f"ps -aux | grep '{process_name}' | grep -v grep | awk '{{ print $2 }}'"
