@@ -1,10 +1,8 @@
-from time import sleep
 from unittest import skip
 
+from jumpscale.loader import j
 from libtmux.exc import LibTmuxException
 from tests.base_tests import BaseTests
-
-from jumpscale.loader import j
 
 
 class TestTmux(BaseTests):
@@ -49,11 +47,9 @@ class TestTmux(BaseTests):
         cmd = "python3 -m http.server 1234"
         window_name = self.generate_random_text()
         j.core.executors.tmux.execute_in_window(cmd, window_name)
-        sleep(1)
-
+        self.assertTrue(j.sals.nettools.wait_connection_test("127.0.0.1", 1234, 2))
         window = j.core.executors.tmux.get_js_window(window_name)
         self.window_to_clear.append(window)
-        self.assertTrue(j.sals.nettools.tcp_connection_test("127.0.0.1", 1234, 1))
 
     def tearDown(self):
         for session in self.session_to_clear:

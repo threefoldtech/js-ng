@@ -20,7 +20,7 @@ class TestGedis(TestCase):
         server.actor_add("test", TEST_ACTOR_PATH)
         server.actor_add("memory", MEMORY_ACTOR_PATH)
         gevent.spawn(server.start)
-        time.sleep(3)
+        assert j.sals.nettools.wait_connection_test(server.host, server.port, 3)
         cls.cl = j.clients.gedis.get("test")
 
     def test01(self):
