@@ -21,7 +21,7 @@ def test_pickle():
 
 
 def test_json():
-    jsonstr = """{
+    json_str = """{
         "firstName": "John",
         "lastName": "Smith",
         "address": {
@@ -36,9 +36,23 @@ def test_json():
         ]
     }
     """
-    jsondict = j.data.serializers.json.loads(jsonstr)
-    assert isinstance(jsondict, dict)
-    assert isinstance(j.data.serializers.json.dumps(jsondict), str)
+    json_load = j.data.serializers.json.loads(json_str)
+    assert isinstance(json_load, dict)
+    assert json_load["firstName"] == "John"
+    assert json_load["address"]["postalCode"] == 10021
+    json_dump = j.data.serializers.json.dumps(json_load)
+    assert isinstance(j.data.serializers.json.dumps(json_load), str)
+
+    file_path = "/tmp/test.json"
+    j.sals.fs.write_file(file_path, json_str)
+    json_load_from_file = j.data.serializers.json.load_from_file(file_path)
+    assert json_load_from_file == json_load
+
+    j.data.serializers.json.dump_to_file(file_path, json_load)
+    json_dump_file = j.sals.fs.read_file(file_path)
+    assert json_dump_file == json_dump
+
+    j.sals.fs.rmtree(file_path)
 
 
 def test_lzma():
