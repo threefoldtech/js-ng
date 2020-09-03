@@ -22,7 +22,28 @@
 <section id="section-intro">
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">from .jsnacl import *</code></pre>
+<pre><code class="python">from io import BytesIO
+from jumpscale.data.serializers.json import dumps
+from .jsnacl import *
+
+
+def payload_build(self, *args):
+    &#34;&#34;&#34;
+    build a bytesIO buffer with all arguments serialized to somethign repeatable
+    &#34;&#34;&#34;
+    buffer = BytesIO()
+    for item in args:
+        if not isinstance(item, bytes):
+            if isinstance(item, str):
+                item = item.encode()
+            elif isinstance(item, int) or isinstance(item, float):
+                item = str(item).encode()
+            elif isinstance(item, dict):
+                item = dumps(item).encode()
+            else:
+                raise ValueError(f&#34;Got {item} supported types are bytes,str,int,float,dict&#34;)
+        buffer.write(item)
+    return buffer.getvalue()</code></pre>
 </details>
 </section>
 <section>
@@ -37,6 +58,35 @@
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="jumpscale.data.nacl.payload_build"><code class="name flex">
+<span>def <span class="ident">payload_build</span></span>(<span>self, *args)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>build a bytesIO buffer with all arguments serialized to somethign repeatable</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def payload_build(self, *args):
+    &#34;&#34;&#34;
+    build a bytesIO buffer with all arguments serialized to somethign repeatable
+    &#34;&#34;&#34;
+    buffer = BytesIO()
+    for item in args:
+        if not isinstance(item, bytes):
+            if isinstance(item, str):
+                item = item.encode()
+            elif isinstance(item, int) or isinstance(item, float):
+                item = str(item).encode()
+            elif isinstance(item, dict):
+                item = dumps(item).encode()
+            else:
+                raise ValueError(f&#34;Got {item} supported types are bytes,str,int,float,dict&#34;)
+        buffer.write(item)
+    return buffer.getvalue()</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 </section>
@@ -55,6 +105,11 @@
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
 <li><code><a title="jumpscale.data.nacl.jsnacl" href="jsnacl.html">jumpscale.data.nacl.jsnacl</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="jumpscale.data.nacl.payload_build" href="#jumpscale.data.nacl.payload_build">payload_build</a></code></li>
 </ul>
 </li>
 </ul>

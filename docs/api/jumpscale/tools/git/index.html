@@ -104,11 +104,16 @@ def clone_repo(url: str, dest: str, branch_or_tag=&#34;&#34;, depth=0, commit_id
         cmd += f&#34; -b {branch_or_tag}&#34;
     if depth != 0:
         cmd += f&#34; --depth={depth}&#34;
-    j.core.executors.run_local(cmd)
+    rc, _, err = j.core.executors.run_local(cmd, warn=True)
+    if rc &gt; 0:
+        raise j.exceptions.Runtime(f&#34;Error in execute {cmd}\n{err}&#34;)
     repo_name = j.sals.fs.basename(url).split(&#34;.git&#34;)[0]
     if commit_id:
         prefix = f&#34;cd {dest}/{repo_name} &amp;&amp; &#34;
-        j.core.executors.run_local(prefix + &#34;git checkout {commit_id}&#34;)
+        checkout_cmd = prefix + f&#34;git checkout {commit_id}&#34;
+        rc, _, err = j.core.executors.run_local(checkout_cmd, warn=True)
+        if rc &gt; 0:
+            raise j.exceptions.Runtime(f&#34;Error in execute {checkout_cmd}\n{err}&#34;)
     return repo_name
 
 
@@ -267,11 +272,16 @@ def find_git_path(path, die=True):
         cmd += f&#34; -b {branch_or_tag}&#34;
     if depth != 0:
         cmd += f&#34; --depth={depth}&#34;
-    j.core.executors.run_local(cmd)
+    rc, _, err = j.core.executors.run_local(cmd, warn=True)
+    if rc &gt; 0:
+        raise j.exceptions.Runtime(f&#34;Error in execute {cmd}\n{err}&#34;)
     repo_name = j.sals.fs.basename(url).split(&#34;.git&#34;)[0]
     if commit_id:
         prefix = f&#34;cd {dest}/{repo_name} &amp;&amp; &#34;
-        j.core.executors.run_local(prefix + &#34;git checkout {commit_id}&#34;)
+        checkout_cmd = prefix + f&#34;git checkout {commit_id}&#34;
+        rc, _, err = j.core.executors.run_local(checkout_cmd, warn=True)
+        if rc &gt; 0:
+            raise j.exceptions.Runtime(f&#34;Error in execute {checkout_cmd}\n{err}&#34;)
     return repo_name</code></pre>
 </details>
 </dd>

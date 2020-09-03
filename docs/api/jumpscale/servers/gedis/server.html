@@ -22,17 +22,58 @@
 <section id="section-intro">
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">import sys
-from io import BytesIO
+<pre><code class="python">import inspect
+import json
+import sys
+import os
+from redis import Redis
+from enum import Enum
 from functools import partial
+from io import BytesIO
+from signal import SIGKILL, SIGTERM
+import json
+import better_exceptions
 import gevent
-from gevent import time
 from gevent.pool import Pool
+from gevent import time
 from gevent.server import StreamServer
-import signal
-from redis.connection import DefaultParser, Encoder
+from jumpscale.core.base import Base, fields
 from jumpscale.loader import j
-from .systemactor import SystemActor
+from redis.connection import DefaultParser, Encoder
+from redis.exceptions import ConnectionError
+from .baseactor import BaseActor
+from .systemactor import CoreActor, SystemActor
+
+
+def serialize(obj):
+    if not isinstance(obj, (str, int, float, list, tuple, dict, bool)):
+        module = inspect.getmodule(obj).__file__[:-3]
+        return dict(__serialized__=True, module=module, type=obj.__class__.__name__, data=obj.to_dict())
+    return obj
+
+
+def deserialize(obj):
+    if isinstance(obj, dict) and obj.get(&#34;__serialized__&#34;):
+        module = sys.modules[obj[&#34;module&#34;]]
+        object_instance = getattr(module, obj[&#34;type&#34;])()
+        object_instance.from_dict(obj[&#34;data&#34;])
+        return object_instance
+    return obj
+
+
+class GedisErrorTypes(Enum):
+    NOT_FOUND = 0
+    BAD_REQUEST = 1
+    ACTOR_ERROR = 3
+    INTERNAL_SERVER_ERROR = 4
+    PERMISSION_ERROR = 5
+
+
+EXCEPTIONS_MAP = {
+    j.exceptions.Value: GedisErrorTypes.BAD_REQUEST.value,
+    j.exceptions.NotFound: GedisErrorTypes.NOT_FOUND.value,
+    j.exceptions.Permission: GedisErrorTypes.PERMISSION_ERROR.value,
+}
 
 
 class RedisConnectionAdapter:
@@ -42,8 +83,8 @@ class RedisConnectionAdapter:
         self.socket_timeout = 600
         self.socket_connect_timeout = 600
         self.socket_keepalive = True
-        self.socket_keepalive_options = {}
         self.retry_on_timeout = True
+        self.socket_keepalive_options = {}
         self.encoder = Encoder(&#34;utf&#34;, &#34;strict&#34;, False)
 
 
@@ -116,93 +157,166 @@ class ResponseEncoder:
         self.buffer = BytesIO()  # seems faster then truncating
 
 
-class GedisServer:
-    def __init__(self, endpoint=(&#34;127.0.0.1&#34;, 16000), actors=None):
-        &#34;&#34;&#34;Create gedis server
+SERIALIZABLE_TYPES = (str, int, float, list, tuple, dict, bool)
+RESERVED_ACTOR_NAMES = (&#34;core&#34;, &#34;system&#34;)
 
-        Keyword Arguments:
-            endpoint {tuple[host, port]} -- host and port to bind server on (default: {(&#34;127.0.0.1&#34;, 16000)})
-            actors {dict[str, Actor]} -- doct of available actors (default: {None})
+
+class GedisServer(Base):
+    host = fields.String(default=&#34;127.0.0.1&#34;)
+    port = fields.Integer(default=16000)
+    enable_system_actor = fields.Boolean(default=True)
+    run_async = fields.Boolean(default=True)
+    _actors = fields.Typed(dict, default={})
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._core_actor = CoreActor()
+        self._system_actor = SystemActor()
+        self._loaded_actors = {&#34;core&#34;: self._core_actor}
+
+    @property
+    def actors(self):
+        &#34;&#34;&#34;Lists saved actors
+
+        Returns:
+            list -- List of saved actors
         &#34;&#34;&#34;
-        self.actors = actors or {}
-        self.endpoint = endpoint
+        return self._actors
 
-    def start(self):
-        &#34;&#34;&#34;Start gedis server.
-        &#34;&#34;&#34;
-        s = StreamServer(self.endpoint, self.on_connection)
-
-        gevent.signal(signal.SIGTERM, s.stop)
-        gevent.signal(signal.SIGINT, s.stop)
-        s.reuse_addr = True
-        s.serve_forever()
-
-    def stop(self):
-        &#34;&#34;&#34;Shutting down the server.
-        &#34;&#34;&#34;
-        if self.closed:
-            sys.exit(&#34;Multiple exit signals received - aborting.&#34;)
-        else:
-            j.logger.debug(&#34;Closing listener socket&#34;)
-            StreamServer.close(self)
-
-    def on_connection(self, socket, address):
-        &#34;&#34;&#34;Handling new connection
+    def actor_add(self, actor_name: str, actor_path: str):
+        &#34;&#34;&#34;Adds an actor to the server
 
         Arguments:
-            socket {socket} -- TCP socket
-            address {tuple[str, port]} -- connection address
+            actor_name {str} -- Actor name
+            actor_path {str} -- Actor absolute path
+
+        Raises:
+            j.exceptions.Value: raises if actor name is matched one of the reserved actor names
+            j.exceptions.Value: raises if actor name is not a valid identifier
         &#34;&#34;&#34;
+        if actor_name in RESERVED_ACTOR_NAMES:
+            raise j.exceptions.Value(&#34;Invalid actor name&#34;)
 
-        print(&#34;New connection from {}&#34;.format(address))
-        parser = DefaultParser(65536)
-        conn = RedisConnectionAdapter(socket)
-        encoder = ResponseEncoder(socket)
-        parser.on_connect(conn)
+        if not actor_name.isidentifier():
+            raise j.exceptions.Value(f&#34;Actor name should be a valid identifier&#34;)
+
+        self._actors[actor_name] = actor_path
+
+    def actor_delete(self, actor_name: str):
+        &#34;&#34;&#34;Removes an actor from the server
+
+        Arguments:
+            actor_name {str} -- Actor name
+        &#34;&#34;&#34;
+        self._actors.pop(actor_name, None)
+
+    def start(self):
+        &#34;&#34;&#34;Starts the server
+        &#34;&#34;&#34;
+        j.application.start(&#34;gedis&#34;)
+
+        # handle signals
+        for signal_type in (SIGTERM, SIGKILL):
+            gevent.signal(signal_type, self.stop)
+
+        # register system actor if enabled
+        if self.enable_system_actor:
+            self._register_actor(&#34;system&#34;, self._system_actor)
+
+        self._core_actor.set_server(self)
+        self._system_actor.set_server(self)
+
+        # register saved actors
+        for actor_name, actor_path in self._actors.items():
+            self._system_actor.register_actor(actor_name, actor_path)
+
+        # start the server
+        self._server = StreamServer((self.host, self.port), self._on_connection, spawn=Pool())
+        self._server.reuse_addr = True
+        self._server.start()
+
+    def stop(self):
+        &#34;&#34;&#34;Stops the server
+        &#34;&#34;&#34;
+        j.logger.info(&#34;Shutting down...&#34;)
+        self._server.stop()
+
+    def _register_actor(self, actor_name: str, actor_module: BaseActor):
+        self._loaded_actors[actor_name] = actor_module
+
+    def _unregister_actor(self, actor_name: str):
+        self._loaded_actors.pop(actor_name, None)
+
+    def _execute(self, method, args, kwargs):
+        response = {}
         try:
-            while True:
-                resp = parser.read_response()
-                print(resp)
-                if len(resp) &gt; 1:
-                    actor_name = resp[0].decode()
-                    method_name = resp[1].decode()
-                    args = resp[2:]
-                    print(&#34;SERVICE: {} METHOD: {} ARGS : {} &#34;.format(actor_name, method_name, args))
-                    if actor_name not in self.actors:
-                        encoder.encode(&#34;actor {} isn&#39;t loaded&#34;.format(actor_name))
-                    else:
-                        actor = self.actors[actor_name]
-                        m = getattr(actor, method_name)
-                        res = None
-                        res = m(*args)
-                        print(&#34;RES: &#34;, res)
-                        encoder.encode(res)
+            response[&#34;result&#34;] = method(*args, **kwargs)
+
         except Exception as e:
-            # import traceback
-            # exc_info = sys.exc_info()
-            # traceback.print_exception(*exc_info)
-            print(e)
+            response[&#34;error&#34;] = str(e)
+            response[&#34;error_type&#34;] = EXCEPTIONS_MAP.get(e.__class__, GedisErrorTypes.ACTOR_ERROR.value)
 
-        parser.on_disconnect()
+        return response
 
+    def _on_connection(self, socket, address):
+        j.logger.info(&#34;New connection from {}&#34;, address)
+        parser = DefaultParser(65536)
+        connection = RedisConnectionAdapter(socket)
+        try:
+            encoder = ResponseEncoder(socket)
+            parser.on_connect(connection)
 
-def new_server(actors=None):
-    &#34;&#34;&#34;Launch new gedis server windeth actors `actor`
+            while True:
+                response = dict(success=True, result=None, error=None, error_type=None, is_async=False, task_id=None)
+                try:
+                    request = parser.read_response()
 
-    server will have `SystemActor` enabled under name `system` to allow registration of other actors.
+                    if len(request) &lt; 2:
+                        response[&#34;error&#34;] = &#34;invalid request&#34;
+                        response[&#34;error_type&#34;] = GedisErrorTypes.BAD_REQUEST.value
 
-    Keyword Arguments:
-        actors {dict[str, Actor]} -- dict of actor name -&gt; actor object. (default: {None})
-    &#34;&#34;&#34;
-    actors = actors or {}
-    if not actors:
-        print(&#34;empty actors on the gedis server.&#34;)
+                    else:
+                        actor_name = request.pop(0).decode()
+                        method_name = request.pop(0).decode()
+                        actor_object = self._loaded_actors.get(actor_name)
 
-    s = GedisServer()
-    default_actors = {&#34;system&#34;: SystemActor(s)}
-    s.actors = {**s.actors, **default_actors}
-    s.start()
-    gevent.wait()</code></pre>
+                        if not actor_object:
+                            response[&#34;error&#34;] = &#34;actor not found&#34;
+                            response[&#34;error_type&#34;] = GedisErrorTypes.NOT_FOUND.value
+
+                        elif not hasattr(actor_object, method_name):
+                            response[&#34;error&#34;] = &#34;method not found&#34;
+                            response[&#34;error_type&#34;] = GedisErrorTypes.NOT_FOUND.value
+
+                        else:
+                            j.logger.info(
+                                &#34;Executing method {} from actor {} to client {}&#34;, method_name, actor_name, address
+                            )
+
+                            if request:
+                                args, kwargs = json.loads(request.pop(0), object_hook=deserialize)
+                            else:
+                                args, kwargs = (), {}
+
+                            method = getattr(actor_object, method_name)
+                            result = self._execute(method, args, kwargs)
+                            response.update(result)
+
+                except ConnectionError:
+                    j.logger.info(&#34;Client {} closed the connection&#34;, address)
+
+                except Exception as exception:
+                    j.logger.exception(&#34;internal error&#34;, exception=exception)
+                    response[&#34;error&#34;] = &#34;internal server error&#34;
+                    response[&#34;error_type&#34;] = GedisErrorTypes.INTERNAL_SERVER_ERROR.value
+
+                response[&#34;success&#34;] = response[&#34;error&#34;] is None
+                encoder.encode(json.dumps(response, default=serialize))
+
+            parser.on_disconnect()
+
+        except BrokenPipeError:
+            pass</code></pre>
 </details>
 </section>
 <section>
@@ -212,33 +326,34 @@ def new_server(actors=None):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="jumpscale.servers.gedis.server.new_server"><code class="name flex">
-<span>def <span class="ident">new_server</span></span>(<span>actors=None)</span>
+<dt id="jumpscale.servers.gedis.server.deserialize"><code class="name flex">
+<span>def <span class="ident">deserialize</span></span>(<span>obj)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Launch new gedis server windeth actors <code>actor</code></p>
-<p>server will have <code>SystemActor</code> enabled under name <code>system</code> to allow registration of other actors.</p>
-<p>Keyword Arguments:
-actors {dict[str, Actor]} &ndash; dict of actor name -&gt; actor object. (default: {None})</p></section>
+<section class="desc"></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def new_server(actors=None):
-    &#34;&#34;&#34;Launch new gedis server windeth actors `actor`
-
-    server will have `SystemActor` enabled under name `system` to allow registration of other actors.
-
-    Keyword Arguments:
-        actors {dict[str, Actor]} -- dict of actor name -&gt; actor object. (default: {None})
-    &#34;&#34;&#34;
-    actors = actors or {}
-    if not actors:
-        print(&#34;empty actors on the gedis server.&#34;)
-
-    s = GedisServer()
-    default_actors = {&#34;system&#34;: SystemActor(s)}
-    s.actors = {**s.actors, **default_actors}
-    s.start()
-    gevent.wait()</code></pre>
+<pre><code class="python">def deserialize(obj):
+    if isinstance(obj, dict) and obj.get(&#34;__serialized__&#34;):
+        module = sys.modules[obj[&#34;module&#34;]]
+        object_instance = getattr(module, obj[&#34;type&#34;])()
+        object_instance.from_dict(obj[&#34;data&#34;])
+        return object_instance
+    return obj</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.servers.gedis.server.serialize"><code class="name flex">
+<span>def <span class="ident">serialize</span></span>(<span>obj)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def serialize(obj):
+    if not isinstance(obj, (str, int, float, list, tuple, dict, bool)):
+        module = inspect.getmodule(obj).__file__[:-3]
+        return dict(__serialized__=True, module=module, type=obj.__class__.__name__, data=obj.to_dict())
+    return obj</code></pre>
 </details>
 </dd>
 </dl>
@@ -246,174 +361,476 @@ actors {dict[str, Actor]} &ndash; dict of actor name -&gt; actor object. (defaul
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
+<dt id="jumpscale.servers.gedis.server.GedisErrorTypes"><code class="flex name class">
+<span>class <span class="ident">GedisErrorTypes</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>An enumeration.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class GedisErrorTypes(Enum):
+    NOT_FOUND = 0
+    BAD_REQUEST = 1
+    ACTOR_ERROR = 3
+    INTERNAL_SERVER_ERROR = 4
+    PERMISSION_ERROR = 5</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>enum.Enum</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="jumpscale.servers.gedis.server.GedisErrorTypes.ACTOR_ERROR"><code class="name">var <span class="ident">ACTOR_ERROR</span></code></dt>
+<dd>
+<section class="desc"></section>
+</dd>
+<dt id="jumpscale.servers.gedis.server.GedisErrorTypes.BAD_REQUEST"><code class="name">var <span class="ident">BAD_REQUEST</span></code></dt>
+<dd>
+<section class="desc"></section>
+</dd>
+<dt id="jumpscale.servers.gedis.server.GedisErrorTypes.INTERNAL_SERVER_ERROR"><code class="name">var <span class="ident">INTERNAL_SERVER_ERROR</span></code></dt>
+<dd>
+<section class="desc"></section>
+</dd>
+<dt id="jumpscale.servers.gedis.server.GedisErrorTypes.NOT_FOUND"><code class="name">var <span class="ident">NOT_FOUND</span></code></dt>
+<dd>
+<section class="desc"></section>
+</dd>
+<dt id="jumpscale.servers.gedis.server.GedisErrorTypes.PERMISSION_ERROR"><code class="name">var <span class="ident">PERMISSION_ERROR</span></code></dt>
+<dd>
+<section class="desc"></section>
+</dd>
+</dl>
+</dd>
 <dt id="jumpscale.servers.gedis.server.GedisServer"><code class="flex name class">
 <span>class <span class="ident">GedisServer</span></span>
-<span>(</span><span>endpoint=('127.0.0.1', 16000), actors=None)</span>
+<span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Create gedis server</p>
-<p>Keyword Arguments:
-endpoint {tuple[host, port]} &ndash; host and port to bind server on (default: {("127.0.0.1", 16000)})
-actors {dict[str, Actor]} &ndash; doct of available actors (default: {None})</p></section>
+<section class="desc"><p>A simple attribute-based namespace.</p>
+<p>SimpleNamespace(**kwargs)</p>
+<p>base class implementation for any class with fields which supports getting/setting raw data for any instance fields.</p>
+<p>any instance can have an optional name and a parent.</p>
+<pre><code class="python">class Person(Base):
+    name = fields.String()
+    age = fields.Float()
+
+p = Person(name=&quot;ahmed&quot;, age=&quot;19&quot;)
+print(p.name, p.age)
+</code></pre>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>parent_</code></strong> :&ensp;<code>Base</code>, optional</dt>
+<dd>parent instance. Defaults to None.</dd>
+<dt><strong><code>instance_name_</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>instance name. Defaults to None.</dd>
+<dt><strong><code>**values</code></strong></dt>
+<dd>any given field values to initiate the instance with</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class GedisServer:
-    def __init__(self, endpoint=(&#34;127.0.0.1&#34;, 16000), actors=None):
-        &#34;&#34;&#34;Create gedis server
+<pre><code class="python">class GedisServer(Base):
+    host = fields.String(default=&#34;127.0.0.1&#34;)
+    port = fields.Integer(default=16000)
+    enable_system_actor = fields.Boolean(default=True)
+    run_async = fields.Boolean(default=True)
+    _actors = fields.Typed(dict, default={})
 
-        Keyword Arguments:
-            endpoint {tuple[host, port]} -- host and port to bind server on (default: {(&#34;127.0.0.1&#34;, 16000)})
-            actors {dict[str, Actor]} -- doct of available actors (default: {None})
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._core_actor = CoreActor()
+        self._system_actor = SystemActor()
+        self._loaded_actors = {&#34;core&#34;: self._core_actor}
+
+    @property
+    def actors(self):
+        &#34;&#34;&#34;Lists saved actors
+
+        Returns:
+            list -- List of saved actors
         &#34;&#34;&#34;
-        self.actors = actors or {}
-        self.endpoint = endpoint
+        return self._actors
 
-    def start(self):
-        &#34;&#34;&#34;Start gedis server.
-        &#34;&#34;&#34;
-        s = StreamServer(self.endpoint, self.on_connection)
-
-        gevent.signal(signal.SIGTERM, s.stop)
-        gevent.signal(signal.SIGINT, s.stop)
-        s.reuse_addr = True
-        s.serve_forever()
-
-    def stop(self):
-        &#34;&#34;&#34;Shutting down the server.
-        &#34;&#34;&#34;
-        if self.closed:
-            sys.exit(&#34;Multiple exit signals received - aborting.&#34;)
-        else:
-            j.logger.debug(&#34;Closing listener socket&#34;)
-            StreamServer.close(self)
-
-    def on_connection(self, socket, address):
-        &#34;&#34;&#34;Handling new connection
+    def actor_add(self, actor_name: str, actor_path: str):
+        &#34;&#34;&#34;Adds an actor to the server
 
         Arguments:
-            socket {socket} -- TCP socket
-            address {tuple[str, port]} -- connection address
+            actor_name {str} -- Actor name
+            actor_path {str} -- Actor absolute path
+
+        Raises:
+            j.exceptions.Value: raises if actor name is matched one of the reserved actor names
+            j.exceptions.Value: raises if actor name is not a valid identifier
         &#34;&#34;&#34;
+        if actor_name in RESERVED_ACTOR_NAMES:
+            raise j.exceptions.Value(&#34;Invalid actor name&#34;)
 
-        print(&#34;New connection from {}&#34;.format(address))
-        parser = DefaultParser(65536)
-        conn = RedisConnectionAdapter(socket)
-        encoder = ResponseEncoder(socket)
-        parser.on_connect(conn)
+        if not actor_name.isidentifier():
+            raise j.exceptions.Value(f&#34;Actor name should be a valid identifier&#34;)
+
+        self._actors[actor_name] = actor_path
+
+    def actor_delete(self, actor_name: str):
+        &#34;&#34;&#34;Removes an actor from the server
+
+        Arguments:
+            actor_name {str} -- Actor name
+        &#34;&#34;&#34;
+        self._actors.pop(actor_name, None)
+
+    def start(self):
+        &#34;&#34;&#34;Starts the server
+        &#34;&#34;&#34;
+        j.application.start(&#34;gedis&#34;)
+
+        # handle signals
+        for signal_type in (SIGTERM, SIGKILL):
+            gevent.signal(signal_type, self.stop)
+
+        # register system actor if enabled
+        if self.enable_system_actor:
+            self._register_actor(&#34;system&#34;, self._system_actor)
+
+        self._core_actor.set_server(self)
+        self._system_actor.set_server(self)
+
+        # register saved actors
+        for actor_name, actor_path in self._actors.items():
+            self._system_actor.register_actor(actor_name, actor_path)
+
+        # start the server
+        self._server = StreamServer((self.host, self.port), self._on_connection, spawn=Pool())
+        self._server.reuse_addr = True
+        self._server.start()
+
+    def stop(self):
+        &#34;&#34;&#34;Stops the server
+        &#34;&#34;&#34;
+        j.logger.info(&#34;Shutting down...&#34;)
+        self._server.stop()
+
+    def _register_actor(self, actor_name: str, actor_module: BaseActor):
+        self._loaded_actors[actor_name] = actor_module
+
+    def _unregister_actor(self, actor_name: str):
+        self._loaded_actors.pop(actor_name, None)
+
+    def _execute(self, method, args, kwargs):
+        response = {}
         try:
-            while True:
-                resp = parser.read_response()
-                print(resp)
-                if len(resp) &gt; 1:
-                    actor_name = resp[0].decode()
-                    method_name = resp[1].decode()
-                    args = resp[2:]
-                    print(&#34;SERVICE: {} METHOD: {} ARGS : {} &#34;.format(actor_name, method_name, args))
-                    if actor_name not in self.actors:
-                        encoder.encode(&#34;actor {} isn&#39;t loaded&#34;.format(actor_name))
-                    else:
-                        actor = self.actors[actor_name]
-                        m = getattr(actor, method_name)
-                        res = None
-                        res = m(*args)
-                        print(&#34;RES: &#34;, res)
-                        encoder.encode(res)
-        except Exception as e:
-            # import traceback
-            # exc_info = sys.exc_info()
-            # traceback.print_exception(*exc_info)
-            print(e)
+            response[&#34;result&#34;] = method(*args, **kwargs)
 
-        parser.on_disconnect()</code></pre>
+        except Exception as e:
+            response[&#34;error&#34;] = str(e)
+            response[&#34;error_type&#34;] = EXCEPTIONS_MAP.get(e.__class__, GedisErrorTypes.ACTOR_ERROR.value)
+
+        return response
+
+    def _on_connection(self, socket, address):
+        j.logger.info(&#34;New connection from {}&#34;, address)
+        parser = DefaultParser(65536)
+        connection = RedisConnectionAdapter(socket)
+        try:
+            encoder = ResponseEncoder(socket)
+            parser.on_connect(connection)
+
+            while True:
+                response = dict(success=True, result=None, error=None, error_type=None, is_async=False, task_id=None)
+                try:
+                    request = parser.read_response()
+
+                    if len(request) &lt; 2:
+                        response[&#34;error&#34;] = &#34;invalid request&#34;
+                        response[&#34;error_type&#34;] = GedisErrorTypes.BAD_REQUEST.value
+
+                    else:
+                        actor_name = request.pop(0).decode()
+                        method_name = request.pop(0).decode()
+                        actor_object = self._loaded_actors.get(actor_name)
+
+                        if not actor_object:
+                            response[&#34;error&#34;] = &#34;actor not found&#34;
+                            response[&#34;error_type&#34;] = GedisErrorTypes.NOT_FOUND.value
+
+                        elif not hasattr(actor_object, method_name):
+                            response[&#34;error&#34;] = &#34;method not found&#34;
+                            response[&#34;error_type&#34;] = GedisErrorTypes.NOT_FOUND.value
+
+                        else:
+                            j.logger.info(
+                                &#34;Executing method {} from actor {} to client {}&#34;, method_name, actor_name, address
+                            )
+
+                            if request:
+                                args, kwargs = json.loads(request.pop(0), object_hook=deserialize)
+                            else:
+                                args, kwargs = (), {}
+
+                            method = getattr(actor_object, method_name)
+                            result = self._execute(method, args, kwargs)
+                            response.update(result)
+
+                except ConnectionError:
+                    j.logger.info(&#34;Client {} closed the connection&#34;, address)
+
+                except Exception as exception:
+                    j.logger.exception(&#34;internal error&#34;, exception=exception)
+                    response[&#34;error&#34;] = &#34;internal server error&#34;
+                    response[&#34;error_type&#34;] = GedisErrorTypes.INTERNAL_SERVER_ERROR.value
+
+                response[&#34;success&#34;] = response[&#34;error&#34;] is None
+                encoder.encode(json.dumps(response, default=serialize))
+
+            parser.on_disconnect()
+
+        except BrokenPipeError:
+            pass</code></pre>
 </details>
-<h3>Methods</h3>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="jumpscale.core.base.meta.Base" href="../../core/base/meta.html#jumpscale.core.base.meta.Base">Base</a></li>
+<li>types.SimpleNamespace</li>
+</ul>
+<h3>Instance variables</h3>
 <dl>
-<dt id="jumpscale.servers.gedis.server.GedisServer.on_connection"><code class="name flex">
-<span>def <span class="ident">on_connection</span></span>(<span>self, socket, address)</span>
-</code></dt>
+<dt id="jumpscale.servers.gedis.server.GedisServer.actors"><code class="name">var <span class="ident">actors</span></code></dt>
 <dd>
-<section class="desc"><p>Handling new connection</p>
-<h2 id="arguments">Arguments</h2>
-<p>socket {socket} &ndash; TCP socket
-address {tuple[str, port]} &ndash; connection address</p></section>
+<section class="desc"><p>Lists saved actors</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>list</code> &ndash; <code>List</code> of <code>saved</code> <code>actors</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def on_connection(self, socket, address):
-    &#34;&#34;&#34;Handling new connection
+<pre><code class="python">@property
+def actors(self):
+    &#34;&#34;&#34;Lists saved actors
+
+    Returns:
+        list -- List of saved actors
+    &#34;&#34;&#34;
+    return self._actors</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.servers.gedis.server.GedisServer.enable_system_actor"><code class="name">var <span class="ident">enable_system_actor</span></code></dt>
+<dd>
+<section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>any</code></strong></dt>
+<dd>the field value</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def getter(self):
+    &#34;&#34;&#34;
+    getter method this property
+
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
+    Returns:
+        any: the field value
+    &#34;&#34;&#34;
+    return self._get_value(name, field)</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.servers.gedis.server.GedisServer.host"><code class="name">var <span class="ident">host</span></code></dt>
+<dd>
+<section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>any</code></strong></dt>
+<dd>the field value</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def getter(self):
+    &#34;&#34;&#34;
+    getter method this property
+
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
+    Returns:
+        any: the field value
+    &#34;&#34;&#34;
+    return self._get_value(name, field)</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.servers.gedis.server.GedisServer.port"><code class="name">var <span class="ident">port</span></code></dt>
+<dd>
+<section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>any</code></strong></dt>
+<dd>the field value</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def getter(self):
+    &#34;&#34;&#34;
+    getter method this property
+
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
+    Returns:
+        any: the field value
+    &#34;&#34;&#34;
+    return self._get_value(name, field)</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.servers.gedis.server.GedisServer.run_async"><code class="name">var <span class="ident">run_async</span></code></dt>
+<dd>
+<section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>any</code></strong></dt>
+<dd>the field value</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def getter(self):
+    &#34;&#34;&#34;
+    getter method this property
+
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
+    Returns:
+        any: the field value
+    &#34;&#34;&#34;
+    return self._get_value(name, field)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="jumpscale.servers.gedis.server.GedisServer.actor_add"><code class="name flex">
+<span>def <span class="ident">actor_add</span></span>(<span>self, actor_name, actor_path)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Adds an actor to the server</p>
+<h2 id="arguments">Arguments</h2>
+<p>actor_name {str} &ndash; Actor name
+actor_path {str} &ndash; Actor absolute path</p>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>j.exceptions.Value</code>: <code>raises</code> <code>if</code> <code>actor</code> <code>name</code> <code>is</code> <code>matched</code> <code>one</code> of <code>the</code> <code>reserved</code> <code>actor</code> <code>names</code></dt>
+<dd>&nbsp;</dd>
+<dt><code>j.exceptions.Value</code>: <code>raises</code> <code>if</code> <code>actor</code> <code>name</code> <code>is</code> <code>not</code> <code>a</code> <code>valid</code> <code>identifier</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def actor_add(self, actor_name: str, actor_path: str):
+    &#34;&#34;&#34;Adds an actor to the server
 
     Arguments:
-        socket {socket} -- TCP socket
-        address {tuple[str, port]} -- connection address
+        actor_name {str} -- Actor name
+        actor_path {str} -- Actor absolute path
+
+    Raises:
+        j.exceptions.Value: raises if actor name is matched one of the reserved actor names
+        j.exceptions.Value: raises if actor name is not a valid identifier
     &#34;&#34;&#34;
+    if actor_name in RESERVED_ACTOR_NAMES:
+        raise j.exceptions.Value(&#34;Invalid actor name&#34;)
 
-    print(&#34;New connection from {}&#34;.format(address))
-    parser = DefaultParser(65536)
-    conn = RedisConnectionAdapter(socket)
-    encoder = ResponseEncoder(socket)
-    parser.on_connect(conn)
-    try:
-        while True:
-            resp = parser.read_response()
-            print(resp)
-            if len(resp) &gt; 1:
-                actor_name = resp[0].decode()
-                method_name = resp[1].decode()
-                args = resp[2:]
-                print(&#34;SERVICE: {} METHOD: {} ARGS : {} &#34;.format(actor_name, method_name, args))
-                if actor_name not in self.actors:
-                    encoder.encode(&#34;actor {} isn&#39;t loaded&#34;.format(actor_name))
-                else:
-                    actor = self.actors[actor_name]
-                    m = getattr(actor, method_name)
-                    res = None
-                    res = m(*args)
-                    print(&#34;RES: &#34;, res)
-                    encoder.encode(res)
-    except Exception as e:
-        # import traceback
-        # exc_info = sys.exc_info()
-        # traceback.print_exception(*exc_info)
-        print(e)
+    if not actor_name.isidentifier():
+        raise j.exceptions.Value(f&#34;Actor name should be a valid identifier&#34;)
 
-    parser.on_disconnect()</code></pre>
+    self._actors[actor_name] = actor_path</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.servers.gedis.server.GedisServer.actor_delete"><code class="name flex">
+<span>def <span class="ident">actor_delete</span></span>(<span>self, actor_name)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Removes an actor from the server</p>
+<h2 id="arguments">Arguments</h2>
+<p>actor_name {str} &ndash; Actor name</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def actor_delete(self, actor_name: str):
+    &#34;&#34;&#34;Removes an actor from the server
+
+    Arguments:
+        actor_name {str} -- Actor name
+    &#34;&#34;&#34;
+    self._actors.pop(actor_name, None)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.servers.gedis.server.GedisServer.start"><code class="name flex">
 <span>def <span class="ident">start</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Start gedis server.</p></section>
+<section class="desc"><p>Starts the server</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def start(self):
-    &#34;&#34;&#34;Start gedis server.
+    &#34;&#34;&#34;Starts the server
     &#34;&#34;&#34;
-    s = StreamServer(self.endpoint, self.on_connection)
+    j.application.start(&#34;gedis&#34;)
 
-    gevent.signal(signal.SIGTERM, s.stop)
-    gevent.signal(signal.SIGINT, s.stop)
-    s.reuse_addr = True
-    s.serve_forever()</code></pre>
+    # handle signals
+    for signal_type in (SIGTERM, SIGKILL):
+        gevent.signal(signal_type, self.stop)
+
+    # register system actor if enabled
+    if self.enable_system_actor:
+        self._register_actor(&#34;system&#34;, self._system_actor)
+
+    self._core_actor.set_server(self)
+    self._system_actor.set_server(self)
+
+    # register saved actors
+    for actor_name, actor_path in self._actors.items():
+        self._system_actor.register_actor(actor_name, actor_path)
+
+    # start the server
+    self._server = StreamServer((self.host, self.port), self._on_connection, spawn=Pool())
+    self._server.reuse_addr = True
+    self._server.start()</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.servers.gedis.server.GedisServer.stop"><code class="name flex">
 <span>def <span class="ident">stop</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Shutting down the server.</p></section>
+<section class="desc"><p>Stops the server</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def stop(self):
-    &#34;&#34;&#34;Shutting down the server.
+    &#34;&#34;&#34;Stops the server
     &#34;&#34;&#34;
-    if self.closed:
-        sys.exit(&#34;Multiple exit signals received - aborting.&#34;)
-    else:
-        j.logger.debug(&#34;Closing listener socket&#34;)
-        StreamServer.close(self)</code></pre>
+    j.logger.info(&#34;Shutting down...&#34;)
+    self._server.stop()</code></pre>
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="jumpscale.core.base.meta.Base" href="../../core/base/meta.html#jumpscale.core.base.meta.Base">Base</a></b></code>:
+<ul class="hlist">
+<li><code><a title="jumpscale.core.base.meta.Base.from_dict" href="../../core/base/meta.html#jumpscale.core.base.meta.Base.from_dict">from_dict</a></code></li>
+<li><code><a title="jumpscale.core.base.meta.Base.to_dict" href="../../core/base/meta.html#jumpscale.core.base.meta.Base.to_dict">to_dict</a></code></li>
+<li><code><a title="jumpscale.core.base.meta.Base.validate" href="../../core/base/meta.html#jumpscale.core.base.meta.Base.validate">validate</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="jumpscale.servers.gedis.server.RedisConnectionAdapter"><code class="flex name class">
 <span>class <span class="ident">RedisConnectionAdapter</span></span>
@@ -430,8 +847,8 @@ address {tuple[str, port]} &ndash; connection address</p></section>
         self.socket_timeout = 600
         self.socket_connect_timeout = 600
         self.socket_keepalive = True
-        self.socket_keepalive_options = {}
         self.retry_on_timeout = True
+        self.socket_keepalive_options = {}
         self.encoder = Encoder(&#34;utf&#34;, &#34;strict&#34;, False)</code></pre>
 </details>
 </dd>
@@ -593,15 +1010,32 @@ address {tuple[str, port]} &ndash; connection address</p></section>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="jumpscale.servers.gedis.server.new_server" href="#jumpscale.servers.gedis.server.new_server">new_server</a></code></li>
+<li><code><a title="jumpscale.servers.gedis.server.deserialize" href="#jumpscale.servers.gedis.server.deserialize">deserialize</a></code></li>
+<li><code><a title="jumpscale.servers.gedis.server.serialize" href="#jumpscale.servers.gedis.server.serialize">serialize</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="jumpscale.servers.gedis.server.GedisServer" href="#jumpscale.servers.gedis.server.GedisServer">GedisServer</a></code></h4>
+<h4><code><a title="jumpscale.servers.gedis.server.GedisErrorTypes" href="#jumpscale.servers.gedis.server.GedisErrorTypes">GedisErrorTypes</a></code></h4>
 <ul class="">
-<li><code><a title="jumpscale.servers.gedis.server.GedisServer.on_connection" href="#jumpscale.servers.gedis.server.GedisServer.on_connection">on_connection</a></code></li>
+<li><code><a title="jumpscale.servers.gedis.server.GedisErrorTypes.ACTOR_ERROR" href="#jumpscale.servers.gedis.server.GedisErrorTypes.ACTOR_ERROR">ACTOR_ERROR</a></code></li>
+<li><code><a title="jumpscale.servers.gedis.server.GedisErrorTypes.BAD_REQUEST" href="#jumpscale.servers.gedis.server.GedisErrorTypes.BAD_REQUEST">BAD_REQUEST</a></code></li>
+<li><code><a title="jumpscale.servers.gedis.server.GedisErrorTypes.INTERNAL_SERVER_ERROR" href="#jumpscale.servers.gedis.server.GedisErrorTypes.INTERNAL_SERVER_ERROR">INTERNAL_SERVER_ERROR</a></code></li>
+<li><code><a title="jumpscale.servers.gedis.server.GedisErrorTypes.NOT_FOUND" href="#jumpscale.servers.gedis.server.GedisErrorTypes.NOT_FOUND">NOT_FOUND</a></code></li>
+<li><code><a title="jumpscale.servers.gedis.server.GedisErrorTypes.PERMISSION_ERROR" href="#jumpscale.servers.gedis.server.GedisErrorTypes.PERMISSION_ERROR">PERMISSION_ERROR</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="jumpscale.servers.gedis.server.GedisServer" href="#jumpscale.servers.gedis.server.GedisServer">GedisServer</a></code></h4>
+<ul class="two-column">
+<li><code><a title="jumpscale.servers.gedis.server.GedisServer.actor_add" href="#jumpscale.servers.gedis.server.GedisServer.actor_add">actor_add</a></code></li>
+<li><code><a title="jumpscale.servers.gedis.server.GedisServer.actor_delete" href="#jumpscale.servers.gedis.server.GedisServer.actor_delete">actor_delete</a></code></li>
+<li><code><a title="jumpscale.servers.gedis.server.GedisServer.actors" href="#jumpscale.servers.gedis.server.GedisServer.actors">actors</a></code></li>
+<li><code><a title="jumpscale.servers.gedis.server.GedisServer.enable_system_actor" href="#jumpscale.servers.gedis.server.GedisServer.enable_system_actor">enable_system_actor</a></code></li>
+<li><code><a title="jumpscale.servers.gedis.server.GedisServer.host" href="#jumpscale.servers.gedis.server.GedisServer.host">host</a></code></li>
+<li><code><a title="jumpscale.servers.gedis.server.GedisServer.port" href="#jumpscale.servers.gedis.server.GedisServer.port">port</a></code></li>
+<li><code><a title="jumpscale.servers.gedis.server.GedisServer.run_async" href="#jumpscale.servers.gedis.server.GedisServer.run_async">run_async</a></code></li>
 <li><code><a title="jumpscale.servers.gedis.server.GedisServer.start" href="#jumpscale.servers.gedis.server.GedisServer.start">start</a></code></li>
 <li><code><a title="jumpscale.servers.gedis.server.GedisServer.stop" href="#jumpscale.servers.gedis.server.GedisServer.stop">stop</a></code></li>
 </ul>

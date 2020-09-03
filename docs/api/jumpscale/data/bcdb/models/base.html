@@ -27,6 +27,7 @@ from jumpscale.data.schema import Property
 from jumpscale.data.types import Integer, JSObject
 import json
 
+
 class JSObjBase:
     def __init__(self, model):
         self.model = model
@@ -40,9 +41,11 @@ class JSObjBase:
     def __str__(self):
         return json.dumps(self.get_dict(), indent=4)
 
+
 class ModelBase:
     _schema = &#34;&#34;
     _name = &#34;&#34;
+
     def __init__(self, bcdb):
         self.schema = self._load_schema()
         self.schema.props[&#34;id&#34;] = Property()
@@ -68,7 +71,7 @@ class ModelBase:
             JSObjBase: The newly created
         &#34;&#34;&#34;
         o = JSObjBase(self)
-        data[&#39;id&#39;] = self._incr_id()
+        data[&#34;id&#34;] = self._incr_id()
         self.set_from_dict(o, data)
         return o
 
@@ -274,6 +277,7 @@ class ModelBase:
 <pre><code class="python">class ModelBase:
     _schema = &#34;&#34;
     _name = &#34;&#34;
+
     def __init__(self, bcdb):
         self.schema = self._load_schema()
         self.schema.props[&#34;id&#34;] = Property()
@@ -299,7 +303,7 @@ class ModelBase:
             JSObjBase: The newly created
         &#34;&#34;&#34;
         o = JSObjBase(self)
-        data[&#39;id&#39;] = self._incr_id()
+        data[&#34;id&#34;] = self._incr_id()
         self.set_from_dict(o, data)
         return o
 
@@ -440,12 +444,12 @@ class ModelBase:
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="jumpscale.data.bcdb.models.model_model.ModelModel" href="model_model.html#jumpscale.data.bcdb.models.model_model.ModelModel">ModelModel</a></li>
-<li><a title="jumpscale.data.bcdb.models.user_model.UserModel" href="user_model.html#jumpscale.data.bcdb.models.user_model.UserModel">UserModel</a></li>
+<li><a title="jumpscale.data.bcdb.models.db_model.DBModel" href="db_model.html#jumpscale.data.bcdb.models.db_model.DBModel">DBModel</a></li>
+<li><a title="jumpscale.data.bcdb.models.emplyee_model.EmployeeModel" href="emplyee_model.html#jumpscale.data.bcdb.models.emplyee_model.EmployeeModel">EmployeeModel</a></li>
+<li><a title="jumpscale.data.bcdb.models.post_model.QuoteModel" href="post_model.html#jumpscale.data.bcdb.models.post_model.QuoteModel">QuoteModel</a></li>
 <li><a title="jumpscale.data.bcdb.models.proj_model.ProjModel" href="proj_model.html#jumpscale.data.bcdb.models.proj_model.ProjModel">ProjModel</a></li>
 <li><a title="jumpscale.data.bcdb.models.test_model.TestModel" href="test_model.html#jumpscale.data.bcdb.models.test_model.TestModel">TestModel</a></li>
-<li><a title="jumpscale.data.bcdb.models.db_model.DBModel" href="db_model.html#jumpscale.data.bcdb.models.db_model.DBModel">DBModel</a></li>
-<li><a title="jumpscale.data.bcdb.models.post_model.QuoteModel" href="post_model.html#jumpscale.data.bcdb.models.post_model.QuoteModel">QuoteModel</a></li>
-<li><a title="jumpscale.data.bcdb.models.emplyee_model.EmployeeModel" href="emplyee_model.html#jumpscale.data.bcdb.models.emplyee_model.EmployeeModel">EmployeeModel</a></li>
+<li><a title="jumpscale.data.bcdb.models.user_model.UserModel" href="user_model.html#jumpscale.data.bcdb.models.user_model.UserModel">UserModel</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -478,7 +482,7 @@ Missing props are defaultly initialized.</p>
         JSObjBase: The newly created
     &#34;&#34;&#34;
     o = JSObjBase(self)
-    data[&#39;id&#39;] = self._incr_id()
+    data[&#34;id&#34;] = self._incr_id()
     self.set_from_dict(o, data)
     return o</code></pre>
 </details>

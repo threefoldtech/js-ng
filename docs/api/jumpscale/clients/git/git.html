@@ -223,6 +223,8 @@ def branch_name(self):
 <dt id="jumpscale.clients.git.git.GitClient.path"><code class="name">var <span class="ident">path</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -234,16 +236,13 @@ def branch_name(self):
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.clients.git.git.GitClient.remote_url"><code class="name">var <span class="ident">remote_url</span></code></dt>

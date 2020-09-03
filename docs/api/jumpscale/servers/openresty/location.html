@@ -168,6 +168,8 @@ print(p.name, p.age)
 <dt id="jumpscale.servers.openresty.location.Location.config"><code class="name">var <span class="ident">config</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -179,21 +181,20 @@ print(p.name, p.age)
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.servers.openresty.location.Location.connection_type"><code class="name">var <span class="ident">connection_type</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -205,21 +206,20 @@ print(p.name, p.age)
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.servers.openresty.location.Location.force_https"><code class="name">var <span class="ident">force_https</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -231,21 +231,20 @@ print(p.name, p.age)
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.servers.openresty.location.Location.index"><code class="name">var <span class="ident">index</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -257,21 +256,20 @@ print(p.name, p.age)
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.servers.openresty.location.Location.ipaddr_dest"><code class="name">var <span class="ident">ipaddr_dest</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -283,21 +281,20 @@ print(p.name, p.age)
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.servers.openresty.location.Location.is_auth"><code class="name">var <span class="ident">is_auth</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -309,21 +306,20 @@ print(p.name, p.age)
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.servers.openresty.location.Location.location_type"><code class="name">var <span class="ident">location_type</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -335,21 +331,20 @@ print(p.name, p.age)
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.servers.openresty.location.Location.name"><code class="name">var <span class="ident">name</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -361,16 +356,13 @@ print(p.name, p.age)
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.servers.openresty.location.Location.path_cfg"><code class="name">var <span class="ident">path_cfg</span></code></dt>
@@ -396,6 +388,8 @@ def path_cfg_dir(self):
 <dt id="jumpscale.servers.openresty.location.Location.path_dest"><code class="name">var <span class="ident">path_dest</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -407,21 +401,20 @@ def path_cfg_dir(self):
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.servers.openresty.location.Location.path_location"><code class="name">var <span class="ident">path_location</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -433,21 +426,20 @@ def path_cfg_dir(self):
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.servers.openresty.location.Location.path_url"><code class="name">var <span class="ident">path_url</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -459,16 +451,13 @@ def path_cfg_dir(self):
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.servers.openresty.location.Location.path_web"><code class="name">var <span class="ident">path_web</span></code></dt>
@@ -484,6 +473,8 @@ def path_web(self):
 <dt id="jumpscale.servers.openresty.location.Location.port_dest"><code class="name">var <span class="ident">port_dest</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -495,21 +486,20 @@ def path_web(self):
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.servers.openresty.location.Location.scheme"><code class="name">var <span class="ident">scheme</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -521,21 +511,20 @@ def path_web(self):
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.servers.openresty.location.Location.use_weblibs"><code class="name">var <span class="ident">use_weblibs</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -547,16 +536,13 @@ def path_web(self):
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 </dl>

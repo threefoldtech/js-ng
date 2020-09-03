@@ -26,29 +26,51 @@
 
 
 def dumps(obj):
-    &#34;&#34;&#34;dump dict object into json stream 
-    
+    &#34;&#34;&#34;dump dict object into json stream
+
     Arguments:
-        obj (dict) : the dict which will be dumped     
-    
+        obj (dict) : the dict which will be dumped
+
     Returns:
         string : the json stream
     &#34;&#34;&#34;
     return json.dumps(obj)
 
 
+def dump_to_file(file_path, obj):
+    &#34;&#34;&#34;Writes the dumped obj to a file
+
+   Args:
+       file_path (str): path to write to
+       obj (dict): the dict which will be dumped
+   &#34;&#34;&#34;
+    with open(file_path, &#34;w&#34;) as fp:
+        json.dump(obj, fp)
+
+
 def loads(s):
     &#34;&#34;&#34;loads the data from json string into dict
-    
+
     Arguments:
         s (string) : the json stream
-    
+
     Returns:
         dict : the loaded data from json stram
     &#34;&#34;&#34;
     if isinstance(s, bytes):
         s = s.decode(&#34;utf-8&#34;)
-    return json.loads(s)</code></pre>
+    return json.loads(s)
+
+
+def load_from_file(file_path):
+    &#34;&#34;&#34;Loads data from file to a dict
+
+    Args:
+        file_path (str): path of the json file
+    &#34;&#34;&#34;
+    with open(file_path) as fp:
+        obj = json.load(fp)
+    return obj</code></pre>
 </details>
 </section>
 <section>
@@ -58,14 +80,38 @@ def loads(s):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="jumpscale.data.serializers.json.dump_to_file"><code class="name flex">
+<span>def <span class="ident">dump_to_file</span></span>(<span>file_path, obj)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Writes the dumped obj to a file</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>file_path</code></strong> :&ensp;<code>str</code></dt>
+<dd>path to write to</dd>
+<dt><strong><code>obj</code></strong> :&ensp;<code>dict</code></dt>
+<dd>the dict which will be dumped</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def dump_to_file(file_path, obj):
+    &#34;&#34;&#34;Writes the dumped obj to a file
+
+   Args:
+       file_path (str): path to write to
+       obj (dict): the dict which will be dumped
+   &#34;&#34;&#34;
+    with open(file_path, &#34;w&#34;) as fp:
+        json.dump(obj, fp)</code></pre>
+</details>
+</dd>
 <dt id="jumpscale.data.serializers.json.dumps"><code class="name flex">
 <span>def <span class="ident">dumps</span></span>(<span>obj)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>dump dict object into json stream </p>
+<section class="desc"><p>dump dict object into json stream</p>
 <h2 id="arguments">Arguments</h2>
-<p>obj (dict) : the dict which will be dumped
-</p>
+<p>obj (dict) : the dict which will be dumped</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>string</code></strong> :&ensp;<code>the</code> <code>json</code> <code>stream</code></dt>
@@ -74,15 +120,38 @@ def loads(s):
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def dumps(obj):
-    &#34;&#34;&#34;dump dict object into json stream 
-    
+    &#34;&#34;&#34;dump dict object into json stream
+
     Arguments:
-        obj (dict) : the dict which will be dumped     
-    
+        obj (dict) : the dict which will be dumped
+
     Returns:
         string : the json stream
     &#34;&#34;&#34;
     return json.dumps(obj)</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.data.serializers.json.load_from_file"><code class="name flex">
+<span>def <span class="ident">load_from_file</span></span>(<span>file_path)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Loads data from file to a dict</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>file_path</code></strong> :&ensp;<code>str</code></dt>
+<dd>path of the json file</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def load_from_file(file_path):
+    &#34;&#34;&#34;Loads data from file to a dict
+
+    Args:
+        file_path (str): path of the json file
+    &#34;&#34;&#34;
+    with open(file_path) as fp:
+        obj = json.load(fp)
+    return obj</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.data.serializers.json.loads"><code class="name flex">
@@ -101,10 +170,10 @@ def loads(s):
 <summary>Source code</summary>
 <pre><code class="python">def loads(s):
     &#34;&#34;&#34;loads the data from json string into dict
-    
+
     Arguments:
         s (string) : the json stream
-    
+
     Returns:
         dict : the loaded data from json stram
     &#34;&#34;&#34;
@@ -131,7 +200,9 @@ def loads(s):
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="jumpscale.data.serializers.json.dump_to_file" href="#jumpscale.data.serializers.json.dump_to_file">dump_to_file</a></code></li>
 <li><code><a title="jumpscale.data.serializers.json.dumps" href="#jumpscale.data.serializers.json.dumps">dumps</a></code></li>
+<li><code><a title="jumpscale.data.serializers.json.load_from_file" href="#jumpscale.data.serializers.json.load_from_file">load_from_file</a></code></li>
 <li><code><a title="jumpscale.data.serializers.json.loads" href="#jumpscale.data.serializers.json.loads">loads</a></code></li>
 </ul>
 </li>

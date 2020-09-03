@@ -30,12 +30,18 @@ Docs for nettools
 # TODO: test *2
 
 import time
+import urllib3
 import socket
 import ipaddress
 import re
-import os
 from typing import Optional
-from jumpscale.loader import j
+from jumpscale.core.exceptions import Value, Runtime, Input
+from jumpscale.data.time import now
+import jumpscale.tools.http
+import jumpscale.data.platform
+import jumpscale.sals.fs
+import jumpscale.core.executors
+from jumpscale.data.types import IPAddress
 
 
 def tcp_connection_test(ipaddr: str, port: int, timeout: Optional[int]):
@@ -85,7 +91,6 @@ def udp_connection_test(ipaddr: str, port: int, timeout=1, message=b&#34;PING&#3
         conn.close()
         return False
 
-    j.logger.info(f&#34;Sending {len(message)} bytes to {ipaddr}:{port}&#34;)
     conn.send(message)
 
     try:
@@ -107,33 +112,58 @@ def wait_connection_test(ipaddr: str, port: int, timeout=5):
         bool: True if the test succeeds, False otherwise
     &#34;&#34;&#34;
     port = int(port)
-    end = j.data.time.now().timestamp + timeout
+    end = now().timestamp + timeout
     while True:
-        if j.data.time.now().timestamp &gt; end:
+        if now().timestamp &gt; end:
             return False
         if tcp_connection_test(ipaddr, port, timeout=2):
             return True
 
 
-def check_url_reachable(url: str, timeout=5):
+def wait_http_test(url: str, timeout: int = 60, verify: bool = True) -&gt; bool:
+    &#34;&#34;&#34;Will wait until url is reachable
+
+    Args:
+        url (str): url
+        timeout (int, optional): how long to wait for the connection. Defaults to 60.
+        verify (bool, optional): boolean indication to verify the servers TLS certificate or not.
+
+
+    Returns:
+        bool: true if the test succeeds
+    &#34;&#34;&#34;
+    for _ in range(timeout):
+        try:
+            if check_url_reachable(url, timeout, verify):
+                return True
+        except:
+            pass
+
+        time.sleep(1)
+    else:
+        return False
+
+
+def check_url_reachable(url: str, timeout=5, verify=True):
     &#34;&#34;&#34;Check that given url is reachable
 
     Args:
         url (str): url to test
         timeout (int, optional): timeout of test. Defaults to 5.
+        verify (bool, optional): boolean indication to verify the servers TLS certificate or not.
 
     Raises:
-        j.exceptions.Input: raises if not correct url
+        Input: raises if not correct url
 
     Returns:
         bool: True if the test succeeds, False otherwise
     &#34;&#34;&#34;
     try:
-        code = j.tools.http.get(url, timeout=timeout).status_code
+        code = jumpscale.tools.http.get(url, timeout=timeout, verify=verify).status_code
         return code == 200
-    except j.tools.http.exceptions.MissingSchema:
-        raise j.exceptions.Input(&#34;Please specify correct url with correct scheme&#34;)
-    except j.tools.http.exceptions.ConnectionError:
+    except jumpscale.tools.http.exceptions.MissingSchema:
+        raise Input(&#34;Please specify correct url with correct scheme&#34;)
+    except jumpscale.tools.http.exceptions.ConnectionError:
         return False
 
 
@@ -153,25 +183,25 @@ def get_nic_type(interface):
         interface (str): interface name
 
     Raises:
-        j.exceptions.Runtime: if ethtool not installed on the system
-        j.exceptions.Value: if interface given is invalid
+        Runtime: if ethtool not installed on the system
+        Value: if interface given is invalid
 
     Returns:
         str: type of the interface
     &#34;&#34;&#34;
     output = &#34;&#34;
-    if j.data.platform.is_linux():
-        if j.sals.fs.exists(f&#34;/sys/class/net/{interface}&#34;):
-            output = j.sals.fs.read_file(f&#34;/sys/class/net/{interface}/type&#34;)
+    if jumpscale.data.platform.is_linux():
+        if jumpscale.sals.fs.exists(f&#34;/sys/class/net/{interface}&#34;):
+            output = jumpscale.sals.fs.read_file(f&#34;/sys/class/net/{interface}/type&#34;)
         if output.strip() == &#34;32&#34;:
             return &#34;INFINIBAND&#34;
         else:
-            if j.sals.fs.exists(&#34;/proc/net/vlan/%s&#34; % (interface)):
+            if jumpscale.sals.fs.exists(&#34;/proc/net/vlan/%s&#34; % (interface)):
                 return &#34;VLAN&#34;
-            exitcode, _, _ = j.core.executors.run_local(&#34;which ethtool&#34;, hide=True, warn=True)
+            exitcode, _, _ = jumpscale.core.executors.run_local(&#34;which ethtool&#34;, hide=True, warn=True)
             if exitcode != 0:
-                raise j.exceptions.Runtime(&#34;Ethtool is not installed on this system!&#34;)
-            exitcode, output, _ = j.core.executors.run_local(f&#34;ethtool -i {interface}&#34;, hide=True, warn=True)
+                raise Runtime(&#34;Ethtool is not installed on this system!&#34;)
+            exitcode, output, _ = jumpscale.core.executors.run_local(f&#34;ethtool -i {interface}&#34;, hide=True, warn=True)
             if exitcode != 0:
                 return &#34;VIRTUAL&#34;
             match = re.search(r&#34;^driver:\s+(?P&lt;driver&gt;\w+)\s*$&#34;, output, re.MULTILINE)
@@ -181,15 +211,14 @@ def get_nic_type(interface):
                 return &#34;VLAN&#34;
             return &#34;ETHERNET_GB&#34;
 
-    elif j.data.platform.is_osx():
+    elif jumpscale.data.platform.is_osx():
         command = f&#34;ifconfig {interface}&#34;
-        exitcode, output, err = j.core.executors.run_local(command, hide=True, warn=True)
+        exitcode, output, err = jumpscale.core.executors.run_local(command, hide=True, warn=True)
         if exitcode != 0:
             # temporary plumb the interface to lookup its mac
-            j.logger.info(f&#34;Interface {interface} is down. Temporarily plumbing it to be able to lookup its nic type&#34;)
-            j.core.executors.run_local(f&#34;{command} plumb&#34;, hide=True)
-            exitcode, output, err = j.core.executors.run_local(command, hide=True)
-            j.core.executors.run_local(f&#34;{command} unplumb&#34;, hide=True)
+            jumpscale.core.executors.run_local(f&#34;{command} plumb&#34;, hide=True)
+            exitcode, output, err = jumpscale.core.executors.run_local(command, hide=True)
+            jumpscale.core.executors.run_local(f&#34;{command} unplumb&#34;, hide=True)
         if output.find(&#34;ipib&#34;) &gt;= 0:
             return &#34;INFINIBAND&#34;
         else:
@@ -198,7 +227,7 @@ def get_nic_type(interface):
             interface = interfacepieces[0]
             match = re.search(r&#34;^\w+?(?P&lt;interfaceid&gt;\d+)$&#34;, interface, re.MULTILINE)
             if not match:
-                raise j.exceptions.Value(f&#34;Invalid interface {interface}&#34;)
+                raise Value(f&#34;Invalid interface {interface}&#34;)
             if len(match.group(&#34;interfaceid&#34;)) &gt;= 4:
                 return &#34;VLAN&#34;
             else:
@@ -216,7 +245,7 @@ def get_reachable_ip_address(ip: str, port: int):
         port (int): port number
 
     Raises:
-        j.exceptions.RuntimeError: if can&#39;t connect
+        Runtime: if can&#39;t connect
 
     Returns:
         str: ip that can connect to the specified ip
@@ -225,7 +254,7 @@ def get_reachable_ip_address(ip: str, port: int):
     try:
         s.connect((ip, port))
     except BaseException:
-        raise j.exceptions.RuntimeError(&#34;Cannot connect to %s:%s, check network configuration&#34; % (ip, port))
+        raise Runtime(&#34;Cannot connect to %s:%s, check network configuration&#34; % (ip, port))
     return s.getsockname()[0]
 
 
@@ -280,7 +309,9 @@ def get_network_info(device=None):
             for m in mrec.finditer(block):
                 for key, value in list(m.groupdict().items()):
                     result[key].append(value)
-        _, IPV6, _ = j.core.executors.run_local(&#34;ifconfig %s |  awk &#39;/inet6/{print $2}&#39;&#34; % result[&#34;name&#34;], hide=True)
+        _, IPV6, _ = jumpscale.core.executors.run_local(
+            &#34;ifconfig %s |  awk &#39;/inet6/{print $2}&#39;&#34; % result[&#34;name&#34;], hide=True
+        )
         for ipv6 in IPV6.split(&#34;\n&#34;):
             result[&#34;ip6&#34;].append(ipv6)
         if isinstance(result[&#34;cidr&#34;], list):
@@ -291,7 +322,7 @@ def get_network_info(device=None):
         return result
 
     def networkinfo_get():
-        _, output, _ = j.core.executors.run_local(&#34;ip a&#34;, hide=True)
+        _, output, _ = jumpscale.core.executors.run_local(&#34;ip a&#34;, hide=True)
         for m in IPBLOCKS.finditer(output):
             block = m.group(&#34;block&#34;)
             yield block_parse(block)
@@ -303,7 +334,7 @@ def get_network_info(device=None):
         res.append(nic)
 
     if device is not None:
-        raise j.exceptions.Runtime(&#34;could not find device&#34;)
+        raise Runtime(&#34;could not find device&#34;)
     return res
 
 
@@ -337,20 +368,20 @@ def is_nic_connected(interface: str):
     Returns:
         bool: whether it is connected or not
     &#34;&#34;&#34;
-    if j.data.platform.is_linux():
+    if jumpscale.data.platform.is_linux():
         carrierfile = f&#34;/sys/class/net/{interface}/carrier&#34;
-        if not j.sals.fs.exists(carrierfile):
+        if not jumpscale.sals.fs.exists(carrierfile):
             return False
         try:
-            return int(j.sals.fs.read_file(carrierfile)) != 0
+            return int(jumpscale.sals.fs.read_file(carrierfile)) != 0
         except IOError:
             return False
 
-    elif j.data.platform.is_osx():
-        command = f&#34;dladm show-dev -p -o STATE {platform}&#34;
+    elif jumpscale.data.platform.is_osx():
+        command = f&#34;dladm show-dev -p -o STATE {interface}&#34;
         expectResults = [&#34;up&#34;, &#34;unknown&#34;]
 
-        exitcode, output, _ = j.core.executors.run_local(command, warn=True, hide=True)
+        exitcode, output, _ = jumpscale.core.executors.run_local(command, warn=True, hide=True)
         if exitcode != 0:
             return False
         output = output.strip()
@@ -377,17 +408,17 @@ def ping_machine(ip, pingtimeout=60, allowhostname=True):
     @rtype: True if machine is pingable, False otherwise
     &#34;&#34;&#34;
     if not allowhostname:
-        if not j.data.types.IPAddress().check(ip):
-            raise j.exceptions.Value(&#34;Invalid ip address, set allowedhostname to use hostnames&#34;)
+        if not IPAddress().check(ip):
+            raise Value(&#34;Invalid ip address, set allowedhostname to use hostnames&#34;)
 
     start = time.time()
     pingsucceeded = False
     while time.time() - start &lt; pingtimeout:
-        if j.data.platform.is_linux():
+        if jumpscale.data.platform.is_linux():
             # ping -c 1 -W 1 IP
-            exitcode, _, _ = j.core.executors.run_local(f&#34;ping -c 1 -W 1 -w 1 {ip}&#34;, warn=True, hide=True)
-        elif j.data.platform.is_osx():
-            exitcode, _, _ = j.core.executors.run_local(f&#34;ping -c 1 {ip}&#34;, warn=True, hide=True)
+            exitcode, _, _ = jumpscale.core.executors.run_local(f&#34;ping -c 1 -W 1 -w 1 {ip}&#34;, warn=True, hide=True)
+        elif jumpscale.data.platform.is_osx():
+            exitcode, _, _ = jumpscale.core.executors.run_local(f&#34;ping -c 1 {ip}&#34;, warn=True, hide=True)
         if exitcode == 0:
             pingsucceeded = True
             return True
@@ -408,27 +439,29 @@ def download(url, localpath, username=None, passwd=None, overwrite=True):
     @type passwd: string
     &#34;&#34;&#34;
     if not url:
-        raise j.exceptions.Value(&#34;URL can not be None or empty string&#34;)
+        raise Value(&#34;URL can not be None or empty string&#34;)
     if not localpath:
-        raise j.exceptions.Value(&#34;Local path to download the url to can not be None or empty string&#34;)
+        raise Value(&#34;Local path to download the url to can not be None or empty string&#34;)
     filename = &#34;&#34;
     if localpath == &#34;-&#34;:
         filename = &#34;-&#34;
-    if j.sals.fs.exists(localpath) and j.sals.fs.is_dir(localpath):
-        filename = j.sals.fs.join_paths(localpath, j.sals.fs.basename(url))
+    if jumpscale.sals.fs.exists(localpath) and jumpscale.sals.fs.is_dir(localpath):
+        filename = jumpscale.sals.fs.join_paths(localpath, jumpscale.sals.fs.basename(url))
     else:
-        if j.sals.fs.is_dir(j.sals.fs.dirname(localpath)):
+        if jumpscale.sals.fs.is_dir(jumpscale.sals.fs.dirname(localpath)):
             filename = localpath
         else:
-            raise j.exceptions.Value(&#34;Local path is an invalid path&#34;)
+            raise Value(&#34;Local path is an invalid path&#34;)
 
-    if not j.sals.fs.exists(filename):
+    if not jumpscale.sals.fs.exists(filename):
         overwrite = True
 
     if overwrite:
-        if username and passwd and j.tools.http.urllib3.util.parse_url(url).scheme == &#34;ftp&#34;:
+        if username and passwd and jumpscale.tools.http.urllib3.util.parse_url(url).scheme == &#34;ftp&#34;:
             url = url.split(&#34;://&#34;)[0] + &#34;://%s:%s@&#34; % (username, passwd) + url.split(&#34;://&#34;)[1]
-        response = j.tools.http.get(url, stream=True, auth=j.tools.http.auth.HTTPBasicAuth(username, passwd))
+        response = jumpscale.tools.http.get(
+            url, stream=True, auth=jumpscale.tools.http.auth.HTTPBasicAuth(username, passwd)
+        )
         response.raise_for_status()
         if filename != &#34;-&#34;:
             with open(filename, &#34;wb&#34;) as fw:
@@ -438,7 +471,6 @@ def download(url, localpath, username=None, passwd=None, overwrite=True):
             return
         else:
             return response.content
-    j.logger.info(&#34;!!! File already exists did not overwrite&#34;)
 
 
 def _netobject_get(device: str):
@@ -473,7 +505,7 @@ def netrange_get(device, skip_begin=10, skip_end=10):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="jumpscale.sals.nettools.check_url_reachable"><code class="name flex">
-<span>def <span class="ident">check_url_reachable</span></span>(<span>url, timeout=5)</span>
+<span>def <span class="ident">check_url_reachable</span></span>(<span>url, timeout=5, verify=True)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Check that given url is reachable</p>
@@ -483,11 +515,13 @@ def netrange_get(device, skip_begin=10, skip_end=10):
 <dd>url to test</dd>
 <dt><strong><code>timeout</code></strong> :&ensp;<code>int</code>, optional</dt>
 <dd>timeout of test. Defaults to 5.</dd>
+<dt><strong><code>verify</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>boolean indication to verify the servers TLS certificate or not.</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
-<dt><code>j.exceptions.Input</code>: <code>raises</code> <code>if</code> <code>not</code> <code>correct</code> <code>url</code></dt>
-<dd>&nbsp;</dd>
+<dt><strong><code>Input</code></strong></dt>
+<dd>raises if not correct url</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -496,25 +530,26 @@ def netrange_get(device, skip_begin=10, skip_end=10):
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def check_url_reachable(url: str, timeout=5):
+<pre><code class="python">def check_url_reachable(url: str, timeout=5, verify=True):
     &#34;&#34;&#34;Check that given url is reachable
 
     Args:
         url (str): url to test
         timeout (int, optional): timeout of test. Defaults to 5.
+        verify (bool, optional): boolean indication to verify the servers TLS certificate or not.
 
     Raises:
-        j.exceptions.Input: raises if not correct url
+        Input: raises if not correct url
 
     Returns:
         bool: True if the test succeeds, False otherwise
     &#34;&#34;&#34;
     try:
-        code = j.tools.http.get(url, timeout=timeout).status_code
+        code = jumpscale.tools.http.get(url, timeout=timeout, verify=verify).status_code
         return code == 200
-    except j.tools.http.exceptions.MissingSchema:
-        raise j.exceptions.Input(&#34;Please specify correct url with correct scheme&#34;)
-    except j.tools.http.exceptions.ConnectionError:
+    except jumpscale.tools.http.exceptions.MissingSchema:
+        raise Input(&#34;Please specify correct url with correct scheme&#34;)
+    except jumpscale.tools.http.exceptions.ConnectionError:
         return False</code></pre>
 </details>
 </dd>
@@ -545,27 +580,29 @@ def netrange_get(device, skip_begin=10, skip_end=10):
     @type passwd: string
     &#34;&#34;&#34;
     if not url:
-        raise j.exceptions.Value(&#34;URL can not be None or empty string&#34;)
+        raise Value(&#34;URL can not be None or empty string&#34;)
     if not localpath:
-        raise j.exceptions.Value(&#34;Local path to download the url to can not be None or empty string&#34;)
+        raise Value(&#34;Local path to download the url to can not be None or empty string&#34;)
     filename = &#34;&#34;
     if localpath == &#34;-&#34;:
         filename = &#34;-&#34;
-    if j.sals.fs.exists(localpath) and j.sals.fs.is_dir(localpath):
-        filename = j.sals.fs.join_paths(localpath, j.sals.fs.basename(url))
+    if jumpscale.sals.fs.exists(localpath) and jumpscale.sals.fs.is_dir(localpath):
+        filename = jumpscale.sals.fs.join_paths(localpath, jumpscale.sals.fs.basename(url))
     else:
-        if j.sals.fs.is_dir(j.sals.fs.dirname(localpath)):
+        if jumpscale.sals.fs.is_dir(jumpscale.sals.fs.dirname(localpath)):
             filename = localpath
         else:
-            raise j.exceptions.Value(&#34;Local path is an invalid path&#34;)
+            raise Value(&#34;Local path is an invalid path&#34;)
 
-    if not j.sals.fs.exists(filename):
+    if not jumpscale.sals.fs.exists(filename):
         overwrite = True
 
     if overwrite:
-        if username and passwd and j.tools.http.urllib3.util.parse_url(url).scheme == &#34;ftp&#34;:
+        if username and passwd and jumpscale.tools.http.urllib3.util.parse_url(url).scheme == &#34;ftp&#34;:
             url = url.split(&#34;://&#34;)[0] + &#34;://%s:%s@&#34; % (username, passwd) + url.split(&#34;://&#34;)[1]
-        response = j.tools.http.get(url, stream=True, auth=j.tools.http.auth.HTTPBasicAuth(username, passwd))
+        response = jumpscale.tools.http.get(
+            url, stream=True, auth=jumpscale.tools.http.auth.HTTPBasicAuth(username, passwd)
+        )
         response.raise_for_status()
         if filename != &#34;-&#34;:
             with open(filename, &#34;wb&#34;) as fw:
@@ -574,8 +611,7 @@ def netrange_get(device, skip_begin=10, skip_end=10):
                         fw.write(chunk)
             return
         else:
-            return response.content
-    j.logger.info(&#34;!!! File already exists did not overwrite&#34;)</code></pre>
+            return response.content</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.sals.nettools.get_default_ip_config"><code class="name flex">
@@ -743,7 +779,9 @@ def netrange_get(device, skip_begin=10, skip_end=10):
             for m in mrec.finditer(block):
                 for key, value in list(m.groupdict().items()):
                     result[key].append(value)
-        _, IPV6, _ = j.core.executors.run_local(&#34;ifconfig %s |  awk &#39;/inet6/{print $2}&#39;&#34; % result[&#34;name&#34;], hide=True)
+        _, IPV6, _ = jumpscale.core.executors.run_local(
+            &#34;ifconfig %s |  awk &#39;/inet6/{print $2}&#39;&#34; % result[&#34;name&#34;], hide=True
+        )
         for ipv6 in IPV6.split(&#34;\n&#34;):
             result[&#34;ip6&#34;].append(ipv6)
         if isinstance(result[&#34;cidr&#34;], list):
@@ -754,7 +792,7 @@ def netrange_get(device, skip_begin=10, skip_end=10):
         return result
 
     def networkinfo_get():
-        _, output, _ = j.core.executors.run_local(&#34;ip a&#34;, hide=True)
+        _, output, _ = jumpscale.core.executors.run_local(&#34;ip a&#34;, hide=True)
         for m in IPBLOCKS.finditer(output):
             block = m.group(&#34;block&#34;)
             yield block_parse(block)
@@ -766,7 +804,7 @@ def netrange_get(device, skip_begin=10, skip_end=10):
         res.append(nic)
 
     if device is not None:
-        raise j.exceptions.Runtime(&#34;could not find device&#34;)
+        raise Runtime(&#34;could not find device&#34;)
     return res</code></pre>
 </details>
 </dd>
@@ -803,10 +841,10 @@ def netrange_get(device, skip_begin=10, skip_end=10):
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
-<dt><code>j.exceptions.Runtime</code>: <code>if</code> <code>ethtool</code> <code>not</code> <code>installed</code> <code>on</code> <code>the</code> <code>system</code></dt>
-<dd>&nbsp;</dd>
-<dt><code>j.exceptions.Value</code>: <code>if</code> <code>interface</code> <code>given</code> <code>is</code> <code>invalid</code></dt>
-<dd>&nbsp;</dd>
+<dt><strong><code>Runtime</code></strong></dt>
+<dd>if ethtool not installed on the system</dd>
+<dt><strong><code>Value</code></strong></dt>
+<dd>if interface given is invalid</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -822,25 +860,25 @@ def netrange_get(device, skip_begin=10, skip_end=10):
         interface (str): interface name
 
     Raises:
-        j.exceptions.Runtime: if ethtool not installed on the system
-        j.exceptions.Value: if interface given is invalid
+        Runtime: if ethtool not installed on the system
+        Value: if interface given is invalid
 
     Returns:
         str: type of the interface
     &#34;&#34;&#34;
     output = &#34;&#34;
-    if j.data.platform.is_linux():
-        if j.sals.fs.exists(f&#34;/sys/class/net/{interface}&#34;):
-            output = j.sals.fs.read_file(f&#34;/sys/class/net/{interface}/type&#34;)
+    if jumpscale.data.platform.is_linux():
+        if jumpscale.sals.fs.exists(f&#34;/sys/class/net/{interface}&#34;):
+            output = jumpscale.sals.fs.read_file(f&#34;/sys/class/net/{interface}/type&#34;)
         if output.strip() == &#34;32&#34;:
             return &#34;INFINIBAND&#34;
         else:
-            if j.sals.fs.exists(&#34;/proc/net/vlan/%s&#34; % (interface)):
+            if jumpscale.sals.fs.exists(&#34;/proc/net/vlan/%s&#34; % (interface)):
                 return &#34;VLAN&#34;
-            exitcode, _, _ = j.core.executors.run_local(&#34;which ethtool&#34;, hide=True, warn=True)
+            exitcode, _, _ = jumpscale.core.executors.run_local(&#34;which ethtool&#34;, hide=True, warn=True)
             if exitcode != 0:
-                raise j.exceptions.Runtime(&#34;Ethtool is not installed on this system!&#34;)
-            exitcode, output, _ = j.core.executors.run_local(f&#34;ethtool -i {interface}&#34;, hide=True, warn=True)
+                raise Runtime(&#34;Ethtool is not installed on this system!&#34;)
+            exitcode, output, _ = jumpscale.core.executors.run_local(f&#34;ethtool -i {interface}&#34;, hide=True, warn=True)
             if exitcode != 0:
                 return &#34;VIRTUAL&#34;
             match = re.search(r&#34;^driver:\s+(?P&lt;driver&gt;\w+)\s*$&#34;, output, re.MULTILINE)
@@ -850,15 +888,14 @@ def netrange_get(device, skip_begin=10, skip_end=10):
                 return &#34;VLAN&#34;
             return &#34;ETHERNET_GB&#34;
 
-    elif j.data.platform.is_osx():
+    elif jumpscale.data.platform.is_osx():
         command = f&#34;ifconfig {interface}&#34;
-        exitcode, output, err = j.core.executors.run_local(command, hide=True, warn=True)
+        exitcode, output, err = jumpscale.core.executors.run_local(command, hide=True, warn=True)
         if exitcode != 0:
             # temporary plumb the interface to lookup its mac
-            j.logger.info(f&#34;Interface {interface} is down. Temporarily plumbing it to be able to lookup its nic type&#34;)
-            j.core.executors.run_local(f&#34;{command} plumb&#34;, hide=True)
-            exitcode, output, err = j.core.executors.run_local(command, hide=True)
-            j.core.executors.run_local(f&#34;{command} unplumb&#34;, hide=True)
+            jumpscale.core.executors.run_local(f&#34;{command} plumb&#34;, hide=True)
+            exitcode, output, err = jumpscale.core.executors.run_local(command, hide=True)
+            jumpscale.core.executors.run_local(f&#34;{command} unplumb&#34;, hide=True)
         if output.find(&#34;ipib&#34;) &gt;= 0:
             return &#34;INFINIBAND&#34;
         else:
@@ -867,7 +904,7 @@ def netrange_get(device, skip_begin=10, skip_end=10):
             interface = interfacepieces[0]
             match = re.search(r&#34;^\w+?(?P&lt;interfaceid&gt;\d+)$&#34;, interface, re.MULTILINE)
             if not match:
-                raise j.exceptions.Value(f&#34;Invalid interface {interface}&#34;)
+                raise Value(f&#34;Invalid interface {interface}&#34;)
             if len(match.group(&#34;interfaceid&#34;)) &gt;= 4:
                 return &#34;VLAN&#34;
             else:
@@ -891,8 +928,8 @@ def netrange_get(device, skip_begin=10, skip_end=10):
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
-<dt><code>j.exceptions.RuntimeError</code>: <code>if</code> <code>can't</code> <code>connect</code></dt>
-<dd>&nbsp;</dd>
+<dt><strong><code>Runtime</code></strong></dt>
+<dd>if can't connect</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -909,7 +946,7 @@ def netrange_get(device, skip_begin=10, skip_end=10):
         port (int): port number
 
     Raises:
-        j.exceptions.RuntimeError: if can&#39;t connect
+        Runtime: if can&#39;t connect
 
     Returns:
         str: ip that can connect to the specified ip
@@ -918,7 +955,7 @@ def netrange_get(device, skip_begin=10, skip_end=10):
     try:
         s.connect((ip, port))
     except BaseException:
-        raise j.exceptions.RuntimeError(&#34;Cannot connect to %s:%s, check network configuration&#34; % (ip, port))
+        raise Runtime(&#34;Cannot connect to %s:%s, check network configuration&#34; % (ip, port))
     return s.getsockname()[0]</code></pre>
 </details>
 </dd>
@@ -948,20 +985,20 @@ def netrange_get(device, skip_begin=10, skip_end=10):
     Returns:
         bool: whether it is connected or not
     &#34;&#34;&#34;
-    if j.data.platform.is_linux():
+    if jumpscale.data.platform.is_linux():
         carrierfile = f&#34;/sys/class/net/{interface}/carrier&#34;
-        if not j.sals.fs.exists(carrierfile):
+        if not jumpscale.sals.fs.exists(carrierfile):
             return False
         try:
-            return int(j.sals.fs.read_file(carrierfile)) != 0
+            return int(jumpscale.sals.fs.read_file(carrierfile)) != 0
         except IOError:
             return False
 
-    elif j.data.platform.is_osx():
-        command = f&#34;dladm show-dev -p -o STATE {platform}&#34;
+    elif jumpscale.data.platform.is_osx():
+        command = f&#34;dladm show-dev -p -o STATE {interface}&#34;
         expectResults = [&#34;up&#34;, &#34;unknown&#34;]
 
-        exitcode, output, _ = j.core.executors.run_local(command, warn=True, hide=True)
+        exitcode, output, _ = jumpscale.core.executors.run_local(command, warn=True, hide=True)
         if exitcode != 0:
             return False
         output = output.strip()
@@ -1020,17 +1057,17 @@ def netrange_get(device, skip_begin=10, skip_end=10):
     @rtype: True if machine is pingable, False otherwise
     &#34;&#34;&#34;
     if not allowhostname:
-        if not j.data.types.IPAddress().check(ip):
-            raise j.exceptions.Value(&#34;Invalid ip address, set allowedhostname to use hostnames&#34;)
+        if not IPAddress().check(ip):
+            raise Value(&#34;Invalid ip address, set allowedhostname to use hostnames&#34;)
 
     start = time.time()
     pingsucceeded = False
     while time.time() - start &lt; pingtimeout:
-        if j.data.platform.is_linux():
+        if jumpscale.data.platform.is_linux():
             # ping -c 1 -W 1 IP
-            exitcode, _, _ = j.core.executors.run_local(f&#34;ping -c 1 -W 1 -w 1 {ip}&#34;, warn=True, hide=True)
-        elif j.data.platform.is_osx():
-            exitcode, _, _ = j.core.executors.run_local(f&#34;ping -c 1 {ip}&#34;, warn=True, hide=True)
+            exitcode, _, _ = jumpscale.core.executors.run_local(f&#34;ping -c 1 -W 1 -w 1 {ip}&#34;, warn=True, hide=True)
+        elif jumpscale.data.platform.is_osx():
+            exitcode, _, _ = jumpscale.core.executors.run_local(f&#34;ping -c 1 {ip}&#34;, warn=True, hide=True)
         if exitcode == 0:
             pingsucceeded = True
             return True
@@ -1130,7 +1167,6 @@ def netrange_get(device, skip_begin=10, skip_end=10):
         conn.close()
         return False
 
-    j.logger.info(f&#34;Sending {len(message)} bytes to {ipaddr}:{port}&#34;)
     conn.send(message)
 
     try:
@@ -1173,12 +1209,57 @@ def netrange_get(device, skip_begin=10, skip_end=10):
         bool: True if the test succeeds, False otherwise
     &#34;&#34;&#34;
     port = int(port)
-    end = j.data.time.now().timestamp + timeout
+    end = now().timestamp + timeout
     while True:
-        if j.data.time.now().timestamp &gt; end:
+        if now().timestamp &gt; end:
             return False
         if tcp_connection_test(ipaddr, port, timeout=2):
             return True</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.sals.nettools.wait_http_test"><code class="name flex">
+<span>def <span class="ident">wait_http_test</span></span>(<span>url, timeout=60, verify=True)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Will wait until url is reachable</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>url</code></strong> :&ensp;<code>str</code></dt>
+<dd>url</dd>
+<dt><strong><code>timeout</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>how long to wait for the connection. Defaults to 60.</dd>
+<dt><strong><code>verify</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>boolean indication to verify the servers TLS certificate or not.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>bool</code></strong></dt>
+<dd>true if the test succeeds</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def wait_http_test(url: str, timeout: int = 60, verify: bool = True) -&gt; bool:
+    &#34;&#34;&#34;Will wait until url is reachable
+
+    Args:
+        url (str): url
+        timeout (int, optional): how long to wait for the connection. Defaults to 60.
+        verify (bool, optional): boolean indication to verify the servers TLS certificate or not.
+
+
+    Returns:
+        bool: true if the test succeeds
+    &#34;&#34;&#34;
+    for _ in range(timeout):
+        try:
+            if check_url_reachable(url, timeout, verify):
+                return True
+        except:
+            pass
+
+        time.sleep(1)
+    else:
+        return False</code></pre>
 </details>
 </dd>
 </dl>
@@ -1215,6 +1296,7 @@ def netrange_get(device, skip_begin=10, skip_end=10):
 <li><code><a title="jumpscale.sals.nettools.tcp_connection_test" href="#jumpscale.sals.nettools.tcp_connection_test">tcp_connection_test</a></code></li>
 <li><code><a title="jumpscale.sals.nettools.udp_connection_test" href="#jumpscale.sals.nettools.udp_connection_test">udp_connection_test</a></code></li>
 <li><code><a title="jumpscale.sals.nettools.wait_connection_test" href="#jumpscale.sals.nettools.wait_connection_test">wait_connection_test</a></code></li>
+<li><code><a title="jumpscale.sals.nettools.wait_http_test" href="#jumpscale.sals.nettools.wait_http_test">wait_http_test</a></code></li>
 </ul>
 </li>
 </ul>

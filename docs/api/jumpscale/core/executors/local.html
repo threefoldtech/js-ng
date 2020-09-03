@@ -22,17 +22,17 @@
 <section id="section-intro">
 <p>Executor Local allows executing commands within specific env on the local machine. using the executor framework you can retrieve the stdout, stderr, and the return code as well.</p>
 <pre><code>JS-NG&gt; j.core.executors.run_local(&quot;echo $WHOME&quot;, env={'WHOME':'abc'}, ech
-     1 o=True)                                                           
+     1 o=True)
 echo $WHOME
 abc
 &lt;Result cmd='echo $WHOME' exited=0&gt;
 
-JS-NG&gt; j.core.executors.run_local(&quot;uname&quot;, echo=True)                    
+JS-NG&gt; j.core.executors.run_local(&quot;uname&quot;, echo=True)
 uname
 Linux
 &lt;Result cmd='uname' exited=0&gt;
 
-JS-NG&gt; j.core.executors.run_local(&quot;uname&quot;, echo=False)                   
+JS-NG&gt; j.core.executors.run_local(&quot;uname&quot;, echo=False)
 Linux
 &lt;Result cmd='uname' exited=0&gt;
 </code></pre>
@@ -42,17 +42,17 @@ Linux
 Executor Local allows executing commands within specific env on the local machine. using the executor framework you can retrieve the stdout, stderr, and the return code as well.
 ```
 JS-NG&gt; j.core.executors.run_local(&#34;echo $WHOME&#34;, env={&#39;WHOME&#39;:&#39;abc&#39;}, ech
-     1 o=True)                                                           
+     1 o=True)
 echo $WHOME
 abc
 &lt;Result cmd=&#39;echo $WHOME&#39; exited=0&gt;
 
-JS-NG&gt; j.core.executors.run_local(&#34;uname&#34;, echo=True)                    
+JS-NG&gt; j.core.executors.run_local(&#34;uname&#34;, echo=True)
 uname
 Linux
 &lt;Result cmd=&#39;uname&#39; exited=0&gt;
 
-JS-NG&gt; j.core.executors.run_local(&#34;uname&#34;, echo=False)                   
+JS-NG&gt; j.core.executors.run_local(&#34;uname&#34;, echo=False)
 Linux
 &lt;Result cmd=&#39;uname&#39; exited=0&gt;
 ```
@@ -61,7 +61,10 @@ Linux
 &#34;&#34;&#34;
 import invoke
 
+from .command_builder import cmd_from_args
 
+
+@cmd_from_args
 def execute(cmd, **command_ctx):
     &#34;&#34;&#34;
     :param str shell:
@@ -329,7 +332,8 @@ and force, or disable, echoing.
 <p>:param timeout:</p></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def execute(cmd, **command_ctx):
+<pre><code class="python">@cmd_from_args
+def execute(cmd, **command_ctx):
     &#34;&#34;&#34;
     :param str shell:
         Which shell binary to use. Default: ``/bin/bash`` (on Unix;

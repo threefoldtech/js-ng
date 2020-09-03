@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.4" />
 <title>jumpscale.clients.sshclient.sshclient API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="SSHClient modules helps connecting and executing commands to a remote machine …" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -20,78 +20,127 @@
 <h1 class="title">Module <code>jumpscale.clients.sshclient.sshclient</code></h1>
 </header>
 <section id="section-intro">
+<p>SSHClient modules helps connecting and executing commands to a remote machine.</p>
+<h2 id="create-ssh-key">Create SSH Key</h2>
+<pre><code class="python">JS-NG&gt; xmonader = j.clients.sshkey.new(&quot;xmonader&quot;)
+JS-NG&gt; xmonader.private_key_path = &quot;/home/xmonader/.ssh/id_rsa&quot;
+JS-NG&gt;
+
+</code></pre>
+<h2 id="creating-sshclient-using-that-key-and-executing-commands">Creating sshclient using that key and executing commands</h2>
+<pre><code>JS-NG&gt; sshkey = j.clients.sshkey.get(&quot;xmonader&quot;)
+JS-NG&gt; localclient = j.clients.sshclient.get(&quot;xmonader&quot;)
+JS-NG&gt; localclient.host = &quot;IP of the machine to access&quot;
+JS-NG&gt; localclient.sshclient.run(&quot;hostname&quot;)
+asgard
+(0, 'asgard
+', '')
+
+</code></pre>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">from jumpscale.clients.base import Client
+<pre><code class="python">&#34;&#34;&#34;
+
+SSHClient modules helps connecting and executing commands to a remote machine.
+
+
+## Create SSH Key
+```python
+JS-NG&gt; xmonader = j.clients.sshkey.new(&#34;xmonader&#34;)
+JS-NG&gt; xmonader.private_key_path = &#34;/home/xmonader/.ssh/id_rsa&#34;
+JS-NG&gt;
+
+```
+
+## Creating sshclient using that key and executing commands
+
+```
+JS-NG&gt; sshkey = j.clients.sshkey.get(&#34;xmonader&#34;)
+JS-NG&gt; localclient = j.clients.sshclient.get(&#34;xmonader&#34;)
+JS-NG&gt; localclient.host = &#34;IP of the machine to access&#34;
+JS-NG&gt; localclient.sshclient.run(&#34;hostname&#34;)
+asgard
+(0, &#39;asgard\n&#39;, &#39;&#39;)
+
+```
+&#34;&#34;&#34;
+
+from jumpscale.clients.base import Client
 from jumpscale.core.base import fields
 from jumpscale.loader import j
 
-# &#34;&#34;&#34;
-# JS-NG&gt; xmonader = j.clients.sshkey.new(&#34;xmonader&#34;)
-# JS-NG&gt; xmonader.private_key_path = &#34;/home/xmonader/.ssh/id_rsa&#34;
-# JS-NG&gt;
-# JS-NG&gt; localconnection = j.clients.sshclient.new(&#34;localconnection&#34;)
-# JS-NG&gt; localconnection.sshkey = &#34;xmonader&#34;
-# JS-NG&gt; localconnection.run(&#34;hostname&#34;)
-# (0, &#39;asgard\n&#39;, &#39;&#39;)
-
-
-# JS-NG&gt; sshkey = j.clients.sshkey.get(&#34;xmonader&#34;)
-# JS-NG&gt; localclient = j.clients.sshclient.get(&#34;xmonader&#34;)
-# JS-NG&gt; localclient.sshclient.run(&#34;hostname&#34;)
-# asgard
-# (0, &#39;asgard\n&#39;, &#39;&#39;)
-
-# &#34;&#34;&#34;
 
 class SSHClient(Client):
+    &#34;&#34;&#34;
+    SSHClient has the following properties:
+    sshkey (str): sshkey to use within that client
+    host (str): host ip
+    user (str): user to connect as default: True
+    port (int): the port to use
+    forward_agent (bool):  forward agent or not (default True)
+    connect_timeout (int): timeout (default 10 seconds)
 
-    name = fields.String()
-    sshkey = fields.String()
+    &#34;&#34;&#34;
 
-    host = fields.String(default=&#34;127.0.0.1&#34;)
-    user = fields.String(default=&#34;root&#34;)
-    port = fields.Integer()
+    sshkey = fields.String(required=True)
+
+    host = fields.String(default=&#34;127.0.0.1&#34;, required=True)
+    user = fields.String(default=&#34;root&#34;, required=True)
+    port = fields.Integer(default=22, required=True)
     forward_agent = fields.Boolean(default=True)
     connect_timeout = fields.Integer(default=10)
+    connection_kwargs = fields.Typed(dict, default={})
 
     # gateway = ?  FIXME: should help with proxyjumps. http://docs.fabfile.org/en/2.4/concepts/networking.html#ssh-gateways
-    # connect_kwargs = ? FIXME: how to pass dict?
-    inline_ssh_env = fields.Boolean(default=True) # whether to send environment variables “inline” as prefixes in front of command strings (export VARNAME=value &amp;&amp; mycommand here), instead of trying to submit them through the SSH protocol itself (which is the default behavior). This is necessary if the remote server has a restricted AcceptEnv setting (which is the common default).
 
-    def __init__(self):
-        super().__init__()
+    inline_ssh_env = fields.Boolean(
+        default=True
+    )  # whether to send environment variables “inline” as prefixes in front of command strings (export VARNAME=value &amp;&amp; mycommand here), instead of trying to submit them through the SSH protocol itself (which is the default behavior). This is necessary if the remote server has a restricted AcceptEnv setting (which is the common default).
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.__client = None
 
+    @property
     def _sshkey(self):
+        &#34;&#34;&#34; Get sshkey client that you have loaded
+        e.g
+            JS-NG&gt; localconnection = j.clients.sshclient.new(&#34;localconnection&#34;)
+            JS-NG&gt; localconnection.sshkey = &#34;xmonader&#34;
+            JS-NG&gt; localconnection._sshkey()  -&gt; SHKeyClient(_Base__instance_name=&#39;xmonader&#39;, _Base__parent=None, ...
+        Returns:
+            Obj: It returns object of SSHkeyClient
+        &#34;&#34;&#34;
         return j.clients.sshkey.get(self.sshkey)
 
     @property
     def sshclient(self):
+        self.validate()
         if not self.__client:
+            self.connection_kwargs[&#34;key_filename&#34;] = self._sshkey.private_key_path
             connection_kwargs = dict(
-                                    host=self.host, user=self.user, port=self.port,
-                                    forward_agent=self.forward_agent,
-                                    connect_timeout=self.connect_timeout,
-                                    connect_kwargs={
-                                            &#34;key_filename&#34;: self._sshkey().private_key_path,
-            })
-            # FIXME: coredump here.
-            # if self._sshkey.passphrase:
-            #     connection_kwargs[&#34;connect_kwargs&#34;][&#34;passphrase&#34;] = self._sshkey().passphrase
+                host=self.host,
+                user=self.user,
+                port=self.port,
+                forward_agent=self.forward_agent,
+                connect_timeout=self.connect_timeout,
+                connect_kwargs=self.connection_kwargs,
+            )
+            if self._sshkey.passphrase:
+                connection_kwargs[&#34;connect_kwargs&#34;][&#34;passphrase&#34;] = self._sshkey.passphrase
 
             self.__client = j.core.executors.RemoteExecutor(**connection_kwargs)
 
         return self.__client
 
     def reset_connection(self):
-        self.__client = None
+        &#34;&#34;&#34; Reset the connection
+        e.g
+            localconnection = j.clients.sshclient.new(&#34;localconnection&#34;)
+            localconnection.reset_connection()
 
-    def __getattr__(self, name):
-        return getattr(self.sshclient, name)
-
-    def __dir__(self):
-        return list(self.__dict__.keys()) + dir(self.sshclient)</code></pre>
+        &#34;&#34;&#34;
+        self.__client = None</code></pre>
 </details>
 </section>
 <section>
@@ -105,10 +154,17 @@ class SSHClient(Client):
 <dl>
 <dt id="jumpscale.clients.sshclient.sshclient.SSHClient"><code class="flex name class">
 <span>class <span class="ident">SSHClient</span></span>
+<span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>A simple attribute-based namespace.</p>
-<p>SimpleNamespace(**kwargs)</p>
+<section class="desc"><p>SSHClient has the following properties:
+sshkey (str): sshkey to use within that client
+host (str): host ip
+user (str): user to connect as default: True
+port (int): the port to use
+forward_agent (bool):
+forward agent or not (default True)
+connect_timeout (int): timeout (default 10 seconds)</p>
 <p>base class implementation for any class with fields which supports getting/setting raw data for any instance fields.</p>
 <p>any instance can have an optional name and a parent.</p>
 <pre><code class="python">class Person(Base):
@@ -130,53 +186,76 @@ print(p.name, p.age)
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class SSHClient(Client):
+    &#34;&#34;&#34;
+    SSHClient has the following properties:
+    sshkey (str): sshkey to use within that client
+    host (str): host ip
+    user (str): user to connect as default: True
+    port (int): the port to use
+    forward_agent (bool):  forward agent or not (default True)
+    connect_timeout (int): timeout (default 10 seconds)
 
-    name = fields.String()
-    sshkey = fields.String()
+    &#34;&#34;&#34;
 
-    host = fields.String(default=&#34;127.0.0.1&#34;)
-    user = fields.String(default=&#34;root&#34;)
-    port = fields.Integer()
+    sshkey = fields.String(required=True)
+
+    host = fields.String(default=&#34;127.0.0.1&#34;, required=True)
+    user = fields.String(default=&#34;root&#34;, required=True)
+    port = fields.Integer(default=22, required=True)
     forward_agent = fields.Boolean(default=True)
     connect_timeout = fields.Integer(default=10)
+    connection_kwargs = fields.Typed(dict, default={})
 
     # gateway = ?  FIXME: should help with proxyjumps. http://docs.fabfile.org/en/2.4/concepts/networking.html#ssh-gateways
-    # connect_kwargs = ? FIXME: how to pass dict?
-    inline_ssh_env = fields.Boolean(default=True) # whether to send environment variables “inline” as prefixes in front of command strings (export VARNAME=value &amp;&amp; mycommand here), instead of trying to submit them through the SSH protocol itself (which is the default behavior). This is necessary if the remote server has a restricted AcceptEnv setting (which is the common default).
 
-    def __init__(self):
-        super().__init__()
+    inline_ssh_env = fields.Boolean(
+        default=True
+    )  # whether to send environment variables “inline” as prefixes in front of command strings (export VARNAME=value &amp;&amp; mycommand here), instead of trying to submit them through the SSH protocol itself (which is the default behavior). This is necessary if the remote server has a restricted AcceptEnv setting (which is the common default).
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.__client = None
 
+    @property
     def _sshkey(self):
+        &#34;&#34;&#34; Get sshkey client that you have loaded
+        e.g
+            JS-NG&gt; localconnection = j.clients.sshclient.new(&#34;localconnection&#34;)
+            JS-NG&gt; localconnection.sshkey = &#34;xmonader&#34;
+            JS-NG&gt; localconnection._sshkey()  -&gt; SHKeyClient(_Base__instance_name=&#39;xmonader&#39;, _Base__parent=None, ...
+        Returns:
+            Obj: It returns object of SSHkeyClient
+        &#34;&#34;&#34;
         return j.clients.sshkey.get(self.sshkey)
 
     @property
     def sshclient(self):
+        self.validate()
         if not self.__client:
+            self.connection_kwargs[&#34;key_filename&#34;] = self._sshkey.private_key_path
             connection_kwargs = dict(
-                                    host=self.host, user=self.user, port=self.port,
-                                    forward_agent=self.forward_agent,
-                                    connect_timeout=self.connect_timeout,
-                                    connect_kwargs={
-                                            &#34;key_filename&#34;: self._sshkey().private_key_path,
-            })
-            # FIXME: coredump here.
-            # if self._sshkey.passphrase:
-            #     connection_kwargs[&#34;connect_kwargs&#34;][&#34;passphrase&#34;] = self._sshkey().passphrase
+                host=self.host,
+                user=self.user,
+                port=self.port,
+                forward_agent=self.forward_agent,
+                connect_timeout=self.connect_timeout,
+                connect_kwargs=self.connection_kwargs,
+            )
+            if self._sshkey.passphrase:
+                connection_kwargs[&#34;connect_kwargs&#34;][&#34;passphrase&#34;] = self._sshkey.passphrase
 
             self.__client = j.core.executors.RemoteExecutor(**connection_kwargs)
 
         return self.__client
 
     def reset_connection(self):
-        self.__client = None
+        &#34;&#34;&#34; Reset the connection
+        e.g
+            localconnection = j.clients.sshclient.new(&#34;localconnection&#34;)
+            localconnection.reset_connection()
 
-    def __getattr__(self, name):
-        return getattr(self.sshclient, name)
-
-    def __dir__(self):
-        return list(self.__dict__.keys()) + dir(self.sshclient)</code></pre>
+        &#34;&#34;&#34;
+        self.__client = None</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -189,6 +268,8 @@ print(p.name, p.age)
 <dt id="jumpscale.clients.sshclient.sshclient.SSHClient.connect_timeout"><code class="name">var <span class="ident">connect_timeout</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -200,21 +281,45 @@ print(p.name, p.age)
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
+    return self._get_value(name, field)</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.clients.sshclient.sshclient.SSHClient.connection_kwargs"><code class="name">var <span class="ident">connection_kwargs</span></code></dt>
+<dd>
+<section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>any</code></strong></dt>
+<dd>the field value</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def getter(self):
+    &#34;&#34;&#34;
+    getter method this property
 
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
+    Returns:
+        any: the field value
+    &#34;&#34;&#34;
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.clients.sshclient.sshclient.SSHClient.forward_agent"><code class="name">var <span class="ident">forward_agent</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -226,21 +331,20 @@ print(p.name, p.age)
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.clients.sshclient.sshclient.SSHClient.host"><code class="name">var <span class="ident">host</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -252,21 +356,20 @@ print(p.name, p.age)
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.clients.sshclient.sshclient.SSHClient.inline_ssh_env"><code class="name">var <span class="ident">inline_ssh_env</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -278,47 +381,20 @@ print(p.name, p.age)
     &#34;&#34;&#34;
     getter method this property
 
-    Returns:
-        any: the field value
-    &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
-</details>
-</dd>
-<dt id="jumpscale.clients.sshclient.sshclient.SSHClient.name"><code class="name">var <span class="ident">name</span></code></dt>
-<dd>
-<section class="desc"><p>getter method this property</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>any</code></strong></dt>
-<dd>the field value</dd>
-</dl></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def getter(self):
-    &#34;&#34;&#34;
-    getter method this property
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
 
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.clients.sshclient.sshclient.SSHClient.port"><code class="name">var <span class="ident">port</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -330,16 +406,13 @@ print(p.name, p.age)
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.clients.sshclient.sshclient.SSHClient.sshclient"><code class="name">var <span class="ident">sshclient</span></code></dt>
@@ -349,17 +422,19 @@ print(p.name, p.age)
 <summary>Source code</summary>
 <pre><code class="python">@property
 def sshclient(self):
+    self.validate()
     if not self.__client:
+        self.connection_kwargs[&#34;key_filename&#34;] = self._sshkey.private_key_path
         connection_kwargs = dict(
-                                host=self.host, user=self.user, port=self.port,
-                                forward_agent=self.forward_agent,
-                                connect_timeout=self.connect_timeout,
-                                connect_kwargs={
-                                        &#34;key_filename&#34;: self._sshkey().private_key_path,
-        })
-        # FIXME: coredump here.
-        # if self._sshkey.passphrase:
-        #     connection_kwargs[&#34;connect_kwargs&#34;][&#34;passphrase&#34;] = self._sshkey().passphrase
+            host=self.host,
+            user=self.user,
+            port=self.port,
+            forward_agent=self.forward_agent,
+            connect_timeout=self.connect_timeout,
+            connect_kwargs=self.connection_kwargs,
+        )
+        if self._sshkey.passphrase:
+            connection_kwargs[&#34;connect_kwargs&#34;][&#34;passphrase&#34;] = self._sshkey.passphrase
 
         self.__client = j.core.executors.RemoteExecutor(**connection_kwargs)
 
@@ -369,6 +444,8 @@ def sshclient(self):
 <dt id="jumpscale.clients.sshclient.sshclient.SSHClient.sshkey"><code class="name">var <span class="ident">sshkey</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -380,21 +457,20 @@ def sshclient(self):
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.clients.sshclient.sshclient.SSHClient.user"><code class="name">var <span class="ident">user</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -406,16 +482,13 @@ def sshclient(self):
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 </dl>
@@ -425,10 +498,19 @@ def sshclient(self):
 <span>def <span class="ident">reset_connection</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>Reset the connection
+e.g
+localconnection = j.clients.sshclient.new("localconnection")
+localconnection.reset_connection()</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def reset_connection(self):
+    &#34;&#34;&#34; Reset the connection
+    e.g
+        localconnection = j.clients.sshclient.new(&#34;localconnection&#34;)
+        localconnection.reset_connection()
+
+    &#34;&#34;&#34;
     self.__client = None</code></pre>
 </details>
 </dd>
@@ -450,7 +532,10 @@ def sshclient(self):
 <nav id="sidebar">
 <h1>Index</h1>
 <div class="toc">
-<ul></ul>
+<ul>
+<li><a href="#create-ssh-key">Create SSH Key</a></li>
+<li><a href="#creating-sshclient-using-that-key-and-executing-commands">Creating sshclient using that key and executing commands</a></li>
+</ul>
 </div>
 <ul id="index">
 <li><h3>Super-module</h3>
@@ -464,10 +549,10 @@ def sshclient(self):
 <h4><code><a title="jumpscale.clients.sshclient.sshclient.SSHClient" href="#jumpscale.clients.sshclient.sshclient.SSHClient">SSHClient</a></code></h4>
 <ul class="two-column">
 <li><code><a title="jumpscale.clients.sshclient.sshclient.SSHClient.connect_timeout" href="#jumpscale.clients.sshclient.sshclient.SSHClient.connect_timeout">connect_timeout</a></code></li>
+<li><code><a title="jumpscale.clients.sshclient.sshclient.SSHClient.connection_kwargs" href="#jumpscale.clients.sshclient.sshclient.SSHClient.connection_kwargs">connection_kwargs</a></code></li>
 <li><code><a title="jumpscale.clients.sshclient.sshclient.SSHClient.forward_agent" href="#jumpscale.clients.sshclient.sshclient.SSHClient.forward_agent">forward_agent</a></code></li>
 <li><code><a title="jumpscale.clients.sshclient.sshclient.SSHClient.host" href="#jumpscale.clients.sshclient.sshclient.SSHClient.host">host</a></code></li>
 <li><code><a title="jumpscale.clients.sshclient.sshclient.SSHClient.inline_ssh_env" href="#jumpscale.clients.sshclient.sshclient.SSHClient.inline_ssh_env">inline_ssh_env</a></code></li>
-<li><code><a title="jumpscale.clients.sshclient.sshclient.SSHClient.name" href="#jumpscale.clients.sshclient.sshclient.SSHClient.name">name</a></code></li>
 <li><code><a title="jumpscale.clients.sshclient.sshclient.SSHClient.port" href="#jumpscale.clients.sshclient.sshclient.SSHClient.port">port</a></code></li>
 <li><code><a title="jumpscale.clients.sshclient.sshclient.SSHClient.reset_connection" href="#jumpscale.clients.sshclient.sshclient.SSHClient.reset_connection">reset_connection</a></code></li>
 <li><code><a title="jumpscale.clients.sshclient.sshclient.SSHClient.sshclient" href="#jumpscale.clients.sshclient.sshclient.SSHClient.sshclient">sshclient</a></code></li>

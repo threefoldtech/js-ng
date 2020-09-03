@@ -25,7 +25,7 @@ cl = …" />
 </header>
 <section id="section-intro">
 <p>This module used to manage your conatiners, create ,run, list, delete and exec commands on docker
-for example </p>
+for example</p>
 <pre><code>#getting docker clinet
 cl = j.clients.docker.get('test')
 running docker
@@ -57,7 +57,6 @@ or container.exec_run(&#34;ls /tmp)
 ```
 &#34;&#34;&#34;
 import docker
-from jumpscale.loader import j
 from jumpscale.clients.base import Client
 from jumpscale.core.base import fields
 
@@ -65,8 +64,8 @@ from jumpscale.core.base import fields
 class DockerClient(Client):
     base_url = fields.String()
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.__client = None
 
     @property
@@ -78,7 +77,21 @@ class DockerClient(Client):
                 self.__client = docker.from_env()
         return self.__client
 
-    def create(self, name, image, command=None, environment=None, entrypoint=None, volumes=None, devices=None, detach=True, ports=None, privileged=False, auto_remove=False, hostname=&#34;js-ng&#34;):
+    def create(
+        self,
+        name,
+        image,
+        command=None,
+        environment=None,
+        entrypoint=None,
+        volumes=None,
+        devices=None,
+        detach=True,
+        ports=None,
+        privileged=False,
+        auto_remove=False,
+        hostname=&#34;js-ng&#34;,
+    ):
         &#34;&#34;&#34;Creates a docker container without starting it
 
         Args:
@@ -109,10 +122,37 @@ class DockerClient(Client):
         Returns:
             container: container object
         &#34;&#34;&#34;
-        docker = self.client.containers.create(name=name, image=image, command=command, environment=environment, entrypoint=entrypoint, volumes=volumes, devices=devices, detach=detach, ports=ports, privileged=privileged, auto_remove=auto_remove, hostname=hostname)
+        docker = self.client.containers.create(
+            name=name,
+            image=image,
+            command=command,
+            environment=environment,
+            entrypoint=entrypoint,
+            volumes=volumes,
+            devices=devices,
+            detach=detach,
+            ports=ports,
+            privileged=privileged,
+            auto_remove=auto_remove,
+            hostname=hostname,
+        )
         return docker
 
-    def run(self, name, image, command=None, environment=None, entrypoint=None, volumes=None, devices=None, detach=True, ports=None, privileged=False, auto_remove=False, hostname=&#34;js-ng&#34;):
+    def run(
+        self,
+        name,
+        image,
+        command=None,
+        environment=None,
+        entrypoint=None,
+        volumes=None,
+        devices=None,
+        detach=True,
+        ports=None,
+        privileged=False,
+        auto_remove=False,
+        hostname=&#34;js-ng&#34;,
+    ):
         &#34;&#34;&#34;Runs docker container
         Args:
             name (str): name of the docker container
@@ -142,7 +182,20 @@ class DockerClient(Client):
         Returns:
             container: container object
         &#34;&#34;&#34;
-        docker = self.client.containers.run(name=name, image=image, command=command, environment=environment, entrypoint=entrypoint, volumes=volumes, devices=devices, detach=detach, ports=ports, privileged=privileged, auto_remove=auto_remove, hostname=hostname)
+        docker = self.client.containers.run(
+            name=name,
+            image=image,
+            command=command,
+            environment=environment,
+            entrypoint=entrypoint,
+            volumes=volumes,
+            devices=devices,
+            detach=detach,
+            ports=ports,
+            privileged=privileged,
+            auto_remove=auto_remove,
+            hostname=hostname,
+        )
         return docker
 
     def get(self, container_id):
@@ -153,8 +206,15 @@ class DockerClient(Client):
         Returns:
             container: container object
         &#34;&#34;&#34;
-        container= self.client.containers.get(container_id)
+        container = self.client.containers.get(container_id)
         return container
+
+    def exists(self, container_id):
+        try:
+            self.client.containers.get(container_id)
+            return True
+        except docker.errors.NotFound:
+            return False
 
     def delete(self, container_id, force=False):
         &#34;&#34;&#34;Deletes docker container
@@ -165,7 +225,7 @@ class DockerClient(Client):
         Returns:
             bool: True container deleted
         &#34;&#34;&#34;
-        container = get(container_id)
+        container = self.get(container_id)
         container.remove(force=force)
         return True
 
@@ -178,7 +238,7 @@ class DockerClient(Client):
         Returns:
             bool: True container killed
         &#34;&#34;&#34;
-        container = get(container_id)
+        container = self.get(container_id)
         container.kill(sig)
         return True
 
@@ -191,7 +251,7 @@ class DockerClient(Client):
         Returns:
             bool: True if container restarted
         &#34;&#34;&#34;
-        container = get(container_id)
+        container = self.get(container_id)
         container.restart(timeout=timeout)
         return True
 
@@ -204,8 +264,21 @@ class DockerClient(Client):
         Returns:
             bool: True if container started
         &#34;&#34;&#34;
-        container = get(container_id)
+        container = self.get(container_id)
         container.start()
+        return True
+
+    def stop(self, container_id):
+        &#34;&#34;&#34;stops docker container
+        Args:
+            container_id (str): Id or name of the docker container
+            timeout (int): timeout to stop container before trying to kill
+
+        Returns:
+            bool: True if container started
+        &#34;&#34;&#34;
+        container = self.get(container_id)
+        container.stop()
         return True
 
     def list(self, all=False):
@@ -218,7 +291,23 @@ class DockerClient(Client):
         &#34;&#34;&#34;
         return self.client.containers.list(all=all)
 
-    def exec(self, container_id, cmd, stdout=True, stderr=True, stdin=False, tty=False, privileged=False, user=&#39;&#39;, detach=False, stream=False, socket=False, environment=None, workdir=None, demux=True):
+    def exec(
+        self,
+        container_id,
+        cmd,
+        stdout=True,
+        stderr=True,
+        stdin=False,
+        tty=False,
+        privileged=False,
+        user=&#34;&#34;,
+        detach=False,
+        stream=False,
+        socket=False,
+        environment=None,
+        workdir=None,
+        demux=True,
+    ):
         &#34;&#34;&#34;Executes command docker container
         Args:
             container_id (str): Id or name of the docker container
@@ -248,7 +337,21 @@ class DockerClient(Client):
                 A bytestring containing response data otherwise.
         &#34;&#34;&#34;
         docker = self.get(container_id)
-        return docker.exec_run(cmd=cmd, stdout=stdout, stderr=stderr, stdin=stdin, tty=tty, privileged=privileged, user=user, detach=detach, stream=stream, socket=socket, environment=environment, workdir=workdir, demux=demux)</code></pre>
+        return docker.exec_run(
+            cmd=cmd,
+            stdout=stdout,
+            stderr=stderr,
+            stdin=stdin,
+            tty=tty,
+            privileged=privileged,
+            user=user,
+            detach=detach,
+            stream=stream,
+            socket=socket,
+            environment=environment,
+            workdir=workdir,
+            demux=demux,
+        )</code></pre>
 </details>
 </section>
 <section>
@@ -262,6 +365,7 @@ class DockerClient(Client):
 <dl>
 <dt id="jumpscale.clients.docker.docker.DockerClient"><code class="flex name class">
 <span>class <span class="ident">DockerClient</span></span>
+<span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>A simple attribute-based namespace.</p>
@@ -289,8 +393,8 @@ print(p.name, p.age)
 <pre><code class="python">class DockerClient(Client):
     base_url = fields.String()
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.__client = None
 
     @property
@@ -302,7 +406,21 @@ print(p.name, p.age)
                 self.__client = docker.from_env()
         return self.__client
 
-    def create(self, name, image, command=None, environment=None, entrypoint=None, volumes=None, devices=None, detach=True, ports=None, privileged=False, auto_remove=False, hostname=&#34;js-ng&#34;):
+    def create(
+        self,
+        name,
+        image,
+        command=None,
+        environment=None,
+        entrypoint=None,
+        volumes=None,
+        devices=None,
+        detach=True,
+        ports=None,
+        privileged=False,
+        auto_remove=False,
+        hostname=&#34;js-ng&#34;,
+    ):
         &#34;&#34;&#34;Creates a docker container without starting it
 
         Args:
@@ -333,10 +451,37 @@ print(p.name, p.age)
         Returns:
             container: container object
         &#34;&#34;&#34;
-        docker = self.client.containers.create(name=name, image=image, command=command, environment=environment, entrypoint=entrypoint, volumes=volumes, devices=devices, detach=detach, ports=ports, privileged=privileged, auto_remove=auto_remove, hostname=hostname)
+        docker = self.client.containers.create(
+            name=name,
+            image=image,
+            command=command,
+            environment=environment,
+            entrypoint=entrypoint,
+            volumes=volumes,
+            devices=devices,
+            detach=detach,
+            ports=ports,
+            privileged=privileged,
+            auto_remove=auto_remove,
+            hostname=hostname,
+        )
         return docker
 
-    def run(self, name, image, command=None, environment=None, entrypoint=None, volumes=None, devices=None, detach=True, ports=None, privileged=False, auto_remove=False, hostname=&#34;js-ng&#34;):
+    def run(
+        self,
+        name,
+        image,
+        command=None,
+        environment=None,
+        entrypoint=None,
+        volumes=None,
+        devices=None,
+        detach=True,
+        ports=None,
+        privileged=False,
+        auto_remove=False,
+        hostname=&#34;js-ng&#34;,
+    ):
         &#34;&#34;&#34;Runs docker container
         Args:
             name (str): name of the docker container
@@ -366,7 +511,20 @@ print(p.name, p.age)
         Returns:
             container: container object
         &#34;&#34;&#34;
-        docker = self.client.containers.run(name=name, image=image, command=command, environment=environment, entrypoint=entrypoint, volumes=volumes, devices=devices, detach=detach, ports=ports, privileged=privileged, auto_remove=auto_remove, hostname=hostname)
+        docker = self.client.containers.run(
+            name=name,
+            image=image,
+            command=command,
+            environment=environment,
+            entrypoint=entrypoint,
+            volumes=volumes,
+            devices=devices,
+            detach=detach,
+            ports=ports,
+            privileged=privileged,
+            auto_remove=auto_remove,
+            hostname=hostname,
+        )
         return docker
 
     def get(self, container_id):
@@ -377,8 +535,15 @@ print(p.name, p.age)
         Returns:
             container: container object
         &#34;&#34;&#34;
-        container= self.client.containers.get(container_id)
+        container = self.client.containers.get(container_id)
         return container
+
+    def exists(self, container_id):
+        try:
+            self.client.containers.get(container_id)
+            return True
+        except docker.errors.NotFound:
+            return False
 
     def delete(self, container_id, force=False):
         &#34;&#34;&#34;Deletes docker container
@@ -389,7 +554,7 @@ print(p.name, p.age)
         Returns:
             bool: True container deleted
         &#34;&#34;&#34;
-        container = get(container_id)
+        container = self.get(container_id)
         container.remove(force=force)
         return True
 
@@ -402,7 +567,7 @@ print(p.name, p.age)
         Returns:
             bool: True container killed
         &#34;&#34;&#34;
-        container = get(container_id)
+        container = self.get(container_id)
         container.kill(sig)
         return True
 
@@ -415,7 +580,7 @@ print(p.name, p.age)
         Returns:
             bool: True if container restarted
         &#34;&#34;&#34;
-        container = get(container_id)
+        container = self.get(container_id)
         container.restart(timeout=timeout)
         return True
 
@@ -428,8 +593,21 @@ print(p.name, p.age)
         Returns:
             bool: True if container started
         &#34;&#34;&#34;
-        container = get(container_id)
+        container = self.get(container_id)
         container.start()
+        return True
+
+    def stop(self, container_id):
+        &#34;&#34;&#34;stops docker container
+        Args:
+            container_id (str): Id or name of the docker container
+            timeout (int): timeout to stop container before trying to kill
+
+        Returns:
+            bool: True if container started
+        &#34;&#34;&#34;
+        container = self.get(container_id)
+        container.stop()
         return True
 
     def list(self, all=False):
@@ -442,7 +620,23 @@ print(p.name, p.age)
         &#34;&#34;&#34;
         return self.client.containers.list(all=all)
 
-    def exec(self, container_id, cmd, stdout=True, stderr=True, stdin=False, tty=False, privileged=False, user=&#39;&#39;, detach=False, stream=False, socket=False, environment=None, workdir=None, demux=True):
+    def exec(
+        self,
+        container_id,
+        cmd,
+        stdout=True,
+        stderr=True,
+        stdin=False,
+        tty=False,
+        privileged=False,
+        user=&#34;&#34;,
+        detach=False,
+        stream=False,
+        socket=False,
+        environment=None,
+        workdir=None,
+        demux=True,
+    ):
         &#34;&#34;&#34;Executes command docker container
         Args:
             container_id (str): Id or name of the docker container
@@ -472,7 +666,21 @@ print(p.name, p.age)
                 A bytestring containing response data otherwise.
         &#34;&#34;&#34;
         docker = self.get(container_id)
-        return docker.exec_run(cmd=cmd, stdout=stdout, stderr=stderr, stdin=stdin, tty=tty, privileged=privileged, user=user, detach=detach, stream=stream, socket=socket, environment=environment, workdir=workdir, demux=demux)</code></pre>
+        return docker.exec_run(
+            cmd=cmd,
+            stdout=stdout,
+            stderr=stderr,
+            stdin=stdin,
+            tty=tty,
+            privileged=privileged,
+            user=user,
+            detach=detach,
+            stream=stream,
+            socket=socket,
+            environment=environment,
+            workdir=workdir,
+            demux=demux,
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -485,6 +693,8 @@ print(p.name, p.age)
 <dt id="jumpscale.clients.docker.docker.DockerClient.base_url"><code class="name">var <span class="ident">base_url</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -496,16 +706,13 @@ print(p.name, p.age)
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.clients.docker.docker.DockerClient.client"><code class="name">var <span class="ident">client</span></code></dt>
@@ -568,7 +775,21 @@ hostname (str) - hostname to be set on docker container default "js-ng"</p>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def create(self, name, image, command=None, environment=None, entrypoint=None, volumes=None, devices=None, detach=True, ports=None, privileged=False, auto_remove=False, hostname=&#34;js-ng&#34;):
+<pre><code class="python">def create(
+    self,
+    name,
+    image,
+    command=None,
+    environment=None,
+    entrypoint=None,
+    volumes=None,
+    devices=None,
+    detach=True,
+    ports=None,
+    privileged=False,
+    auto_remove=False,
+    hostname=&#34;js-ng&#34;,
+):
     &#34;&#34;&#34;Creates a docker container without starting it
 
     Args:
@@ -599,7 +820,20 @@ hostname (str) - hostname to be set on docker container default "js-ng"</p>
     Returns:
         container: container object
     &#34;&#34;&#34;
-    docker = self.client.containers.create(name=name, image=image, command=command, environment=environment, entrypoint=entrypoint, volumes=volumes, devices=devices, detach=detach, ports=ports, privileged=privileged, auto_remove=auto_remove, hostname=hostname)
+    docker = self.client.containers.create(
+        name=name,
+        image=image,
+        command=command,
+        environment=environment,
+        entrypoint=entrypoint,
+        volumes=volumes,
+        devices=devices,
+        detach=detach,
+        ports=ports,
+        privileged=privileged,
+        auto_remove=auto_remove,
+        hostname=hostname,
+    )
     return docker</code></pre>
 </details>
 </dd>
@@ -631,7 +865,7 @@ hostname (str) - hostname to be set on docker container default "js-ng"</p>
     Returns:
         bool: True container deleted
     &#34;&#34;&#34;
-    container = get(container_id)
+    container = self.get(container_id)
     container.remove(force=force)
     return True</code></pre>
 </details>
@@ -645,34 +879,55 @@ hostname (str) - hostname to be set on docker container default "js-ng"</p>
 <dl>
 <dt><strong><code>container_id</code></strong> :&ensp;<code>str</code></dt>
 <dd>Id or name of the docker container</dd>
-<dt>cmd (str or list) – Command to be executed</dt>
-<dt>stdout (bool) – Attach to stdout. Default: True</dt>
-<dt>stderr (bool) – Attach to stderr. Default: True</dt>
-<dt>stdin (bool) – Attach to stdin. Default: False</dt>
-<dt>tty (bool) – Allocate a pseudo-TTY. Default: False</dt>
-<dt>privileged (bool) – Run as privileged.</dt>
-<dt>user (str) – User to execute command as. Default: root</dt>
-<dt>detach (bool) – If true, detach from the exec command. Default: False</dt>
-<dt>stream (bool) – Stream response data. Default: False</dt>
-<dt>socket (bool) – Return the connection socket to allow custom read/write operations. Default: False</dt>
-<dt>environment (dict or list) – A dictionary or a list of strings in the following format ["PASSWORD=xxx"] or {"PASSWORD": "xxx"}.</dt>
-<dt>workdir (str) – Path to working directory for this exec session</dt>
-<dt>demux (bool) – Return stdout and stderr separately</dt>
-<dt><strong><code>Returns</code></strong> :&ensp;</dt>
-<dd>
-<p>A tuple of (exit_code, output)
-exit_code: (int):
-Exit code for the executed command or None if either stream or socket is True.</p>
-<p>output: (generator, bytes, or tuple):
+</dl>
+<p>cmd (str or list) – Command to be executed
+stdout (bool) – Attach to stdout. Default: True
+stderr (bool) – Attach to stderr. Default: True
+stdin (bool) – Attach to stdin. Default: False
+tty (bool) – Allocate a pseudo-TTY. Default: False
+privileged (bool) – Run as privileged.
+user (str) – User to execute command as. Default: root
+detach (bool) – If true, detach from the exec command. Default: False
+stream (bool) – Stream response data. Default: False
+socket (bool) – Return the connection socket to allow custom read/write operations. Default: False
+environment (dict or list) – A dictionary or a list of strings in the following format ["PASSWORD=xxx"] or {"PASSWORD": "xxx"}.
+workdir (str) – Path to working directory for this exec session
+demux (bool) – Return stdout and stderr separately</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>A</code> <code>tuple</code> of (<code>exit_code</code>, <code>output</code>)</dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>exit_code</code></strong></dt>
+<dd>(int):</dd>
+</dl>
+<p>Exit code for the executed command or None if either stream or socket is True.</p>
+<dl>
+<dt><strong><code>output</code></strong></dt>
+<dd>(generator, bytes, or tuple):
 If stream=True, a generator yielding response chunks.
 If socket=True, a socket object for the connection.
 If demux=True, a tuple of two bytes: stdout and stderr.
-A bytestring containing response data otherwise.</p>
-</dd>
+A bytestring containing response data otherwise.</dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def exec(self, container_id, cmd, stdout=True, stderr=True, stdin=False, tty=False, privileged=False, user=&#39;&#39;, detach=False, stream=False, socket=False, environment=None, workdir=None, demux=True):
+<pre><code class="python">def exec(
+    self,
+    container_id,
+    cmd,
+    stdout=True,
+    stderr=True,
+    stdin=False,
+    tty=False,
+    privileged=False,
+    user=&#34;&#34;,
+    detach=False,
+    stream=False,
+    socket=False,
+    environment=None,
+    workdir=None,
+    demux=True,
+):
     &#34;&#34;&#34;Executes command docker container
     Args:
         container_id (str): Id or name of the docker container
@@ -702,7 +957,36 @@ A bytestring containing response data otherwise.</p>
             A bytestring containing response data otherwise.
     &#34;&#34;&#34;
     docker = self.get(container_id)
-    return docker.exec_run(cmd=cmd, stdout=stdout, stderr=stderr, stdin=stdin, tty=tty, privileged=privileged, user=user, detach=detach, stream=stream, socket=socket, environment=environment, workdir=workdir, demux=demux)</code></pre>
+    return docker.exec_run(
+        cmd=cmd,
+        stdout=stdout,
+        stderr=stderr,
+        stdin=stdin,
+        tty=tty,
+        privileged=privileged,
+        user=user,
+        detach=detach,
+        stream=stream,
+        socket=socket,
+        environment=environment,
+        workdir=workdir,
+        demux=demux,
+    )</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.clients.docker.docker.DockerClient.exists"><code class="name flex">
+<span>def <span class="ident">exists</span></span>(<span>self, container_id)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def exists(self, container_id):
+    try:
+        self.client.containers.get(container_id)
+        return True
+    except docker.errors.NotFound:
+        return False</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.clients.docker.docker.DockerClient.get"><code class="name flex">
@@ -730,7 +1014,7 @@ A bytestring containing response data otherwise.</p>
     Returns:
         container: container object
     &#34;&#34;&#34;
-    container= self.client.containers.get(container_id)
+    container = self.client.containers.get(container_id)
     return container</code></pre>
 </details>
 </dd>
@@ -762,7 +1046,7 @@ A bytestring containing response data otherwise.</p>
     Returns:
         bool: True container killed
     &#34;&#34;&#34;
-    container = get(container_id)
+    container = self.get(container_id)
     container.kill(sig)
     return True</code></pre>
 </details>
@@ -823,7 +1107,7 @@ A bytestring containing response data otherwise.</p>
     Returns:
         bool: True if container restarted
     &#34;&#34;&#34;
-    container = get(container_id)
+    container = self.get(container_id)
     container.restart(timeout=timeout)
     return True</code></pre>
 </details>
@@ -870,7 +1154,21 @@ hostname (str) - hostname to be set on docker container default "js-ng"</p>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def run(self, name, image, command=None, environment=None, entrypoint=None, volumes=None, devices=None, detach=True, ports=None, privileged=False, auto_remove=False, hostname=&#34;js-ng&#34;):
+<pre><code class="python">def run(
+    self,
+    name,
+    image,
+    command=None,
+    environment=None,
+    entrypoint=None,
+    volumes=None,
+    devices=None,
+    detach=True,
+    ports=None,
+    privileged=False,
+    auto_remove=False,
+    hostname=&#34;js-ng&#34;,
+):
     &#34;&#34;&#34;Runs docker container
     Args:
         name (str): name of the docker container
@@ -900,7 +1198,20 @@ hostname (str) - hostname to be set on docker container default "js-ng"</p>
     Returns:
         container: container object
     &#34;&#34;&#34;
-    docker = self.client.containers.run(name=name, image=image, command=command, environment=environment, entrypoint=entrypoint, volumes=volumes, devices=devices, detach=detach, ports=ports, privileged=privileged, auto_remove=auto_remove, hostname=hostname)
+    docker = self.client.containers.run(
+        name=name,
+        image=image,
+        command=command,
+        environment=environment,
+        entrypoint=entrypoint,
+        volumes=volumes,
+        devices=devices,
+        detach=detach,
+        ports=ports,
+        privileged=privileged,
+        auto_remove=auto_remove,
+        hostname=hostname,
+    )
     return docker</code></pre>
 </details>
 </dd>
@@ -932,8 +1243,41 @@ hostname (str) - hostname to be set on docker container default "js-ng"</p>
     Returns:
         bool: True if container started
     &#34;&#34;&#34;
-    container = get(container_id)
+    container = self.get(container_id)
     container.start()
+    return True</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.clients.docker.docker.DockerClient.stop"><code class="name flex">
+<span>def <span class="ident">stop</span></span>(<span>self, container_id)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>stops docker container</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>container_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>Id or name of the docker container</dd>
+<dt><strong><code>timeout</code></strong> :&ensp;<code>int</code></dt>
+<dd>timeout to stop container before trying to kill</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>bool</code></strong></dt>
+<dd>True if container started</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def stop(self, container_id):
+    &#34;&#34;&#34;stops docker container
+    Args:
+        container_id (str): Id or name of the docker container
+        timeout (int): timeout to stop container before trying to kill
+
+    Returns:
+        bool: True if container started
+    &#34;&#34;&#34;
+    container = self.get(container_id)
+    container.stop()
     return True</code></pre>
 </details>
 </dd>
@@ -973,12 +1317,14 @@ hostname (str) - hostname to be set on docker container default "js-ng"</p>
 <li><code><a title="jumpscale.clients.docker.docker.DockerClient.create" href="#jumpscale.clients.docker.docker.DockerClient.create">create</a></code></li>
 <li><code><a title="jumpscale.clients.docker.docker.DockerClient.delete" href="#jumpscale.clients.docker.docker.DockerClient.delete">delete</a></code></li>
 <li><code><a title="jumpscale.clients.docker.docker.DockerClient.exec" href="#jumpscale.clients.docker.docker.DockerClient.exec">exec</a></code></li>
+<li><code><a title="jumpscale.clients.docker.docker.DockerClient.exists" href="#jumpscale.clients.docker.docker.DockerClient.exists">exists</a></code></li>
 <li><code><a title="jumpscale.clients.docker.docker.DockerClient.get" href="#jumpscale.clients.docker.docker.DockerClient.get">get</a></code></li>
 <li><code><a title="jumpscale.clients.docker.docker.DockerClient.kill" href="#jumpscale.clients.docker.docker.DockerClient.kill">kill</a></code></li>
 <li><code><a title="jumpscale.clients.docker.docker.DockerClient.list" href="#jumpscale.clients.docker.docker.DockerClient.list">list</a></code></li>
 <li><code><a title="jumpscale.clients.docker.docker.DockerClient.restart" href="#jumpscale.clients.docker.docker.DockerClient.restart">restart</a></code></li>
 <li><code><a title="jumpscale.clients.docker.docker.DockerClient.run" href="#jumpscale.clients.docker.docker.DockerClient.run">run</a></code></li>
 <li><code><a title="jumpscale.clients.docker.docker.DockerClient.start" href="#jumpscale.clients.docker.docker.DockerClient.start">start</a></code></li>
+<li><code><a title="jumpscale.clients.docker.docker.DockerClient.stop" href="#jumpscale.clients.docker.docker.DockerClient.stop">stop</a></code></li>
 </ul>
 </li>
 </ul>

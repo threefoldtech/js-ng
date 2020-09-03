@@ -32,8 +32,6 @@ list available clients
 <pre><code>~&gt; poetry run jsync sync --clients &quot;xmonader&quot; --paths &quot;~/wspace/tq,/tmp/proj:/tmp/proj2&quot;
 ['xmonader'] {'~/wspace/tq': '~/wspace/tq', '/tmp/proj': '/tmp/proj2'}
 </code></pre>
-<pre><code>poetry run jsync sync --clients &quot;xmonader&quot; --paths &quot;~/wspace/tq:/tmp/tq&quot; --sync
-</code></pre>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">&#34;&#34;&#34;`jsync` is syncing tool to sync over certain set of directories against remote machine.
@@ -47,10 +45,6 @@ list available clients
 ```
 ~&gt; poetry run jsync sync --clients &#34;xmonader&#34; --paths &#34;~/wspace/tq,/tmp/proj:/tmp/proj2&#34;
 [&#39;xmonader&#39;] {&#39;~/wspace/tq&#39;: &#39;~/wspace/tq&#39;, &#39;/tmp/proj&#39;: &#39;/tmp/proj2&#39;}
-```
-
-```
-poetry run jsync sync --clients &#34;xmonader&#34; --paths &#34;~/wspace/tq:/tmp/tq&#34; --sync
 ```
 &#34;&#34;&#34;
 

@@ -37,6 +37,10 @@ cmd.start()
 - foreground</p>
 <p>You can attach to a running process by specufying correct <code>name</code>, <code>ports</code>, <code>process_strings</code>, <code>process_strings_regex</code>.
 If it matches any of the above you would be able to perform available on that process.</p>
+<ul>
+<li>Special cases</li>
+</ul>
+<p>you can add cmd.ports, cmd.process_strings_regex or cmd.process_strings_regex to reach the process pid</p>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">&#34;&#34;&#34;This module manages long running commands
@@ -63,6 +67,11 @@ Two types of executor:
 
 You can attach to a running process by specufying correct `name`, `ports`, `process_strings`, `process_strings_regex`.
 If it matches any of the above you would be able to perform available on that process.
+
+
+- Special cases
+
+you can add cmd.ports, cmd.process_strings_regex or cmd.process_strings_regex to reach the process pid
 &#34;&#34;&#34;
 from enum import Enum
 from jumpscale.loader import j
@@ -89,8 +98,8 @@ class StartupCmd(Base):
     process_strings = fields.List(fields.String())
     process_strings_regex = fields.List(fields.String())
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._process = None
         self._pid = None
         self._cmd_path = None
@@ -134,7 +143,7 @@ class StartupCmd(Base):
 
     @property
     def _tmux_window(self):
-        if self.executor == Executor.TMUX:
+        if self.executor.value == Executor.TMUX.value:
             if self.__tmux_window is None:
                 self.__tmux_window = j.core.executors.tmux.get_js_window(self.instance_name)
         return self.__tmux_window
@@ -203,6 +212,12 @@ class StartupCmd(Base):
             exit_code, _, _ = j.sals.process.execute(cmd, die=False)
             self.reset()
             return exit_code == 0
+        elif self.process:
+            try:
+                self.process.terminate()
+                return True
+            except Exception:
+                pass
         return False
 
     def _hard_kill(self):
@@ -214,7 +229,7 @@ class StartupCmd(Base):
 
         self._kill_processes_by_port_or_filter()
 
-        if self.executor == Executor.TMUX:
+        if self.executor.value == Executor.TMUX.value:
             self._tmux_window.kill_window()
             self.__tmux_window = None
 
@@ -231,7 +246,8 @@ class StartupCmd(Base):
         timeout = timeout or self.timeout
 
         if self.is_running():
-            self._soft_kill()
+            if self._soft_kill():
+                self.wait_for_stop(die=False, timeout=timeout)
 
         if force:
             self._hard_kill()
@@ -335,9 +351,9 @@ class StartupCmd(Base):
             j.sals.fs.chmod(self.cmd_path, 0o770)
             command = f&#34;sh {self.cmd_path}&#34;
 
-        if self.executor == Executor.FOREGROUND:
+        if self.executor.value == Executor.FOREGROUND.value:
             j.sals.process.execute(command)
-        elif self.executor == Executor.TMUX:
+        elif self.executor.value == Executor.TMUX.value:
             self._tmux_window.attached_pane.send_keys(command)
 
         self.wait_for_running(die=True, timeout=self.timeout)</code></pre>
@@ -382,6 +398,7 @@ class StartupCmd(Base):
 </dd>
 <dt id="jumpscale.tools.startupcmd.startupcmd.StartupCmd"><code class="flex name class">
 <span>class <span class="ident">StartupCmd</span></span>
+<span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>A simple attribute-based namespace.</p>
@@ -418,8 +435,8 @@ print(p.name, p.age)
     process_strings = fields.List(fields.String())
     process_strings_regex = fields.List(fields.String())
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._process = None
         self._pid = None
         self._cmd_path = None
@@ -463,7 +480,7 @@ print(p.name, p.age)
 
     @property
     def _tmux_window(self):
-        if self.executor == Executor.TMUX:
+        if self.executor.value == Executor.TMUX.value:
             if self.__tmux_window is None:
                 self.__tmux_window = j.core.executors.tmux.get_js_window(self.instance_name)
         return self.__tmux_window
@@ -532,6 +549,12 @@ print(p.name, p.age)
             exit_code, _, _ = j.sals.process.execute(cmd, die=False)
             self.reset()
             return exit_code == 0
+        elif self.process:
+            try:
+                self.process.terminate()
+                return True
+            except Exception:
+                pass
         return False
 
     def _hard_kill(self):
@@ -543,7 +566,7 @@ print(p.name, p.age)
 
         self._kill_processes_by_port_or_filter()
 
-        if self.executor == Executor.TMUX:
+        if self.executor.value == Executor.TMUX.value:
             self._tmux_window.kill_window()
             self.__tmux_window = None
 
@@ -560,7 +583,8 @@ print(p.name, p.age)
         timeout = timeout or self.timeout
 
         if self.is_running():
-            self._soft_kill()
+            if self._soft_kill():
+                self.wait_for_stop(die=False, timeout=timeout)
 
         if force:
             self._hard_kill()
@@ -664,9 +688,9 @@ print(p.name, p.age)
             j.sals.fs.chmod(self.cmd_path, 0o770)
             command = f&#34;sh {self.cmd_path}&#34;
 
-        if self.executor == Executor.FOREGROUND:
+        if self.executor.value == Executor.FOREGROUND.value:
             j.sals.process.execute(command)
-        elif self.executor == Executor.TMUX:
+        elif self.executor.value == Executor.TMUX.value:
             self._tmux_window.attached_pane.send_keys(command)
 
         self.wait_for_running(die=True, timeout=self.timeout)</code></pre>
@@ -681,6 +705,8 @@ print(p.name, p.age)
 <dt id="jumpscale.tools.startupcmd.startupcmd.StartupCmd.check_cmd"><code class="name">var <span class="ident">check_cmd</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -692,16 +718,13 @@ print(p.name, p.age)
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.tools.startupcmd.startupcmd.StartupCmd.cmd_path"><code class="name">var <span class="ident">cmd_path</span></code></dt>
@@ -720,6 +743,8 @@ def cmd_path(self):
 <dt id="jumpscale.tools.startupcmd.startupcmd.StartupCmd.env"><code class="name">var <span class="ident">env</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -731,21 +756,20 @@ def cmd_path(self):
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.tools.startupcmd.startupcmd.StartupCmd.executor"><code class="name">var <span class="ident">executor</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -757,21 +781,20 @@ def cmd_path(self):
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.tools.startupcmd.startupcmd.StartupCmd.path"><code class="name">var <span class="ident">path</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -783,16 +806,13 @@ def cmd_path(self):
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.tools.startupcmd.startupcmd.StartupCmd.pid"><code class="name">var <span class="ident">pid</span></code></dt>
@@ -812,6 +832,8 @@ def pid(self):
 <dt id="jumpscale.tools.startupcmd.startupcmd.StartupCmd.ports"><code class="name">var <span class="ident">ports</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -823,16 +845,13 @@ def pid(self):
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.tools.startupcmd.startupcmd.StartupCmd.process"><code class="name">var <span class="ident">process</span></code></dt>
@@ -857,6 +876,8 @@ def process(self):
 <dt id="jumpscale.tools.startupcmd.startupcmd.StartupCmd.process_strings"><code class="name">var <span class="ident">process_strings</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -868,21 +889,20 @@ def process(self):
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.tools.startupcmd.startupcmd.StartupCmd.process_strings_regex"><code class="name">var <span class="ident">process_strings_regex</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -894,21 +914,20 @@ def process(self):
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.tools.startupcmd.startupcmd.StartupCmd.start_cmd"><code class="name">var <span class="ident">start_cmd</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -920,21 +939,20 @@ def process(self):
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.tools.startupcmd.startupcmd.StartupCmd.stop_cmd"><code class="name">var <span class="ident">stop_cmd</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -946,21 +964,20 @@ def process(self):
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.tools.startupcmd.startupcmd.StartupCmd.timeout"><code class="name">var <span class="ident">timeout</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -972,16 +989,13 @@ def process(self):
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 </dl>
@@ -1069,9 +1083,9 @@ def process(self):
         j.sals.fs.chmod(self.cmd_path, 0o770)
         command = f&#34;sh {self.cmd_path}&#34;
 
-    if self.executor == Executor.FOREGROUND:
+    if self.executor.value == Executor.FOREGROUND.value:
         j.sals.process.execute(command)
-    elif self.executor == Executor.TMUX:
+    elif self.executor.value == Executor.TMUX.value:
         self._tmux_window.attached_pane.send_keys(command)
 
     self.wait_for_running(die=True, timeout=self.timeout)</code></pre>
@@ -1108,7 +1122,8 @@ def process(self):
     timeout = timeout or self.timeout
 
     if self.is_running():
-        self._soft_kill()
+        if self._soft_kill():
+            self.wait_for_stop(die=False, timeout=timeout)
 
     if force:
         self._hard_kill()

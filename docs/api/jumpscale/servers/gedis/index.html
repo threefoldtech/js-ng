@@ -21,36 +21,74 @@
 </header>
 <section id="section-intro">
 <p>Gedis server package provides all code needed to have an RPC server using redis protocol for messaging</p>
-<h1 id="todo-add-code-to-show-how-to-start-gedis">TODO: add code to show how to start gedis.</h1>
-<pre><code>~&gt;  redis-cli -p 16000 greeter hi
-actor greeter isn't loaded
- ~&gt;  redis-cli -p 16000 system register_actor greeter /home/ahmed/wspace/threefoldtech/js-ng/jumpscale/servers/gedis/example_greeter.py
-(integer) -1
- ~&gt;  redis-cli -p 16000 greeter hi
- hello world
- ~&gt;  redis-cli -p 16000 greeter add2 jo deboeck
- &quot;jodeboeck&quot;
- ~&gt;  fuser -k 16000/tcp
-
-16000/tcp:           29331
- ~&gt;  redis-cli -p 16000 greeter hi
- actor greeter isn't loaded
- ~&gt;  redis-cli -p 16000 system register_actor greeter /home/ahmed/wspace/threefoldtech/js-ng/jumpscale/servers/gedis/example_greeter.py
-(integer) -1
- ~&gt;  redis-cli -p 16000 greeter hi
- hello world
- ~&gt;  redis-cli -p 16000 greeter ping
-
-pong no?
- ~&gt;  redis-cli -p 16000 greeter add2 reem khamis
-&quot;reemkhamis&quot;
+<h3 id="create-gedis-instance">Create Gedis instance</h3>
+<pre><code>t = j.servers.gedis.get(&quot;test&quot;)
 </code></pre>
+<p>this will create Gedis instance with name test running on
+default port 16000</p>
+<pre><code>t = j.servers.gedis.new(&quot;test&quot;,port=1500)
+</code></pre>
+<p>This will create Gedis instance with name test running on port 1500</p>
+<h3 id="start-gedis-server">Start Gedis server</h3>
+<pre><code>t.start()
+</code></pre>
+<h3 id="stop-gedis-server">Stop Gedis server</h3>
+<pre><code>t.stop()
+</code></pre>
+<p>~&gt;
+redis-cli -p 16000 greeter hi
+actor greeter isn't loaded
+~&gt;
+redis-cli -p 16000 system register_actor greeter /home/ahmed/wspace/threefoldtech/js-ng/jumpscale/servers/gedis/example_greeter.py
+(integer) -1
+~&gt;
+redis-cli -p 16000 greeter hi
+hello world
+~&gt;
+redis-cli -p 16000 greeter add2 jo deboeck
+"jodeboeck"
+~&gt;
+fuser -k 16000/tcp</p>
+<p>16000/tcp:
+29331
+~&gt;
+redis-cli -p 16000 greeter hi
+actor greeter isn't loaded
+~&gt;
+redis-cli -p 16000 system register_actor greeter /home/ahmed/wspace/threefoldtech/js-ng/jumpscale/servers/gedis/example_greeter.py
+(integer) -1
+~&gt;
+redis-cli -p 16000 greeter hi
+hello world
+~&gt;
+redis-cli -p 16000 greeter ping</p>
+<p>pong no?
+~&gt;
+redis-cli -p 16000 greeter add2 reem khamis
+"reemkhamis"
+```</p>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">&#34;&#34;&#34;Gedis server package provides all code needed to have an RPC server using redis protocol for messaging
 
-# TODO: add code to show how to start gedis.
+### Create Gedis instance
 ```
+t = j.servers.gedis.get(&#34;test&#34;)
+```
+this will create Gedis instance with name test running on  default port 16000
+```
+t = j.servers.gedis.new(&#34;test&#34;,port=1500)
+```
+This will create Gedis instance with name test running on port 1500
+### Start Gedis server
+```
+t.start()
+```
+### Stop Gedis server
+```
+t.stop()
+```
+
 ~&gt;  redis-cli -p 16000 greeter hi
 actor greeter isn&#39;t loaded
  ~&gt;  redis-cli -p 16000 system register_actor greeter /home/ahmed/wspace/threefoldtech/js-ng/jumpscale/servers/gedis/example_greeter.py
@@ -75,9 +113,13 @@ pong no?
 &#34;reemkhamis&#34;
 ```
 &#34;&#34;&#34;
+from jumpscale.core.base import StoredFactory
 
 
-from .server import *</code></pre>
+def export_module_as():
+    from .server import GedisServer
+
+    return StoredFactory(GedisServer)</code></pre>
 </details>
 </section>
 <section>
@@ -87,7 +129,7 @@ from .server import *</code></pre>
 <dd>
 <section class="desc"></section>
 </dd>
-<dt><code class="name"><a title="jumpscale.servers.gedis.example_greeter" href="example_greeter.html">jumpscale.servers.gedis.example_greeter</a></code></dt>
+<dt><code class="name"><a title="jumpscale.servers.gedis.example_actor" href="example_actor.html">jumpscale.servers.gedis.example_actor</a></code></dt>
 <dd>
 <section class="desc"></section>
 </dd>
@@ -104,6 +146,22 @@ from .server import *</code></pre>
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="jumpscale.servers.gedis.export_module_as"><code class="name flex">
+<span>def <span class="ident">export_module_as</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def export_module_as():
+    from .server import GedisServer
+
+    return StoredFactory(GedisServer)</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 </section>
@@ -112,7 +170,9 @@ from .server import *</code></pre>
 <h1>Index</h1>
 <div class="toc">
 <ul>
-<li><a href="#todo-add-code-to-show-how-to-start-gedis">TODO: add code to show how to start gedis.</a></li>
+<li><a href="#create-gedis-instance">Create Gedis instance</a></li>
+<li><a href="#start-gedis-server">Start Gedis server</a></li>
+<li><a href="#stop-gedis-server">Stop Gedis server</a></li>
 </ul>
 </div>
 <ul id="index">
@@ -124,9 +184,14 @@ from .server import *</code></pre>
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
 <li><code><a title="jumpscale.servers.gedis.baseactor" href="baseactor.html">jumpscale.servers.gedis.baseactor</a></code></li>
-<li><code><a title="jumpscale.servers.gedis.example_greeter" href="example_greeter.html">jumpscale.servers.gedis.example_greeter</a></code></li>
+<li><code><a title="jumpscale.servers.gedis.example_actor" href="example_actor.html">jumpscale.servers.gedis.example_actor</a></code></li>
 <li><code><a title="jumpscale.servers.gedis.server" href="server.html">jumpscale.servers.gedis.server</a></code></li>
 <li><code><a title="jumpscale.servers.gedis.systemactor" href="systemactor.html">jumpscale.servers.gedis.systemactor</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="jumpscale.servers.gedis.export_module_as" href="#jumpscale.servers.gedis.export_module_as">export_module_as</a></code></li>
 </ul>
 </li>
 </ul>

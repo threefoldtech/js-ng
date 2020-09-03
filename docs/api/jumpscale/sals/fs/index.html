@@ -29,13 +29,13 @@ Using System Fs …" />
 '/home/xmonader/wspace/threefoldtech/js-ng'
 </code></pre>
 <h3 id="get-basename">Get basename</h3>
-<pre><code>&gt; j.sals.fs.basename(j.sals.fs.cwd()) 
+<pre><code>&gt; j.sals.fs.basename(j.sals.fs.cwd())
 'js-ng'
 </code></pre>
 <h3 id="get-dir-name">Get Dir name</h3>
 <pre><code>&gt; j.sals.fs.dirname(j.sals.fs.cwd())
 '/home/xmonader/wspace/threefoldtech'
-&gt; j.sals.fs.parent(j.sals.fs.cwd()) 
+&gt; j.sals.fs.parent(j.sals.fs.cwd())
 '/home/xmonader/wspace/threefoldtech'
 </code></pre>
 <h3 id="is-dir">is dir</h3>
@@ -91,7 +91,7 @@ b'hello world
 <pre><code>&gt; j.sals.fs.mkdirs(&quot;/home/rafy/testing_make_dir/test1/test2&quot;,exist_ok=False)
 </code></pre>
 <p>will raise if in case the directory already exists</p>
-<pre><code>&gt; j.sals.fs.mkdirs(&quot;/home/rafy/testing_make_dir/test1/test2&quot;,exist_ok=True) 
+<pre><code>&gt; j.sals.fs.mkdirs(&quot;/home/rafy/testing_make_dir/test1/test2&quot;,exist_ok=True)
 </code></pre>
 <p>Won't raise if the directory exists</p>
 <h3 id="get-the-stem-of-the-filepath">Get the stem of the filepath</h3>
@@ -110,26 +110,26 @@ b'hello world
     PosixPath('/')]
 </code></pre>
 <h3 id="rename-file">Rename file</h3>
-<pre><code>&gt; j.sals.fs.rename(&quot;/home/rafy/testing_make_dir&quot;,&quot;/home/rafy/testing_dir&quot;) 
+<pre><code>&gt; j.sals.fs.rename(&quot;/home/rafy/testing_make_dir&quot;,&quot;/home/rafy/testing_dir&quot;)
 </code></pre>
 <h3 id="expand-user">Expand user</h3>
 <pre><code>&gt; j.sals.fs.expanduser(&quot;~/work&quot;)
 '/home/xmonader/work'
 </code></pre>
 <h3 id="get-temporary-filename">Get temporary filename</h3>
-<pre><code>&gt; j.sals.fs.get_temp_filename(dir=&quot;/home/rafy/&quot;)  
+<pre><code>&gt; j.sals.fs.get_temp_filename(dir=&quot;/home/rafy/&quot;)
 '/home/rafy/tmp6x7w71ml'
 </code></pre>
-<pre><code>&gt; j.sals.fs.get_temp_dirname(dir=&quot;/home/rafy&quot;)  
+<pre><code>&gt; j.sals.fs.get_temp_dirname(dir=&quot;/home/rafy&quot;)
 '/home/rafy/tmpntm2ptqy'
 </code></pre>
-<pre><code>&gt; j.sals.fs.join_paths(&quot;home&quot;,&quot;rafy&quot;)  
+<pre><code>&gt; j.sals.fs.join_paths(&quot;home&quot;,&quot;rafy&quot;)
 'home/rafy'
 </code></pre>
 <h3 id="resolving-a-path">Resolving a path</h3>
-<pre><code>&gt; j.sals.fs.resolve(&quot;&quot;)  
+<pre><code>&gt; j.sals.fs.resolve(&quot;&quot;)
 PosixPath('/home/rafy/Documents')
-&gt; j.sals.fs.resolve(&quot;./testing_text.txt&quot;)  
+&gt; j.sals.fs.resolve(&quot;./testing_text.txt&quot;)
 PosixPath('/home/rafy/Documents/testing_text.txt')
 </code></pre>
 <h2 id="walkers">Walkers</h2>
@@ -170,7 +170,7 @@ Manipulating filesystem is one of the most common things in the daily life of a 
 
 ### Get basename
 ```
-&gt; j.sals.fs.basename(j.sals.fs.cwd()) 
+&gt; j.sals.fs.basename(j.sals.fs.cwd())
 &#39;js-ng&#39;
 ```
 
@@ -178,7 +178,7 @@ Manipulating filesystem is one of the most common things in the daily life of a 
 ```
 &gt; j.sals.fs.dirname(j.sals.fs.cwd())
 &#39;/home/xmonader/wspace/threefoldtech&#39;
-&gt; j.sals.fs.parent(j.sals.fs.cwd()) 
+&gt; j.sals.fs.parent(j.sals.fs.cwd())
 &#39;/home/xmonader/wspace/threefoldtech&#39;
 ```
 
@@ -273,7 +273,7 @@ rename, move, copy_file, copy_tree, mkdir, mkdirs, join_paths, , rmtree, rm_empt
 will raise if in case the directory already exists
 
 ```
-&gt; j.sals.fs.mkdirs(&#34;/home/rafy/testing_make_dir/test1/test2&#34;,exist_ok=True) 
+&gt; j.sals.fs.mkdirs(&#34;/home/rafy/testing_make_dir/test1/test2&#34;,exist_ok=True)
 ```
 Won&#39;t raise if the directory exists
 
@@ -281,10 +281,10 @@ Won&#39;t raise if the directory exists
 
 ```
 &gt; j.sals.fs.stem(&#34;/tmp/tmp-5383p1GOmMOOwvfi.tpl&#34;) &#39;tmp-5383p1GOmMOOwvfi&#39;
-   
+
 ```
 
-### Get the parent 
+### Get the parent
 
 ```
 &gt; j.sals.fs.parent(&#34;/home/rafy/testing_make_dir/test1&#34;)
@@ -304,7 +304,7 @@ Won&#39;t raise if the directory exists
 
 ### Rename file
 ```
-&gt; j.sals.fs.rename(&#34;/home/rafy/testing_make_dir&#34;,&#34;/home/rafy/testing_dir&#34;) 
+&gt; j.sals.fs.rename(&#34;/home/rafy/testing_make_dir&#34;,&#34;/home/rafy/testing_dir&#34;)
 ```
 
 ### Expand user
@@ -313,32 +313,32 @@ Won&#39;t raise if the directory exists
 &#39;/home/xmonader/work&#39;
 ```
 
-### Get temporary filename 
+### Get temporary filename
 ```
-&gt; j.sals.fs.get_temp_filename(dir=&#34;/home/rafy/&#34;)  
+&gt; j.sals.fs.get_temp_filename(dir=&#34;/home/rafy/&#34;)
 &#39;/home/rafy/tmp6x7w71ml&#39;
 ```
 
 ```
-&gt; j.sals.fs.get_temp_dirname(dir=&#34;/home/rafy&#34;)  
+&gt; j.sals.fs.get_temp_dirname(dir=&#34;/home/rafy&#34;)
 &#39;/home/rafy/tmpntm2ptqy&#39;
 ```
 
 ```
-&gt; j.sals.fs.join_paths(&#34;home&#34;,&#34;rafy&#34;)  
+&gt; j.sals.fs.join_paths(&#34;home&#34;,&#34;rafy&#34;)
 &#39;home/rafy&#39;
 ```
 
 ### Resolving a path
 ```
-&gt; j.sals.fs.resolve(&#34;&#34;)  
+&gt; j.sals.fs.resolve(&#34;&#34;)
 PosixPath(&#39;/home/rafy/Documents&#39;)
-&gt; j.sals.fs.resolve(&#34;./testing_text.txt&#34;)  
+&gt; j.sals.fs.resolve(&#34;./testing_text.txt&#34;)
 PosixPath(&#39;/home/rafy/Documents/testing_text.txt&#39;)
 ```
 
 ## Walkers
-It&#39;s very common to walk on the filesystem and filtering based on some properties of the path 
+It&#39;s very common to walk on the filesystem and filtering based on some properties of the path
 And very fancy walkers
 
 ### Walk over on files only
@@ -373,7 +373,7 @@ for el in walk_dirs(&#39;/tmp&#39;) : ..
 ```
 for el in walk(&#39;/tmp&#39;, filter_fun= lambda x: len(x)&gt;4 and (j.sals.fs.is_file(x) or j.sals.fs.is_dir(x)) ) : ..
 ```
-   
+
 
 There are more functionality available in the SAL `j.sals.fs` make sure you check the API documentation for more.
 
@@ -417,7 +417,7 @@ def home() -&gt; str:
 def cwd() -&gt; str:
     &#34;&#34;&#34;Return current working directory.
     e.g
-        j.sals.fs.cwd()  -&gt; &#39;/home/rafy&#39; 
+        j.sals.fs.cwd()  -&gt; &#39;/home/rafy&#39;
 
 
     Returns:
@@ -477,7 +477,7 @@ def is_absolute(path: str) -&gt; bool:
         j.sals.fs.is_absolute(&#39;~/rafy/&#39;)  -&gt; False
 
     Args:
-        path (str): path to check if it is absolute 
+        path (str): path to check if it is absolute
 
     Returns:
         bool: True if absolute
@@ -578,11 +578,11 @@ def stem(path: str) -&gt; str:
 
 def mkdir(path: str, exist_ok=True):
     &#34;&#34;&#34;Makes directory at path
-    e.g 
+    e.g
         j.sals.fs.mkdir(&#34;/home/rafy/testing_make_dir&#34;)
         j.sals.fs.mkdir(&#34;/home/rafy/testing_make_dir&#34;,exist_ok=True)
         j.sals.fs.mkdir(&#34;/home/rafy/testing_make_dir&#34;,exist_ok=False) -&gt; File exists: &#39;/home/rafy/testing_make_dir&#39; (raise exception as the file exist and  exist_ok flag is false)
-        
+
     Args:
         path (str): path to create dir at
         exist_ok (bool, optional): won&#39;t fail if directory exists. Defaults to True.
@@ -596,8 +596,8 @@ def mkdir(path: str, exist_ok=True):
 def mkdirs(path: str, exist_ok=True):
     &#34;&#34;&#34;Creates dir as well as all non exisitng parents in the path
     e.g
-        j.sals.fs.mkdirs(&#34;/home/rafy/testing_make_dir/test1/test2&#34;,exist_ok=False) 
-        j.sals.fs.mkdirs(&#34;/home/rafy/testing_make_dir/test1/test2&#34;,exist_ok=True) 
+        j.sals.fs.mkdirs(&#34;/home/rafy/testing_make_dir/test1/test2&#34;,exist_ok=False)
+        j.sals.fs.mkdirs(&#34;/home/rafy/testing_make_dir/test1/test2&#34;,exist_ok=True)
         j.sals.fs.mkdirs(&#34;/home/rafy/testing_make_dir/test1/test2&#34;,exist_ok=False)  -&gt; File exists: &#39;/home/rafy/testing_make_dir/test1/test2&#39;(raise exception as the file exist and  exist_ok flag is false)
 
     Args:
@@ -607,11 +607,24 @@ def mkdirs(path: str, exist_ok=True):
     return os.makedirs(path, exist_ok=exist_ok)
 
 
+def make_path(path):
+    &#34;&#34;&#34;
+    to ensure the given path, create it if it does not exist
+
+    Args:
+        path (str): path
+    &#34;&#34;&#34;
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        return pathlib.Path(path).touch()
+
+
+
 def parent(path: str) -&gt; str:
     &#34;&#34;&#34;Get path&#39;s parent
-    e.g 
+    e.g
         j.sals.fs.parent(&#34;/home/rafy/testing_make_dir/test1&#34;)  -&gt; &#39;/home/rafy/testing_make_dir&#39;
-    
+
     Args:
         path (str): path to get its parent
 
@@ -625,7 +638,7 @@ def parents(path: str) -&gt; List[str]:
     &#34;&#34;&#34;Get parents list
 
     e.g
-        j.sals.fs.parents(&#34;/tmp/home/ahmed/myfile.py&#34;) -&gt; 
+        j.sals.fs.parents(&#34;/tmp/home/ahmed/myfile.py&#34;) -&gt;
     [PosixPath(&#39;/tmp/home/ahmed&#39;),
     PosixPath(&#39;/tmp/home&#39;),
     PosixPath(&#39;/tmp&#39;),
@@ -672,7 +685,7 @@ def exists(path: str) -&gt; bool:
 def rename(path1: str, path2: str):
     &#34;&#34;&#34;Rename path1 to path2
     e.g
-        j.sals.fs.rename(&#34;/home/rafy/testing_make_dir&#34;,&#34;/home/rafy/testing_dir&#34;) 
+        j.sals.fs.rename(&#34;/home/rafy/testing_make_dir&#34;,&#34;/home/rafy/testing_dir&#34;)
 
     Args:
         path1 (str): source path
@@ -697,7 +710,7 @@ def expanduser(path: str) -&gt; str:
 
 def unlink(path: str):
     &#34;&#34;&#34;unlink path
-    e.g 
+    e.g
         j.sals.fs.unlink(&#34;/home/rafy/testfile3&#34;)
     Args:
         path (str): path to unlink
@@ -767,9 +780,9 @@ def write_bytes(path: str, data: bytes):
     Args:
         path (str): path to write to
         data (bytes): binary content
-    
+
     Returns:
-        int: Return the binary contents of the pointed-to file as a bytes object 
+        int: Return the binary contents of the pointed-to file as a bytes object
     &#34;&#34;&#34;
     return pathlib.Path(path).write_bytes(data)
 
@@ -837,7 +850,7 @@ def parts_to_path(parts: List[str]) -&gt; str:
     &#34;&#34;&#34;Convert list of path parts into a path string
     e.g
         j.sals.fs.parts_to_path([&#34;home&#34;,&#34;rafy&#34;])  -&gt; &#39;home/rafy&#39;
-    
+
     Args:
         parts (List[str]): path parts
 
@@ -854,7 +867,7 @@ def join_paths(*paths) -&gt; str:
     &#34;&#34;&#34;
     Convert tuple of path parts into a path string
     e.g
-        j.sals.fs.join_paths(&#34;home&#34;,&#34;rafy&#34;)  -&gt; &#39;home/rafy&#39; 
+        j.sals.fs.join_paths(&#34;home&#34;,&#34;rafy&#34;)  -&gt; &#39;home/rafy&#39;
 
     Args:
         parts (tuple): path parts (path parts comma seprated and they will be used as a tuple)
@@ -870,7 +883,7 @@ def join_paths(*paths) -&gt; str:
 def rm_emptry_dir(path: str):
     &#34;&#34;&#34;Remove empty directory if the directory is not empty it will throw exception (Directory not empty)
     e.g
-        j.sals.fs.rm_emptry_dir(&#34;/home/rafy/empty_dir&#34;)   
+        j.sals.fs.rm_emptry_dir(&#34;/home/rafy/empty_dir&#34;)
 
     Args:
         path (str): path to remove.
@@ -991,7 +1004,7 @@ def lchmod(path: str, mode):
 
 def stat(path: str):
     &#34;&#34;&#34;Gets stat of path `path`
-    e.g 
+    e.g
         j.sals.fs.stat(&#34;/home/rafy/test_dir/test&#34;)  -&gt; os.stat_result(st_mode=33204, st_ino=795348, st_dev=2049, st_nlink=1, st_uid=1000, st_gid=1000, st_size=0, st_atime=1586445434, st_mtime=1586445434, st_ctime=1586445434)
     Args:
         path (str): path to get its stat
@@ -1020,7 +1033,7 @@ def lstat(path: str):
 
 def resolve(path: str) -&gt; str:
     &#34;&#34;&#34;resolve `.` and `..` in path
-    e.g 
+    e.g
         j.sals.fs.resolve(&#34;&#34;)  -&gt; PosixPath(&#39;/home/rafy/Documents&#39;)
         j.sals.fs.resolve(&#34;./testing_text.txt&#34;)  -&gt; PosixPath(&#39;/home/rafy/Documents/testing_text.txt&#39;)
 
@@ -1030,7 +1043,7 @@ def resolve(path: str) -&gt; str:
     Returns:
         str: resolved path
     &#34;&#34;&#34;
-    return pathlib.Path(path).resolve()
+    return str(pathlib.Path(path).resolve())
 
 
 def extension(path: str, include_dot=True):
@@ -1165,17 +1178,15 @@ def walk_dirs(path, recursive=True):
         return walk_non_recursive(path, filter_fun=is_dir)
 
 
-
-
 def fs_check(**arguments):
     &#34;&#34;&#34;Abstracts common checks over your file system related functions.
     To reduce the boilerplate of expanding paths, checking for existence or ensuring non empty values.
 
-    Checks are defined for each argument separately in a form of a set 
+    Checks are defined for each argument separately in a form of a set
         e.g
         @fs_check(path={&#39;required&#39;, &#39;exists&#39;, &#39;expand&#39;})
-        @fs_check(path1={&#39;required&#39;, &#39;exists&#39;, &#39;expand&#39;}, path2={&#39;required&#39;, &#39;exists&#39;, &#39;expand&#39;})    
-        
+        @fs_check(path1={&#39;required&#39;, &#39;exists&#39;, &#39;expand&#39;}, path2={&#39;required&#39;, &#39;exists&#39;, &#39;expand&#39;})
+
     Available checks:
         - `required`: ensures the argument is passed with a non-empty value.
         - `expand`  : expands the tilde `~` in path.
@@ -1184,7 +1195,6 @@ def fs_check(**arguments):
         - `dir`     : the path is a dir.
 
     &#34;&#34;&#34;
-
 
     for argument, validators in arguments.items():
         if not isinstance(validators, set):
@@ -1427,7 +1437,7 @@ j.sals.fs.copy_file(src="/home/rafy/testing_text.txt",dst="/home/rafy/Documents/
 <section class="desc"><p>Return current working directory.
 e.g
 j.sals.fs.cwd()
--&gt; '/home/rafy' </p>
+-&gt; '/home/rafy'</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>str</code></strong></dt>
@@ -1438,7 +1448,7 @@ j.sals.fs.cwd()
 <pre><code class="python">def cwd() -&gt; str:
     &#34;&#34;&#34;Return current working directory.
     e.g
-        j.sals.fs.cwd()  -&gt; &#39;/home/rafy&#39; 
+        j.sals.fs.cwd()  -&gt; &#39;/home/rafy&#39;
 
 
     Returns:
@@ -1624,8 +1634,7 @@ To reduce the boilerplate of expanding paths, checking for existence or ensuring
 <p>Checks are defined for each argument separately in a form of a set
 e.g
 @fs_check(path={'required', 'exists', 'expand'})
-@fs_check(path1={'required', 'exists', 'expand'}, path2={'required', 'exists', 'expand'})
-</p>
+@fs_check(path1={'required', 'exists', 'expand'}, path2={'required', 'exists', 'expand'})</p>
 <p>Available checks:
 - <code>required</code>: ensures the argument is passed with a non-empty value.
 - <code>expand</code>
@@ -1642,11 +1651,11 @@ e.g
     &#34;&#34;&#34;Abstracts common checks over your file system related functions.
     To reduce the boilerplate of expanding paths, checking for existence or ensuring non empty values.
 
-    Checks are defined for each argument separately in a form of a set 
+    Checks are defined for each argument separately in a form of a set
         e.g
         @fs_check(path={&#39;required&#39;, &#39;exists&#39;, &#39;expand&#39;})
-        @fs_check(path1={&#39;required&#39;, &#39;exists&#39;, &#39;expand&#39;}, path2={&#39;required&#39;, &#39;exists&#39;, &#39;expand&#39;})    
-        
+        @fs_check(path1={&#39;required&#39;, &#39;exists&#39;, &#39;expand&#39;}, path2={&#39;required&#39;, &#39;exists&#39;, &#39;expand&#39;})
+
     Available checks:
         - `required`: ensures the argument is passed with a non-empty value.
         - `expand`  : expands the tilde `~` in path.
@@ -1655,7 +1664,6 @@ e.g
         - `dir`     : the path is a dir.
 
     &#34;&#34;&#34;
-
 
     for argument, validators in arguments.items():
         if not isinstance(validators, set):
@@ -1847,7 +1855,7 @@ j.sals.fs.is_absolute('~/rafy/')
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
-<dd>path to check if it is absolute </dd>
+<dd>path to check if it is absolute</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -1863,7 +1871,7 @@ j.sals.fs.is_absolute('~/rafy/')
         j.sals.fs.is_absolute(&#39;~/rafy/&#39;)  -&gt; False
 
     Args:
-        path (str): path to check if it is absolute 
+        path (str): path to check if it is absolute
 
     Returns:
         bool: True if absolute
@@ -2157,7 +2165,7 @@ j.sals.fs.is_symlink('/home/rafy/testfile2')
 <section class="desc"><p>Convert tuple of path parts into a path string
 e.g
 j.sals.fs.join_paths("home","rafy")
--&gt; 'home/rafy' </p>
+-&gt; 'home/rafy'</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>parts</code></strong> :&ensp;<code>tuple</code></dt>
@@ -2174,7 +2182,7 @@ j.sals.fs.join_paths("home","rafy")
     &#34;&#34;&#34;
     Convert tuple of path parts into a path string
     e.g
-        j.sals.fs.join_paths(&#34;home&#34;,&#34;rafy&#34;)  -&gt; &#39;home/rafy&#39; 
+        j.sals.fs.join_paths(&#34;home&#34;,&#34;rafy&#34;)  -&gt; &#39;home/rafy&#39;
 
     Args:
         parts (tuple): path parts (path parts comma seprated and they will be used as a tuple)
@@ -2247,6 +2255,30 @@ j.sals.fs.lstat("/home/rafy/testing_link")
     return pathlib.Path(path).lstat()</code></pre>
 </details>
 </dd>
+<dt id="jumpscale.sals.fs.make_path"><code class="name flex">
+<span>def <span class="ident">make_path</span></span>(<span>path)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>to ensure the given path, create it if it does not exist</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
+<dd>path</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def make_path(path):
+    &#34;&#34;&#34;
+    to ensure the given path, create it if it does not exist
+
+    Args:
+        path (str): path
+    &#34;&#34;&#34;
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        return pathlib.Path(path).touch()</code></pre>
+</details>
+</dd>
 <dt id="jumpscale.sals.fs.mkdir"><code class="name flex">
 <span>def <span class="ident">mkdir</span></span>(<span>path, exist_ok=True)</span>
 </code></dt>
@@ -2269,11 +2301,11 @@ exist_ok flag is false)</p>
 <summary>Source code</summary>
 <pre><code class="python">def mkdir(path: str, exist_ok=True):
     &#34;&#34;&#34;Makes directory at path
-    e.g 
+    e.g
         j.sals.fs.mkdir(&#34;/home/rafy/testing_make_dir&#34;)
         j.sals.fs.mkdir(&#34;/home/rafy/testing_make_dir&#34;,exist_ok=True)
         j.sals.fs.mkdir(&#34;/home/rafy/testing_make_dir&#34;,exist_ok=False) -&gt; File exists: &#39;/home/rafy/testing_make_dir&#39; (raise exception as the file exist and  exist_ok flag is false)
-        
+
     Args:
         path (str): path to create dir at
         exist_ok (bool, optional): won&#39;t fail if directory exists. Defaults to True.
@@ -2307,8 +2339,8 @@ exist_ok flag is false)</p>
 <pre><code class="python">def mkdirs(path: str, exist_ok=True):
     &#34;&#34;&#34;Creates dir as well as all non exisitng parents in the path
     e.g
-        j.sals.fs.mkdirs(&#34;/home/rafy/testing_make_dir/test1/test2&#34;,exist_ok=False) 
-        j.sals.fs.mkdirs(&#34;/home/rafy/testing_make_dir/test1/test2&#34;,exist_ok=True) 
+        j.sals.fs.mkdirs(&#34;/home/rafy/testing_make_dir/test1/test2&#34;,exist_ok=False)
+        j.sals.fs.mkdirs(&#34;/home/rafy/testing_make_dir/test1/test2&#34;,exist_ok=True)
         j.sals.fs.mkdirs(&#34;/home/rafy/testing_make_dir/test1/test2&#34;,exist_ok=False)  -&gt; File exists: &#39;/home/rafy/testing_make_dir/test1/test2&#39;(raise exception as the file exist and  exist_ok flag is false)
 
     Args:
@@ -2340,9 +2372,9 @@ j.sals.fs.parent("/home/rafy/testing_make_dir/test1")
 <summary>Source code</summary>
 <pre><code class="python">def parent(path: str) -&gt; str:
     &#34;&#34;&#34;Get path&#39;s parent
-    e.g 
+    e.g
         j.sals.fs.parent(&#34;/home/rafy/testing_make_dir/test1&#34;)  -&gt; &#39;/home/rafy/testing_make_dir&#39;
-    
+
     Args:
         path (str): path to get its parent
 
@@ -2379,7 +2411,7 @@ PosixPath('/')]</p>
     &#34;&#34;&#34;Get parents list
 
     e.g
-        j.sals.fs.parents(&#34;/tmp/home/ahmed/myfile.py&#34;) -&gt; 
+        j.sals.fs.parents(&#34;/tmp/home/ahmed/myfile.py&#34;) -&gt;
     [PosixPath(&#39;/tmp/home/ahmed&#39;),
     PosixPath(&#39;/tmp/home&#39;),
     PosixPath(&#39;/tmp&#39;),
@@ -2419,7 +2451,7 @@ j.sals.fs.parts_to_path(["home","rafy"])
     &#34;&#34;&#34;Convert list of path parts into a path string
     e.g
         j.sals.fs.parts_to_path([&#34;home&#34;,&#34;rafy&#34;])  -&gt; &#39;home/rafy&#39;
-    
+
     Args:
         parts (List[str]): path parts
 
@@ -2676,7 +2708,7 @@ Returns:
 <dd>
 <section class="desc"><p>Rename path1 to path2
 e.g
-j.sals.fs.rename("/home/rafy/testing_make_dir","/home/rafy/testing_dir") </p>
+j.sals.fs.rename("/home/rafy/testing_make_dir","/home/rafy/testing_dir")</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>path1</code></strong> :&ensp;<code>str</code></dt>
@@ -2689,7 +2721,7 @@ j.sals.fs.rename("/home/rafy/testing_make_dir","/home/rafy/testing_dir") </p>
 <pre><code class="python">def rename(path1: str, path2: str):
     &#34;&#34;&#34;Rename path1 to path2
     e.g
-        j.sals.fs.rename(&#34;/home/rafy/testing_make_dir&#34;,&#34;/home/rafy/testing_dir&#34;) 
+        j.sals.fs.rename(&#34;/home/rafy/testing_make_dir&#34;,&#34;/home/rafy/testing_dir&#34;)
 
     Args:
         path1 (str): source path
@@ -2734,7 +2766,7 @@ j.sals.fs.resolve("./testing_text.txt")
 <summary>Source code</summary>
 <pre><code class="python">def resolve(path: str) -&gt; str:
     &#34;&#34;&#34;resolve `.` and `..` in path
-    e.g 
+    e.g
         j.sals.fs.resolve(&#34;&#34;)  -&gt; PosixPath(&#39;/home/rafy/Documents&#39;)
         j.sals.fs.resolve(&#34;./testing_text.txt&#34;)  -&gt; PosixPath(&#39;/home/rafy/Documents/testing_text.txt&#39;)
 
@@ -2744,7 +2776,7 @@ j.sals.fs.resolve("./testing_text.txt")
     Returns:
         str: resolved path
     &#34;&#34;&#34;
-    return pathlib.Path(path).resolve()</code></pre>
+    return str(pathlib.Path(path).resolve())</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.sals.fs.rm_emptry_dir"><code class="name flex">
@@ -2753,8 +2785,7 @@ j.sals.fs.resolve("./testing_text.txt")
 <dd>
 <section class="desc"><p>Remove empty directory if the directory is not empty it will throw exception (Directory not empty)
 e.g
-j.sals.fs.rm_emptry_dir("/home/rafy/empty_dir")
-</p>
+j.sals.fs.rm_emptry_dir("/home/rafy/empty_dir")</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
@@ -2765,7 +2796,7 @@ j.sals.fs.rm_emptry_dir("/home/rafy/empty_dir")
 <pre><code class="python">def rm_emptry_dir(path: str):
     &#34;&#34;&#34;Remove empty directory if the directory is not empty it will throw exception (Directory not empty)
     e.g
-        j.sals.fs.rm_emptry_dir(&#34;/home/rafy/empty_dir&#34;)   
+        j.sals.fs.rm_emptry_dir(&#34;/home/rafy/empty_dir&#34;)
 
     Args:
         path (str): path to remove.
@@ -2820,7 +2851,7 @@ j.sals.fs.stat("/home/rafy/test_dir/test")
 <summary>Source code</summary>
 <pre><code class="python">def stat(path: str):
     &#34;&#34;&#34;Gets stat of path `path`
-    e.g 
+    e.g
         j.sals.fs.stat(&#34;/home/rafy/test_dir/test&#34;)  -&gt; os.stat_result(st_mode=33204, st_ino=795348, st_dev=2049, st_nlink=1, st_uid=1000, st_gid=1000, st_size=0, st_atime=1586445434, st_mtime=1586445434, st_ctime=1586445434)
     Args:
         path (str): path to get its stat
@@ -2942,7 +2973,7 @@ j.sals.fs.unlink("/home/rafy/testfile3")</p>
 <summary>Source code</summary>
 <pre><code class="python">def unlink(path: str):
     &#34;&#34;&#34;unlink path
-    e.g 
+    e.g
         j.sals.fs.unlink(&#34;/home/rafy/testfile3&#34;)
     Args:
         path (str): path to unlink
@@ -3174,9 +3205,9 @@ j.sals.fs.write_bytes(path="/home/rafy/testing_text.txt",data=b"hello world")
     Args:
         path (str): path to write to
         data (bytes): binary content
-    
+
     Returns:
-        int: Return the binary contents of the pointed-to file as a bytes object 
+        int: Return the binary contents of the pointed-to file as a bytes object
     &#34;&#34;&#34;
     return pathlib.Path(path).write_bytes(data)</code></pre>
 </details>
@@ -3211,9 +3242,9 @@ j.sals.fs.write_bytes(path="/home/rafy/testing_text.txt",data=b"hello world")
     Args:
         path (str): path to write to
         data (bytes): binary content
-    
+
     Returns:
-        int: Return the binary contents of the pointed-to file as a bytes object 
+        int: Return the binary contents of the pointed-to file as a bytes object
     &#34;&#34;&#34;
     return pathlib.Path(path).write_bytes(data)</code></pre>
 </details>
@@ -3289,9 +3320,9 @@ j.sals.fs.write_bytes(path="/home/rafy/testing_text.txt",data=b"hello world")
     Args:
         path (str): path to write to
         data (bytes): binary content
-    
+
     Returns:
-        int: Return the binary contents of the pointed-to file as a bytes object 
+        int: Return the binary contents of the pointed-to file as a bytes object
     &#34;&#34;&#34;
     return pathlib.Path(path).write_bytes(data)</code></pre>
 </details>
@@ -3418,6 +3449,7 @@ j.sals.fs.write_text(path="/home/rafy/testing_text.txt",data="hello world")
 <li><code><a title="jumpscale.sals.fs.join_paths" href="#jumpscale.sals.fs.join_paths">join_paths</a></code></li>
 <li><code><a title="jumpscale.sals.fs.lchmod" href="#jumpscale.sals.fs.lchmod">lchmod</a></code></li>
 <li><code><a title="jumpscale.sals.fs.lstat" href="#jumpscale.sals.fs.lstat">lstat</a></code></li>
+<li><code><a title="jumpscale.sals.fs.make_path" href="#jumpscale.sals.fs.make_path">make_path</a></code></li>
 <li><code><a title="jumpscale.sals.fs.mkdir" href="#jumpscale.sals.fs.mkdir">mkdir</a></code></li>
 <li><code><a title="jumpscale.sals.fs.mkdirs" href="#jumpscale.sals.fs.mkdirs">mkdirs</a></code></li>
 <li><code><a title="jumpscale.sals.fs.parent" href="#jumpscale.sals.fs.parent">parent</a></code></li>

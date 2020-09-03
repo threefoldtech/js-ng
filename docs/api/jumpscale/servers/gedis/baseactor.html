@@ -23,19 +23,109 @@
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">import inspect
-import json
+import sys
+from functools import wraps
+from jumpscale.loader import j
+
+
+def actor_method(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        # verify args and kwargs types
+        signature = inspect.signature(func)
+        try:
+            bound = signature.bind(*args, **kwargs)
+        except TypeError as e:
+            raise j.exceptions.Value(str(e))
+
+        for name, value in bound.arguments.items():
+            annotation = signature.parameters[name].annotation
+            if annotation not in (None, inspect._empty) and not isinstance(value, annotation):
+                raise j.exceptions.Value(
+                    f&#34;parameter ({name}) supposed to be of type ({annotation.__name__}), but found ({type(value).__name__})&#34;
+                )
+
+        # call method
+        result = func(*bound.args, **bound.kwargs)
+        # verify result type
+        return_type = signature.return_annotation
+        if return_type is inspect._empty or return_type is None:
+            return_type = type(None)
+
+        if not isinstance(result, return_type):
+            raise j.exceptions.Value(f&#34;method is supposed to return ({return_type}), but it returned ({type(result)})&#34;)
+
+        return result
+
+    return wrapper
+
 
 class BaseActor:
-    def info(self):
-        result = {}
-        members = inspect.getmembers(self)
-        for name, attr in members:
-            if inspect.ismethod(attr):
-                result[name] = {}
-                result[name][&#34;args&#34;] = [arg for arg in attr.__func__.__code__.co_varnames if arg != &#34;self&#34;]
-                result[name][&#34;doc&#34;] = attr.__doc__ or &#34;&#34;
+    def __init__(self):
+        self.path = None
 
-        return json.dumps(result)</code></pre>
+    @actor_method
+    def info(self) -&gt; dict:
+        info = {}
+        info[&#34;path&#34;] = self.path
+        info[&#34;methods&#34;] = {}
+
+        methods = inspect.getmembers(self, predicate=inspect.ismethod)
+        for name, attr in methods:
+            if name.startswith(&#34;_&#34;):
+                continue
+
+            signature = inspect.signature(attr)
+            info[&#34;methods&#34;][name] = {}
+            info[&#34;methods&#34;][name][&#34;args&#34;] = []
+            info[&#34;methods&#34;][name][&#34;doc&#34;] = attr.__doc__ or &#34;&#34;
+
+            for parameter_name, parameter in signature.parameters.items():
+                info[&#34;methods&#34;][name][&#34;args&#34;].append((parameter_name, parameter.annotation.__name__))
+
+        return info
+
+    def __validate_actor__(self):
+        def validate_annotation(annotation, annotated):
+            if annotation is None or annotation is inspect._empty:
+                return
+
+            if not (inspect.isclass(annotation) and annotation.__class__ == type):
+                raise ValueError(&#34;annotation must be a class type&#34;)
+
+            if annotation not in (str, int, float, list, tuple, dict, bool):
+                if annotation.__module__ == &#34;builtins&#34;:
+                    raise ValueError(f&#34;unsupported type ({annotation.__name__})&#34;)
+
+                for method in [&#34;to_dict&#34;, &#34;from_dict&#34;]:
+                    if method not in dir(annotation):
+                        raise ValueError(
+                            f&#34;type ({annotation.__name__}) which annotate {annotated} doesn&#39;t have {method} method&#34;
+                        )
+
+        result = {&#34;valid&#34;: True, &#34;errors&#34;: {}}
+        methods = inspect.getmembers(self, predicate=inspect.ismethod)
+        for method_name, method_callable in methods:
+            if method_name.startswith(&#34;_&#34;):
+                continue
+
+            result[&#34;errors&#34;][method_name] = []
+            signature = inspect.signature(method_callable)
+            try:
+                validate_annotation(signature.return_annotation, &#34;return&#34;)
+            except ValueError as e:
+                result[&#34;errors&#34;][method_name].append(str(e))
+
+            for name, parameter in signature.parameters.items():
+                try:
+                    validate_annotation(parameter.annotation, f&#34;parameter ({name})&#34;)
+                except ValueError as e:
+                    result[&#34;errors&#34;][method_name].append(str(e))
+
+        if any(result[&#34;errors&#34;].values()):
+            result[&#34;valid&#34;] = False
+
+        return result</code></pre>
 </details>
 </section>
 <section>
@@ -43,34 +133,131 @@ class BaseActor:
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="jumpscale.servers.gedis.baseactor.actor_method"><code class="name flex">
+<span>def <span class="ident">actor_method</span></span>(<span>func)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def actor_method(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        # verify args and kwargs types
+        signature = inspect.signature(func)
+        try:
+            bound = signature.bind(*args, **kwargs)
+        except TypeError as e:
+            raise j.exceptions.Value(str(e))
+
+        for name, value in bound.arguments.items():
+            annotation = signature.parameters[name].annotation
+            if annotation not in (None, inspect._empty) and not isinstance(value, annotation):
+                raise j.exceptions.Value(
+                    f&#34;parameter ({name}) supposed to be of type ({annotation.__name__}), but found ({type(value).__name__})&#34;
+                )
+
+        # call method
+        result = func(*bound.args, **bound.kwargs)
+        # verify result type
+        return_type = signature.return_annotation
+        if return_type is inspect._empty or return_type is None:
+            return_type = type(None)
+
+        if not isinstance(result, return_type):
+            raise j.exceptions.Value(f&#34;method is supposed to return ({return_type}), but it returned ({type(result)})&#34;)
+
+        return result
+
+    return wrapper</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
 <dt id="jumpscale.servers.gedis.baseactor.BaseActor"><code class="flex name class">
 <span>class <span class="ident">BaseActor</span></span>
-<span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class BaseActor:
-    def info(self):
-        result = {}
-        members = inspect.getmembers(self)
-        for name, attr in members:
-            if inspect.ismethod(attr):
-                result[name] = {}
-                result[name][&#34;args&#34;] = [arg for arg in attr.__func__.__code__.co_varnames if arg != &#34;self&#34;]
-                result[name][&#34;doc&#34;] = attr.__doc__ or &#34;&#34;
+    def __init__(self):
+        self.path = None
 
-        return json.dumps(result)</code></pre>
+    @actor_method
+    def info(self) -&gt; dict:
+        info = {}
+        info[&#34;path&#34;] = self.path
+        info[&#34;methods&#34;] = {}
+
+        methods = inspect.getmembers(self, predicate=inspect.ismethod)
+        for name, attr in methods:
+            if name.startswith(&#34;_&#34;):
+                continue
+
+            signature = inspect.signature(attr)
+            info[&#34;methods&#34;][name] = {}
+            info[&#34;methods&#34;][name][&#34;args&#34;] = []
+            info[&#34;methods&#34;][name][&#34;doc&#34;] = attr.__doc__ or &#34;&#34;
+
+            for parameter_name, parameter in signature.parameters.items():
+                info[&#34;methods&#34;][name][&#34;args&#34;].append((parameter_name, parameter.annotation.__name__))
+
+        return info
+
+    def __validate_actor__(self):
+        def validate_annotation(annotation, annotated):
+            if annotation is None or annotation is inspect._empty:
+                return
+
+            if not (inspect.isclass(annotation) and annotation.__class__ == type):
+                raise ValueError(&#34;annotation must be a class type&#34;)
+
+            if annotation not in (str, int, float, list, tuple, dict, bool):
+                if annotation.__module__ == &#34;builtins&#34;:
+                    raise ValueError(f&#34;unsupported type ({annotation.__name__})&#34;)
+
+                for method in [&#34;to_dict&#34;, &#34;from_dict&#34;]:
+                    if method not in dir(annotation):
+                        raise ValueError(
+                            f&#34;type ({annotation.__name__}) which annotate {annotated} doesn&#39;t have {method} method&#34;
+                        )
+
+        result = {&#34;valid&#34;: True, &#34;errors&#34;: {}}
+        methods = inspect.getmembers(self, predicate=inspect.ismethod)
+        for method_name, method_callable in methods:
+            if method_name.startswith(&#34;_&#34;):
+                continue
+
+            result[&#34;errors&#34;][method_name] = []
+            signature = inspect.signature(method_callable)
+            try:
+                validate_annotation(signature.return_annotation, &#34;return&#34;)
+            except ValueError as e:
+                result[&#34;errors&#34;][method_name].append(str(e))
+
+            for name, parameter in signature.parameters.items():
+                try:
+                    validate_annotation(parameter.annotation, f&#34;parameter ({name})&#34;)
+                except ValueError as e:
+                    result[&#34;errors&#34;][method_name].append(str(e))
+
+        if any(result[&#34;errors&#34;].values()):
+            result[&#34;valid&#34;] = False
+
+        return result</code></pre>
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
+<li><a title="jumpscale.servers.gedis.systemactor.CoreActor" href="systemactor.html#jumpscale.servers.gedis.systemactor.CoreActor">CoreActor</a></li>
 <li><a title="jumpscale.servers.gedis.systemactor.SystemActor" href="systemactor.html#jumpscale.servers.gedis.systemactor.SystemActor">SystemActor</a></li>
-<li><a title="jumpscale.servers.gedis.example_greeter.Greeter" href="example_greeter.html#jumpscale.servers.gedis.example_greeter.Greeter">Greeter</a></li>
+<li><a title="jumpscale.servers.gedis.example_actor.Example" href="example_actor.html#jumpscale.servers.gedis.example_actor.Example">Example</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -81,16 +268,26 @@ class BaseActor:
 <section class="desc"></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def info(self):
-    result = {}
-    members = inspect.getmembers(self)
-    for name, attr in members:
-        if inspect.ismethod(attr):
-            result[name] = {}
-            result[name][&#34;args&#34;] = [arg for arg in attr.__func__.__code__.co_varnames if arg != &#34;self&#34;]
-            result[name][&#34;doc&#34;] = attr.__doc__ or &#34;&#34;
+<pre><code class="python">@actor_method
+def info(self) -&gt; dict:
+    info = {}
+    info[&#34;path&#34;] = self.path
+    info[&#34;methods&#34;] = {}
 
-    return json.dumps(result)</code></pre>
+    methods = inspect.getmembers(self, predicate=inspect.ismethod)
+    for name, attr in methods:
+        if name.startswith(&#34;_&#34;):
+            continue
+
+        signature = inspect.signature(attr)
+        info[&#34;methods&#34;][name] = {}
+        info[&#34;methods&#34;][name][&#34;args&#34;] = []
+        info[&#34;methods&#34;][name][&#34;doc&#34;] = attr.__doc__ or &#34;&#34;
+
+        for parameter_name, parameter in signature.parameters.items():
+            info[&#34;methods&#34;][name][&#34;args&#34;].append((parameter_name, parameter.annotation.__name__))
+
+    return info</code></pre>
 </details>
 </dd>
 </dl>
@@ -107,6 +304,11 @@ class BaseActor:
 <li><h3>Super-module</h3>
 <ul>
 <li><code><a title="jumpscale.servers.gedis" href="index.html">jumpscale.servers.gedis</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="jumpscale.servers.gedis.baseactor.actor_method" href="#jumpscale.servers.gedis.baseactor.actor_method">actor_method</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>

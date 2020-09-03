@@ -21,13 +21,54 @@
 </header>
 <section id="section-intro">
 <p>This module helps with getting all of the information of the platform related to the machine hosting js-ng</p>
-<pre><code>JS-NG&gt; j.data.platform.codename()                                                                                                 
-'bionic'
+<h2 id="get-cpu-count">Get CPU count</h2>
+<pre><code>JS-NG&gt; j.data.platform.CPU_COUNT
+4
+</code></pre>
+<h2 id="check-if-64-bit-system">Check if 64-bit system</h2>
+<pre><code>JS-NG&gt; j.data.platform.IS_64BIT
+True
+</code></pre>
+<h2 id="check-if-linux-or-osx">Check if linux or osx</h2>
+<pre><code>JS-NG&gt; j.data.platform.is_linux()
+True
 
-JS-NG&gt; j.data.platform.lsb_release_info()                                                                                         
-{'distributor_id': 'Ubuntu', 'description': 'Ubuntu 18.04.3 LTS', 'release': '18.04', 'codename': 'bionic'}
+JS-NG&gt; j.data.platform.is_osx()
+False
 
-JS-NG&gt; j.data.platform.get_profile()                                                                                              
+JS-NG&gt; j.data.platform.is_unix()
+True
+
+</code></pre>
+<h2 id="get-linux-info">Get linux info</h2>
+<pre><code>
+JS-NG&gt; j.data.platform.lsb_release_info()
+{'distributor_id': 'Ubuntu', 'description': 'Ubuntu 18.04.4 LTS', 'release': '18.04', 'codename': 'bionic'}
+
+JS-NG&gt; j.data.platform.os_release_info()
+{'name': 'Ubuntu', 'version': '18.04.4 LTS (Bionic Beaver)', 'id': 'ubuntu', 'id_like': 'debian', 'pretty_name': 'Ubuntu 18.04.4 LTS', 'version_id': '18.04', 'home_url': 'https://www.ubuntu.com/', 'support_url': 'https://help.ubuntu.com/', 'bug_report_url': 'https://bugs.launchpad.net/ubuntu/', 'privacy_policy_url': 'https://www.ubuntu.com/legal/terms-and-policies/privacy-policy', 'version_codename': 'bionic', 'ubuntu_codename': 'bionic', 'codename': 'bionic'}
+JS-NG&gt; j.data.platform.name
+&lt;function name at 0x7f267e1072f0&gt;
+
+JS-NG&gt; j.data.platform.name()
+'Ubuntu'
+
+
+JS-NG&gt; j.data.platform.main()
+Name: Ubuntu 18.04.4 LTS
+Version: 18.04 (bionic)
+Codename: bionic
+JS-NG&gt; j.data.platform.version()
+'18.04'
+'Ubuntu 18.04.3 LTS', 'release': '18.04', 'codename': 'bionic'}
+
+</code></pre>
+<h2 id="get-python-info">Get python info</h2>
+<pre><code>JS-NG&gt; j.data.platform.get_python_info()
+{'argv': 'jsng', 'bin': '/home/ahmed/.cache/pypoetry/virtualenvs/js-ng--jYQyIYz-py3.6/bin/python', 'version': '3.6.9 (default, Apr 18 2020, 01:56:04) [GCC 8.4.0]', 'compiler': 'GCC 8.4.0', 'build_date': 'Apr 18 2020 01:56:04', 'version_info': [3, 6, 9, 'final', 0], 'features': {'openssl': 'OpenSSL 1.1.1  11 Sep 2018', 'expat': 'expat_2.2.5', 'sqlite': '3.22.0', 'tkinter': '', 'zlib': '1.2.11', 'unicode_wide': True, 'readline': True, '64bit': True, 'ipv6': True, 'threading': True, 'urandom': True}}
+</code></pre>
+<h2 id="get-the-complete-profile-info">Get the complete profile info</h2>
+<pre><code>JS-NG&gt; j.data.platform.get_profile()
 {'username': 'xmonader', 'guid': 'ce5a52d09920b248b602caf28539073', 'hostname': 'xmonader-ThinkPad-E580', 'hostfqdn': 'xmonader-Th
 inkPad-E580', 'uname': {'system': 'Linux', 'node': 'xmonader-ThinkPad-E580', 'release': '4.15.0-55-generic', 'version': '#60-Ubunt
 u SMP Tue Jul 2 18:22:20 UTC 2019', 'machine': 'x86_64', 'processor': 'x86_64'}, 'linux_dist_name': 'debian', 'linux_dist_version'
@@ -44,14 +85,70 @@ t_2.2.7', 'sqlite': '3.29.0', 'tkinter': '', 'zlib': '1.2.11', 'unicode_wide': T
 <pre><code class="python">&#34;&#34;&#34;This module helps with getting all of the information of the platform related to the machine hosting js-ng
 
 
+## Get CPU count
+
 ```
-JS-NG&gt; j.data.platform.codename()                                                                                                 
-&#39;bionic&#39;
+JS-NG&gt; j.data.platform.CPU_COUNT
+4
+```
 
-JS-NG&gt; j.data.platform.lsb_release_info()                                                                                         
-{&#39;distributor_id&#39;: &#39;Ubuntu&#39;, &#39;description&#39;: &#39;Ubuntu 18.04.3 LTS&#39;, &#39;release&#39;: &#39;18.04&#39;, &#39;codename&#39;: &#39;bionic&#39;}
+## Check if 64-bit system
 
-JS-NG&gt; j.data.platform.get_profile()                                                                                              
+```
+JS-NG&gt; j.data.platform.IS_64BIT
+True
+```
+
+## Check if linux or osx
+
+```
+JS-NG&gt; j.data.platform.is_linux()
+True
+
+JS-NG&gt; j.data.platform.is_osx()
+False
+
+JS-NG&gt; j.data.platform.is_unix()
+True
+
+```
+
+## Get linux info
+```
+
+JS-NG&gt; j.data.platform.lsb_release_info()
+{&#39;distributor_id&#39;: &#39;Ubuntu&#39;, &#39;description&#39;: &#39;Ubuntu 18.04.4 LTS&#39;, &#39;release&#39;: &#39;18.04&#39;, &#39;codename&#39;: &#39;bionic&#39;}
+
+JS-NG&gt; j.data.platform.os_release_info()
+{&#39;name&#39;: &#39;Ubuntu&#39;, &#39;version&#39;: &#39;18.04.4 LTS (Bionic Beaver)&#39;, &#39;id&#39;: &#39;ubuntu&#39;, &#39;id_like&#39;: &#39;debian&#39;, &#39;pretty_name&#39;: &#39;Ubuntu 18.04.4 LTS&#39;, &#39;version_id&#39;: &#39;18.04&#39;, &#39;home_url&#39;: &#39;https://www.ubuntu.com/&#39;, &#39;support_url&#39;: &#39;https://help.ubuntu.com/&#39;, &#39;bug_report_url&#39;: &#39;https://bugs.launchpad.net/ubuntu/&#39;, &#39;privacy_policy_url&#39;: &#39;https://www.ubuntu.com/legal/terms-and-policies/privacy-policy&#39;, &#39;version_codename&#39;: &#39;bionic&#39;, &#39;ubuntu_codename&#39;: &#39;bionic&#39;, &#39;codename&#39;: &#39;bionic&#39;}
+JS-NG&gt; j.data.platform.name
+&lt;function name at 0x7f267e1072f0&gt;
+
+JS-NG&gt; j.data.platform.name()
+&#39;Ubuntu&#39;
+
+
+JS-NG&gt; j.data.platform.main()
+Name: Ubuntu 18.04.4 LTS
+Version: 18.04 (bionic)
+Codename: bionic
+JS-NG&gt; j.data.platform.version()
+&#39;18.04&#39;
+&#39;Ubuntu 18.04.3 LTS&#39;, &#39;release&#39;: &#39;18.04&#39;, &#39;codename&#39;: &#39;bionic&#39;}
+
+```
+
+## Get python info
+
+```
+JS-NG&gt; j.data.platform.get_python_info()
+{&#39;argv&#39;: &#39;jsng&#39;, &#39;bin&#39;: &#39;/home/ahmed/.cache/pypoetry/virtualenvs/js-ng--jYQyIYz-py3.6/bin/python&#39;, &#39;version&#39;: &#39;3.6.9 (default, Apr 18 2020, 01:56:04) [GCC 8.4.0]&#39;, &#39;compiler&#39;: &#39;GCC 8.4.0&#39;, &#39;build_date&#39;: &#39;Apr 18 2020 01:56:04&#39;, &#39;version_info&#39;: [3, 6, 9, &#39;final&#39;, 0], &#39;features&#39;: {&#39;openssl&#39;: &#39;OpenSSL 1.1.1  11 Sep 2018&#39;, &#39;expat&#39;: &#39;expat_2.2.5&#39;, &#39;sqlite&#39;: &#39;3.22.0&#39;, &#39;tkinter&#39;: &#39;&#39;, &#39;zlib&#39;: &#39;1.2.11&#39;, &#39;unicode_wide&#39;: True, &#39;readline&#39;: True, &#39;64bit&#39;: True, &#39;ipv6&#39;: True, &#39;threading&#39;: True, &#39;urandom&#39;: True}}
+```
+
+## Get the complete profile info
+
+```
+JS-NG&gt; j.data.platform.get_profile()
 {&#39;username&#39;: &#39;xmonader&#39;, &#39;guid&#39;: &#39;ce5a52d09920b248b602caf28539073&#39;, &#39;hostname&#39;: &#39;xmonader-ThinkPad-E580&#39;, &#39;hostfqdn&#39;: &#39;xmonader-Th
 inkPad-E580&#39;, &#39;uname&#39;: {&#39;system&#39;: &#39;Linux&#39;, &#39;node&#39;: &#39;xmonader-ThinkPad-E580&#39;, &#39;release&#39;: &#39;4.15.0-55-generic&#39;, &#39;version&#39;: &#39;#60-Ubunt
 u SMP Tue Jul 2 18:22:20 UTC 2019&#39;, &#39;machine&#39;: &#39;x86_64&#39;, &#39;processor&#39;: &#39;x86_64&#39;}, &#39;linux_dist_name&#39;: &#39;debian&#39;, &#39;linux_dist_version&#39;
@@ -415,6 +512,10 @@ def is_osx():
     return sys.platform.lower() == &#34;darwin&#34;
 
 
+def is_unix():
+    return is_linux() or is_osx()
+
+
 if is_linux():
     from distro import *</code></pre>
 </details>
@@ -597,6 +698,17 @@ remain in place.</p></section>
     return sys.platform.lower() == &#34;darwin&#34;</code></pre>
 </details>
 </dd>
+<dt id="jumpscale.data.platform.is_unix"><code class="name flex">
+<span>def <span class="ident">is_unix</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def is_unix():
+    return is_linux() or is_osx()</code></pre>
+</details>
+</dd>
 </dl>
 </section>
 <section>
@@ -605,7 +717,14 @@ remain in place.</p></section>
 <nav id="sidebar">
 <h1>Index</h1>
 <div class="toc">
-<ul></ul>
+<ul>
+<li><a href="#get-cpu-count">Get CPU count</a></li>
+<li><a href="#check-if-64-bit-system">Check if 64-bit system</a></li>
+<li><a href="#check-if-linux-or-osx">Check if linux or osx</a></li>
+<li><a href="#get-linux-info">Get linux info</a></li>
+<li><a href="#get-python-info">Get python info</a></li>
+<li><a href="#get-the-complete-profile-info">Get the complete profile info</a></li>
+</ul>
 </div>
 <ul id="index">
 <li><h3>Super-module</h3>
@@ -614,12 +733,13 @@ remain in place.</p></section>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="">
+<ul class="two-column">
 <li><code><a title="jumpscale.data.platform.get_profile" href="#jumpscale.data.platform.get_profile">get_profile</a></code></li>
 <li><code><a title="jumpscale.data.platform.get_profile_json" href="#jumpscale.data.platform.get_profile_json">get_profile_json</a></code></li>
 <li><code><a title="jumpscale.data.platform.get_python_info" href="#jumpscale.data.platform.get_python_info">get_python_info</a></code></li>
 <li><code><a title="jumpscale.data.platform.is_linux" href="#jumpscale.data.platform.is_linux">is_linux</a></code></li>
 <li><code><a title="jumpscale.data.platform.is_osx" href="#jumpscale.data.platform.is_osx">is_osx</a></code></li>
+<li><code><a title="jumpscale.data.platform.is_unix" href="#jumpscale.data.platform.is_unix">is_unix</a></code></li>
 </ul>
 </li>
 </ul>

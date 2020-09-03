@@ -25,14 +25,54 @@
 <pre><code class="python">import click
 
 from jumpscale.core.config import get_default_config, update_config, get_config
+import toml
+
+
+def decode_toml_value(s):
+    try:
+        return toml.TomlDecoder().load_value(s)[0]
+    except Exception:
+        return s
+
+
+def encode_toml_value(s):
+    return toml.TomlEncoder().dump_value(s)
 
 
 def format_config_parameter(name, value):
-    return &#34;%s = %s&#34; % (name, str(value))
+    if isinstance(value, dict):
+        print_dict(value, f&#34;{name}.&#34;)
+    else:
+        return &#34;%s = %s&#34; % (name, encode_toml_value(value))
+
+
+def print_dict(data, path):
+    for name, value in data.items():
+        if isinstance(value, dict):
+            print_dict(value, f&#34;{path}{name}.&#34;)
+        else:
+            encoded = encode_toml_value(value)
+            print(f&#34;{path}{name} = {encoded}&#34;)
+
+
+def validate_type(a, b):
+    typea = type(a).__name__
+    typeb = type(b).__name__
+    if typea != typeb:
+        raise TypeError(f&#34;Type mismatch: Expected {typea} found {typeb}.&#34;)
 
 
 def format_config(config):
-    return &#34;\n&#34;.join([format_config_parameter(name, value) for name, value in config.items()])
+    print_dict(config, &#34;&#34;)
+
+
+def traverse_config(name):
+    path = name.split(&#34;.&#34;)
+    config = get_config()
+    prop = config
+    for i, p in enumerate(path[:-1]):
+        prop = prop[p]
+    return config, prop, path[-1]
 
 
 @click.group()
@@ -42,30 +82,49 @@ def config():
 
 @config.command()
 def defaults():
-    click.echo(format_config(get_default_config()))
+    &#34;&#34;&#34;list default configuration.&#34;&#34;&#34;
+    format_config(get_default_config())
 
 
 @config.command()
 def list_all():
-    click.echo(format_config(get_config()))
+    &#34;&#34;&#34;list all configurations.&#34;&#34;&#34;
+    format_config(get_config())
 
 
 @config.command()
-@click.option(&#34;--name&#34;)
+@click.argument(&#34;name&#34;)
 def get(name):
-    value = get_config()[name]
-    click.echo(format_config_parameter(name, value))
+    &#34;&#34;&#34;get the key from the configuration, use dots to access nested values.&#34;&#34;&#34;
+    try:
+        _, obj, prop = traverse_config(name)
+        if not isinstance(obj, dict):
+            raise KeyError()
+        value = obj[prop]
+        click.echo(format_config_parameter(name, value))
+    except KeyError:
+        click.echo(&#39;Key doens\&#39;t exist. Type &#34;jsctl config list-all&#34; to see all valid configurations.&#39;)
 
 
 @config.command()
-@click.option(&#34;--name&#34;)
-@click.option(&#34;--value&#34;)
+@click.argument(&#34;name&#34;)
+@click.argument(&#34;value&#34;)
 def update(name, value):
-    config = get_config()
-    config[name] = value
-    update_config(config)
-
-    click.echo(&#34;Updated.&#34;)
+    &#34;&#34;&#34;set the passed key by the corresponding toml value.&#34;&#34;&#34;
+    try:
+        config, obj, prop = traverse_config(name)
+        if not isinstance(obj, dict) or prop not in obj:
+            raise KeyError()
+        value = decode_toml_value(value)
+        validate_type(obj[prop], value)
+        obj[prop] = value
+        update_config(config)
+    except KeyError:
+        click.echo(&#39;Key doens\&#39;t exist. Type &#34;jsctl config list-all&#34; to see all valid configurations.&#39;)
+    except TypeError as e:
+        click.echo(str(e))
+    else:
+        click.echo(&#34;Updated.&#34;)
 
 
 @click.group()
@@ -86,6 +145,31 @@ if __name__ == &#34;__main__&#34;:
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="jumpscale.entry_points.jsctl.decode_toml_value"><code class="name flex">
+<span>def <span class="ident">decode_toml_value</span></span>(<span>s)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def decode_toml_value(s):
+    try:
+        return toml.TomlDecoder().load_value(s)[0]
+    except Exception:
+        return s</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.entry_points.jsctl.encode_toml_value"><code class="name flex">
+<span>def <span class="ident">encode_toml_value</span></span>(<span>s)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def encode_toml_value(s):
+    return toml.TomlEncoder().dump_value(s)</code></pre>
+</details>
+</dd>
 <dt id="jumpscale.entry_points.jsctl.format_config"><code class="name flex">
 <span>def <span class="ident">format_config</span></span>(<span>config)</span>
 </code></dt>
@@ -94,7 +178,7 @@ if __name__ == &#34;__main__&#34;:
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def format_config(config):
-    return &#34;\n&#34;.join([format_config_parameter(name, value) for name, value in config.items()])</code></pre>
+    print_dict(config, &#34;&#34;)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.entry_points.jsctl.format_config_parameter"><code class="name flex">
@@ -105,7 +189,56 @@ if __name__ == &#34;__main__&#34;:
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def format_config_parameter(name, value):
-    return &#34;%s = %s&#34; % (name, str(value))</code></pre>
+    if isinstance(value, dict):
+        print_dict(value, f&#34;{name}.&#34;)
+    else:
+        return &#34;%s = %s&#34; % (name, encode_toml_value(value))</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.entry_points.jsctl.print_dict"><code class="name flex">
+<span>def <span class="ident">print_dict</span></span>(<span>data, path)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def print_dict(data, path):
+    for name, value in data.items():
+        if isinstance(value, dict):
+            print_dict(value, f&#34;{path}{name}.&#34;)
+        else:
+            encoded = encode_toml_value(value)
+            print(f&#34;{path}{name} = {encoded}&#34;)</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.entry_points.jsctl.traverse_config"><code class="name flex">
+<span>def <span class="ident">traverse_config</span></span>(<span>name)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def traverse_config(name):
+    path = name.split(&#34;.&#34;)
+    config = get_config()
+    prop = config
+    for i, p in enumerate(path[:-1]):
+        prop = prop[p]
+    return config, prop, path[-1]</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.entry_points.jsctl.validate_type"><code class="name flex">
+<span>def <span class="ident">validate_type</span></span>(<span>a, b)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def validate_type(a, b):
+    typea = type(a).__name__
+    typeb = type(b).__name__
+    if typea != typeb:
+        raise TypeError(f&#34;Type mismatch: Expected {typea} found {typeb}.&#34;)</code></pre>
 </details>
 </dd>
 </dl>
@@ -126,8 +259,13 @@ if __name__ == &#34;__main__&#34;:
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="jumpscale.entry_points.jsctl.decode_toml_value" href="#jumpscale.entry_points.jsctl.decode_toml_value">decode_toml_value</a></code></li>
+<li><code><a title="jumpscale.entry_points.jsctl.encode_toml_value" href="#jumpscale.entry_points.jsctl.encode_toml_value">encode_toml_value</a></code></li>
 <li><code><a title="jumpscale.entry_points.jsctl.format_config" href="#jumpscale.entry_points.jsctl.format_config">format_config</a></code></li>
 <li><code><a title="jumpscale.entry_points.jsctl.format_config_parameter" href="#jumpscale.entry_points.jsctl.format_config_parameter">format_config_parameter</a></code></li>
+<li><code><a title="jumpscale.entry_points.jsctl.print_dict" href="#jumpscale.entry_points.jsctl.print_dict">print_dict</a></code></li>
+<li><code><a title="jumpscale.entry_points.jsctl.traverse_config" href="#jumpscale.entry_points.jsctl.traverse_config">traverse_config</a></code></li>
+<li><code><a title="jumpscale.entry_points.jsctl.validate_type" href="#jumpscale.entry_points.jsctl.validate_type">validate_type</a></code></li>
 </ul>
 </li>
 </ul>

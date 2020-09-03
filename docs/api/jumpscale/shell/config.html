@@ -60,7 +60,7 @@ def patched_handle_exception(self, e):
         tb = tb.tb_next
 
     # except hook does not work as expected
-    # sys.excepthook(t, v, last_stdin_tb)
+    sys.excepthook(t, v, last_stdin_tb)
     # just print formatted exception for now
     formatted = better_exceptions.format_exception(t, v, last_stdin_tb)
     print_formatted_text(ANSI(formatted))
@@ -127,6 +127,7 @@ def get_completions(self, document, complete_event):
                 c.name_with_symbols,
                 len(c.complete) - len(c.name_with_symbols),
                 display=c.name_with_symbols,
+                selected_style=&#34;bg:ansidarkgray&#34;,
                 style=get_style_for_completion(c),
             )
 
@@ -225,12 +226,12 @@ def ptconfig(repl):
         &#34;&#34;&#34;
         b = event.cli.current_buffer
         app = get_app()
-        statements = b.document.text
-        if statements:
-            import linecache
 
-            linecache.cache[&#34;&lt;string&gt;&#34;] = (len(statements), time.time(), statements.split(&#34;\n&#34;), &#34;&lt;string&gt;&#34;)
-            app.exit(pudb.runstatement(statements))
+        statements = b.document.text.strip()
+        if statements:
+            _globals = repl.get_globals()
+            _globals[&#34;_MODULE_SOURCE_CODE&#34;] = statements
+            app.exit(pudb.runstatement(statements, globals=_globals, locals=repl.get_locals()))
             app.pre_run_callables.append(b.reset)
         else:
             pudb.pm()
@@ -331,6 +332,7 @@ and check their type, because <code>prompt-toolkit.completion.Completion</code> 
                 c.name_with_symbols,
                 len(c.complete) - len(c.name_with_symbols),
                 display=c.name_with_symbols,
+                selected_style=&#34;bg:ansidarkgray&#34;,
                 style=get_style_for_completion(c),
             )</code></pre>
 </details>
@@ -383,7 +385,7 @@ it will call excepthook after ommitting all this framework's calls from tracebac
         tb = tb.tb_next
 
     # except hook does not work as expected
-    # sys.excepthook(t, v, last_stdin_tb)
+    sys.excepthook(t, v, last_stdin_tb)
     # just print formatted exception for now
     formatted = better_exceptions.format_exception(t, v, last_stdin_tb)
     print_formatted_text(ANSI(formatted))
@@ -493,12 +495,12 @@ it will call excepthook after ommitting all this framework's calls from tracebac
         &#34;&#34;&#34;
         b = event.cli.current_buffer
         app = get_app()
-        statements = b.document.text
-        if statements:
-            import linecache
 
-            linecache.cache[&#34;&lt;string&gt;&#34;] = (len(statements), time.time(), statements.split(&#34;\n&#34;), &#34;&lt;string&gt;&#34;)
-            app.exit(pudb.runstatement(statements))
+        statements = b.document.text.strip()
+        if statements:
+            _globals = repl.get_globals()
+            _globals[&#34;_MODULE_SOURCE_CODE&#34;] = statements
+            app.exit(pudb.runstatement(statements, globals=_globals, locals=repl.get_locals()))
             app.pre_run_callables.append(b.reset)
         else:
             pudb.pm()

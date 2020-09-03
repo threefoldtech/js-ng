@@ -26,6 +26,10 @@
 from jumpscale.loader import j
 
 
+def pascalify_name(name):
+    return &#34;&#34;.join([x.capitalize() for x in name.replace(&#34;_&#34;, &#34;-&#34;).split(&#34;-&#34;)])
+
+
 class Property:
     def __init__(self):
         self.index = False
@@ -36,13 +40,57 @@ class Property:
         self.comment = &#34;&#34;
         self.defaultvalue = &#34;&#34;
         self.name = &#34;&#34;
+        self.pointer_type = &#34;&#34;
+        self.prop_type = &#34;&#34;
+
+    @classmethod
+    def get_id_prop(cls):
+        prop = cls()
+        prop.prop_type = &#34;I&#34;
+        prop.name = &#34;id&#34;
+        prop.type = j.data.types.get_js_type(prop.prop_type)
+        return prop
+
+    def __repr__(self):
+        return str(self.__dict__)
+
+    __str__ = __repr__
+
+    @property
+    def url_to_class_name(self):
+        url = self.defaultvalue
+        urlparts = url.split(&#34;.&#34;)
+        return &#34;&#34;.join(x.capitalize() for x in urlparts)
 
 
 class Schema:
     def __init__(self):
         self.url = &#34;&#34;
         self.system_props = {}
-        self.props = {}
+        self.props = {&#34;id&#34;: Property.get_id_prop()}
+
+    @property
+    def url_to_class_name(self):
+        return &#34;&#34;.join(x.capitalize() for x in self.url.split(&#34;.&#34;))
+
+    def get_enums_required(self):
+        enums = []
+        for prop_name, prop in self.props.items():
+            if prop.prop_type == &#34;E&#34;:
+                cleanname = pascalify_name(prop.name)
+                enums.append({&#34;name&#34;: cleanname, &#34;vals&#34;: [pascalify_name(x) for x in prop.defaultvalue.split(&#34;,&#34;)]})
+        return enums
+
+    def get_classes_required(self):
+        classes = []
+        for prop_name, prop in self.props.items():
+            if prop.prop_type in [&#34;O&#34;, &#34;LO&#34;] and &#34;.&#34; in prop.defaultvalue:
+                classes.append(prop.url_to_class_name)
+        return classes
+
+    def get_dependencies(self):
+
+        return {enum: self.get_enums_required(), classes: self.get_classes_requireds()}
 
 
 def _normalize_string(text):
@@ -65,13 +113,12 @@ def _normalize_string(text):
             in_comment = True
         if c == &#34;\n&#34;:
             in_comment = False
-        if c == &#34;\&#34;&#34; or c == &#34;&#39;&#34;:
+        if c == &#39;&#34;&#39; or c == &#34;&#39;&#34;:
             if in_string and c == string_char:
                 in_string = False
-            elif not in_string:
+            elif not in_string and not in_comment:
                 in_string = True
-                string_char  = c
-
+                string_char = c
 
         if not in_comment and not in_string and c in whitespaces:
             continue
@@ -186,7 +233,13 @@ def _parse_prop(line):
     if name == &#34;id&#34;:
         raise NameError(&#34;id is reserved and can&#39;t be a name of property.&#34;)
     pointer_type = pointer_type[1:] if pointer_type else pointer_type
+    prop.pointer_type = pointer_type
     prop_type = prop_type[1:-1] if prop_type else prop_type
+
+    if not prop_type:
+        prop_type = &#34;S&#34;
+    prop.prop_type = prop_type
+
     comment = comment[1:] if comment else comment
     prop.name = name
     prop.unique = unique == &#34;&amp;&#34;
@@ -216,6 +269,7 @@ def parse_schema(text):
     Returns:
         Schema: Schema object representing the schema.
     &#34;&#34;&#34;
+    # print(f&#34;parsing \n {text}&#34;)
     text = _normalize_string(text)
     if text.count(&#34;@url&#34;) != 1:
         raise RuntimeError(&#34;The number of urls must be equal to one.&#34;)
@@ -225,6 +279,8 @@ def parse_schema(text):
         if line.startswith(&#34;@&#34;):
             name, value = _parse_system_prop(line)
             schema.system_props[name] = value
+        elif line.startswith(&#34;#&#34;) or not line.strip():
+            continue
         else:
             name, prop = _parse_prop(line)
             schema.props[name] = prop
@@ -273,6 +329,7 @@ def parse_schema(text):
     Returns:
         Schema: Schema object representing the schema.
     &#34;&#34;&#34;
+    # print(f&#34;parsing \n {text}&#34;)
     text = _normalize_string(text)
     if text.count(&#34;@url&#34;) != 1:
         raise RuntimeError(&#34;The number of urls must be equal to one.&#34;)
@@ -282,11 +339,24 @@ def parse_schema(text):
         if line.startswith(&#34;@&#34;):
             name, value = _parse_system_prop(line)
             schema.system_props[name] = value
+        elif line.startswith(&#34;#&#34;) or not line.strip():
+            continue
         else:
             name, prop = _parse_prop(line)
             schema.props[name] = prop
     schema.url = schema.system_props[&#34;url&#34;]
     return schema</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.data.schema.schema.pascalify_name"><code class="name flex">
+<span>def <span class="ident">pascalify_name</span></span>(<span>name)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def pascalify_name(name):
+    return &#34;&#34;.join([x.capitalize() for x in name.replace(&#34;_&#34;, &#34;-&#34;).split(&#34;-&#34;)])</code></pre>
 </details>
 </dd>
 </dl>
@@ -310,8 +380,63 @@ def parse_schema(text):
         self.type = None
         self.comment = &#34;&#34;
         self.defaultvalue = &#34;&#34;
-        self.name = &#34;&#34;</code></pre>
+        self.name = &#34;&#34;
+        self.pointer_type = &#34;&#34;
+        self.prop_type = &#34;&#34;
+
+    @classmethod
+    def get_id_prop(cls):
+        prop = cls()
+        prop.prop_type = &#34;I&#34;
+        prop.name = &#34;id&#34;
+        prop.type = j.data.types.get_js_type(prop.prop_type)
+        return prop
+
+    def __repr__(self):
+        return str(self.__dict__)
+
+    __str__ = __repr__
+
+    @property
+    def url_to_class_name(self):
+        url = self.defaultvalue
+        urlparts = url.split(&#34;.&#34;)
+        return &#34;&#34;.join(x.capitalize() for x in urlparts)</code></pre>
 </details>
+<h3>Static methods</h3>
+<dl>
+<dt id="jumpscale.data.schema.schema.Property.get_id_prop"><code class="name flex">
+<span>def <span class="ident">get_id_prop</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@classmethod
+def get_id_prop(cls):
+    prop = cls()
+    prop.prop_type = &#34;I&#34;
+    prop.name = &#34;id&#34;
+    prop.type = j.data.types.get_js_type(prop.prop_type)
+    return prop</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="jumpscale.data.schema.schema.Property.url_to_class_name"><code class="name">var <span class="ident">url_to_class_name</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def url_to_class_name(self):
+    url = self.defaultvalue
+    urlparts = url.split(&#34;.&#34;)
+    return &#34;&#34;.join(x.capitalize() for x in urlparts)</code></pre>
+</details>
+</dd>
+</dl>
 </dd>
 <dt id="jumpscale.data.schema.schema.Schema"><code class="flex name class">
 <span>class <span class="ident">Schema</span></span>
@@ -324,8 +449,90 @@ def parse_schema(text):
     def __init__(self):
         self.url = &#34;&#34;
         self.system_props = {}
-        self.props = {}</code></pre>
+        self.props = {&#34;id&#34;: Property.get_id_prop()}
+
+    @property
+    def url_to_class_name(self):
+        return &#34;&#34;.join(x.capitalize() for x in self.url.split(&#34;.&#34;))
+
+    def get_enums_required(self):
+        enums = []
+        for prop_name, prop in self.props.items():
+            if prop.prop_type == &#34;E&#34;:
+                cleanname = pascalify_name(prop.name)
+                enums.append({&#34;name&#34;: cleanname, &#34;vals&#34;: [pascalify_name(x) for x in prop.defaultvalue.split(&#34;,&#34;)]})
+        return enums
+
+    def get_classes_required(self):
+        classes = []
+        for prop_name, prop in self.props.items():
+            if prop.prop_type in [&#34;O&#34;, &#34;LO&#34;] and &#34;.&#34; in prop.defaultvalue:
+                classes.append(prop.url_to_class_name)
+        return classes
+
+    def get_dependencies(self):
+
+        return {enum: self.get_enums_required(), classes: self.get_classes_requireds()}</code></pre>
 </details>
+<h3>Instance variables</h3>
+<dl>
+<dt id="jumpscale.data.schema.schema.Schema.url_to_class_name"><code class="name">var <span class="ident">url_to_class_name</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def url_to_class_name(self):
+    return &#34;&#34;.join(x.capitalize() for x in self.url.split(&#34;.&#34;))</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="jumpscale.data.schema.schema.Schema.get_classes_required"><code class="name flex">
+<span>def <span class="ident">get_classes_required</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_classes_required(self):
+    classes = []
+    for prop_name, prop in self.props.items():
+        if prop.prop_type in [&#34;O&#34;, &#34;LO&#34;] and &#34;.&#34; in prop.defaultvalue:
+            classes.append(prop.url_to_class_name)
+    return classes</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.data.schema.schema.Schema.get_dependencies"><code class="name flex">
+<span>def <span class="ident">get_dependencies</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_dependencies(self):
+
+    return {enum: self.get_enums_required(), classes: self.get_classes_requireds()}</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.data.schema.schema.Schema.get_enums_required"><code class="name flex">
+<span>def <span class="ident">get_enums_required</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_enums_required(self):
+    enums = []
+    for prop_name, prop in self.props.items():
+        if prop.prop_type == &#34;E&#34;:
+            cleanname = pascalify_name(prop.name)
+            enums.append({&#34;name&#34;: cleanname, &#34;vals&#34;: [pascalify_name(x) for x in prop.defaultvalue.split(&#34;,&#34;)]})
+    return enums</code></pre>
+</details>
+</dd>
+</dl>
 </dd>
 </dl>
 </section>
@@ -344,15 +551,26 @@ def parse_schema(text):
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="jumpscale.data.schema.schema.parse_schema" href="#jumpscale.data.schema.schema.parse_schema">parse_schema</a></code></li>
+<li><code><a title="jumpscale.data.schema.schema.pascalify_name" href="#jumpscale.data.schema.schema.pascalify_name">pascalify_name</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
 <h4><code><a title="jumpscale.data.schema.schema.Property" href="#jumpscale.data.schema.schema.Property">Property</a></code></h4>
+<ul class="">
+<li><code><a title="jumpscale.data.schema.schema.Property.get_id_prop" href="#jumpscale.data.schema.schema.Property.get_id_prop">get_id_prop</a></code></li>
+<li><code><a title="jumpscale.data.schema.schema.Property.url_to_class_name" href="#jumpscale.data.schema.schema.Property.url_to_class_name">url_to_class_name</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="jumpscale.data.schema.schema.Schema" href="#jumpscale.data.schema.schema.Schema">Schema</a></code></h4>
+<ul class="">
+<li><code><a title="jumpscale.data.schema.schema.Schema.get_classes_required" href="#jumpscale.data.schema.schema.Schema.get_classes_required">get_classes_required</a></code></li>
+<li><code><a title="jumpscale.data.schema.schema.Schema.get_dependencies" href="#jumpscale.data.schema.schema.Schema.get_dependencies">get_dependencies</a></code></li>
+<li><code><a title="jumpscale.data.schema.schema.Schema.get_enums_required" href="#jumpscale.data.schema.schema.Schema.get_enums_required">get_enums_required</a></code></li>
+<li><code><a title="jumpscale.data.schema.schema.Schema.url_to_class_name" href="#jumpscale.data.schema.schema.Schema.url_to_class_name">url_to_class_name</a></code></li>
+</ul>
 </li>
 </ul>
 </li>

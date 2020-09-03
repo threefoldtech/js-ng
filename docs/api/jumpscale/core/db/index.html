@@ -34,12 +34,7 @@
         @property
         def db(self):
             if not self._db:
-                try:
-                    self._db = j.clients.redis.get(&#34;main&#34;)
-                    self._db.ping()
-                except ConnectionError:
-                    # TODO log
-                    return None
+                self._db = j.clients.redis.get(&#34;main&#34;)
             return self._db
 
     return DefaultRedisDB().db</code></pre>
@@ -71,12 +66,7 @@
         @property
         def db(self):
             if not self._db:
-                try:
-                    self._db = j.clients.redis.get(&#34;main&#34;)
-                    self._db.ping()
-                except ConnectionError:
-                    # TODO log
-                    return None
+                self._db = j.clients.redis.get(&#34;main&#34;)
             return self._db
 
     return DefaultRedisDB().db</code></pre>

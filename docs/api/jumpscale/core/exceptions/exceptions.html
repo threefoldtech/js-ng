@@ -94,6 +94,10 @@ class NotImplemented(JSException):
     pass
 
 
+class Validation(JSException):
+    pass
+
+
 class Bug(JSException):
     pass
 
@@ -247,6 +251,7 @@ class SSHTimeout(JSException):
 <li><a title="jumpscale.core.exceptions.exceptions.Input" href="#jumpscale.core.exceptions.exceptions.Input">Input</a></li>
 <li><a title="jumpscale.core.exceptions.exceptions.Value" href="#jumpscale.core.exceptions.exceptions.Value">Value</a></li>
 <li><a title="jumpscale.core.exceptions.exceptions.NotImplemented" href="#jumpscale.core.exceptions.exceptions.NotImplemented">NotImplemented</a></li>
+<li><a title="jumpscale.core.exceptions.exceptions.Validation" href="#jumpscale.core.exceptions.exceptions.Validation">Validation</a></li>
 <li><a title="jumpscale.core.exceptions.exceptions.Bug" href="#jumpscale.core.exceptions.exceptions.Bug">Bug</a></li>
 <li><a title="jumpscale.core.exceptions.exceptions.Operations" href="#jumpscale.core.exceptions.exceptions.Operations">Operations</a></li>
 <li><a title="jumpscale.core.exceptions.exceptions.IO" href="#jumpscale.core.exceptions.exceptions.IO">IO</a></li>
@@ -255,9 +260,6 @@ class SSHTimeout(JSException):
 <li><a title="jumpscale.core.exceptions.exceptions.SSH" href="#jumpscale.core.exceptions.exceptions.SSH">SSH</a></li>
 <li><a title="jumpscale.core.exceptions.exceptions.SSHTimeout" href="#jumpscale.core.exceptions.exceptions.SSHTimeout">SSHTimeout</a></li>
 <li><a title="jumpscale.data.encryption.exceptions.FailedChecksumError" href="../../data/encryption/exceptions.html#jumpscale.data.encryption.exceptions.FailedChecksumError">FailedChecksumError</a></li>
-<li><a title="jumpscale.data.treemanager.exceptions.NameExistsError" href="../../data/treemanager/exceptions.html#jumpscale.data.treemanager.exceptions.NameExistsError">NameExistsError</a></li>
-<li><a title="jumpscale.data.treemanager.exceptions.EmptyNameError" href="../../data/treemanager/exceptions.html#jumpscale.data.treemanager.exceptions.EmptyNameError">EmptyNameError</a></li>
-<li><a title="jumpscale.data.treemanager.exceptions.RootRemoveError" href="../../data/treemanager/exceptions.html#jumpscale.data.treemanager.exceptions.RootRemoveError">RootRemoveError</a></li>
 </ul>
 </dd>
 <dt id="jumpscale.core.exceptions.exceptions.NotFound"><code class="flex name class">
@@ -404,6 +406,24 @@ class SSHTimeout(JSException):
 <li>builtins.BaseException</li>
 </ul>
 </dd>
+<dt id="jumpscale.core.exceptions.exceptions.Validation"><code class="flex name class">
+<span>class <span class="ident">Validation</span></span>
+<span>(</span><span>message, category=None, level=None, context=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Common base class for all non-exit exceptions.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class Validation(JSException):
+    pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="jumpscale.core.exceptions.exceptions.JSException" href="#jumpscale.core.exceptions.exceptions.JSException">JSException</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
 <dt id="jumpscale.core.exceptions.exceptions.Value"><code class="flex name class">
 <span>class <span class="ident">Value</span></span>
 <span>(</span><span>message, category=None, level=None, context=None)</span>
@@ -479,6 +499,9 @@ class SSHTimeout(JSException):
 </li>
 <li>
 <h4><code><a title="jumpscale.core.exceptions.exceptions.Timeout" href="#jumpscale.core.exceptions.exceptions.Timeout">Timeout</a></code></h4>
+</li>
+<li>
+<h4><code><a title="jumpscale.core.exceptions.exceptions.Validation" href="#jumpscale.core.exceptions.exceptions.Validation">Validation</a></code></h4>
 </li>
 <li>
 <h4><code><a title="jumpscale.core.exceptions.exceptions.Value" href="#jumpscale.core.exceptions.exceptions.Value">Value</a></code></h4>

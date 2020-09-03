@@ -193,6 +193,9 @@ class AlertsHandler:
         Returns:
             Alert -- alert object
         &#34;&#34;&#34;
+        if not self.db.is_running():
+            return
+
         identifier = _get_identifier(appname, message, public_message, category, alert_type)
         alert = self.get(identifier=identifier, die=False) or Alert()
 
@@ -513,6 +516,9 @@ def json(self):
         Returns:
             Alert -- alert object
         &#34;&#34;&#34;
+        if not self.db.is_running():
+            return
+
         identifier = _get_identifier(appname, message, public_message, category, alert_type)
         alert = self.get(identifier=identifier, die=False) or Alert()
 
@@ -655,6 +661,9 @@ traceback {dict} &ndash; alert traceback (default: {None})</p>
     Returns:
         Alert -- alert object
     &#34;&#34;&#34;
+    if not self.db.is_running():
+        return
+
     identifier = _get_identifier(appname, message, public_message, category, alert_type)
     alert = self.get(identifier=identifier, die=False) or Alert()
 

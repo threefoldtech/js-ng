@@ -28,12 +28,14 @@ import json
 import sqlite3
 from jumpscale.loader import j
 
+
 class JSONSerializer(SerializerInterface):
     def loads(self, model, s):
         return model.load_obj_from_dict(json.loads(s))
 
     def dumps(self, model, data):
         return json.dumps(model.get_dict(data))
+
 
 class RedisStorageClient(StorageInterface):
     def __init__(self, bcdb_namespace, host=&#34;localhost&#34;, port=6379, serializer=None):
@@ -46,20 +48,23 @@ class RedisStorageClient(StorageInterface):
         return self.serializer.loads(model, obj_str) if obj_str else None
 
     def set(self, model, obj_id, value):
-        return self.redis_client.set(f&#34;{self.bcdb_namespace}.{model.name}://{obj_id}&#34;, self.serializer.dumps(model, value))
+        return self.redis_client.set(
+            f&#34;{self.bcdb_namespace}.{model.name}://{obj_id}&#34;, self.serializer.dumps(model, value)
+        )
 
     def get_keys_in_model(self, model):
         pattern = f&#34;{self.bcdb_namespace}.{model.name}://*&#34;
         result = []
-        cur, keys  = self.redis_client.scan(cursor=0, match=pattern, count=2)
+        cur, keys = self.redis_client.scan(cursor=0, match=pattern, count=2)
         result.extend(keys)
         while cur != 0:
             cur, keys = self.redis_client.scan(cursor=cur, match=pattern, count=2)
             result.extend(keys)
-        return [self.get(model, int(x.split(b&#39;://&#39;)[1])) for x in result]
+        return [self.get(model, int(x.split(b&#34;://&#34;)[1])) for x in result]
 
     def incr_id(self, model):
         return self.redis_client.incr(f&#34;{self.bcdb_namespace}.{model.name}.lastid&#34;)
+
 
 class RedisIndexClient(IndexInterface):
     def __init__(self, bcdb_namespace, host=&#34;localhost&#34;, port=6379):
@@ -67,13 +72,14 @@ class RedisIndexClient(IndexInterface):
         self.bcdb_namespace = bcdb_namespace
 
     def get(self, model, index_prop, index_value):
-        res = (self.redis_client.get(f&#34;{self.bcdb_namespace}.indexer.{model.name}.{index_prop}://{index_value}&#34;))
+        res = self.redis_client.get(f&#34;{self.bcdb_namespace}.indexer.{model.name}.{index_prop}://{index_value}&#34;)
         return int(res) if res else None
 
     def set(self, model, index_prop, index_value, obj_id, old_value=None):
         if old_value:
             self.redis_client.delete(f&#34;{self.bcdb_namespace}.indexer.{model.name}.{index_prop}://{old_value}&#34;)
         return self.redis_client.set(f&#34;{self.bcdb_namespace}.indexer.{model.name}.{index_prop}://{index_value}&#34;, obj_id)
+
 
 class SQLiteIndexSetClient(IndexSetInterface):
     def __init__(self, bcdb_namespace):
@@ -89,7 +95,7 @@ class SQLiteIndexSetClient(IndexSetInterface):
         props = []
         props_str = &#34;&#34;
         for prop in model.schema.props.values():
-            if prop.name != &#39;id&#39; and prop.index_key:
+            if prop.name != &#34;id&#34; and prop.index_key:
                 prop_type = &#34;INTEGER&#34; if isinstance(prop.type, j.data.types.Integer) else &#34;TEXT&#34;
                 props_str += f&#34;, {prop.name} {prop_type}&#34;
                 props.append(prop.name)
@@ -136,14 +142,14 @@ class SonicIndexTextClient(IndexTextInterface):
             self.sonic_client = j.clients.sonic.get(self.bcdb_namespace)
 
     def set(self, model, obj):
-       for prop in model.schema.props.values():
-           if prop.index_text:
-               self.sonic_client.push(self.bcdb_namespace, f&#34;{model.name}_{prop.name}&#34;, str(obj.id), str(getattr(obj, prop.name)))
+        for prop in model.schema.props.values():
+            if prop.index_text:
+                self.sonic_client.push(
+                    self.bcdb_namespace, f&#34;{model.name}_{prop.name}&#34;, str(obj.id), str(getattr(obj, prop.name))
+                )
 
     def get(self, model, index_prop, pattern):
-        return self.sonic_client.query(self.bcdb_namespace, f&#34;{model.name}_{index_prop}&#34;, pattern)
-
-               </code></pre>
+        return self.sonic_client.query(self.bcdb_namespace, f&#34;{model.name}_{index_prop}&#34;, pattern)</code></pre>
 </details>
 </section>
 <section>
@@ -214,7 +220,7 @@ class SonicIndexTextClient(IndexTextInterface):
         self.bcdb_namespace = bcdb_namespace
 
     def get(self, model, index_prop, index_value):
-        res = (self.redis_client.get(f&#34;{self.bcdb_namespace}.indexer.{model.name}.{index_prop}://{index_value}&#34;))
+        res = self.redis_client.get(f&#34;{self.bcdb_namespace}.indexer.{model.name}.{index_prop}://{index_value}&#34;)
         return int(res) if res else None
 
     def set(self, model, index_prop, index_value, obj_id, old_value=None):
@@ -236,7 +242,7 @@ class SonicIndexTextClient(IndexTextInterface):
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def get(self, model, index_prop, index_value):
-    res = (self.redis_client.get(f&#34;{self.bcdb_namespace}.indexer.{model.name}.{index_prop}://{index_value}&#34;))
+    res = self.redis_client.get(f&#34;{self.bcdb_namespace}.indexer.{model.name}.{index_prop}://{index_value}&#34;)
     return int(res) if res else None</code></pre>
 </details>
 </dd>
@@ -274,17 +280,19 @@ class SonicIndexTextClient(IndexTextInterface):
         return self.serializer.loads(model, obj_str) if obj_str else None
 
     def set(self, model, obj_id, value):
-        return self.redis_client.set(f&#34;{self.bcdb_namespace}.{model.name}://{obj_id}&#34;, self.serializer.dumps(model, value))
+        return self.redis_client.set(
+            f&#34;{self.bcdb_namespace}.{model.name}://{obj_id}&#34;, self.serializer.dumps(model, value)
+        )
 
     def get_keys_in_model(self, model):
         pattern = f&#34;{self.bcdb_namespace}.{model.name}://*&#34;
         result = []
-        cur, keys  = self.redis_client.scan(cursor=0, match=pattern, count=2)
+        cur, keys = self.redis_client.scan(cursor=0, match=pattern, count=2)
         result.extend(keys)
         while cur != 0:
             cur, keys = self.redis_client.scan(cursor=cur, match=pattern, count=2)
             result.extend(keys)
-        return [self.get(model, int(x.split(b&#39;://&#39;)[1])) for x in result]
+        return [self.get(model, int(x.split(b&#34;://&#34;)[1])) for x in result]
 
     def incr_id(self, model):
         return self.redis_client.incr(f&#34;{self.bcdb_namespace}.{model.name}.lastid&#34;)</code></pre>
@@ -317,12 +325,12 @@ class SonicIndexTextClient(IndexTextInterface):
 <pre><code class="python">def get_keys_in_model(self, model):
     pattern = f&#34;{self.bcdb_namespace}.{model.name}://*&#34;
     result = []
-    cur, keys  = self.redis_client.scan(cursor=0, match=pattern, count=2)
+    cur, keys = self.redis_client.scan(cursor=0, match=pattern, count=2)
     result.extend(keys)
     while cur != 0:
         cur, keys = self.redis_client.scan(cursor=cur, match=pattern, count=2)
         result.extend(keys)
-    return [self.get(model, int(x.split(b&#39;://&#39;)[1])) for x in result]</code></pre>
+    return [self.get(model, int(x.split(b&#34;://&#34;)[1])) for x in result]</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.data.bcdb.clients.RedisStorageClient.incr_id"><code class="name flex">
@@ -344,7 +352,9 @@ class SonicIndexTextClient(IndexTextInterface):
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def set(self, model, obj_id, value):
-    return self.redis_client.set(f&#34;{self.bcdb_namespace}.{model.name}://{obj_id}&#34;, self.serializer.dumps(model, value))</code></pre>
+    return self.redis_client.set(
+        f&#34;{self.bcdb_namespace}.{model.name}://{obj_id}&#34;, self.serializer.dumps(model, value)
+    )</code></pre>
 </details>
 </dd>
 </dl>
@@ -371,7 +381,7 @@ class SonicIndexTextClient(IndexTextInterface):
         props = []
         props_str = &#34;&#34;
         for prop in model.schema.props.values():
-            if prop.name != &#39;id&#39; and prop.index_key:
+            if prop.name != &#34;id&#34; and prop.index_key:
                 prop_type = &#34;INTEGER&#34; if isinstance(prop.type, j.data.types.Integer) else &#34;TEXT&#34;
                 props_str += f&#34;, {prop.name} {prop_type}&#34;
                 props.append(prop.name)
@@ -475,9 +485,11 @@ class SonicIndexTextClient(IndexTextInterface):
             self.sonic_client = j.clients.sonic.get(self.bcdb_namespace)
 
     def set(self, model, obj):
-       for prop in model.schema.props.values():
-           if prop.index_text:
-               self.sonic_client.push(self.bcdb_namespace, f&#34;{model.name}_{prop.name}&#34;, str(obj.id), str(getattr(obj, prop.name)))
+        for prop in model.schema.props.values():
+            if prop.index_text:
+                self.sonic_client.push(
+                    self.bcdb_namespace, f&#34;{model.name}_{prop.name}&#34;, str(obj.id), str(getattr(obj, prop.name))
+                )
 
     def get(self, model, index_prop, pattern):
         return self.sonic_client.query(self.bcdb_namespace, f&#34;{model.name}_{index_prop}&#34;, pattern)</code></pre>
@@ -507,9 +519,11 @@ class SonicIndexTextClient(IndexTextInterface):
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def set(self, model, obj):
-   for prop in model.schema.props.values():
-       if prop.index_text:
-           self.sonic_client.push(self.bcdb_namespace, f&#34;{model.name}_{prop.name}&#34;, str(obj.id), str(getattr(obj, prop.name)))</code></pre>
+    for prop in model.schema.props.values():
+        if prop.index_text:
+            self.sonic_client.push(
+                self.bcdb_namespace, f&#34;{model.name}_{prop.name}&#34;, str(obj.id), str(getattr(obj, prop.name))
+            )</code></pre>
 </details>
 </dd>
 </dl>

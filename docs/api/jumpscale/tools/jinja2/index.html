@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.4" />
 <title>jumpscale.tools.jinja2 API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="This module helps with the common operations of jinja2 and reduces the boilerplate around it …" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -20,9 +20,78 @@
 <h1 class="title">Module <code>jumpscale.tools.jinja2</code></h1>
 </header>
 <section id="section-intro">
+<p>This module helps with the common operations of jinja2 and reduces the boilerplate around it</p>
+<h2 id="getting-environment">Getting environment</h2>
+<pre><code class="python">from jinja2 import (
+    Environment,
+    FileSystemLoader,
+    select_autoescape,
+    StrictUndefined,
+    Template,
+)
+env = Environment(loader=FileSystemLoader(templates_path), autoescape=select_autoescape([&quot;html&quot;, &quot;xml&quot;]),)
+
+</code></pre>
+<p>but you can easily get the Environment without worrying too much about the syntax with <code>j.tools.jinja2.get_env()</code> and that's it.</p>
+<h2 id="getting-a-template-from-path-or-text">Getting a template from path or text</h2>
+<p>and same for getting a specific template object from a text or a file, but you can easily do <code>get_template(template_path=...)</code> or <code>get_template(template_text=...)</code></p>
+<h2 id="rendering-a-template-with-data">Rendering a template with data</h2>
+<p>you can render from a file path or a text directly using <code>j.tools.jinja2.render_template</code> and pass <code>template_text</code> in case of a string or <code>template_path</code> in case of a file path.</p>
+<p>e.g</p>
+<pre><code class="python">        data = dict(
+            generated_class_name=schema.url_to_class_name,
+            generated_properties=schema.props,
+            types_map=self._types_map,
+            enums=schema.get_enums_required(),
+            classes=schema.get_classes_required(),
+            get_prop_line=self._get_prop_line,
+        )
+        return j.tools.jinja2.render_template(template_text=self._single_template, **data)
+</code></pre>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">from jumpscale.loader import j
+<pre><code class="python">&#34;&#34;&#34;This module helps with the common operations of jinja2 and reduces the boilerplate around it
+
+
+## Getting environment
+
+```python
+from jinja2 import (
+    Environment,
+    FileSystemLoader,
+    select_autoescape,
+    StrictUndefined,
+    Template,
+)
+env = Environment(loader=FileSystemLoader(templates_path), autoescape=select_autoescape([&#34;html&#34;, &#34;xml&#34;]),)
+
+```
+but you can easily get the Environment without worrying too much about the syntax with `j.tools.jinja2.get_env()` and that&#39;s it.
+
+
+## Getting a template from path or text
+and same for getting a specific template object from a text or a file, but you can easily do `get_template(template_path=...)` or `get_template(template_text=...)`
+
+
+## Rendering a template with data
+you can render from a file path or a text directly using `j.tools.jinja2.render_template` and pass `template_text` in case of a string or `template_path` in case of a file path.
+
+e.g
+
+```python
+        data = dict(
+            generated_class_name=schema.url_to_class_name,
+            generated_properties=schema.props,
+            types_map=self._types_map,
+            enums=schema.get_enums_required(),
+            classes=schema.get_classes_required(),
+            get_prop_line=self._get_prop_line,
+        )
+        return j.tools.jinja2.render_template(template_text=self._single_template, **data)
+```
+&#34;&#34;&#34;
+
+from jumpscale.loader import j
 from jinja2 import (
     Environment,
     FileSystemLoader,
@@ -267,7 +336,11 @@ def render_code_python(
 <nav id="sidebar">
 <h1>Index</h1>
 <div class="toc">
-<ul></ul>
+<ul>
+<li><a href="#getting-environment">Getting environment</a></li>
+<li><a href="#getting-a-template-from-path-or-text">Getting a template from path or text</a></li>
+<li><a href="#rendering-a-template-with-data">Rendering a template with data</a></li>
+</ul>
 </div>
 <ul id="index">
 <li><h3>Super-module</h3>

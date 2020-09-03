@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.4" />
 <title>jumpscale.core.dirs.dirs API documentation</title>
-<meta name="description" content="This module defines main dirs in jumpscale to be used" />
+<meta name="description" content="This module defines main dirs in jumpscale to be used …" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -21,10 +21,80 @@
 </header>
 <section id="section-intro">
 <p>This module defines main dirs in jumpscale to be used</p>
+<pre><code>JS-NG&gt; j.core.dirs                                                                                                                                                        
+ExportedModule(__doc__=None, _exportedas=&lt;class 'jumpscale.core.dirs.dirs.Dirs'&gt;, _loaded=True, _m=&lt;module 'jumpscale.core.dirs' from '/home/ahmed/wspace/js/js-ng/jumpscale/core/dirs/__init__.py'&gt;)
+
+JS-NG&gt; j.core.dirs.BASEDIR                                                                                                                                                
+'/home/ahmed/sandbox'
+
+JS-NG&gt; j.core.dirs.BINDIR                                                                                                                                                 
+'/home/ahmed/sandbox/bin'
+
+JS-NG&gt;                                                                                                                                                                    
+JS-NG&gt; j.core.dirs.CFGDIR                                                                                                                                                 
+'/home/ahmed/sandbox/cfg'
+
+JS-NG&gt;                                                                                                                                                                    
+JS-NG&gt; j.core.dirs.CODEDIR                                                                                                                                                
+'/home/ahmed/sandbox/code'
+
+JS-NG&gt;                                                                                                                                                                    
+JS-NG&gt; j.core.dirs.HOMEDIR                                                                                                                                                
+'/home/ahmed'
+
+JS-NG&gt; j.core.dirs.LOGDIR                                                                                                                                                 
+'/home/ahmed/sandbox/var/log'
+
+JS-NG&gt; j.core.dirs.TEMPLATEDIR                                                                                                                                            
+'/home/ahmed/sandbox/var/templates'
+
+JS-NG&gt; j.core.dirs.TMPDIR                                                                                                                                                 
+'/tmp/jumpscale'
+
+JS-NG&gt; j.core.dirs.VARDIR                                                                                                                                                 
+'/home/ahmed/sandbox/var'
+</code></pre>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">&#34;&#34;&#34;
 This module defines main dirs in jumpscale to be used
+
+```
+JS-NG&gt; j.core.dirs                                                                                                                                                        
+ExportedModule(__doc__=None, _exportedas=&lt;class &#39;jumpscale.core.dirs.dirs.Dirs&#39;&gt;, _loaded=True, _m=&lt;module &#39;jumpscale.core.dirs&#39; from &#39;/home/ahmed/wspace/js/js-ng/jumpscale/core/dirs/__init__.py&#39;&gt;)
+
+JS-NG&gt; j.core.dirs.BASEDIR                                                                                                                                                
+&#39;/home/ahmed/sandbox&#39;
+
+JS-NG&gt; j.core.dirs.BINDIR                                                                                                                                                 
+&#39;/home/ahmed/sandbox/bin&#39;
+
+JS-NG&gt;                                                                                                                                                                    
+JS-NG&gt; j.core.dirs.CFGDIR                                                                                                                                                 
+&#39;/home/ahmed/sandbox/cfg&#39;
+
+JS-NG&gt;                                                                                                                                                                    
+JS-NG&gt; j.core.dirs.CODEDIR                                                                                                                                                
+&#39;/home/ahmed/sandbox/code&#39;
+
+JS-NG&gt;                                                                                                                                                                    
+JS-NG&gt; j.core.dirs.HOMEDIR                                                                                                                                                
+&#39;/home/ahmed&#39;
+
+JS-NG&gt; j.core.dirs.LOGDIR                                                                                                                                                 
+&#39;/home/ahmed/sandbox/var/log&#39;
+
+JS-NG&gt; j.core.dirs.TEMPLATEDIR                                                                                                                                            
+&#39;/home/ahmed/sandbox/var/templates&#39;
+
+JS-NG&gt; j.core.dirs.TMPDIR                                                                                                                                                 
+&#39;/tmp/jumpscale&#39;
+
+JS-NG&gt; j.core.dirs.VARDIR                                                                                                                                                 
+&#39;/home/ahmed/sandbox/var&#39;
+```
+
+
 &#34;&#34;&#34;
 
 import os
@@ -32,13 +102,14 @@ import os
 
 class Dirs:
 
-    HOMEDIR = os.path.expanduser(&#34;~&#34;)  # TODO: ؤاثؤن homedir defined in sal.fs
+    HOMEDIR = os.path.expanduser(&#34;~&#34;)  # TODO: check homedir defined in sal.fs
     BASEDIR = os.path.join(HOMEDIR, &#34;sandbox&#34;)
     BINDIR = os.path.join(BASEDIR, &#34;bin&#34;)
     CFGDIR = os.path.join(BASEDIR, &#34;cfg&#34;)  # TODO: check conflict with core.config_root..
     CODEDIR = os.path.join(BASEDIR, &#34;code&#34;)
     VARDIR = os.path.join(BASEDIR, &#34;var&#34;)
     LOGDIR = os.path.join(VARDIR, &#34;log&#34;)
+    JSCFGDIR = os.path.join(HOMEDIR, &#34;.config/jumpscale&#34;)
     TEMPLATEDIR = os.path.join(VARDIR, &#34;templates&#34;)
     TMPDIR = &#34;/tmp/jumpscale&#34;</code></pre>
 </details>
@@ -62,13 +133,14 @@ class Dirs:
 <summary>Source code</summary>
 <pre><code class="python">class Dirs:
 
-    HOMEDIR = os.path.expanduser(&#34;~&#34;)  # TODO: ؤاثؤن homedir defined in sal.fs
+    HOMEDIR = os.path.expanduser(&#34;~&#34;)  # TODO: check homedir defined in sal.fs
     BASEDIR = os.path.join(HOMEDIR, &#34;sandbox&#34;)
     BINDIR = os.path.join(BASEDIR, &#34;bin&#34;)
     CFGDIR = os.path.join(BASEDIR, &#34;cfg&#34;)  # TODO: check conflict with core.config_root..
     CODEDIR = os.path.join(BASEDIR, &#34;code&#34;)
     VARDIR = os.path.join(BASEDIR, &#34;var&#34;)
     LOGDIR = os.path.join(VARDIR, &#34;log&#34;)
+    JSCFGDIR = os.path.join(HOMEDIR, &#34;.config/jumpscale&#34;)
     TEMPLATEDIR = os.path.join(VARDIR, &#34;templates&#34;)
     TMPDIR = &#34;/tmp/jumpscale&#34;</code></pre>
 </details>
@@ -91,6 +163,10 @@ class Dirs:
 <section class="desc"></section>
 </dd>
 <dt id="jumpscale.core.dirs.dirs.Dirs.HOMEDIR"><code class="name">var <span class="ident">HOMEDIR</span></code></dt>
+<dd>
+<section class="desc"></section>
+</dd>
+<dt id="jumpscale.core.dirs.dirs.Dirs.JSCFGDIR"><code class="name">var <span class="ident">JSCFGDIR</span></code></dt>
 <dd>
 <section class="desc"></section>
 </dd>
@@ -136,6 +212,7 @@ class Dirs:
 <li><code><a title="jumpscale.core.dirs.dirs.Dirs.CFGDIR" href="#jumpscale.core.dirs.dirs.Dirs.CFGDIR">CFGDIR</a></code></li>
 <li><code><a title="jumpscale.core.dirs.dirs.Dirs.CODEDIR" href="#jumpscale.core.dirs.dirs.Dirs.CODEDIR">CODEDIR</a></code></li>
 <li><code><a title="jumpscale.core.dirs.dirs.Dirs.HOMEDIR" href="#jumpscale.core.dirs.dirs.Dirs.HOMEDIR">HOMEDIR</a></code></li>
+<li><code><a title="jumpscale.core.dirs.dirs.Dirs.JSCFGDIR" href="#jumpscale.core.dirs.dirs.Dirs.JSCFGDIR">JSCFGDIR</a></code></li>
 <li><code><a title="jumpscale.core.dirs.dirs.Dirs.LOGDIR" href="#jumpscale.core.dirs.dirs.Dirs.LOGDIR">LOGDIR</a></code></li>
 <li><code><a title="jumpscale.core.dirs.dirs.Dirs.TEMPLATEDIR" href="#jumpscale.core.dirs.dirs.Dirs.TEMPLATEDIR">TEMPLATEDIR</a></code></li>
 <li><code><a title="jumpscale.core.dirs.dirs.Dirs.TMPDIR" href="#jumpscale.core.dirs.dirs.Dirs.TMPDIR">TMPDIR</a></code></li>

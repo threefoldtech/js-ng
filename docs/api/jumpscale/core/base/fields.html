@@ -126,10 +126,10 @@ No need for `from_raw` to raise an error on e.g. type mismatch, as `validate` wi
 &#34;&#34;&#34;
 import arrow
 import datetime
-import enum
 import ipaddress
+import json
 import re
-import time
+import uuid
 
 from urllib.parse import urlparse
 
@@ -143,10 +143,20 @@ class ValidationError(Exception):
 
 
 class Field:
-    def __init__(self, default=None, required=False, indexed=False, readonly=False, validators=None, **kwargs):
+    def __init__(
+        self,
+        default=None,
+        required=False,
+        indexed=False,
+        readonly=False,
+        validators=None,
+        stored=True,
+        on_update=None,
+        compute=None,
+        **kwargs,
+    ):
         &#34;&#34;&#34;
         Base field for all field types, have some common options that can be used any other field type too.
-
 
         Args:
             default (any, optional): default value. Defaults to None.
@@ -154,6 +164,9 @@ class Field:
             indexed (bool, optional): indexed or not. Defaults to False.
             readonly (bool, optional): can only get the value. Defaults to False.
             validators (list of function, optional): a list of functions that takes a value and raises ValidationError if not valid. Defaults to None.
+            stored (bool, optional): if the fields should be stored or not, useful for computed fields. Defaults to True.
+            on_update (callable, optional): a callable that takes the instance and new value on field updates. Defaults to None.
+            compute (callable, optional): a callable that takes the instance and returns a computed value for this field. `on_update` won&#39;t be called in this case. Defaults to None.
         &#34;&#34;&#34;
         self.default = default
         self.required = required
@@ -165,9 +178,34 @@ class Field:
         if self.validators is None:
             self.validators = []
 
-        # self.validate = Schema({
+        self.stored = stored
+        self.on_update = on_update
+        self.compute = compute
 
-        # })
+    def preprocess(self, value):
+        # TODO: make from/to raw methods only for serialization
+        # and let preprocess/validate do the cleanup/checking step
+        # and return the correct value that current field should hold
+        # so, from_raw and to_raw are used only for serialization
+        return value
+
+    def validate_with_name(self, value, name):
+        &#34;&#34;&#34;
+        validates the value using validate method and prepends the field name
+        in case an exception was thrown
+
+        Args:
+            value (any): in case value is not valid
+            name  (str): the field name
+
+        Raises:
+            ValidationError: The original validation error with the field name prepended to the message
+
+        &#34;&#34;&#34;
+        try:
+            self.validate(value)
+        except ValidationError as e:
+            raise ValidationError(f&#34;{name}: &#34; + str(e))
 
     def validate(self, value):
         &#34;&#34;&#34;
@@ -182,6 +220,7 @@ class Field:
         if value is None:
             if self.required:
                 raise ValidationError(&#34;field is required&#34;)
+
         for validator in self.validators:
             validator(value)
 
@@ -209,11 +248,19 @@ class Field:
         &#34;&#34;&#34;
         return value
 
+    @property
+    def trigger_updates(self):
+        return callable(self.on_update)
+
+    @property
+    def computed(self):
+        return callable(self.compute)
+
 
 class Typed(Field):
     def __init__(self, type_, **kwargs):
         &#34;&#34;&#34;
-        base field for any type, value mus tof of `type_`
+        Base field for any type, it will hold values of `type_`
 
         Args:
             type_ (type): any type (class)
@@ -226,15 +273,15 @@ class Typed(Field):
         super().validate(value)
         if value is not None:
             if not isinstance(value, self.type):
-                raise ValidationError(f&#34;value {value} is not of type {self.type}&#34;)
+                raise ValidationError(f&#34;value &#39;{value}&#39; is not of type {self.type.__name__}&#34;)
 
 
 class Boolean(Typed):
     def __init__(self, default=False, **kwargs):
         &#34;&#34;&#34;
-        Boolean fields to hold a bool value.
+        Boolean fields to hold a `bool` value.
 
-        values can be set using strings or numbers like:
+        values can be set using strings or numbers and will be converted to `bool` like:
 
         - &#34;on&#34;, &#34;off&#34;
         - &#34;yes&#34;, &#34;no&#34;
@@ -253,7 +300,7 @@ class Boolean(Typed):
         get bool value from strings and numbers
 
         Args:
-            value (str or int or float or complex): valie
+            value (str or int or float or complex)
 
         Returns:
             bool: boolean value
@@ -272,29 +319,35 @@ class Boolean(Typed):
 
 
 class Integer(Typed):
-    def __init__(self, default=0, min=None, **kwargs):
+    def __init__(self, default=0, min=None, max=None, **kwargs):
         &#34;&#34;&#34;
         Intger field, the same as `Typed`, but with a type of `int`
 
         It can have a minimum value, if min is not set, it will ignore it.
 
-        values can be set using strings like:
+        values can be set using strings like (will be converted to `int`):
 
         - &#34;12&#34;, &#34;1212  &#34;
 
         Args:
             default (int, optional): default value. Defaults to 0.
-            min (int, optional): minimum value. Defaults to None.
+            min (int, optional): minimum value (inclusive). Defaults to None.
+            max (int, optional): maximum value (inclusive). Defaults to None.
             kwargs: any keyword arguments supported by `Field`
         &#34;&#34;&#34;
         self.min = min
+        self.max = max
         super().__init__(type_=int, default=default, min=min, **kwargs)
 
     def validate(self, value):
         super().validate(value)
-        if self.min is not None:
+        if value and self.min is not None:
             if value &lt; self.min:
                 raise ValidationError(f&#34;cannot set values less than {self.min}&#34;)
+
+        if value and self.max is not None:
+            if value &gt; self.max:
+                raise ValidationError(f&#34;cannot set values greater than {self.max}&#34;)
 
     def from_raw(self, value):
         if isinstance(value, str):
@@ -310,7 +363,7 @@ class Float(Typed):
         &#34;&#34;&#34;
         Same as `Integer` field, but with a type of `float`.
 
-        values can be set using strings like:
+        values can be set using strings like (will be converted to `float`):
 
         - &#34;12.3&#34;, &#34; 1212.23  &#34;
 
@@ -321,16 +374,19 @@ class Float(Typed):
         super().__init__(type_=float, default=default, min=min, **kwargs)
 
     def from_raw(self, value):
+
         if isinstance(value, str):
-            try:
-                value = float(value.strip())
-            except ValueError:
-                pass
+            value = value.strip()
+        try:
+            value = float(value)
+        except ValueError:
+            pass
+
         return value
 
 
 class String(Typed):
-    def __init__(self, maxlen=None, **kwargs):
+    def __init__(self, maxlen=None, allow_empty=True, **kwargs):
         &#34;&#34;&#34;
         Same as `Typed`, but with a type of `str`.
 
@@ -338,15 +394,21 @@ class String(Typed):
 
         Args:
             maxlen (int): maximum length allowed. Defaults to None
+            allow_empty (bool): if empty string values are allowed or not. Defaults to True
             kwargs: any keyword arguments supported by `Field`
         &#34;&#34;&#34;
         super().__init__(type_=str, **kwargs)
         self.maxlen = maxlen
+        self.allow_empty = allow_empty
 
     def validate(self, value):
         super().validate(value)
+
+        if not self.allow_empty and value == &#34;&#34;:
+            raise ValidationError(&#34;field does not allow empty values&#34;)
+
         if self.maxlen is not None:
-            if len(value) &gt; self.maxlen:
+            if value and len(value) &gt; self.maxlen:
                 raise ValidationError(f&#34;length of the string exceeds {self.maxlen}&#34;)
 
 
@@ -357,7 +419,6 @@ class Secret(String):
     Should be used with sensitive data.
 
     Args:
-        maxlen (int): maximum length allowed. Defaults to None
         kwargs: any keyword arguments supported by `String`
     &#34;&#34;&#34;
 
@@ -379,7 +440,9 @@ class Object(Typed):
             self.type_kwargs = {}
 
         if not self.default:
-            self.default = self.type(**self.type_kwargs)
+            # make it callable to create different objects
+            # not a single one as a default for all
+            self.default = lambda: self.type(**self.type_kwargs)
 
     def validate(self, value):
         &#34;&#34;&#34;
@@ -389,10 +452,8 @@ class Object(Typed):
             value (Base): object
         &#34;&#34;&#34;
         super().validate(value)
-        try:
+        if value:
             value.validate()
-        except AttributeError:
-            raise ValidationError(&#34;object of Base must have validate()&#34;)
 
     def to_raw(self, obj):
         &#34;&#34;&#34;
@@ -404,7 +465,8 @@ class Object(Typed):
         Returns:
             dict: raw data
         &#34;&#34;&#34;
-        return obj._get_data()
+        if obj:
+            return obj._get_data()
 
     def from_raw(self, data):
         &#34;&#34;&#34;
@@ -417,9 +479,7 @@ class Object(Typed):
             Base: base object
         &#34;&#34;&#34;
         if isinstance(data, dict):
-            obj = self.type()
-            obj._set_data(data)
-            return obj
+            return self.type(**data)
         return data
 
 
@@ -482,16 +542,20 @@ class List(Field):
 class Enum(Typed):
     def __init__(self, enum_type, **kwargs):
         &#34;&#34;&#34;
-        enum field, to be used with `enum.Enum`.
+        Enum field, to be used with `enum.Enum`.
+
         Example:
 
         ```python
         class UserType(Enum):
             USER = &#34;user&#34;
             ADMIN = &#34;admin&#34;
+
+        class User(Base):
+            field = fields.Enum(UserType)
         ```
 
-        field = fields.Enum(UserType)
+        Will hold values of type `enum.Enum`.
 
         Args:
             enum_type (type): enum type (class)
@@ -512,7 +576,8 @@ class Enum(Typed):
         Returns:
             any: enum value
         &#34;&#34;&#34;
-        return enum_obj.value
+        if enum_obj:
+            return enum_obj.value
 
     def from_raw(self, value):
         &#34;&#34;&#34;
@@ -531,16 +596,18 @@ class Enum(Typed):
             return value
 
 
-class Email(Field):
+class Email(String):
     def __init__(self, default=&#34;&#34;, **kwargs):
         &#34;&#34;&#34;
-        email field, will validate the value of emails
+        Email field, will validate the value of emails
+
+        will hold string email values.
 
         Args:
             default (str, optional): default value. Defaults to &#34;&#34;
-            kwargs: any keyword arguments supported by `Field`
+            kwargs: other keyword arguments supported by `string`
         &#34;&#34;&#34;
-        super().__init__(default, **kwargs)
+        super().__init__(default=default, **kwargs)
         self.regex = r&#34;^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$&#34;
 
     def validate(self, value):
@@ -554,19 +621,21 @@ class Email(Field):
             ValidationError: in case the value is not a telephone
         &#34;&#34;&#34;
         super().validate(value)
-        if not re.match(self.regex, value):
-            raise ValidationError(f&#34;{value} is not a valid Email address&#34;)
+        if value and not re.match(self.regex, value):
+            raise ValidationError(f&#34;&#39;{value}&#39; is not a valid Email address&#34;)
 
 
-class Path(Field):
+class Path(String):
     # TODO: Validate that it is working on windows
     def __init__(self, default=&#34;&#34;, **kwargs):
         &#34;&#34;&#34;
-        path field, will validate the value of file system paths
+        Path field, will validate the value of file system paths
+
+        Will hold string path values.
 
         Args:
             default (str, optional): default value. Defaults to &#34;&#34;
-            kwargs: any keyword arguments supported by `Field`
+            kwargs: other keyword arguments supported by `Field`
         &#34;&#34;&#34;
         super().__init__(default, **kwargs)
         self.regex = r&#34;^(/[^/ ]*)+/?$&#34;
@@ -582,20 +651,22 @@ class Path(Field):
             ValidationError: in case the value is not a telephone
         &#34;&#34;&#34;
         super().validate(value)
-        if not re.match(self.regex, value):
-            raise ValidationError(f&#34;{value} is not a valid Path&#34;)
+        if value and not re.match(self.regex, value):
+            raise ValidationError(f&#34;&#39;{value}&#39; is not a valid Path&#34;)
 
 
-class URL(Field):
+class URL(String):
     def __init__(self, default=&#34;&#34;, **kwargs):
         &#34;&#34;&#34;
-        url field, will validate the value of urls
+        URL field, will validate the value of urls
+
+        Will hold string URLs.
 
         Args:
             default (str, optional): default value. Defaults to &#34;&#34;
-            kwargs: any keyword arguments supported by `Field`
+            kwargs: other keyword arguments supported by `Field`
         &#34;&#34;&#34;
-        super().__init__(default, **kwargs)
+        super().__init__(default=default, **kwargs)
         self.regex = r&#34;^(https?|ftp)://[^\s/$.?#].[^\s]*$&#34;
 
     def validate(self, value):
@@ -609,25 +680,26 @@ class URL(Field):
             ValidationError: in case the value is not a telephone
         &#34;&#34;&#34;
         super().validate(value)
-        url = urlparse(value)
-        if not url.scheme or not url.netloc:
-            raise ValidationError(f&#34;{value} is not a valid URL address&#34;)
+        if value:
+            url = urlparse(value)
+            if not url.scheme or not url.netloc:
+                raise ValidationError(f&#34;&#39;{value}&#39; is not a valid URL address&#34;)
 
 
-class Tel(Field):
+class Tel(String):
     def __init__(self, default=&#34;&#34;, **kwargs):
         &#34;&#34;&#34;
-        email field, will validate the value of telephone numbers
+        Telephone field, will validate the value of telephone numbers
 
-        will be stored as a string at the end.
+        Will hold telephone values as strings.
 
         It will strip any additional characters that are not numbers.
 
         Args:
             default (str, optional): default value. Defaults to &#34;&#34;
-            kwargs: any keyword arguments supported by `Field`
+            kwargs: other keyword arguments supported by `String`
         &#34;&#34;&#34;
-        super().__init__(default, **kwargs)
+        super().__init__(default=default, **kwargs)
         self.regex = r&#34;^\+?[0-9]{6,15}(?:x[0-9]+)?$&#34;
 
     def validate(self, value):
@@ -641,11 +713,11 @@ class Tel(Field):
             ValidationError: in case the value is not a telephone
         &#34;&#34;&#34;
         super().validate(value)
-        if not re.search(self.regex, value):
-            raise ValidationError(f&#34;{value} is not a valid Telephone&#34;)
+        if value and not re.search(self.regex, value):
+            raise ValidationError(f&#34;&#39;{value}&#39; is not a valid Telephone&#34;)
 
     def from_raw(self, value):
-        &#34;&#34;&#34;clean the telephone function from unwanted signs like , - ( )&#34;&#34;&#34;
+        &#34;&#34;&#34;clean the telephone value from unwanted signs like , - ( )&#34;&#34;&#34;
         if value is not None:
             value = value.replace(&#34;,&#34;, &#34;&#34;)
             value = value.replace(&#34;-&#34;, &#34;&#34;)
@@ -656,18 +728,89 @@ class Tel(Field):
         return value
 
 
-class IPAddress(Field):
-    def __init__(self, default=&#34;&#34;, **kwargs):
+class IPMixin:
+    def is_a(self, value, *types):
         &#34;&#34;&#34;
-        ip address field, will validate the value of ip address (v4 and v6)
+        try creating any type of `types` from the given value
 
-        will be stored as a string.
+        Args:
+            value (str)
+
+        Returns:
+            bool: `True` if any matched, `False` otherwise
+        &#34;&#34;&#34;
+        matched = False
+
+        for type_ in types:
+            try:
+                type_(value)
+                matched |= True
+            except ValueError:
+                continue
+
+        return matched
+
+    def is_ipv4(self, value):
+        &#34;&#34;&#34;
+        check if a given value is a v4 IP address
+
+        Args:
+            value (str): ip address
+
+        Returns:
+            bool: `True` if it&#39;s a valid v4 IP address
+        &#34;&#34;&#34;
+        return self.is_a(value, ipaddress.IPv4Address)
+
+    def is_ipv6(self, value):
+        &#34;&#34;&#34;
+        check if a given value is a v6 IP address
+
+        Args:
+            value (str): IP address
+
+        Returns:
+            bool: `True` if it&#39;s a valid v6 IP address
+        &#34;&#34;&#34;
+        return self.is_a(value, ipaddress.IPv6Address)
+
+    def is_ip(self, value):
+        &#34;&#34;&#34;
+        check if a given value is a v4/v6 IP address
+
+        Args:
+            value (str): IP address
+
+        Returns:
+            bool: `True` if it&#39;s a valid  v4/v6 IP address
+        &#34;&#34;&#34;
+        return self.is_ipv4(value) or self.is_ipv6(value)
+
+    def is_iface(self, value):
+        &#34;&#34;&#34;
+        check if a given value is an IP interface
+
+        Args:
+            value (str): IP interface
+
+        Returns:
+            bool: `True` if it&#39;s a valid v4/v6 IP interface
+        &#34;&#34;&#34;
+        return self.is_a(value, ipaddress.IPv4Interface, ipaddress.IPv6Interface)
+
+
+class IPAddress(IPMixin, String):
+    def __init__(self, default=&#34;0.0.0.0&#34;, **kwargs):
+        &#34;&#34;&#34;
+        IP address field, will validate the value of ip address (v4 and v6)
+
+        Will hold string ip addresses.
 
         Args:
             default (str, optional): default value. Defaults to &#34;&#34;
             kwargs: any keyword arguments supported by `Field`
         &#34;&#34;&#34;
-        super().__init__(default, **kwargs)
+        super().__init__(default=default, **kwargs)
 
     def validate(self, value):
         &#34;&#34;&#34;
@@ -678,14 +821,133 @@ class IPAddress(Field):
             value (str)
 
         Raises:
-            ValidationError: in case the value is not a telephone
+            ValidationError: in case the value is not an IPAddress
+        &#34;&#34;&#34;
+        super().validate(value)
+        if value and not self.is_ip(value):
+            raise ValidationError(f&#34;&#39;{value}&#39; is not a valid IP address&#34;)
+
+    def from_raw(self, value):
+        if isinstance(value, str):
+            if value.strip().lower() == &#34;localhost&#34;:
+                value = &#34;127.0.0.1&#34;
+        return value
+
+
+class IPRange(IPMixin, String):
+    def __init__(self, default=&#34;::/128&#34;, **kwargs):
+        &#34;&#34;&#34;
+        ip range field, will validate the value of ip ranges (v4 and v6)
+
+        will be stored as a string.
+
+        Args:
+            default (str, optional): default value. Defaults to &#34;&#34;
+            kwargs: any keyword arguments supported by `Field`
+        &#34;&#34;&#34;
+        super().__init__(default=default, **kwargs)
+
+    def validate(self, value):
+        &#34;&#34;&#34;
+        check whether provided value is a valid IPaddress representation
+        including IPv4,IPv6 and network
+
+        Args:
+            value (str)
+
+        Raises:
+            ValidationError: in case the value is not an IPAddress
         &#34;&#34;&#34;
 
         super().validate(value)
+        if value and not self.is_iface(value):
+            raise ValidationError(f&#34;&#39;{value}&#39; is not a valid IP range/interface&#34;)
+
+
+class Port(Integer):
+    def __init__(self, **kwargs):
+        &#34;&#34;&#34;
+        Port field, will check if the given port is within the range of 0-65535.
+
+        Will hold integers, but also accepts string values like `&#34;8080&#34;`.
+
+        Args:
+            kwargs: any keyword arguments supported by `Field`
+        &#34;&#34;&#34;
+        super().__init__(min=0, max=65535, **kwargs)
+
+    def validate(self, value):
         try:
-            ipaddress.ip_interface(value)
-        except Exception:
-            raise ValidationError(f&#34;{value} is not a valid IP address&#34;)
+            super().validate(value)
+        except ValidationError:
+            raise ValidationError(&#34;value is not in range of 0-65535&#34;)
+
+
+class GUID(String):
+    def __init__(self, default=None, **kwargs):
+        &#34;&#34;&#34;
+        UUID v4 field, will be auto-generated by default.
+
+        Will hold the UUID as a string.
+
+        It accepts setting UUID value by many ways and converts them to strings:
+
+        - Strings like: `&#34;12345678-1234-4678-9234-567812345678&#34;`
+        - Bytes like: `b&#34;\x12\x34\x56\x78&#34; * 4`
+        - Integer like: `0x12345678123456781234567812345678`
+        - UUID objects of type uuid.UUID
+
+        Args:
+            default (str, optional): default value, will be auto-generated if None. Defaults to None
+            kwargs: other keyword arguments supported by `String`
+        &#34;&#34;&#34;
+        if not default:
+            default = lambda: str(uuid.uuid4())
+        super().__init__(default=default, **kwargs)
+
+    def validate(self, value):
+        super().validate(value)
+
+        if not value:
+            return
+
+        try:
+            uuid.UUID(value, version=4)
+        except ValueError as valexc:
+            raise ValidationError(f&#34;&#39;&#39;{value}&#39;&#39; is invalid, {valexc}&#34;) from valexc
+
+    def from_raw(self, value):
+        &#34;&#34;&#34;
+        convert string, bytes, int to UUID object, then to a string
+
+        Args:
+            value (int or str or bytes or uuid.UUID): [description]
+
+        Returns:
+            str: UUID string
+        &#34;&#34;&#34;
+
+        if isinstance(value, uuid.UUID):
+            return str(value)
+
+        try:
+            uuid_obj = None
+            if isinstance(value, int):
+                uuid_obj = uuid.UUID(int=value, version=4)
+            elif isinstance(value, str):
+                uuid_obj = uuid.UUID(value, version=4)
+            elif isinstance(value, bytes):
+                uuid_obj = uuid.UUID(bytes=value, version=4)
+
+            if uuid_obj:
+                return str(uuid_obj)
+
+            # return as is to be validated later
+            return value
+        except ValueError:
+            # failed to get uuid from raw value
+            # return as is to be validated later
+            return value
 
 
 class DateTimeMixin:
@@ -757,12 +1019,13 @@ class DateTimeMixin:
         Returns:
             int or float: utc timestamp
         &#34;&#34;&#34;
-        return self.get_arrow_obj(dt_obj).to(&#34;utc&#34;).timestamp
+        if dt_obj:
+            return self.get_arrow_obj(dt_obj).to(&#34;utc&#34;).timestamp
 
     def validate(self, value):
         if isinstance(self.from_raw(value), str):
             # cannot convert from string, still an invalid format
-            raise ValidationError(f&#34;{value} is not in the format of &#39;{self.format}&#39;&#34;)
+            raise ValidationError(f&#34;&#39;{value}&#39; is not in the format of &#39;{self.format}&#39;&#34;)
 
         super().validate(value)
 
@@ -771,7 +1034,7 @@ class DateTime(DateTimeMixin, Typed):
     # maybe add something like auto_now and auto_today for date/time fields
     def __init__(self, default=None, format_=None, **kwargs):
         &#34;&#34;&#34;
-        datetime field, stores datetime.datetime objects
+        datetime field, will hold datetime.datetime objects.
 
         values can be set using strings in the given `format_` too like &#34;12/1/2020&#34; or a utc timestamp,
         they will converted to objects.
@@ -790,7 +1053,7 @@ class DateTime(DateTimeMixin, Typed):
 class Date(DateTimeMixin, Typed):
     def __init__(self, default=None, format_=None, **kwargs):
         &#34;&#34;&#34;
-        date field, stores datetime.date objectsself.
+        date field, will hold datetime.date objects.
 
         values can be set using strings in the given `format_` too like &#34;12/1/2020&#34; or a utc timestamp,
         they will converted to objects.
@@ -809,7 +1072,7 @@ class Date(DateTimeMixin, Typed):
 class Time(DateTimeMixin, Typed):
     def __init__(self, default=None, format_=None, **kwargs):
         &#34;&#34;&#34;
-        time field, stores utc datetime.time objects
+        time field, will hold utc datetime.time objects
 
         values can be set using strings in the given `format_` too like &#34;12:13&#34; or a utc timestamp,
         they will converted to objects.
@@ -825,8 +1088,85 @@ class Time(DateTimeMixin, Typed):
         self.format = format_
 
 
+class Bytes(Typed):
+    def __init__(self, default=b&#34;&#34;, encoding=&#34;utf-8&#34;, **kwargs):
+        &#34;&#34;&#34;
+        same as string field, but will hold `bytes`.
+
+        Args:
+            default (b&#34;&#34;, optional): default value. Defaults to b&#34;&#34;
+            encoding: encoding to be used when serializing the value. Defaults to &#34;utf-8&#34;
+            kwargs: any keyword arguments supported by `Field`
+        &#34;&#34;&#34;
+        self.encoding = encoding
+        super().__init__(default=default, type_=bytes, **kwargs)
+
+    def from_raw(self, value):
+        if isinstance(value, str):
+            return value.encode(self.encoding)
+        return value
+
+    def to_raw(self, value):
+        if value:
+            return value.decode(self.encoding)
+
+
+class Json(String):
+    def __init__(self, default=&#34;{}&#34;, encoding=&#34;utf-8&#34;, **kwargs):
+        &#34;&#34;&#34;
+        Json field, will check if the value is a valid json string.
+
+        It will hold json strings, if the value is not string, it will be converted.
+
+        Args:
+            default (str, optional): default value. Defaults to &#34;{}&#34;
+            encoding: encoding to be used when serializing the value. Defaults to &#34;utf-8&#34;
+            kwargs: other keyword arguments supported by `String`
+        &#34;&#34;&#34;
+        self.encoding = encoding
+        super().__init__(default=default, **kwargs)
+
+    def validate(self, value):
+        &#34;&#34;&#34;
+        check whether provided value is a valid json
+
+        Args:
+            value (str)
+
+        Raises:
+            ValidationError: in case the value isn&#39;t a valid json
+        &#34;&#34;&#34;
+        super().validate(value)
+
+        if not value:
+            return
+
+        # if it&#39;s a string, try to load it
+        try:
+            json.loads(value, encoding=self.encoding)
+        except Exception as e:
+            raise ValidationError(f&#34;&#39;{value}&#39; isn&#39;t a valid json, {e}&#34;) from e
+
+    def from_raw(self, value):
+        &#34;&#34;&#34;
+        convert non-string values to json string
+
+        Args:
+            value (any): non-string value
+
+        Returns:
+            str: a json string
+        &#34;&#34;&#34;
+        if not isinstance(value, (str, bytes, bytearray)):
+            try:
+                value = json.dumps(value)
+            except:
+                pass
+        return value
+
+
 class Factory(Field):
-    def __init__(self, type_, factory_type=None, stored=True, **kwargs):
+    def __init__(self, type_, factory_type=None, **kwargs):
         &#34;&#34;&#34;
         A factory field for any `Base` type, also, you can specify your factory type/class
 
@@ -859,18 +1199,18 @@ class Factory(Field):
         Args:
             type_ (Base): any base type to be used by the factory
             factory_type (`BaseFactory`, optional): factory class/type. Defaults to None.
-            stored (bool, optional): if it&#39;s stored or not, will be used if `factory_type` is not set. Defaults to True.
         &#34;&#34;&#34;
         # value type will be factory
+        # make sure stored default value is True
+        kwargs[&#34;stored&#34;] = kwargs.get(&#34;stored&#34;, True)
         super().__init__(readonly=True, **kwargs)
         # but we keep the type of any Base class
         # so, we can init a Factory with it
         self.type = type_
-        self.stored = stored
         if factory_type:
             self.factory_type = factory_type
         else:
-            if stored:
+            if self.stored:
                 self.factory_type = StoredFactory
             else:
                 self.factory_type = BaseFactory
@@ -901,8 +1241,8 @@ class Factory(Field):
 <span>(</span><span>default=False, **kwargs)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Boolean fields to hold a bool value.</p>
-<p>values can be set using strings or numbers like:</p>
+<section class="desc"><p>Boolean fields to hold a <code>bool</code> value.</p>
+<p>values can be set using strings or numbers and will be converted to <code>bool</code> like:</p>
 <ul>
 <li>"on", "off"</li>
 <li>"yes", "no"</li>
@@ -922,9 +1262,9 @@ class Factory(Field):
 <pre><code class="python">class Boolean(Typed):
     def __init__(self, default=False, **kwargs):
         &#34;&#34;&#34;
-        Boolean fields to hold a bool value.
+        Boolean fields to hold a `bool` value.
 
-        values can be set using strings or numbers like:
+        values can be set using strings or numbers and will be converted to `bool` like:
 
         - &#34;on&#34;, &#34;off&#34;
         - &#34;yes&#34;, &#34;no&#34;
@@ -943,7 +1283,7 @@ class Factory(Field):
         get bool value from strings and numbers
 
         Args:
-            value (str or int or float or complex): valie
+            value (str or int or float or complex)
 
         Returns:
             bool: boolean value
@@ -973,10 +1313,7 @@ class Factory(Field):
 <dd>
 <section class="desc"><p>get bool value from strings and numbers</p>
 <h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>value</code></strong> :&ensp;<code>str</code> or <code>int</code> or <code>float</code> or <code>complex</code></dt>
-<dd>valie</dd>
-</dl>
+<p>value (str or int or float or complex)</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>bool</code></strong></dt>
@@ -989,7 +1326,7 @@ class Factory(Field):
     get bool value from strings and numbers
 
     Args:
-        value (str or int or float or complex): valie
+        value (str or int or float or complex)
 
     Returns:
         bool: boolean value
@@ -1014,6 +1351,62 @@ class Factory(Field):
 <ul class="hlist">
 <li><code><a title="jumpscale.core.base.fields.Typed.to_raw" href="#jumpscale.core.base.fields.Field.to_raw">to_raw</a></code></li>
 <li><code><a title="jumpscale.core.base.fields.Typed.validate" href="#jumpscale.core.base.fields.Field.validate">validate</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.Typed.validate_with_name" href="#jumpscale.core.base.fields.Field.validate_with_name">validate_with_name</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="jumpscale.core.base.fields.Bytes"><code class="flex name class">
+<span>class <span class="ident">Bytes</span></span>
+<span>(</span><span>default=b'', encoding='utf-8', **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>same as string field, but will hold <code>bytes</code>.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt>default (b"", optional): default value. Defaults to b""</dt>
+<dt><strong><code>encoding</code></strong></dt>
+<dd>encoding to be used when serializing the value. Defaults to "utf-8"</dd>
+<dt><strong><code>kwargs</code></strong></dt>
+<dd>any keyword arguments supported by <a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field"><code>Field</code></a></dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class Bytes(Typed):
+    def __init__(self, default=b&#34;&#34;, encoding=&#34;utf-8&#34;, **kwargs):
+        &#34;&#34;&#34;
+        same as string field, but will hold `bytes`.
+
+        Args:
+            default (b&#34;&#34;, optional): default value. Defaults to b&#34;&#34;
+            encoding: encoding to be used when serializing the value. Defaults to &#34;utf-8&#34;
+            kwargs: any keyword arguments supported by `Field`
+        &#34;&#34;&#34;
+        self.encoding = encoding
+        super().__init__(default=default, type_=bytes, **kwargs)
+
+    def from_raw(self, value):
+        if isinstance(value, str):
+            return value.encode(self.encoding)
+        return value
+
+    def to_raw(self, value):
+        if value:
+            return value.decode(self.encoding)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></li>
+<li><a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field">Field</a></li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></b></code>:
+<ul class="hlist">
+<li><code><a title="jumpscale.core.base.fields.Typed.from_raw" href="#jumpscale.core.base.fields.Field.from_raw">from_raw</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.Typed.to_raw" href="#jumpscale.core.base.fields.Field.to_raw">to_raw</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.Typed.validate" href="#jumpscale.core.base.fields.Field.validate">validate</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.Typed.validate_with_name" href="#jumpscale.core.base.fields.Field.validate_with_name">validate_with_name</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1023,7 +1416,7 @@ class Factory(Field):
 <span>(</span><span>default=None, format_=None, **kwargs)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>date field, stores datetime.date objectsself.</p>
+<section class="desc"><p>date field, will hold datetime.date objects.</p>
 <p>values can be set using strings in the given <code>format_</code> too like "12/1/2020" or a utc timestamp,
 they will converted to objects.</p>
 <h2 id="args">Args</h2>
@@ -1040,7 +1433,7 @@ they will converted to objects.</p>
 <pre><code class="python">class Date(DateTimeMixin, Typed):
     def __init__(self, default=None, format_=None, **kwargs):
         &#34;&#34;&#34;
-        date field, stores datetime.date objectsself.
+        date field, will hold datetime.date objects.
 
         values can be set using strings in the given `format_` too like &#34;12/1/2020&#34; or a utc timestamp,
         they will converted to objects.
@@ -1074,6 +1467,7 @@ they will converted to objects.</p>
 <li><code><b><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></b></code>:
 <ul class="hlist">
 <li><code><a title="jumpscale.core.base.fields.Typed.validate" href="#jumpscale.core.base.fields.Field.validate">validate</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.Typed.validate_with_name" href="#jumpscale.core.base.fields.Field.validate_with_name">validate_with_name</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1083,7 +1477,7 @@ they will converted to objects.</p>
 <span>(</span><span>default=None, format_=None, **kwargs)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>datetime field, stores datetime.datetime objects</p>
+<section class="desc"><p>datetime field, will hold datetime.datetime objects.</p>
 <p>values can be set using strings in the given <code>format_</code> too like "12/1/2020" or a utc timestamp,
 they will converted to objects.</p>
 <h2 id="args">Args</h2>
@@ -1101,7 +1495,7 @@ they will converted to objects.</p>
     # maybe add something like auto_now and auto_today for date/time fields
     def __init__(self, default=None, format_=None, **kwargs):
         &#34;&#34;&#34;
-        datetime field, stores datetime.datetime objects
+        datetime field, will hold datetime.datetime objects.
 
         values can be set using strings in the given `format_` too like &#34;12/1/2020&#34; or a utc timestamp,
         they will converted to objects.
@@ -1135,6 +1529,7 @@ they will converted to objects.</p>
 <li><code><b><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></b></code>:
 <ul class="hlist">
 <li><code><a title="jumpscale.core.base.fields.Typed.validate" href="#jumpscale.core.base.fields.Field.validate">validate</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.Typed.validate_with_name" href="#jumpscale.core.base.fields.Field.validate_with_name">validate_with_name</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1216,12 +1611,13 @@ they will converted to objects.</p>
         Returns:
             int or float: utc timestamp
         &#34;&#34;&#34;
-        return self.get_arrow_obj(dt_obj).to(&#34;utc&#34;).timestamp
+        if dt_obj:
+            return self.get_arrow_obj(dt_obj).to(&#34;utc&#34;).timestamp
 
     def validate(self, value):
         if isinstance(self.from_raw(value), str):
             # cannot convert from string, still an invalid format
-            raise ValidationError(f&#34;{value} is not in the format of &#39;{self.format}&#39;&#34;)
+            raise ValidationError(f&#34;&#39;{value}&#39; is not in the format of &#39;{self.format}&#39;&#34;)
 
         super().validate(value)</code></pre>
 </details>
@@ -1372,7 +1768,8 @@ they will converted to objects.</p>
     Returns:
         int or float: utc timestamp
     &#34;&#34;&#34;
-    return self.get_arrow_obj(dt_obj).to(&#34;utc&#34;).timestamp</code></pre>
+    if dt_obj:
+        return self.get_arrow_obj(dt_obj).to(&#34;utc&#34;).timestamp</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.core.base.fields.DateTimeMixin.validate"><code class="name flex">
@@ -1385,7 +1782,7 @@ they will converted to objects.</p>
 <pre><code class="python">def validate(self, value):
     if isinstance(self.from_raw(value), str):
         # cannot convert from string, still an invalid format
-        raise ValidationError(f&#34;{value} is not in the format of &#39;{self.format}&#39;&#34;)
+        raise ValidationError(f&#34;&#39;{value}&#39; is not in the format of &#39;{self.format}&#39;&#34;)
 
     super().validate(value)</code></pre>
 </details>
@@ -1397,26 +1794,29 @@ they will converted to objects.</p>
 <span>(</span><span>default='', **kwargs)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>email field, will validate the value of emails</p>
+<section class="desc"><p>Email field, will validate the value of emails</p>
+<p>will hold string email values.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>default</code></strong> :&ensp;<code>str</code>, optional</dt>
 <dd>default value. Defaults to ""</dd>
 <dt><strong><code>kwargs</code></strong></dt>
-<dd>any keyword arguments supported by <a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field"><code>Field</code></a></dd>
+<dd>other keyword arguments supported by <code>string</code></dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class Email(Field):
+<pre><code class="python">class Email(String):
     def __init__(self, default=&#34;&#34;, **kwargs):
         &#34;&#34;&#34;
-        email field, will validate the value of emails
+        Email field, will validate the value of emails
+
+        will hold string email values.
 
         Args:
             default (str, optional): default value. Defaults to &#34;&#34;
-            kwargs: any keyword arguments supported by `Field`
+            kwargs: other keyword arguments supported by `string`
         &#34;&#34;&#34;
-        super().__init__(default, **kwargs)
+        super().__init__(default=default, **kwargs)
         self.regex = r&#34;^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$&#34;
 
     def validate(self, value):
@@ -1430,11 +1830,13 @@ they will converted to objects.</p>
             ValidationError: in case the value is not a telephone
         &#34;&#34;&#34;
         super().validate(value)
-        if not re.match(self.regex, value):
-            raise ValidationError(f&#34;{value} is not a valid Email address&#34;)</code></pre>
+        if value and not re.match(self.regex, value):
+            raise ValidationError(f&#34;&#39;{value}&#39; is not a valid Email address&#34;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="jumpscale.core.base.fields.String" href="#jumpscale.core.base.fields.String">String</a></li>
+<li><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></li>
 <li><a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field">Field</a></li>
 </ul>
 <h3>Methods</h3>
@@ -1464,17 +1866,18 @@ they will converted to objects.</p>
         ValidationError: in case the value is not a telephone
     &#34;&#34;&#34;
     super().validate(value)
-    if not re.match(self.regex, value):
-        raise ValidationError(f&#34;{value} is not a valid Email address&#34;)</code></pre>
+    if value and not re.match(self.regex, value):
+        raise ValidationError(f&#34;&#39;{value}&#39; is not a valid Email address&#34;)</code></pre>
 </details>
 </dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field">Field</a></b></code>:
+<li><code><b><a title="jumpscale.core.base.fields.String" href="#jumpscale.core.base.fields.String">String</a></b></code>:
 <ul class="hlist">
-<li><code><a title="jumpscale.core.base.fields.Field.from_raw" href="#jumpscale.core.base.fields.Field.from_raw">from_raw</a></code></li>
-<li><code><a title="jumpscale.core.base.fields.Field.to_raw" href="#jumpscale.core.base.fields.Field.to_raw">to_raw</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.String.from_raw" href="#jumpscale.core.base.fields.Field.from_raw">from_raw</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.String.to_raw" href="#jumpscale.core.base.fields.Field.to_raw">to_raw</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.String.validate_with_name" href="#jumpscale.core.base.fields.Field.validate_with_name">validate_with_name</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1484,13 +1887,16 @@ they will converted to objects.</p>
 <span>(</span><span>enum_type, **kwargs)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>enum field, to be used with <code>enum.Enum</code>.
-Example:</p>
+<section class="desc"><p>Enum field, to be used with <code>enum.Enum</code>.</p>
+<p>Example:</p>
 <pre><code class="python">class UserType(Enum):
     USER = &quot;user&quot;
     ADMIN = &quot;admin&quot;
+
+class User(Base):
+    field = fields.Enum(UserType)
 </code></pre>
-<p>field = fields.Enum(UserType)</p>
+<p>Will hold values of type <code>enum.Enum</code>.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>enum_type</code></strong> :&ensp;<code>type</code></dt>
@@ -1503,16 +1909,20 @@ Example:</p>
 <pre><code class="python">class Enum(Typed):
     def __init__(self, enum_type, **kwargs):
         &#34;&#34;&#34;
-        enum field, to be used with `enum.Enum`.
+        Enum field, to be used with `enum.Enum`.
+
         Example:
 
         ```python
         class UserType(Enum):
             USER = &#34;user&#34;
             ADMIN = &#34;admin&#34;
+
+        class User(Base):
+            field = fields.Enum(UserType)
         ```
 
-        field = fields.Enum(UserType)
+        Will hold values of type `enum.Enum`.
 
         Args:
             enum_type (type): enum type (class)
@@ -1533,7 +1943,8 @@ Example:</p>
         Returns:
             any: enum value
         &#34;&#34;&#34;
-        return enum_obj.value
+        if enum_obj:
+            return enum_obj.value
 
     def from_raw(self, value):
         &#34;&#34;&#34;
@@ -1619,7 +2030,8 @@ Example:</p>
     Returns:
         any: enum value
     &#34;&#34;&#34;
-    return enum_obj.value</code></pre>
+    if enum_obj:
+        return enum_obj.value</code></pre>
 </details>
 </dd>
 </dl>
@@ -1628,13 +2040,14 @@ Example:</p>
 <li><code><b><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></b></code>:
 <ul class="hlist">
 <li><code><a title="jumpscale.core.base.fields.Typed.validate" href="#jumpscale.core.base.fields.Field.validate">validate</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.Typed.validate_with_name" href="#jumpscale.core.base.fields.Field.validate_with_name">validate_with_name</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
 <dt id="jumpscale.core.base.fields.Factory"><code class="flex name class">
 <span>class <span class="ident">Factory</span></span>
-<span>(</span><span>type_, factory_type=None, stored=True, **kwargs)</span>
+<span>(</span><span>type_, factory_type=None, **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>A factory field for any <code>Base</code> type, also, you can specify your factory type/class</p>
@@ -1662,14 +2075,12 @@ class Server(Base):
 <dl>
 <dt><strong><code>type_</code></strong> :&ensp;<code>Base</code></dt>
 <dd>any base type to be used by the factory</dd>
-<dt>factory_type (<code>BaseFactory</code>, optional): factory class/type. Defaults to None.</dt>
-<dt><strong><code>stored</code></strong> :&ensp;<code>bool</code>, optional</dt>
-<dd>if it's stored or not, will be used if <code>factory_type</code> is not set. Defaults to True.</dd>
-</dl></section>
+</dl>
+<p>factory_type (<code>BaseFactory</code>, optional): factory class/type. Defaults to None.</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class Factory(Field):
-    def __init__(self, type_, factory_type=None, stored=True, **kwargs):
+    def __init__(self, type_, factory_type=None, **kwargs):
         &#34;&#34;&#34;
         A factory field for any `Base` type, also, you can specify your factory type/class
 
@@ -1702,18 +2113,18 @@ class Server(Base):
         Args:
             type_ (Base): any base type to be used by the factory
             factory_type (`BaseFactory`, optional): factory class/type. Defaults to None.
-            stored (bool, optional): if it&#39;s stored or not, will be used if `factory_type` is not set. Defaults to True.
         &#34;&#34;&#34;
         # value type will be factory
+        # make sure stored default value is True
+        kwargs[&#34;stored&#34;] = kwargs.get(&#34;stored&#34;, True)
         super().__init__(readonly=True, **kwargs)
         # but we keep the type of any Base class
         # so, we can init a Factory with it
         self.type = type_
-        self.stored = stored
         if factory_type:
             self.factory_type = factory_type
         else:
-            if stored:
+            if self.stored:
                 self.factory_type = StoredFactory
             else:
                 self.factory_type = BaseFactory
@@ -1740,13 +2151,14 @@ class Server(Base):
 <li><code><a title="jumpscale.core.base.fields.Field.from_raw" href="#jumpscale.core.base.fields.Field.from_raw">from_raw</a></code></li>
 <li><code><a title="jumpscale.core.base.fields.Field.to_raw" href="#jumpscale.core.base.fields.Field.to_raw">to_raw</a></code></li>
 <li><code><a title="jumpscale.core.base.fields.Field.validate" href="#jumpscale.core.base.fields.Field.validate">validate</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.Field.validate_with_name" href="#jumpscale.core.base.fields.Field.validate_with_name">validate_with_name</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
 <dt id="jumpscale.core.base.fields.Field"><code class="flex name class">
 <span>class <span class="ident">Field</span></span>
-<span>(</span><span>default=None, required=False, indexed=False, readonly=False, validators=None, **kwargs)</span>
+<span>(</span><span>default=None, required=False, indexed=False, readonly=False, validators=None, stored=True, on_update=None, compute=None, **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Base field for all field types, have some common options that can be used any other field type too.</p>
@@ -1762,14 +2174,30 @@ class Server(Base):
 <dd>can only get the value. Defaults to False.</dd>
 <dt><strong><code>validators</code></strong> :&ensp;<code>list</code> of <code>function</code>, optional</dt>
 <dd>a list of functions that takes a value and raises ValidationError if not valid. Defaults to None.</dd>
+<dt><strong><code>stored</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>if the fields should be stored or not, useful for computed fields. Defaults to True.</dd>
+<dt><strong><code>on_update</code></strong> :&ensp;<code>callable</code>, optional</dt>
+<dd>a callable that takes the instance and new value on field updates. Defaults to None.</dd>
+<dt><strong><code>compute</code></strong> :&ensp;<code>callable</code>, optional</dt>
+<dd>a callable that takes the instance and returns a computed value for this field. <code>on_update</code> won't be called in this case. Defaults to None.</dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class Field:
-    def __init__(self, default=None, required=False, indexed=False, readonly=False, validators=None, **kwargs):
+    def __init__(
+        self,
+        default=None,
+        required=False,
+        indexed=False,
+        readonly=False,
+        validators=None,
+        stored=True,
+        on_update=None,
+        compute=None,
+        **kwargs,
+    ):
         &#34;&#34;&#34;
         Base field for all field types, have some common options that can be used any other field type too.
-
 
         Args:
             default (any, optional): default value. Defaults to None.
@@ -1777,6 +2205,9 @@ class Server(Base):
             indexed (bool, optional): indexed or not. Defaults to False.
             readonly (bool, optional): can only get the value. Defaults to False.
             validators (list of function, optional): a list of functions that takes a value and raises ValidationError if not valid. Defaults to None.
+            stored (bool, optional): if the fields should be stored or not, useful for computed fields. Defaults to True.
+            on_update (callable, optional): a callable that takes the instance and new value on field updates. Defaults to None.
+            compute (callable, optional): a callable that takes the instance and returns a computed value for this field. `on_update` won&#39;t be called in this case. Defaults to None.
         &#34;&#34;&#34;
         self.default = default
         self.required = required
@@ -1788,9 +2219,34 @@ class Server(Base):
         if self.validators is None:
             self.validators = []
 
-        # self.validate = Schema({
+        self.stored = stored
+        self.on_update = on_update
+        self.compute = compute
 
-        # })
+    def preprocess(self, value):
+        # TODO: make from/to raw methods only for serialization
+        # and let preprocess/validate do the cleanup/checking step
+        # and return the correct value that current field should hold
+        # so, from_raw and to_raw are used only for serialization
+        return value
+
+    def validate_with_name(self, value, name):
+        &#34;&#34;&#34;
+        validates the value using validate method and prepends the field name
+        in case an exception was thrown
+
+        Args:
+            value (any): in case value is not valid
+            name  (str): the field name
+
+        Raises:
+            ValidationError: The original validation error with the field name prepended to the message
+
+        &#34;&#34;&#34;
+        try:
+            self.validate(value)
+        except ValidationError as e:
+            raise ValidationError(f&#34;{name}: &#34; + str(e))
 
     def validate(self, value):
         &#34;&#34;&#34;
@@ -1805,6 +2261,7 @@ class Server(Base):
         if value is None:
             if self.required:
                 raise ValidationError(&#34;field is required&#34;)
+
         for validator in self.validators:
             validator(value)
 
@@ -1830,19 +2287,45 @@ class Server(Base):
         Returns:
             any: a primitive raw value
         &#34;&#34;&#34;
-        return value</code></pre>
+        return value
+
+    @property
+    def trigger_updates(self):
+        return callable(self.on_update)
+
+    @property
+    def computed(self):
+        return callable(self.compute)</code></pre>
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></li>
 <li><a title="jumpscale.core.base.fields.List" href="#jumpscale.core.base.fields.List">List</a></li>
-<li><a title="jumpscale.core.base.fields.Email" href="#jumpscale.core.base.fields.Email">Email</a></li>
-<li><a title="jumpscale.core.base.fields.Path" href="#jumpscale.core.base.fields.Path">Path</a></li>
-<li><a title="jumpscale.core.base.fields.URL" href="#jumpscale.core.base.fields.URL">URL</a></li>
-<li><a title="jumpscale.core.base.fields.Tel" href="#jumpscale.core.base.fields.Tel">Tel</a></li>
-<li><a title="jumpscale.core.base.fields.IPAddress" href="#jumpscale.core.base.fields.IPAddress">IPAddress</a></li>
 <li><a title="jumpscale.core.base.fields.Factory" href="#jumpscale.core.base.fields.Factory">Factory</a></li>
 </ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="jumpscale.core.base.fields.Field.computed"><code class="name">var <span class="ident">computed</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def computed(self):
+    return callable(self.compute)</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.core.base.fields.Field.trigger_updates"><code class="name">var <span class="ident">trigger_updates</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def trigger_updates(self):
+    return callable(self.on_update)</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="jumpscale.core.base.fields.Field.from_raw"><code class="name flex">
@@ -1872,6 +2355,21 @@ class Server(Base):
     Returns:
         any: raw value
     &#34;&#34;&#34;
+    return value</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.core.base.fields.Field.preprocess"><code class="name flex">
+<span>def <span class="ident">preprocess</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def preprocess(self, value):
+    # TODO: make from/to raw methods only for serialization
+    # and let preprocess/validate do the cleanup/checking step
+    # and return the correct value that current field should hold
+    # so, from_raw and to_raw are used only for serialization
     return value</code></pre>
 </details>
 </dd>
@@ -1935,8 +2433,48 @@ class Server(Base):
     if value is None:
         if self.required:
             raise ValidationError(&#34;field is required&#34;)
+
     for validator in self.validators:
         validator(value)</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.core.base.fields.Field.validate_with_name"><code class="name flex">
+<span>def <span class="ident">validate_with_name</span></span>(<span>self, value, name)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>validates the value using validate method and prepends the field name
+in case an exception was thrown</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>value</code></strong> :&ensp;<code>any</code></dt>
+<dd>in case value is not valid</dd>
+</dl>
+<p>name
+(str): the field name</p>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><strong><a title="jumpscale.core.base.fields.ValidationError" href="#jumpscale.core.base.fields.ValidationError"><code>ValidationError</code></a></strong></dt>
+<dd>The original validation error with the field name prepended to the message</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def validate_with_name(self, value, name):
+    &#34;&#34;&#34;
+    validates the value using validate method and prepends the field name
+    in case an exception was thrown
+
+    Args:
+        value (any): in case value is not valid
+        name  (str): the field name
+
+    Raises:
+        ValidationError: The original validation error with the field name prepended to the message
+
+    &#34;&#34;&#34;
+    try:
+        self.validate(value)
+    except ValidationError as e:
+        raise ValidationError(f&#34;{name}: &#34; + str(e))</code></pre>
 </details>
 </dd>
 </dl>
@@ -1947,7 +2485,7 @@ class Server(Base):
 </code></dt>
 <dd>
 <section class="desc"><p>Same as <a title="jumpscale.core.base.fields.Integer" href="#jumpscale.core.base.fields.Integer"><code>Integer</code></a> field, but with a type of <code>float</code>.</p>
-<p>values can be set using strings like:</p>
+<p>values can be set using strings like (will be converted to <code>float</code>):</p>
 <ul>
 <li>"12.3", " 1212.23
 "</li>
@@ -1966,7 +2504,7 @@ class Server(Base):
         &#34;&#34;&#34;
         Same as `Integer` field, but with a type of `float`.
 
-        values can be set using strings like:
+        values can be set using strings like (will be converted to `float`):
 
         - &#34;12.3&#34;, &#34; 1212.23  &#34;
 
@@ -1977,11 +2515,14 @@ class Server(Base):
         super().__init__(type_=float, default=default, min=min, **kwargs)
 
     def from_raw(self, value):
+
         if isinstance(value, str):
-            try:
-                value = float(value.strip())
-            except ValueError:
-                pass
+            value = value.strip()
+        try:
+            value = float(value)
+        except ValueError:
+            pass
+
         return value</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -1996,17 +2537,178 @@ class Server(Base):
 <li><code><a title="jumpscale.core.base.fields.Typed.from_raw" href="#jumpscale.core.base.fields.Field.from_raw">from_raw</a></code></li>
 <li><code><a title="jumpscale.core.base.fields.Typed.to_raw" href="#jumpscale.core.base.fields.Field.to_raw">to_raw</a></code></li>
 <li><code><a title="jumpscale.core.base.fields.Typed.validate" href="#jumpscale.core.base.fields.Field.validate">validate</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.Typed.validate_with_name" href="#jumpscale.core.base.fields.Field.validate_with_name">validate_with_name</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="jumpscale.core.base.fields.GUID"><code class="flex name class">
+<span>class <span class="ident">GUID</span></span>
+<span>(</span><span>default=None, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>UUID v4 field, will be auto-generated by default.</p>
+<p>Will hold the UUID as a string.</p>
+<p>It accepts setting UUID value by many ways and converts them to strings:</p>
+<ul>
+<li>Strings like: <code>"12345678-1234-4678-9234-567812345678"</code></li>
+<li>Bytes like: <code>b"4Vx" * 4</code></li>
+<li>Integer like: <code>0x12345678123456781234567812345678</code></li>
+<li>UUID objects of type uuid.UUID</li>
+</ul>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>default</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>default value, will be auto-generated if None. Defaults to None</dd>
+<dt><strong><code>kwargs</code></strong></dt>
+<dd>other keyword arguments supported by <a title="jumpscale.core.base.fields.String" href="#jumpscale.core.base.fields.String"><code>String</code></a></dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class GUID(String):
+    def __init__(self, default=None, **kwargs):
+        &#34;&#34;&#34;
+        UUID v4 field, will be auto-generated by default.
+
+        Will hold the UUID as a string.
+
+        It accepts setting UUID value by many ways and converts them to strings:
+
+        - Strings like: `&#34;12345678-1234-4678-9234-567812345678&#34;`
+        - Bytes like: `b&#34;\x12\x34\x56\x78&#34; * 4`
+        - Integer like: `0x12345678123456781234567812345678`
+        - UUID objects of type uuid.UUID
+
+        Args:
+            default (str, optional): default value, will be auto-generated if None. Defaults to None
+            kwargs: other keyword arguments supported by `String`
+        &#34;&#34;&#34;
+        if not default:
+            default = lambda: str(uuid.uuid4())
+        super().__init__(default=default, **kwargs)
+
+    def validate(self, value):
+        super().validate(value)
+
+        if not value:
+            return
+
+        try:
+            uuid.UUID(value, version=4)
+        except ValueError as valexc:
+            raise ValidationError(f&#34;&#39;&#39;{value}&#39;&#39; is invalid, {valexc}&#34;) from valexc
+
+    def from_raw(self, value):
+        &#34;&#34;&#34;
+        convert string, bytes, int to UUID object, then to a string
+
+        Args:
+            value (int or str or bytes or uuid.UUID): [description]
+
+        Returns:
+            str: UUID string
+        &#34;&#34;&#34;
+
+        if isinstance(value, uuid.UUID):
+            return str(value)
+
+        try:
+            uuid_obj = None
+            if isinstance(value, int):
+                uuid_obj = uuid.UUID(int=value, version=4)
+            elif isinstance(value, str):
+                uuid_obj = uuid.UUID(value, version=4)
+            elif isinstance(value, bytes):
+                uuid_obj = uuid.UUID(bytes=value, version=4)
+
+            if uuid_obj:
+                return str(uuid_obj)
+
+            # return as is to be validated later
+            return value
+        except ValueError:
+            # failed to get uuid from raw value
+            # return as is to be validated later
+            return value</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="jumpscale.core.base.fields.String" href="#jumpscale.core.base.fields.String">String</a></li>
+<li><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></li>
+<li><a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field">Field</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="jumpscale.core.base.fields.GUID.from_raw"><code class="name flex">
+<span>def <span class="ident">from_raw</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>convert string, bytes, int to UUID object, then to a string</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>value</code></strong> :&ensp;<code>int</code> or <code>str</code> or <code>bytes</code> or <code>uuid.UUID</code></dt>
+<dd>[description]</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>str</code></strong></dt>
+<dd>UUID string</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def from_raw(self, value):
+    &#34;&#34;&#34;
+    convert string, bytes, int to UUID object, then to a string
+
+    Args:
+        value (int or str or bytes or uuid.UUID): [description]
+
+    Returns:
+        str: UUID string
+    &#34;&#34;&#34;
+
+    if isinstance(value, uuid.UUID):
+        return str(value)
+
+    try:
+        uuid_obj = None
+        if isinstance(value, int):
+            uuid_obj = uuid.UUID(int=value, version=4)
+        elif isinstance(value, str):
+            uuid_obj = uuid.UUID(value, version=4)
+        elif isinstance(value, bytes):
+            uuid_obj = uuid.UUID(bytes=value, version=4)
+
+        if uuid_obj:
+            return str(uuid_obj)
+
+        # return as is to be validated later
+        return value
+    except ValueError:
+        # failed to get uuid from raw value
+        # return as is to be validated later
+        return value</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="jumpscale.core.base.fields.String" href="#jumpscale.core.base.fields.String">String</a></b></code>:
+<ul class="hlist">
+<li><code><a title="jumpscale.core.base.fields.String.to_raw" href="#jumpscale.core.base.fields.Field.to_raw">to_raw</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.String.validate" href="#jumpscale.core.base.fields.Field.validate">validate</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.String.validate_with_name" href="#jumpscale.core.base.fields.Field.validate_with_name">validate_with_name</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
 <dt id="jumpscale.core.base.fields.IPAddress"><code class="flex name class">
 <span>class <span class="ident">IPAddress</span></span>
-<span>(</span><span>default='', **kwargs)</span>
+<span>(</span><span>default='0.0.0.0', **kwargs)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>ip address field, will validate the value of ip address (v4 and v6)</p>
-<p>will be stored as a string.</p>
+<section class="desc"><p>IP address field, will validate the value of ip address (v4 and v6)</p>
+<p>Will hold string ip addresses.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>default</code></strong> :&ensp;<code>str</code>, optional</dt>
@@ -2016,18 +2718,18 @@ class Server(Base):
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class IPAddress(Field):
-    def __init__(self, default=&#34;&#34;, **kwargs):
+<pre><code class="python">class IPAddress(IPMixin, String):
+    def __init__(self, default=&#34;0.0.0.0&#34;, **kwargs):
         &#34;&#34;&#34;
-        ip address field, will validate the value of ip address (v4 and v6)
+        IP address field, will validate the value of ip address (v4 and v6)
 
-        will be stored as a string.
+        Will hold string ip addresses.
 
         Args:
             default (str, optional): default value. Defaults to &#34;&#34;
             kwargs: any keyword arguments supported by `Field`
         &#34;&#34;&#34;
-        super().__init__(default, **kwargs)
+        super().__init__(default=default, **kwargs)
 
     def validate(self, value):
         &#34;&#34;&#34;
@@ -2038,17 +2740,23 @@ class Server(Base):
             value (str)
 
         Raises:
-            ValidationError: in case the value is not a telephone
+            ValidationError: in case the value is not an IPAddress
         &#34;&#34;&#34;
-
         super().validate(value)
-        try:
-            ipaddress.ip_interface(value)
-        except Exception:
-            raise ValidationError(f&#34;{value} is not a valid IP address&#34;)</code></pre>
+        if value and not self.is_ip(value):
+            raise ValidationError(f&#34;&#39;{value}&#39; is not a valid IP address&#34;)
+
+    def from_raw(self, value):
+        if isinstance(value, str):
+            if value.strip().lower() == &#34;localhost&#34;:
+                value = &#34;127.0.0.1&#34;
+        return value</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="jumpscale.core.base.fields.IPMixin" href="#jumpscale.core.base.fields.IPMixin">IPMixin</a></li>
+<li><a title="jumpscale.core.base.fields.String" href="#jumpscale.core.base.fields.String">String</a></li>
+<li><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></li>
 <li><a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field">Field</a></li>
 </ul>
 <h3>Methods</h3>
@@ -2064,7 +2772,7 @@ including IPv4,IPv6 and network</p>
 <h2 id="raises">Raises</h2>
 <dl>
 <dt><strong><a title="jumpscale.core.base.fields.ValidationError" href="#jumpscale.core.base.fields.ValidationError"><code>ValidationError</code></a></strong></dt>
-<dd>in case the value is not a telephone</dd>
+<dd>in case the value is not an IPAddress</dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
@@ -2077,35 +2785,397 @@ including IPv4,IPv6 and network</p>
         value (str)
 
     Raises:
-        ValidationError: in case the value is not a telephone
+        ValidationError: in case the value is not an IPAddress
     &#34;&#34;&#34;
-
     super().validate(value)
-    try:
-        ipaddress.ip_interface(value)
-    except Exception:
-        raise ValidationError(f&#34;{value} is not a valid IP address&#34;)</code></pre>
+    if value and not self.is_ip(value):
+        raise ValidationError(f&#34;&#39;{value}&#39; is not a valid IP address&#34;)</code></pre>
 </details>
 </dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field">Field</a></b></code>:
+<li><code><b><a title="jumpscale.core.base.fields.IPMixin" href="#jumpscale.core.base.fields.IPMixin">IPMixin</a></b></code>:
 <ul class="hlist">
-<li><code><a title="jumpscale.core.base.fields.Field.from_raw" href="#jumpscale.core.base.fields.Field.from_raw">from_raw</a></code></li>
-<li><code><a title="jumpscale.core.base.fields.Field.to_raw" href="#jumpscale.core.base.fields.Field.to_raw">to_raw</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.IPMixin.is_a" href="#jumpscale.core.base.fields.IPMixin.is_a">is_a</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.IPMixin.is_iface" href="#jumpscale.core.base.fields.IPMixin.is_iface">is_iface</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.IPMixin.is_ip" href="#jumpscale.core.base.fields.IPMixin.is_ip">is_ip</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.IPMixin.is_ipv4" href="#jumpscale.core.base.fields.IPMixin.is_ipv4">is_ipv4</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.IPMixin.is_ipv6" href="#jumpscale.core.base.fields.IPMixin.is_ipv6">is_ipv6</a></code></li>
+</ul>
+</li>
+<li><code><b><a title="jumpscale.core.base.fields.String" href="#jumpscale.core.base.fields.String">String</a></b></code>:
+<ul class="hlist">
+<li><code><a title="jumpscale.core.base.fields.String.from_raw" href="#jumpscale.core.base.fields.Field.from_raw">from_raw</a></code></li>
+</ul>
+</li>
+<li><code><b><a title="jumpscale.core.base.fields.String" href="#jumpscale.core.base.fields.String">String</a></b></code>:
+<ul class="hlist">
+<li><code><a title="jumpscale.core.base.fields.String.to_raw" href="#jumpscale.core.base.fields.Field.to_raw">to_raw</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.String.validate_with_name" href="#jumpscale.core.base.fields.Field.validate_with_name">validate_with_name</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="jumpscale.core.base.fields.IPMixin"><code class="flex name class">
+<span>class <span class="ident">IPMixin</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class IPMixin:
+    def is_a(self, value, *types):
+        &#34;&#34;&#34;
+        try creating any type of `types` from the given value
+
+        Args:
+            value (str)
+
+        Returns:
+            bool: `True` if any matched, `False` otherwise
+        &#34;&#34;&#34;
+        matched = False
+
+        for type_ in types:
+            try:
+                type_(value)
+                matched |= True
+            except ValueError:
+                continue
+
+        return matched
+
+    def is_ipv4(self, value):
+        &#34;&#34;&#34;
+        check if a given value is a v4 IP address
+
+        Args:
+            value (str): ip address
+
+        Returns:
+            bool: `True` if it&#39;s a valid v4 IP address
+        &#34;&#34;&#34;
+        return self.is_a(value, ipaddress.IPv4Address)
+
+    def is_ipv6(self, value):
+        &#34;&#34;&#34;
+        check if a given value is a v6 IP address
+
+        Args:
+            value (str): IP address
+
+        Returns:
+            bool: `True` if it&#39;s a valid v6 IP address
+        &#34;&#34;&#34;
+        return self.is_a(value, ipaddress.IPv6Address)
+
+    def is_ip(self, value):
+        &#34;&#34;&#34;
+        check if a given value is a v4/v6 IP address
+
+        Args:
+            value (str): IP address
+
+        Returns:
+            bool: `True` if it&#39;s a valid  v4/v6 IP address
+        &#34;&#34;&#34;
+        return self.is_ipv4(value) or self.is_ipv6(value)
+
+    def is_iface(self, value):
+        &#34;&#34;&#34;
+        check if a given value is an IP interface
+
+        Args:
+            value (str): IP interface
+
+        Returns:
+            bool: `True` if it&#39;s a valid v4/v6 IP interface
+        &#34;&#34;&#34;
+        return self.is_a(value, ipaddress.IPv4Interface, ipaddress.IPv6Interface)</code></pre>
+</details>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="jumpscale.core.base.fields.IPAddress" href="#jumpscale.core.base.fields.IPAddress">IPAddress</a></li>
+<li><a title="jumpscale.core.base.fields.IPRange" href="#jumpscale.core.base.fields.IPRange">IPRange</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="jumpscale.core.base.fields.IPMixin.is_a"><code class="name flex">
+<span>def <span class="ident">is_a</span></span>(<span>self, value, *types)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>try creating any type of <code>types</code> from the given value</p>
+<h2 id="args">Args</h2>
+<p>value (str)</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>bool</code></strong></dt>
+<dd><code>True</code> if any matched, <code>False</code> otherwise</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def is_a(self, value, *types):
+    &#34;&#34;&#34;
+    try creating any type of `types` from the given value
+
+    Args:
+        value (str)
+
+    Returns:
+        bool: `True` if any matched, `False` otherwise
+    &#34;&#34;&#34;
+    matched = False
+
+    for type_ in types:
+        try:
+            type_(value)
+            matched |= True
+        except ValueError:
+            continue
+
+    return matched</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.core.base.fields.IPMixin.is_iface"><code class="name flex">
+<span>def <span class="ident">is_iface</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>check if a given value is an IP interface</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>value</code></strong> :&ensp;<code>str</code></dt>
+<dd>IP interface</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>bool</code></strong></dt>
+<dd><code>True</code> if it's a valid v4/v6 IP interface</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def is_iface(self, value):
+    &#34;&#34;&#34;
+    check if a given value is an IP interface
+
+    Args:
+        value (str): IP interface
+
+    Returns:
+        bool: `True` if it&#39;s a valid v4/v6 IP interface
+    &#34;&#34;&#34;
+    return self.is_a(value, ipaddress.IPv4Interface, ipaddress.IPv6Interface)</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.core.base.fields.IPMixin.is_ip"><code class="name flex">
+<span>def <span class="ident">is_ip</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>check if a given value is a v4/v6 IP address</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>value</code></strong> :&ensp;<code>str</code></dt>
+<dd>IP address</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>bool</code></strong></dt>
+<dd><code>True</code> if it's a valid
+v4/v6 IP address</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def is_ip(self, value):
+    &#34;&#34;&#34;
+    check if a given value is a v4/v6 IP address
+
+    Args:
+        value (str): IP address
+
+    Returns:
+        bool: `True` if it&#39;s a valid  v4/v6 IP address
+    &#34;&#34;&#34;
+    return self.is_ipv4(value) or self.is_ipv6(value)</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.core.base.fields.IPMixin.is_ipv4"><code class="name flex">
+<span>def <span class="ident">is_ipv4</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>check if a given value is a v4 IP address</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>value</code></strong> :&ensp;<code>str</code></dt>
+<dd>ip address</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>bool</code></strong></dt>
+<dd><code>True</code> if it's a valid v4 IP address</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def is_ipv4(self, value):
+    &#34;&#34;&#34;
+    check if a given value is a v4 IP address
+
+    Args:
+        value (str): ip address
+
+    Returns:
+        bool: `True` if it&#39;s a valid v4 IP address
+    &#34;&#34;&#34;
+    return self.is_a(value, ipaddress.IPv4Address)</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.core.base.fields.IPMixin.is_ipv6"><code class="name flex">
+<span>def <span class="ident">is_ipv6</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>check if a given value is a v6 IP address</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>value</code></strong> :&ensp;<code>str</code></dt>
+<dd>IP address</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>bool</code></strong></dt>
+<dd><code>True</code> if it's a valid v6 IP address</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def is_ipv6(self, value):
+    &#34;&#34;&#34;
+    check if a given value is a v6 IP address
+
+    Args:
+        value (str): IP address
+
+    Returns:
+        bool: `True` if it&#39;s a valid v6 IP address
+    &#34;&#34;&#34;
+    return self.is_a(value, ipaddress.IPv6Address)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="jumpscale.core.base.fields.IPRange"><code class="flex name class">
+<span>class <span class="ident">IPRange</span></span>
+<span>(</span><span>default='::/128', **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>ip range field, will validate the value of ip ranges (v4 and v6)</p>
+<p>will be stored as a string.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>default</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>default value. Defaults to ""</dd>
+<dt><strong><code>kwargs</code></strong></dt>
+<dd>any keyword arguments supported by <a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field"><code>Field</code></a></dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class IPRange(IPMixin, String):
+    def __init__(self, default=&#34;::/128&#34;, **kwargs):
+        &#34;&#34;&#34;
+        ip range field, will validate the value of ip ranges (v4 and v6)
+
+        will be stored as a string.
+
+        Args:
+            default (str, optional): default value. Defaults to &#34;&#34;
+            kwargs: any keyword arguments supported by `Field`
+        &#34;&#34;&#34;
+        super().__init__(default=default, **kwargs)
+
+    def validate(self, value):
+        &#34;&#34;&#34;
+        check whether provided value is a valid IPaddress representation
+        including IPv4,IPv6 and network
+
+        Args:
+            value (str)
+
+        Raises:
+            ValidationError: in case the value is not an IPAddress
+        &#34;&#34;&#34;
+
+        super().validate(value)
+        if value and not self.is_iface(value):
+            raise ValidationError(f&#34;&#39;{value}&#39; is not a valid IP range/interface&#34;)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="jumpscale.core.base.fields.IPMixin" href="#jumpscale.core.base.fields.IPMixin">IPMixin</a></li>
+<li><a title="jumpscale.core.base.fields.String" href="#jumpscale.core.base.fields.String">String</a></li>
+<li><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></li>
+<li><a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field">Field</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="jumpscale.core.base.fields.IPRange.validate"><code class="name flex">
+<span>def <span class="ident">validate</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>check whether provided value is a valid IPaddress representation
+including IPv4,IPv6 and network</p>
+<h2 id="args">Args</h2>
+<p>value (str)</p>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><strong><a title="jumpscale.core.base.fields.ValidationError" href="#jumpscale.core.base.fields.ValidationError"><code>ValidationError</code></a></strong></dt>
+<dd>in case the value is not an IPAddress</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def validate(self, value):
+    &#34;&#34;&#34;
+    check whether provided value is a valid IPaddress representation
+    including IPv4,IPv6 and network
+
+    Args:
+        value (str)
+
+    Raises:
+        ValidationError: in case the value is not an IPAddress
+    &#34;&#34;&#34;
+
+    super().validate(value)
+    if value and not self.is_iface(value):
+        raise ValidationError(f&#34;&#39;{value}&#39; is not a valid IP range/interface&#34;)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="jumpscale.core.base.fields.IPMixin" href="#jumpscale.core.base.fields.IPMixin">IPMixin</a></b></code>:
+<ul class="hlist">
+<li><code><a title="jumpscale.core.base.fields.IPMixin.is_a" href="#jumpscale.core.base.fields.IPMixin.is_a">is_a</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.IPMixin.is_iface" href="#jumpscale.core.base.fields.IPMixin.is_iface">is_iface</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.IPMixin.is_ip" href="#jumpscale.core.base.fields.IPMixin.is_ip">is_ip</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.IPMixin.is_ipv4" href="#jumpscale.core.base.fields.IPMixin.is_ipv4">is_ipv4</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.IPMixin.is_ipv6" href="#jumpscale.core.base.fields.IPMixin.is_ipv6">is_ipv6</a></code></li>
+</ul>
+</li>
+<li><code><b><a title="jumpscale.core.base.fields.String" href="#jumpscale.core.base.fields.String">String</a></b></code>:
+<ul class="hlist">
+<li><code><a title="jumpscale.core.base.fields.String.from_raw" href="#jumpscale.core.base.fields.Field.from_raw">from_raw</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.String.to_raw" href="#jumpscale.core.base.fields.Field.to_raw">to_raw</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.String.validate_with_name" href="#jumpscale.core.base.fields.Field.validate_with_name">validate_with_name</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
 <dt id="jumpscale.core.base.fields.Integer"><code class="flex name class">
 <span>class <span class="ident">Integer</span></span>
-<span>(</span><span>default=0, min=None, **kwargs)</span>
+<span>(</span><span>default=0, min=None, max=None, **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Intger field, the same as <a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed"><code>Typed</code></a>, but with a type of <code>int</code></p>
 <p>It can have a minimum value, if min is not set, it will ignore it.</p>
-<p>values can be set using strings like:</p>
+<p>values can be set using strings like (will be converted to <code>int</code>):</p>
 <ul>
 <li>"12", "1212
 "</li>
@@ -2115,36 +3185,44 @@ including IPv4,IPv6 and network</p>
 <dt><strong><code>default</code></strong> :&ensp;<code>int</code>, optional</dt>
 <dd>default value. Defaults to 0.</dd>
 <dt><strong><code>min</code></strong> :&ensp;<code>int</code>, optional</dt>
-<dd>minimum value. Defaults to None.</dd>
+<dd>minimum value (inclusive). Defaults to None.</dd>
+<dt><strong><code>max</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>maximum value (inclusive). Defaults to None.</dd>
 <dt><strong><code>kwargs</code></strong></dt>
 <dd>any keyword arguments supported by <a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field"><code>Field</code></a></dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class Integer(Typed):
-    def __init__(self, default=0, min=None, **kwargs):
+    def __init__(self, default=0, min=None, max=None, **kwargs):
         &#34;&#34;&#34;
         Intger field, the same as `Typed`, but with a type of `int`
 
         It can have a minimum value, if min is not set, it will ignore it.
 
-        values can be set using strings like:
+        values can be set using strings like (will be converted to `int`):
 
         - &#34;12&#34;, &#34;1212  &#34;
 
         Args:
             default (int, optional): default value. Defaults to 0.
-            min (int, optional): minimum value. Defaults to None.
+            min (int, optional): minimum value (inclusive). Defaults to None.
+            max (int, optional): maximum value (inclusive). Defaults to None.
             kwargs: any keyword arguments supported by `Field`
         &#34;&#34;&#34;
         self.min = min
+        self.max = max
         super().__init__(type_=int, default=default, min=min, **kwargs)
 
     def validate(self, value):
         super().validate(value)
-        if self.min is not None:
+        if value and self.min is not None:
             if value &lt; self.min:
                 raise ValidationError(f&#34;cannot set values less than {self.min}&#34;)
+
+        if value and self.max is not None:
+            if value &gt; self.max:
+                raise ValidationError(f&#34;cannot set values greater than {self.max}&#34;)
 
     def from_raw(self, value):
         if isinstance(value, str):
@@ -2159,6 +3237,10 @@ including IPv4,IPv6 and network</p>
 <li><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></li>
 <li><a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field">Field</a></li>
 </ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="jumpscale.core.base.fields.Port" href="#jumpscale.core.base.fields.Port">Port</a></li>
+</ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></b></code>:
@@ -2166,6 +3248,168 @@ including IPv4,IPv6 and network</p>
 <li><code><a title="jumpscale.core.base.fields.Typed.from_raw" href="#jumpscale.core.base.fields.Field.from_raw">from_raw</a></code></li>
 <li><code><a title="jumpscale.core.base.fields.Typed.to_raw" href="#jumpscale.core.base.fields.Field.to_raw">to_raw</a></code></li>
 <li><code><a title="jumpscale.core.base.fields.Typed.validate" href="#jumpscale.core.base.fields.Field.validate">validate</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.Typed.validate_with_name" href="#jumpscale.core.base.fields.Field.validate_with_name">validate_with_name</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="jumpscale.core.base.fields.Json"><code class="flex name class">
+<span>class <span class="ident">Json</span></span>
+<span>(</span><span>default='{}', encoding='utf-8', **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Json field, will check if the value is a valid json string.</p>
+<p>It will hold json strings, if the value is not string, it will be converted.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>default</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>default value. Defaults to "{}"</dd>
+<dt><strong><code>encoding</code></strong></dt>
+<dd>encoding to be used when serializing the value. Defaults to "utf-8"</dd>
+<dt><strong><code>kwargs</code></strong></dt>
+<dd>other keyword arguments supported by <a title="jumpscale.core.base.fields.String" href="#jumpscale.core.base.fields.String"><code>String</code></a></dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class Json(String):
+    def __init__(self, default=&#34;{}&#34;, encoding=&#34;utf-8&#34;, **kwargs):
+        &#34;&#34;&#34;
+        Json field, will check if the value is a valid json string.
+
+        It will hold json strings, if the value is not string, it will be converted.
+
+        Args:
+            default (str, optional): default value. Defaults to &#34;{}&#34;
+            encoding: encoding to be used when serializing the value. Defaults to &#34;utf-8&#34;
+            kwargs: other keyword arguments supported by `String`
+        &#34;&#34;&#34;
+        self.encoding = encoding
+        super().__init__(default=default, **kwargs)
+
+    def validate(self, value):
+        &#34;&#34;&#34;
+        check whether provided value is a valid json
+
+        Args:
+            value (str)
+
+        Raises:
+            ValidationError: in case the value isn&#39;t a valid json
+        &#34;&#34;&#34;
+        super().validate(value)
+
+        if not value:
+            return
+
+        # if it&#39;s a string, try to load it
+        try:
+            json.loads(value, encoding=self.encoding)
+        except Exception as e:
+            raise ValidationError(f&#34;&#39;{value}&#39; isn&#39;t a valid json, {e}&#34;) from e
+
+    def from_raw(self, value):
+        &#34;&#34;&#34;
+        convert non-string values to json string
+
+        Args:
+            value (any): non-string value
+
+        Returns:
+            str: a json string
+        &#34;&#34;&#34;
+        if not isinstance(value, (str, bytes, bytearray)):
+            try:
+                value = json.dumps(value)
+            except:
+                pass
+        return value</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="jumpscale.core.base.fields.String" href="#jumpscale.core.base.fields.String">String</a></li>
+<li><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></li>
+<li><a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field">Field</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="jumpscale.core.base.fields.Json.from_raw"><code class="name flex">
+<span>def <span class="ident">from_raw</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>convert non-string values to json string</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>value</code></strong> :&ensp;<code>any</code></dt>
+<dd>non-string value</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>str</code></strong></dt>
+<dd>a json string</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def from_raw(self, value):
+    &#34;&#34;&#34;
+    convert non-string values to json string
+
+    Args:
+        value (any): non-string value
+
+    Returns:
+        str: a json string
+    &#34;&#34;&#34;
+    if not isinstance(value, (str, bytes, bytearray)):
+        try:
+            value = json.dumps(value)
+        except:
+            pass
+    return value</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.core.base.fields.Json.validate"><code class="name flex">
+<span>def <span class="ident">validate</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>check whether provided value is a valid json</p>
+<h2 id="args">Args</h2>
+<p>value (str)</p>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><strong><a title="jumpscale.core.base.fields.ValidationError" href="#jumpscale.core.base.fields.ValidationError"><code>ValidationError</code></a></strong></dt>
+<dd>in case the value isn't a valid json</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def validate(self, value):
+    &#34;&#34;&#34;
+    check whether provided value is a valid json
+
+    Args:
+        value (str)
+
+    Raises:
+        ValidationError: in case the value isn&#39;t a valid json
+    &#34;&#34;&#34;
+    super().validate(value)
+
+    if not value:
+        return
+
+    # if it&#39;s a string, try to load it
+    try:
+        json.loads(value, encoding=self.encoding)
+    except Exception as e:
+        raise ValidationError(f&#34;&#39;{value}&#39; isn&#39;t a valid json, {e}&#34;) from e</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="jumpscale.core.base.fields.String" href="#jumpscale.core.base.fields.String">String</a></b></code>:
+<ul class="hlist">
+<li><code><a title="jumpscale.core.base.fields.String.to_raw" href="#jumpscale.core.base.fields.Field.to_raw">to_raw</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.String.validate_with_name" href="#jumpscale.core.base.fields.Field.validate_with_name">validate_with_name</a></code></li>
 </ul>
 </li>
 </ul>
@@ -2335,6 +3579,14 @@ Will just call the field.validate of the given field</p></section>
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field">Field</a></b></code>:
+<ul class="hlist">
+<li><code><a title="jumpscale.core.base.fields.Field.validate_with_name" href="#jumpscale.core.base.fields.Field.validate_with_name">validate_with_name</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="jumpscale.core.base.fields.Object"><code class="flex name class">
 <span>class <span class="ident">Object</span></span>
@@ -2370,7 +3622,9 @@ Will just call the field.validate of the given field</p></section>
             self.type_kwargs = {}
 
         if not self.default:
-            self.default = self.type(**self.type_kwargs)
+            # make it callable to create different objects
+            # not a single one as a default for all
+            self.default = lambda: self.type(**self.type_kwargs)
 
     def validate(self, value):
         &#34;&#34;&#34;
@@ -2380,10 +3634,8 @@ Will just call the field.validate of the given field</p></section>
             value (Base): object
         &#34;&#34;&#34;
         super().validate(value)
-        try:
+        if value:
             value.validate()
-        except AttributeError:
-            raise ValidationError(&#34;object of Base must have validate()&#34;)
 
     def to_raw(self, obj):
         &#34;&#34;&#34;
@@ -2395,7 +3647,8 @@ Will just call the field.validate of the given field</p></section>
         Returns:
             dict: raw data
         &#34;&#34;&#34;
-        return obj._get_data()
+        if obj:
+            return obj._get_data()
 
     def from_raw(self, data):
         &#34;&#34;&#34;
@@ -2408,9 +3661,7 @@ Will just call the field.validate of the given field</p></section>
             Base: base object
         &#34;&#34;&#34;
         if isinstance(data, dict):
-            obj = self.type()
-            obj._set_data(data)
-            return obj
+            return self.type(**data)
         return data</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -2448,9 +3699,7 @@ Will just call the field.validate of the given field</p></section>
         Base: base object
     &#34;&#34;&#34;
     if isinstance(data, dict):
-        obj = self.type()
-        obj._set_data(data)
-        return obj
+        return self.type(**data)
     return data</code></pre>
 </details>
 </dd>
@@ -2481,7 +3730,8 @@ Will just call the field.validate of the given field</p></section>
     Returns:
         dict: raw data
     &#34;&#34;&#34;
-    return obj._get_data()</code></pre>
+    if obj:
+        return obj._get_data()</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.core.base.fields.Object.validate"><code class="name flex">
@@ -2504,38 +3754,47 @@ Will just call the field.validate of the given field</p></section>
         value (Base): object
     &#34;&#34;&#34;
     super().validate(value)
-    try:
-        value.validate()
-    except AttributeError:
-        raise ValidationError(&#34;object of Base must have validate()&#34;)</code></pre>
+    if value:
+        value.validate()</code></pre>
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></b></code>:
+<ul class="hlist">
+<li><code><a title="jumpscale.core.base.fields.Typed.validate_with_name" href="#jumpscale.core.base.fields.Field.validate_with_name">validate_with_name</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="jumpscale.core.base.fields.Path"><code class="flex name class">
 <span>class <span class="ident">Path</span></span>
 <span>(</span><span>default='', **kwargs)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>path field, will validate the value of file system paths</p>
+<section class="desc"><p>Path field, will validate the value of file system paths</p>
+<p>Will hold string path values.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>default</code></strong> :&ensp;<code>str</code>, optional</dt>
 <dd>default value. Defaults to ""</dd>
 <dt><strong><code>kwargs</code></strong></dt>
-<dd>any keyword arguments supported by <a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field"><code>Field</code></a></dd>
+<dd>other keyword arguments supported by <a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field"><code>Field</code></a></dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class Path(Field):
+<pre><code class="python">class Path(String):
     # TODO: Validate that it is working on windows
     def __init__(self, default=&#34;&#34;, **kwargs):
         &#34;&#34;&#34;
-        path field, will validate the value of file system paths
+        Path field, will validate the value of file system paths
+
+        Will hold string path values.
 
         Args:
             default (str, optional): default value. Defaults to &#34;&#34;
-            kwargs: any keyword arguments supported by `Field`
+            kwargs: other keyword arguments supported by `Field`
         &#34;&#34;&#34;
         super().__init__(default, **kwargs)
         self.regex = r&#34;^(/[^/ ]*)+/?$&#34;
@@ -2551,11 +3810,13 @@ Will just call the field.validate of the given field</p></section>
             ValidationError: in case the value is not a telephone
         &#34;&#34;&#34;
         super().validate(value)
-        if not re.match(self.regex, value):
-            raise ValidationError(f&#34;{value} is not a valid Path&#34;)</code></pre>
+        if value and not re.match(self.regex, value):
+            raise ValidationError(f&#34;&#39;{value}&#39; is not a valid Path&#34;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="jumpscale.core.base.fields.String" href="#jumpscale.core.base.fields.String">String</a></li>
+<li><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></li>
 <li><a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field">Field</a></li>
 </ul>
 <h3>Methods</h3>
@@ -2585,32 +3846,81 @@ Will just call the field.validate of the given field</p></section>
         ValidationError: in case the value is not a telephone
     &#34;&#34;&#34;
     super().validate(value)
-    if not re.match(self.regex, value):
-        raise ValidationError(f&#34;{value} is not a valid Path&#34;)</code></pre>
+    if value and not re.match(self.regex, value):
+        raise ValidationError(f&#34;&#39;{value}&#39; is not a valid Path&#34;)</code></pre>
 </details>
 </dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field">Field</a></b></code>:
+<li><code><b><a title="jumpscale.core.base.fields.String" href="#jumpscale.core.base.fields.String">String</a></b></code>:
 <ul class="hlist">
-<li><code><a title="jumpscale.core.base.fields.Field.from_raw" href="#jumpscale.core.base.fields.Field.from_raw">from_raw</a></code></li>
-<li><code><a title="jumpscale.core.base.fields.Field.to_raw" href="#jumpscale.core.base.fields.Field.to_raw">to_raw</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.String.from_raw" href="#jumpscale.core.base.fields.Field.from_raw">from_raw</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.String.to_raw" href="#jumpscale.core.base.fields.Field.to_raw">to_raw</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.String.validate_with_name" href="#jumpscale.core.base.fields.Field.validate_with_name">validate_with_name</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="jumpscale.core.base.fields.Port"><code class="flex name class">
+<span>class <span class="ident">Port</span></span>
+<span>(</span><span>**kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Port field, will check if the given port is within the range of 0-65535.</p>
+<p>Will hold integers, but also accepts string values like <code>"8080"</code>.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>kwargs</code></strong></dt>
+<dd>any keyword arguments supported by <a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field"><code>Field</code></a></dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class Port(Integer):
+    def __init__(self, **kwargs):
+        &#34;&#34;&#34;
+        Port field, will check if the given port is within the range of 0-65535.
+
+        Will hold integers, but also accepts string values like `&#34;8080&#34;`.
+
+        Args:
+            kwargs: any keyword arguments supported by `Field`
+        &#34;&#34;&#34;
+        super().__init__(min=0, max=65535, **kwargs)
+
+    def validate(self, value):
+        try:
+            super().validate(value)
+        except ValidationError:
+            raise ValidationError(&#34;value is not in range of 0-65535&#34;)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="jumpscale.core.base.fields.Integer" href="#jumpscale.core.base.fields.Integer">Integer</a></li>
+<li><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></li>
+<li><a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field">Field</a></li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="jumpscale.core.base.fields.Integer" href="#jumpscale.core.base.fields.Integer">Integer</a></b></code>:
+<ul class="hlist">
+<li><code><a title="jumpscale.core.base.fields.Integer.from_raw" href="#jumpscale.core.base.fields.Field.from_raw">from_raw</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.Integer.to_raw" href="#jumpscale.core.base.fields.Field.to_raw">to_raw</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.Integer.validate" href="#jumpscale.core.base.fields.Field.validate">validate</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.Integer.validate_with_name" href="#jumpscale.core.base.fields.Field.validate_with_name">validate_with_name</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
 <dt id="jumpscale.core.base.fields.Secret"><code class="flex name class">
 <span>class <span class="ident">Secret</span></span>
-<span>(</span><span>maxlen=None, **kwargs)</span>
+<span>(</span><span>maxlen=None, allow_empty=True, **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Same as <a title="jumpscale.core.base.fields.String" href="#jumpscale.core.base.fields.String"><code>String</code></a>, but encrypted by default.</p>
 <p>Should be used with sensitive data.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>maxlen</code></strong> :&ensp;<code>int</code></dt>
-<dd>maximum length allowed. Defaults to None</dd>
 <dt><strong><code>kwargs</code></strong></dt>
 <dd>any keyword arguments supported by <a title="jumpscale.core.base.fields.String" href="#jumpscale.core.base.fields.String"><code>String</code></a></dd>
 </dl>
@@ -2620,6 +3930,8 @@ Will just call the field.validate of the given field</p></section>
 <dl>
 <dt><strong><code>maxlen</code></strong> :&ensp;<code>int</code></dt>
 <dd>maximum length allowed. Defaults to None</dd>
+<dt><strong><code>allow_empty</code></strong> :&ensp;<code>bool</code></dt>
+<dd>if empty string values are allowed or not. Defaults to True</dd>
 <dt><strong><code>kwargs</code></strong></dt>
 <dd>any keyword arguments supported by <a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field"><code>Field</code></a></dd>
 </dl></section>
@@ -2632,7 +3944,6 @@ Will just call the field.validate of the given field</p></section>
     Should be used with sensitive data.
 
     Args:
-        maxlen (int): maximum length allowed. Defaults to None
         kwargs: any keyword arguments supported by `String`
     &#34;&#34;&#34;</code></pre>
 </details>
@@ -2649,13 +3960,14 @@ Will just call the field.validate of the given field</p></section>
 <li><code><a title="jumpscale.core.base.fields.String.from_raw" href="#jumpscale.core.base.fields.Field.from_raw">from_raw</a></code></li>
 <li><code><a title="jumpscale.core.base.fields.String.to_raw" href="#jumpscale.core.base.fields.Field.to_raw">to_raw</a></code></li>
 <li><code><a title="jumpscale.core.base.fields.String.validate" href="#jumpscale.core.base.fields.Field.validate">validate</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.String.validate_with_name" href="#jumpscale.core.base.fields.Field.validate_with_name">validate_with_name</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
 <dt id="jumpscale.core.base.fields.String"><code class="flex name class">
 <span>class <span class="ident">String</span></span>
-<span>(</span><span>maxlen=None, **kwargs)</span>
+<span>(</span><span>maxlen=None, allow_empty=True, **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Same as <a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed"><code>Typed</code></a>, but with a type of <code>str</code>.</p>
@@ -2664,13 +3976,15 @@ Will just call the field.validate of the given field</p></section>
 <dl>
 <dt><strong><code>maxlen</code></strong> :&ensp;<code>int</code></dt>
 <dd>maximum length allowed. Defaults to None</dd>
+<dt><strong><code>allow_empty</code></strong> :&ensp;<code>bool</code></dt>
+<dd>if empty string values are allowed or not. Defaults to True</dd>
 <dt><strong><code>kwargs</code></strong></dt>
 <dd>any keyword arguments supported by <a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field"><code>Field</code></a></dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class String(Typed):
-    def __init__(self, maxlen=None, **kwargs):
+    def __init__(self, maxlen=None, allow_empty=True, **kwargs):
         &#34;&#34;&#34;
         Same as `Typed`, but with a type of `str`.
 
@@ -2678,15 +3992,21 @@ Will just call the field.validate of the given field</p></section>
 
         Args:
             maxlen (int): maximum length allowed. Defaults to None
+            allow_empty (bool): if empty string values are allowed or not. Defaults to True
             kwargs: any keyword arguments supported by `Field`
         &#34;&#34;&#34;
         super().__init__(type_=str, **kwargs)
         self.maxlen = maxlen
+        self.allow_empty = allow_empty
 
     def validate(self, value):
         super().validate(value)
+
+        if not self.allow_empty and value == &#34;&#34;:
+            raise ValidationError(&#34;field does not allow empty values&#34;)
+
         if self.maxlen is not None:
-            if len(value) &gt; self.maxlen:
+            if value and len(value) &gt; self.maxlen:
                 raise ValidationError(f&#34;length of the string exceeds {self.maxlen}&#34;)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -2697,6 +4017,14 @@ Will just call the field.validate of the given field</p></section>
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="jumpscale.core.base.fields.Secret" href="#jumpscale.core.base.fields.Secret">Secret</a></li>
+<li><a title="jumpscale.core.base.fields.Email" href="#jumpscale.core.base.fields.Email">Email</a></li>
+<li><a title="jumpscale.core.base.fields.Path" href="#jumpscale.core.base.fields.Path">Path</a></li>
+<li><a title="jumpscale.core.base.fields.URL" href="#jumpscale.core.base.fields.URL">URL</a></li>
+<li><a title="jumpscale.core.base.fields.Tel" href="#jumpscale.core.base.fields.Tel">Tel</a></li>
+<li><a title="jumpscale.core.base.fields.IPAddress" href="#jumpscale.core.base.fields.IPAddress">IPAddress</a></li>
+<li><a title="jumpscale.core.base.fields.IPRange" href="#jumpscale.core.base.fields.IPRange">IPRange</a></li>
+<li><a title="jumpscale.core.base.fields.GUID" href="#jumpscale.core.base.fields.GUID">GUID</a></li>
+<li><a title="jumpscale.core.base.fields.Json" href="#jumpscale.core.base.fields.Json">Json</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -2705,6 +4033,7 @@ Will just call the field.validate of the given field</p></section>
 <li><code><a title="jumpscale.core.base.fields.Typed.from_raw" href="#jumpscale.core.base.fields.Field.from_raw">from_raw</a></code></li>
 <li><code><a title="jumpscale.core.base.fields.Typed.to_raw" href="#jumpscale.core.base.fields.Field.to_raw">to_raw</a></code></li>
 <li><code><a title="jumpscale.core.base.fields.Typed.validate" href="#jumpscale.core.base.fields.Field.validate">validate</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.Typed.validate_with_name" href="#jumpscale.core.base.fields.Field.validate_with_name">validate_with_name</a></code></li>
 </ul>
 </li>
 </ul>
@@ -2714,32 +4043,32 @@ Will just call the field.validate of the given field</p></section>
 <span>(</span><span>default='', **kwargs)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>email field, will validate the value of telephone numbers</p>
-<p>will be stored as a string at the end.</p>
+<section class="desc"><p>Telephone field, will validate the value of telephone numbers</p>
+<p>Will hold telephone values as strings.</p>
 <p>It will strip any additional characters that are not numbers.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>default</code></strong> :&ensp;<code>str</code>, optional</dt>
 <dd>default value. Defaults to ""</dd>
 <dt><strong><code>kwargs</code></strong></dt>
-<dd>any keyword arguments supported by <a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field"><code>Field</code></a></dd>
+<dd>other keyword arguments supported by <a title="jumpscale.core.base.fields.String" href="#jumpscale.core.base.fields.String"><code>String</code></a></dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class Tel(Field):
+<pre><code class="python">class Tel(String):
     def __init__(self, default=&#34;&#34;, **kwargs):
         &#34;&#34;&#34;
-        email field, will validate the value of telephone numbers
+        Telephone field, will validate the value of telephone numbers
 
-        will be stored as a string at the end.
+        Will hold telephone values as strings.
 
         It will strip any additional characters that are not numbers.
 
         Args:
             default (str, optional): default value. Defaults to &#34;&#34;
-            kwargs: any keyword arguments supported by `Field`
+            kwargs: other keyword arguments supported by `String`
         &#34;&#34;&#34;
-        super().__init__(default, **kwargs)
+        super().__init__(default=default, **kwargs)
         self.regex = r&#34;^\+?[0-9]{6,15}(?:x[0-9]+)?$&#34;
 
     def validate(self, value):
@@ -2753,11 +4082,11 @@ Will just call the field.validate of the given field</p></section>
             ValidationError: in case the value is not a telephone
         &#34;&#34;&#34;
         super().validate(value)
-        if not re.search(self.regex, value):
-            raise ValidationError(f&#34;{value} is not a valid Telephone&#34;)
+        if value and not re.search(self.regex, value):
+            raise ValidationError(f&#34;&#39;{value}&#39; is not a valid Telephone&#34;)
 
     def from_raw(self, value):
-        &#34;&#34;&#34;clean the telephone function from unwanted signs like , - ( )&#34;&#34;&#34;
+        &#34;&#34;&#34;clean the telephone value from unwanted signs like , - ( )&#34;&#34;&#34;
         if value is not None:
             value = value.replace(&#34;,&#34;, &#34;&#34;)
             value = value.replace(&#34;-&#34;, &#34;&#34;)
@@ -2769,6 +4098,8 @@ Will just call the field.validate of the given field</p></section>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="jumpscale.core.base.fields.String" href="#jumpscale.core.base.fields.String">String</a></li>
+<li><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></li>
 <li><a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field">Field</a></li>
 </ul>
 <h3>Methods</h3>
@@ -2777,11 +4108,11 @@ Will just call the field.validate of the given field</p></section>
 <span>def <span class="ident">from_raw</span></span>(<span>self, value)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>clean the telephone function from unwanted signs like , - ( )</p></section>
+<section class="desc"><p>clean the telephone value from unwanted signs like , - ( )</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def from_raw(self, value):
-    &#34;&#34;&#34;clean the telephone function from unwanted signs like , - ( )&#34;&#34;&#34;
+    &#34;&#34;&#34;clean the telephone value from unwanted signs like , - ( )&#34;&#34;&#34;
     if value is not None:
         value = value.replace(&#34;,&#34;, &#34;&#34;)
         value = value.replace(&#34;-&#34;, &#34;&#34;)
@@ -2817,16 +4148,17 @@ Will just call the field.validate of the given field</p></section>
         ValidationError: in case the value is not a telephone
     &#34;&#34;&#34;
     super().validate(value)
-    if not re.search(self.regex, value):
-        raise ValidationError(f&#34;{value} is not a valid Telephone&#34;)</code></pre>
+    if value and not re.search(self.regex, value):
+        raise ValidationError(f&#34;&#39;{value}&#39; is not a valid Telephone&#34;)</code></pre>
 </details>
 </dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field">Field</a></b></code>:
+<li><code><b><a title="jumpscale.core.base.fields.String" href="#jumpscale.core.base.fields.String">String</a></b></code>:
 <ul class="hlist">
-<li><code><a title="jumpscale.core.base.fields.Field.to_raw" href="#jumpscale.core.base.fields.Field.to_raw">to_raw</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.String.to_raw" href="#jumpscale.core.base.fields.Field.to_raw">to_raw</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.String.validate_with_name" href="#jumpscale.core.base.fields.Field.validate_with_name">validate_with_name</a></code></li>
 </ul>
 </li>
 </ul>
@@ -2836,7 +4168,7 @@ Will just call the field.validate of the given field</p></section>
 <span>(</span><span>default=None, format_=None, **kwargs)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>time field, stores utc datetime.time objects</p>
+<section class="desc"><p>time field, will hold utc datetime.time objects</p>
 <p>values can be set using strings in the given <code>format_</code> too like "12:13" or a utc timestamp,
 they will converted to objects.</p>
 <h2 id="args">Args</h2>
@@ -2853,7 +4185,7 @@ they will converted to objects.</p>
 <pre><code class="python">class Time(DateTimeMixin, Typed):
     def __init__(self, default=None, format_=None, **kwargs):
         &#34;&#34;&#34;
-        time field, stores utc datetime.time objects
+        time field, will hold utc datetime.time objects
 
         values can be set using strings in the given `format_` too like &#34;12:13&#34; or a utc timestamp,
         they will converted to objects.
@@ -2887,6 +4219,7 @@ they will converted to objects.</p>
 <li><code><b><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></b></code>:
 <ul class="hlist">
 <li><code><a title="jumpscale.core.base.fields.Typed.validate" href="#jumpscale.core.base.fields.Field.validate">validate</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.Typed.validate_with_name" href="#jumpscale.core.base.fields.Field.validate_with_name">validate_with_name</a></code></li>
 </ul>
 </li>
 </ul>
@@ -2896,7 +4229,7 @@ they will converted to objects.</p>
 <span>(</span><span>type_, **kwargs)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>base field for any type, value mus tof of <code>type_</code></p>
+<section class="desc"><p>Base field for any type, it will hold values of <code>type_</code></p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>type_</code></strong> :&ensp;<code>type</code></dt>
@@ -2909,7 +4242,7 @@ they will converted to objects.</p>
 <pre><code class="python">class Typed(Field):
     def __init__(self, type_, **kwargs):
         &#34;&#34;&#34;
-        base field for any type, value mus tof of `type_`
+        Base field for any type, it will hold values of `type_`
 
         Args:
             type_ (type): any type (class)
@@ -2922,7 +4255,7 @@ they will converted to objects.</p>
         super().validate(value)
         if value is not None:
             if not isinstance(value, self.type):
-                raise ValidationError(f&#34;value {value} is not of type {self.type}&#34;)</code></pre>
+                raise ValidationError(f&#34;value &#39;{value}&#39; is not of type {self.type.__name__}&#34;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -2939,6 +4272,7 @@ they will converted to objects.</p>
 <li><a title="jumpscale.core.base.fields.DateTime" href="#jumpscale.core.base.fields.DateTime">DateTime</a></li>
 <li><a title="jumpscale.core.base.fields.Date" href="#jumpscale.core.base.fields.Date">Date</a></li>
 <li><a title="jumpscale.core.base.fields.Time" href="#jumpscale.core.base.fields.Time">Time</a></li>
+<li><a title="jumpscale.core.base.fields.Bytes" href="#jumpscale.core.base.fields.Bytes">Bytes</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -2947,6 +4281,7 @@ they will converted to objects.</p>
 <li><code><a title="jumpscale.core.base.fields.Field.from_raw" href="#jumpscale.core.base.fields.Field.from_raw">from_raw</a></code></li>
 <li><code><a title="jumpscale.core.base.fields.Field.to_raw" href="#jumpscale.core.base.fields.Field.to_raw">to_raw</a></code></li>
 <li><code><a title="jumpscale.core.base.fields.Field.validate" href="#jumpscale.core.base.fields.Field.validate">validate</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.Field.validate_with_name" href="#jumpscale.core.base.fields.Field.validate_with_name">validate_with_name</a></code></li>
 </ul>
 </li>
 </ul>
@@ -2956,26 +4291,29 @@ they will converted to objects.</p>
 <span>(</span><span>default='', **kwargs)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>url field, will validate the value of urls</p>
+<section class="desc"><p>URL field, will validate the value of urls</p>
+<p>Will hold string URLs.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>default</code></strong> :&ensp;<code>str</code>, optional</dt>
 <dd>default value. Defaults to ""</dd>
 <dt><strong><code>kwargs</code></strong></dt>
-<dd>any keyword arguments supported by <a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field"><code>Field</code></a></dd>
+<dd>other keyword arguments supported by <a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field"><code>Field</code></a></dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class URL(Field):
+<pre><code class="python">class URL(String):
     def __init__(self, default=&#34;&#34;, **kwargs):
         &#34;&#34;&#34;
-        url field, will validate the value of urls
+        URL field, will validate the value of urls
+
+        Will hold string URLs.
 
         Args:
             default (str, optional): default value. Defaults to &#34;&#34;
-            kwargs: any keyword arguments supported by `Field`
+            kwargs: other keyword arguments supported by `Field`
         &#34;&#34;&#34;
-        super().__init__(default, **kwargs)
+        super().__init__(default=default, **kwargs)
         self.regex = r&#34;^(https?|ftp)://[^\s/$.?#].[^\s]*$&#34;
 
     def validate(self, value):
@@ -2989,12 +4327,15 @@ they will converted to objects.</p>
             ValidationError: in case the value is not a telephone
         &#34;&#34;&#34;
         super().validate(value)
-        url = urlparse(value)
-        if not url.scheme or not url.netloc:
-            raise ValidationError(f&#34;{value} is not a valid URL address&#34;)</code></pre>
+        if value:
+            url = urlparse(value)
+            if not url.scheme or not url.netloc:
+                raise ValidationError(f&#34;&#39;{value}&#39; is not a valid URL address&#34;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="jumpscale.core.base.fields.String" href="#jumpscale.core.base.fields.String">String</a></li>
+<li><a title="jumpscale.core.base.fields.Typed" href="#jumpscale.core.base.fields.Typed">Typed</a></li>
 <li><a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field">Field</a></li>
 </ul>
 <h3>Methods</h3>
@@ -3024,18 +4365,20 @@ they will converted to objects.</p>
         ValidationError: in case the value is not a telephone
     &#34;&#34;&#34;
     super().validate(value)
-    url = urlparse(value)
-    if not url.scheme or not url.netloc:
-        raise ValidationError(f&#34;{value} is not a valid URL address&#34;)</code></pre>
+    if value:
+        url = urlparse(value)
+        if not url.scheme or not url.netloc:
+            raise ValidationError(f&#34;&#39;{value}&#39; is not a valid URL address&#34;)</code></pre>
 </details>
 </dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field">Field</a></b></code>:
+<li><code><b><a title="jumpscale.core.base.fields.String" href="#jumpscale.core.base.fields.String">String</a></b></code>:
 <ul class="hlist">
-<li><code><a title="jumpscale.core.base.fields.Field.from_raw" href="#jumpscale.core.base.fields.Field.from_raw">from_raw</a></code></li>
-<li><code><a title="jumpscale.core.base.fields.Field.to_raw" href="#jumpscale.core.base.fields.Field.to_raw">to_raw</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.String.from_raw" href="#jumpscale.core.base.fields.Field.from_raw">from_raw</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.String.to_raw" href="#jumpscale.core.base.fields.Field.to_raw">to_raw</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.String.validate_with_name" href="#jumpscale.core.base.fields.Field.validate_with_name">validate_with_name</a></code></li>
 </ul>
 </li>
 </ul>
@@ -3082,6 +4425,9 @@ they will converted to objects.</p>
 </ul>
 </li>
 <li>
+<h4><code><a title="jumpscale.core.base.fields.Bytes" href="#jumpscale.core.base.fields.Bytes">Bytes</a></code></h4>
+</li>
+<li>
 <h4><code><a title="jumpscale.core.base.fields.Date" href="#jumpscale.core.base.fields.Date">Date</a></code></h4>
 </li>
 <li>
@@ -3115,14 +4461,24 @@ they will converted to objects.</p>
 </li>
 <li>
 <h4><code><a title="jumpscale.core.base.fields.Field" href="#jumpscale.core.base.fields.Field">Field</a></code></h4>
-<ul class="">
+<ul class="two-column">
+<li><code><a title="jumpscale.core.base.fields.Field.computed" href="#jumpscale.core.base.fields.Field.computed">computed</a></code></li>
 <li><code><a title="jumpscale.core.base.fields.Field.from_raw" href="#jumpscale.core.base.fields.Field.from_raw">from_raw</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.Field.preprocess" href="#jumpscale.core.base.fields.Field.preprocess">preprocess</a></code></li>
 <li><code><a title="jumpscale.core.base.fields.Field.to_raw" href="#jumpscale.core.base.fields.Field.to_raw">to_raw</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.Field.trigger_updates" href="#jumpscale.core.base.fields.Field.trigger_updates">trigger_updates</a></code></li>
 <li><code><a title="jumpscale.core.base.fields.Field.validate" href="#jumpscale.core.base.fields.Field.validate">validate</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.Field.validate_with_name" href="#jumpscale.core.base.fields.Field.validate_with_name">validate_with_name</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="jumpscale.core.base.fields.Float" href="#jumpscale.core.base.fields.Float">Float</a></code></h4>
+</li>
+<li>
+<h4><code><a title="jumpscale.core.base.fields.GUID" href="#jumpscale.core.base.fields.GUID">GUID</a></code></h4>
+<ul class="">
+<li><code><a title="jumpscale.core.base.fields.GUID.from_raw" href="#jumpscale.core.base.fields.GUID.from_raw">from_raw</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="jumpscale.core.base.fields.IPAddress" href="#jumpscale.core.base.fields.IPAddress">IPAddress</a></code></h4>
@@ -3131,7 +4487,30 @@ they will converted to objects.</p>
 </ul>
 </li>
 <li>
+<h4><code><a title="jumpscale.core.base.fields.IPMixin" href="#jumpscale.core.base.fields.IPMixin">IPMixin</a></code></h4>
+<ul class="">
+<li><code><a title="jumpscale.core.base.fields.IPMixin.is_a" href="#jumpscale.core.base.fields.IPMixin.is_a">is_a</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.IPMixin.is_iface" href="#jumpscale.core.base.fields.IPMixin.is_iface">is_iface</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.IPMixin.is_ip" href="#jumpscale.core.base.fields.IPMixin.is_ip">is_ip</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.IPMixin.is_ipv4" href="#jumpscale.core.base.fields.IPMixin.is_ipv4">is_ipv4</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.IPMixin.is_ipv6" href="#jumpscale.core.base.fields.IPMixin.is_ipv6">is_ipv6</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="jumpscale.core.base.fields.IPRange" href="#jumpscale.core.base.fields.IPRange">IPRange</a></code></h4>
+<ul class="">
+<li><code><a title="jumpscale.core.base.fields.IPRange.validate" href="#jumpscale.core.base.fields.IPRange.validate">validate</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="jumpscale.core.base.fields.Integer" href="#jumpscale.core.base.fields.Integer">Integer</a></code></h4>
+</li>
+<li>
+<h4><code><a title="jumpscale.core.base.fields.Json" href="#jumpscale.core.base.fields.Json">Json</a></code></h4>
+<ul class="">
+<li><code><a title="jumpscale.core.base.fields.Json.from_raw" href="#jumpscale.core.base.fields.Json.from_raw">from_raw</a></code></li>
+<li><code><a title="jumpscale.core.base.fields.Json.validate" href="#jumpscale.core.base.fields.Json.validate">validate</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="jumpscale.core.base.fields.List" href="#jumpscale.core.base.fields.List">List</a></code></h4>
@@ -3154,6 +4533,9 @@ they will converted to objects.</p>
 <ul class="">
 <li><code><a title="jumpscale.core.base.fields.Path.validate" href="#jumpscale.core.base.fields.Path.validate">validate</a></code></li>
 </ul>
+</li>
+<li>
+<h4><code><a title="jumpscale.core.base.fields.Port" href="#jumpscale.core.base.fields.Port">Port</a></code></h4>
 </li>
 <li>
 <h4><code><a title="jumpscale.core.base.fields.Secret" href="#jumpscale.core.base.fields.Secret">Secret</a></code></h4>

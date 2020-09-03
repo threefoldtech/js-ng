@@ -22,16 +22,37 @@
 <section id="section-intro">
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">from jumpscale.clients.base import Client
+<pre><code class="python">import inspect
+import json
+import os
+import sys
+from functools import partial
+
+from jumpscale.clients.base import Client
 from jumpscale.core.base import fields
 from jumpscale.loader import j
-from functools import partial
-import json
-from typing import List
+from jumpscale.servers.gedis.server import GedisErrorTypes, deserialize, serialize
+from jumpscale.tools.codeloader import load_python_module
+
+
+class ActorResult:
+    def __init__(self, **kwargs):
+        self.success = kwargs.get(&#34;success&#34;, True)
+        self.result = kwargs.get(&#34;result&#34;, None)
+        self.error = kwargs.get(&#34;error&#34;, None)
+        self.error_type = kwargs.get(&#34;error_type&#34;, None)
+        self.is_async = kwargs.get(&#34;is_async&#34;, False)
+        self.task_id = kwargs.get(&#34;task_id&#34;, None)
+
+    def __dir__(self):
+        return list(self.__dict__.keys())
+
+    def __repr__(self):
+        return str(self.__dict__)
 
 
 class ActorProxy:
-    def __init__(self, actor_name, actor_info, gedis_client):
+    def __init__(self, actor_name, actor_info, client):
         &#34;&#34;&#34;ActorProxy to remote actor on the server side
 
         Arguments:
@@ -41,7 +62,7 @@ class ActorProxy:
         &#34;&#34;&#34;
         self.actor_name = actor_name
         self.actor_info = actor_info
-        self._gedis_client = gedis_client
+        self.client = client
 
     def __dir__(self):
         &#34;&#34;&#34;Delegate the available functions on the ActorProxy to `actor_info` keys
@@ -49,9 +70,9 @@ class ActorProxy:
         Returns:
             list -- methods available on the ActorProxy
         &#34;&#34;&#34;
-        return list(self.actor_info.keys())
+        return list(self.actor_info[&#34;methods&#34;].keys())
 
-    def __getattr__(self, attr):
+    def __getattr__(self, method):
         &#34;&#34;&#34;Return a function representing the remote function on the actual actor
 
         Arguments:
@@ -61,48 +82,23 @@ class ActorProxy:
             function -- function waiting on the arguments
         &#34;&#34;&#34;
 
-        def mkfun(actor_name, fn_name, *args):
-            return self._gedis_client.execute(self.actor_name, fn_name, *args)
+        def function(*args, **kwargs):
+            return self.client.execute(self.actor_name, method, *args, **kwargs)
 
-        mkfun.__doc__ = self.actor_info[attr][&#34;doc&#34;]
-        return partial(mkfun, self.actor_name, attr)
+        func = partial(function)
+        func.__doc__ = self.actor_info[&#34;methods&#34;][method][&#34;doc&#34;]
+        return func
 
 
 class ActorsCollection:
-    def __init__(self, gedis_client):
-        &#34;&#34;&#34;ActorsCollection to allow using the actors like `gedis.actors.ACTORNAME.ACTORMETHOD(*ACTOR_METHOD_ARGS)
-
-        Arguments:
-            gedis_client {GedisClient} -- gedis client
-        &#34;&#34;&#34;
-        self._gedis_client = gedis_client
-        self._actors = {}
-
-    @property
-    def actors_names(self):
-        # TODO: CHECK IF WE SHOULD USE CACHE HERE?
-        return json.loads(self._gedis_client.execute(&#34;system&#34;, &#34;list_actors&#34;))
+    def __init__(self, actors):
+        self._actors = actors
 
     def __dir__(self):
-        return self.actors_names
-
-    def _load_actor(self, actor_name):
-        &#34;&#34;&#34;Load actor: creating ActorProxy for remote actor `actor_name` and store it in the collection.
-
-        Arguments:
-            actor_name {str} -- remote actor name
-
-        Returns:
-            ActorProxy -- ActorProxy that can call the remote actor.
-        &#34;&#34;&#34;
-        actor_info = json.loads(self._gedis_client.execute(actor_name, &#34;info&#34;))
-        self._actors[actor_name] = ActorProxy(actor_name, actor_info, self._gedis_client)
-        return self._actors[actor_name]
+        return list(self._actors.keys())
 
     def __getattr__(self, actor_name):
-        if actor_name not in self._actors:
-            return self._load_actor(actor_name)
-        else:
+        if actor_name in self._actors:
             return self._actors[actor_name]
 
 
@@ -110,72 +106,86 @@ class GedisClient(Client):
     name = fields.String(default=&#34;local&#34;)
     hostname = fields.String(default=&#34;localhost&#34;)
     port = fields.Integer(default=16000)
+    raise_on_error = fields.Boolean(default=False)
+    disable_deserialization = fields.Boolean(default=False)
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._redisclient = None
-        self.redis_client
-        self.actors = ActorsCollection(self)
+        self._loaded_actors = {}
+        self._loaded_modules = []
+        self.actors = None
+        self._load_actors()
 
     @property
     def redis_client(self):
-        if not self._redisclient:
-            try:
-                self._redisclient = j.clients.redis.get(f&#34;gedis_{self.name}&#34;)
-            except:
-                self._redisclient = j.clients.redis.new(f&#34;gedis_{self.name}&#34;)
-
-        self._redisclient.hostname = self.hostname
-        self._redisclient.port = self.port
-        self._redisclient.save()
+        if self._redisclient is None:
+            self._redisclient = j.clients.redis.get(name=f&#34;gedis_{self.name}&#34;, hostname=self.hostname, port=self.port)
         return self._redisclient
 
-    def register_actor(self, actor_name: str, actor_path: str):
-        &#34;&#34;&#34;Register actor on the server side (gedis server)
+    def _load_module(self, path):
+        if path not in self._loaded_modules:
+            load_python_module(path)
+            self._loaded_modules.append(path)
 
-        Arguments:
-            actor_name {str} -- actor name to be used in the system
-            actor_path {str} -- actor path on the remote gedis server
+    def _load_actors(self):
+        self._loaded_actors = {}
+        for actor_name in self.list_actors():
+            actor_info = self._get_actor_info(actor_name)
+            self._load_module(actor_info[&#34;path&#34;])
+            self._loaded_actors[actor_name] = ActorProxy(actor_name, actor_info, self)
 
-        &#34;&#34;&#34;
-        return self.execute(&#34;system&#34;, &#34;register_actor&#34;, actor_name, actor_path)
+        self.actors = ActorsCollection(self._loaded_actors)
 
-    def execute(self, actor_name: str, actor_method: str, *args):
-        &#34;&#34;&#34;Execute
+    def _get_actor_info(self, actor_name):
+        return self.execute(actor_name, &#34;info&#34;, die=True).result
 
-        Arguments:
-            actor_name {str} -- actor name
-            actor_name {str} -- actor method to execute
-            *args      {List[object]}  -- *args of parameters
-
-        &#34;&#34;&#34;
-        return self._redisclient.execute_command(actor_name, actor_method, *args)
-
-    def doc(self, actor_name: str):
-        &#34;&#34;&#34;Gets the documentation of actor `actor_name`
-
-        Arguments:
-            actor_name {str} -- actor to retrieve its documentation
-
-        &#34;&#34;&#34;
-        return json.loads(self.execute(actor_name, &#34;info&#34;))
-
-    def ppdoc(self, actor_name):
-        &#34;&#34;&#34;Pretty print documentation of actor
-
-        Arguments:
-            actor_name {str} -- actor to print its documentation.
-        &#34;&#34;&#34;
-        res = self.doc(actor_name)
-        print(json.dumps(res, indent=2, sort_keys=True))
-
-    def list_actors(self) -&gt; List[str]:
+    def list_actors(self) -&gt; list:
         &#34;&#34;&#34;List actors
 
         Returns:
-            List[str] -- list of actors available on gedis server.
+            list -- List of loaded actors
         &#34;&#34;&#34;
-        return json.loads(self.execute(&#34;system&#34;, &#34;list_actors&#34;))</code></pre>
+        return self.execute(&#34;core&#34;, &#34;list_actors&#34;, die=True).result
+
+    def reload(self):
+        &#34;&#34;&#34;Reload actors
+        &#34;&#34;&#34;
+        self._load_actors()
+
+    def execute(self, actor_name: str, actor_method: str, *args, die: bool = False, **kwargs) -&gt; ActorResult:
+        &#34;&#34;&#34;Execute actor&#39;s method
+
+        Arguments:
+            actor_name {str} -- actor name
+            actor_method {str} -- actor method
+
+        Keyword Arguments:
+            die {bool} --  flag to raise an error when request fails (default: {False})
+
+        Raises:
+            RemoteException: Raises if the request failed and raise_on_error flag is set
+
+        Returns:
+            ActorResult -- request result
+        &#34;&#34;&#34;
+        payload = json.dumps((args, kwargs), default=serialize)
+        response = self.redis_client.execute_command(actor_name, actor_method, payload)
+
+        deserializer = deserialize if not self.disable_deserialization else None
+        response = json.loads(response, object_hook=deserializer)
+
+        if not response[&#34;success&#34;]:
+            if die or self.raise_on_error:
+                raise RemoteException(response[&#34;error&#34;])
+
+            response[&#34;error_type&#34;] = GedisErrorTypes(response[&#34;error_type&#34;])
+
+        return ActorResult(**response)
+
+
+class RemoteException(Exception):
+    pass</code></pre>
 </details>
 </section>
 <section>
@@ -189,7 +199,7 @@ class GedisClient(Client):
 <dl>
 <dt id="jumpscale.clients.gedis.gedis.ActorProxy"><code class="flex name class">
 <span>class <span class="ident">ActorProxy</span></span>
-<span>(</span><span>actor_name, actor_info, gedis_client)</span>
+<span>(</span><span>actor_name, actor_info, client)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>ActorProxy to remote actor on the server side</p>
@@ -200,7 +210,7 @@ gedis_client {GedisClient} &ndash; gedis client reference</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class ActorProxy:
-    def __init__(self, actor_name, actor_info, gedis_client):
+    def __init__(self, actor_name, actor_info, client):
         &#34;&#34;&#34;ActorProxy to remote actor on the server side
 
         Arguments:
@@ -210,7 +220,7 @@ gedis_client {GedisClient} &ndash; gedis client reference</p></section>
         &#34;&#34;&#34;
         self.actor_name = actor_name
         self.actor_info = actor_info
-        self._gedis_client = gedis_client
+        self.client = client
 
     def __dir__(self):
         &#34;&#34;&#34;Delegate the available functions on the ActorProxy to `actor_info` keys
@@ -218,9 +228,9 @@ gedis_client {GedisClient} &ndash; gedis client reference</p></section>
         Returns:
             list -- methods available on the ActorProxy
         &#34;&#34;&#34;
-        return list(self.actor_info.keys())
+        return list(self.actor_info[&#34;methods&#34;].keys())
 
-    def __getattr__(self, attr):
+    def __getattr__(self, method):
         &#34;&#34;&#34;Return a function representing the remote function on the actual actor
 
         Arguments:
@@ -230,77 +240,61 @@ gedis_client {GedisClient} &ndash; gedis client reference</p></section>
             function -- function waiting on the arguments
         &#34;&#34;&#34;
 
-        def mkfun(actor_name, fn_name, *args):
-            return self._gedis_client.execute(self.actor_name, fn_name, *args)
+        def function(*args, **kwargs):
+            return self.client.execute(self.actor_name, method, *args, **kwargs)
 
-        mkfun.__doc__ = self.actor_info[attr][&#34;doc&#34;]
-        return partial(mkfun, self.actor_name, attr)</code></pre>
+        func = partial(function)
+        func.__doc__ = self.actor_info[&#34;methods&#34;][method][&#34;doc&#34;]
+        return func</code></pre>
 </details>
 </dd>
-<dt id="jumpscale.clients.gedis.gedis.ActorsCollection"><code class="flex name class">
-<span>class <span class="ident">ActorsCollection</span></span>
-<span>(</span><span>gedis_client)</span>
+<dt id="jumpscale.clients.gedis.gedis.ActorResult"><code class="flex name class">
+<span>class <span class="ident">ActorResult</span></span>
+<span>(</span><span>**kwargs)</span>
 </code></dt>
-<dd>
-<section class="desc"><p>ActorsCollection to allow using the actors like `gedis.actors.ACTORNAME.ACTORMETHOD(*ACTOR_METHOD_ARGS)</p>
-<h2 id="arguments">Arguments</h2>
-<p>gedis_client {GedisClient} &ndash; gedis client</p></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">class ActorsCollection:
-    def __init__(self, gedis_client):
-        &#34;&#34;&#34;ActorsCollection to allow using the actors like `gedis.actors.ACTORNAME.ACTORMETHOD(*ACTOR_METHOD_ARGS)
-
-        Arguments:
-            gedis_client {GedisClient} -- gedis client
-        &#34;&#34;&#34;
-        self._gedis_client = gedis_client
-        self._actors = {}
-
-    @property
-    def actors_names(self):
-        # TODO: CHECK IF WE SHOULD USE CACHE HERE?
-        return json.loads(self._gedis_client.execute(&#34;system&#34;, &#34;list_actors&#34;))
-
-    def __dir__(self):
-        return self.actors_names
-
-    def _load_actor(self, actor_name):
-        &#34;&#34;&#34;Load actor: creating ActorProxy for remote actor `actor_name` and store it in the collection.
-
-        Arguments:
-            actor_name {str} -- remote actor name
-
-        Returns:
-            ActorProxy -- ActorProxy that can call the remote actor.
-        &#34;&#34;&#34;
-        actor_info = json.loads(self._gedis_client.execute(actor_name, &#34;info&#34;))
-        self._actors[actor_name] = ActorProxy(actor_name, actor_info, self._gedis_client)
-        return self._actors[actor_name]
-
-    def __getattr__(self, actor_name):
-        if actor_name not in self._actors:
-            return self._load_actor(actor_name)
-        else:
-            return self._actors[actor_name]</code></pre>
-</details>
-<h3>Instance variables</h3>
-<dl>
-<dt id="jumpscale.clients.gedis.gedis.ActorsCollection.actors_names"><code class="name">var <span class="ident">actors_names</span></code></dt>
 <dd>
 <section class="desc"></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">@property
-def actors_names(self):
-    # TODO: CHECK IF WE SHOULD USE CACHE HERE?
-    return json.loads(self._gedis_client.execute(&#34;system&#34;, &#34;list_actors&#34;))</code></pre>
+<pre><code class="python">class ActorResult:
+    def __init__(self, **kwargs):
+        self.success = kwargs.get(&#34;success&#34;, True)
+        self.result = kwargs.get(&#34;result&#34;, None)
+        self.error = kwargs.get(&#34;error&#34;, None)
+        self.error_type = kwargs.get(&#34;error_type&#34;, None)
+        self.is_async = kwargs.get(&#34;is_async&#34;, False)
+        self.task_id = kwargs.get(&#34;task_id&#34;, None)
+
+    def __dir__(self):
+        return list(self.__dict__.keys())
+
+    def __repr__(self):
+        return str(self.__dict__)</code></pre>
 </details>
 </dd>
-</dl>
+<dt id="jumpscale.clients.gedis.gedis.ActorsCollection"><code class="flex name class">
+<span>class <span class="ident">ActorsCollection</span></span>
+<span>(</span><span>actors)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class ActorsCollection:
+    def __init__(self, actors):
+        self._actors = actors
+
+    def __dir__(self):
+        return list(self._actors.keys())
+
+    def __getattr__(self, actor_name):
+        if actor_name in self._actors:
+            return self._actors[actor_name]</code></pre>
+</details>
 </dd>
 <dt id="jumpscale.clients.gedis.gedis.GedisClient"><code class="flex name class">
 <span>class <span class="ident">GedisClient</span></span>
+<span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>A simple attribute-based namespace.</p>
@@ -329,72 +323,82 @@ print(p.name, p.age)
     name = fields.String(default=&#34;local&#34;)
     hostname = fields.String(default=&#34;localhost&#34;)
     port = fields.Integer(default=16000)
+    raise_on_error = fields.Boolean(default=False)
+    disable_deserialization = fields.Boolean(default=False)
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._redisclient = None
-        self.redis_client
-        self.actors = ActorsCollection(self)
+        self._loaded_actors = {}
+        self._loaded_modules = []
+        self.actors = None
+        self._load_actors()
 
     @property
     def redis_client(self):
-        if not self._redisclient:
-            try:
-                self._redisclient = j.clients.redis.get(f&#34;gedis_{self.name}&#34;)
-            except:
-                self._redisclient = j.clients.redis.new(f&#34;gedis_{self.name}&#34;)
-
-        self._redisclient.hostname = self.hostname
-        self._redisclient.port = self.port
-        self._redisclient.save()
+        if self._redisclient is None:
+            self._redisclient = j.clients.redis.get(name=f&#34;gedis_{self.name}&#34;, hostname=self.hostname, port=self.port)
         return self._redisclient
 
-    def register_actor(self, actor_name: str, actor_path: str):
-        &#34;&#34;&#34;Register actor on the server side (gedis server)
+    def _load_module(self, path):
+        if path not in self._loaded_modules:
+            load_python_module(path)
+            self._loaded_modules.append(path)
 
-        Arguments:
-            actor_name {str} -- actor name to be used in the system
-            actor_path {str} -- actor path on the remote gedis server
+    def _load_actors(self):
+        self._loaded_actors = {}
+        for actor_name in self.list_actors():
+            actor_info = self._get_actor_info(actor_name)
+            self._load_module(actor_info[&#34;path&#34;])
+            self._loaded_actors[actor_name] = ActorProxy(actor_name, actor_info, self)
 
-        &#34;&#34;&#34;
-        return self.execute(&#34;system&#34;, &#34;register_actor&#34;, actor_name, actor_path)
+        self.actors = ActorsCollection(self._loaded_actors)
 
-    def execute(self, actor_name: str, actor_method: str, *args):
-        &#34;&#34;&#34;Execute
+    def _get_actor_info(self, actor_name):
+        return self.execute(actor_name, &#34;info&#34;, die=True).result
 
-        Arguments:
-            actor_name {str} -- actor name
-            actor_name {str} -- actor method to execute
-            *args      {List[object]}  -- *args of parameters
-
-        &#34;&#34;&#34;
-        return self._redisclient.execute_command(actor_name, actor_method, *args)
-
-    def doc(self, actor_name: str):
-        &#34;&#34;&#34;Gets the documentation of actor `actor_name`
-
-        Arguments:
-            actor_name {str} -- actor to retrieve its documentation
-
-        &#34;&#34;&#34;
-        return json.loads(self.execute(actor_name, &#34;info&#34;))
-
-    def ppdoc(self, actor_name):
-        &#34;&#34;&#34;Pretty print documentation of actor
-
-        Arguments:
-            actor_name {str} -- actor to print its documentation.
-        &#34;&#34;&#34;
-        res = self.doc(actor_name)
-        print(json.dumps(res, indent=2, sort_keys=True))
-
-    def list_actors(self) -&gt; List[str]:
+    def list_actors(self) -&gt; list:
         &#34;&#34;&#34;List actors
 
         Returns:
-            List[str] -- list of actors available on gedis server.
+            list -- List of loaded actors
         &#34;&#34;&#34;
-        return json.loads(self.execute(&#34;system&#34;, &#34;list_actors&#34;))</code></pre>
+        return self.execute(&#34;core&#34;, &#34;list_actors&#34;, die=True).result
+
+    def reload(self):
+        &#34;&#34;&#34;Reload actors
+        &#34;&#34;&#34;
+        self._load_actors()
+
+    def execute(self, actor_name: str, actor_method: str, *args, die: bool = False, **kwargs) -&gt; ActorResult:
+        &#34;&#34;&#34;Execute actor&#39;s method
+
+        Arguments:
+            actor_name {str} -- actor name
+            actor_method {str} -- actor method
+
+        Keyword Arguments:
+            die {bool} --  flag to raise an error when request fails (default: {False})
+
+        Raises:
+            RemoteException: Raises if the request failed and raise_on_error flag is set
+
+        Returns:
+            ActorResult -- request result
+        &#34;&#34;&#34;
+        payload = json.dumps((args, kwargs), default=serialize)
+        response = self.redis_client.execute_command(actor_name, actor_method, payload)
+
+        deserializer = deserialize if not self.disable_deserialization else None
+        response = json.loads(response, object_hook=deserializer)
+
+        if not response[&#34;success&#34;]:
+            if die or self.raise_on_error:
+                raise RemoteException(response[&#34;error&#34;])
+
+            response[&#34;error_type&#34;] = GedisErrorTypes(response[&#34;error_type&#34;])
+
+        return ActorResult(**response)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -404,9 +408,11 @@ print(p.name, p.age)
 </ul>
 <h3>Instance variables</h3>
 <dl>
-<dt id="jumpscale.clients.gedis.gedis.GedisClient.hostname"><code class="name">var <span class="ident">hostname</span></code></dt>
+<dt id="jumpscale.clients.gedis.gedis.GedisClient.disable_deserialization"><code class="name">var <span class="ident">disable_deserialization</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -418,21 +424,45 @@ print(p.name, p.age)
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
+    return self._get_value(name, field)</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.clients.gedis.gedis.GedisClient.hostname"><code class="name">var <span class="ident">hostname</span></code></dt>
+<dd>
+<section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>any</code></strong></dt>
+<dd>the field value</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def getter(self):
+    &#34;&#34;&#34;
+    getter method this property
 
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
+    Returns:
+        any: the field value
+    &#34;&#34;&#34;
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.clients.gedis.gedis.GedisClient.name"><code class="name">var <span class="ident">name</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -444,21 +474,20 @@ print(p.name, p.age)
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.clients.gedis.gedis.GedisClient.port"><code class="name">var <span class="ident">port</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -470,16 +499,38 @@ print(p.name, p.age)
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
+    return self._get_value(name, field)</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.clients.gedis.gedis.GedisClient.raise_on_error"><code class="name">var <span class="ident">raise_on_error</span></code></dt>
+<dd>
+<section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>any</code></strong></dt>
+<dd>the field value</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def getter(self):
+    &#34;&#34;&#34;
+    getter method this property
 
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
+    Returns:
+        any: the field value
+    &#34;&#34;&#34;
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.clients.gedis.gedis.GedisClient.redis_client"><code class="name">var <span class="ident">redis_client</span></code></dt>
@@ -489,63 +540,66 @@ print(p.name, p.age)
 <summary>Source code</summary>
 <pre><code class="python">@property
 def redis_client(self):
-    if not self._redisclient:
-        try:
-            self._redisclient = j.clients.redis.get(f&#34;gedis_{self.name}&#34;)
-        except:
-            self._redisclient = j.clients.redis.new(f&#34;gedis_{self.name}&#34;)
-
-    self._redisclient.hostname = self.hostname
-    self._redisclient.port = self.port
-    self._redisclient.save()
+    if self._redisclient is None:
+        self._redisclient = j.clients.redis.get(name=f&#34;gedis_{self.name}&#34;, hostname=self.hostname, port=self.port)
     return self._redisclient</code></pre>
 </details>
 </dd>
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="jumpscale.clients.gedis.gedis.GedisClient.doc"><code class="name flex">
-<span>def <span class="ident">doc</span></span>(<span>self, actor_name)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Gets the documentation of actor <code>actor_name</code></p>
-<h2 id="arguments">Arguments</h2>
-<p>actor_name {str} &ndash; actor to retrieve its documentation</p></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def doc(self, actor_name: str):
-    &#34;&#34;&#34;Gets the documentation of actor `actor_name`
-
-    Arguments:
-        actor_name {str} -- actor to retrieve its documentation
-
-    &#34;&#34;&#34;
-    return json.loads(self.execute(actor_name, &#34;info&#34;))</code></pre>
-</details>
-</dd>
 <dt id="jumpscale.clients.gedis.gedis.GedisClient.execute"><code class="name flex">
-<span>def <span class="ident">execute</span></span>(<span>self, actor_name, actor_method, *args)</span>
+<span>def <span class="ident">execute</span></span>(<span>self, actor_name, actor_method, *args, die=False, **kwargs)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Execute</p>
+<section class="desc"><p>Execute actor's method</p>
 <h2 id="arguments">Arguments</h2>
 <p>actor_name {str} &ndash; actor name
-actor_name {str} &ndash; actor method to execute
-<em>args
-{List[object]}
-&ndash; </em>args of parameters</p></section>
+actor_method {str} &ndash; actor method
+Keyword Arguments:
+die {bool} &ndash;
+flag to raise an error when request fails (default: {False})</p>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><strong><a title="jumpscale.clients.gedis.gedis.RemoteException" href="#jumpscale.clients.gedis.gedis.RemoteException"><code>RemoteException</code></a></strong></dt>
+<dd>Raises if the request failed and raise_on_error flag is set</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><a title="jumpscale.clients.gedis.gedis.ActorResult" href="#jumpscale.clients.gedis.gedis.ActorResult"><code>ActorResult</code></a> &ndash; <code>request</code> <code>result</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def execute(self, actor_name: str, actor_method: str, *args):
-    &#34;&#34;&#34;Execute
+<pre><code class="python">def execute(self, actor_name: str, actor_method: str, *args, die: bool = False, **kwargs) -&gt; ActorResult:
+    &#34;&#34;&#34;Execute actor&#39;s method
 
     Arguments:
         actor_name {str} -- actor name
-        actor_name {str} -- actor method to execute
-        *args      {List[object]}  -- *args of parameters
+        actor_method {str} -- actor method
 
+    Keyword Arguments:
+        die {bool} --  flag to raise an error when request fails (default: {False})
+
+    Raises:
+        RemoteException: Raises if the request failed and raise_on_error flag is set
+
+    Returns:
+        ActorResult -- request result
     &#34;&#34;&#34;
-    return self._redisclient.execute_command(actor_name, actor_method, *args)</code></pre>
+    payload = json.dumps((args, kwargs), default=serialize)
+    response = self.redis_client.execute_command(actor_name, actor_method, payload)
+
+    deserializer = deserialize if not self.disable_deserialization else None
+    response = json.loads(response, object_hook=deserializer)
+
+    if not response[&#34;success&#34;]:
+        if die or self.raise_on_error:
+            raise RemoteException(response[&#34;error&#34;])
+
+        response[&#34;error_type&#34;] = GedisErrorTypes(response[&#34;error_type&#34;])
+
+    return ActorResult(**response)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.clients.gedis.gedis.GedisClient.list_actors"><code class="name flex">
@@ -554,56 +608,32 @@ actor_name {str} &ndash; actor method to execute
 <dd>
 <section class="desc"><p>List actors</p>
 <h2 id="returns">Returns</h2>
-<p>List[str] &ndash; list of actors available on gedis server.</p></section>
+<dl>
+<dt><code>list</code> &ndash; <code>List</code> of <code>loaded</code> <code>actors</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def list_actors(self) -&gt; List[str]:
+<pre><code class="python">def list_actors(self) -&gt; list:
     &#34;&#34;&#34;List actors
 
     Returns:
-        List[str] -- list of actors available on gedis server.
+        list -- List of loaded actors
     &#34;&#34;&#34;
-    return json.loads(self.execute(&#34;system&#34;, &#34;list_actors&#34;))</code></pre>
+    return self.execute(&#34;core&#34;, &#34;list_actors&#34;, die=True).result</code></pre>
 </details>
 </dd>
-<dt id="jumpscale.clients.gedis.gedis.GedisClient.ppdoc"><code class="name flex">
-<span>def <span class="ident">ppdoc</span></span>(<span>self, actor_name)</span>
+<dt id="jumpscale.clients.gedis.gedis.GedisClient.reload"><code class="name flex">
+<span>def <span class="ident">reload</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Pretty print documentation of actor</p>
-<h2 id="arguments">Arguments</h2>
-<p>actor_name {str} &ndash; actor to print its documentation.</p></section>
+<section class="desc"><p>Reload actors</p></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def ppdoc(self, actor_name):
-    &#34;&#34;&#34;Pretty print documentation of actor
-
-    Arguments:
-        actor_name {str} -- actor to print its documentation.
+<pre><code class="python">def reload(self):
+    &#34;&#34;&#34;Reload actors
     &#34;&#34;&#34;
-    res = self.doc(actor_name)
-    print(json.dumps(res, indent=2, sort_keys=True))</code></pre>
-</details>
-</dd>
-<dt id="jumpscale.clients.gedis.gedis.GedisClient.register_actor"><code class="name flex">
-<span>def <span class="ident">register_actor</span></span>(<span>self, actor_name, actor_path)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Register actor on the server side (gedis server)</p>
-<h2 id="arguments">Arguments</h2>
-<p>actor_name {str} &ndash; actor name to be used in the system
-actor_path {str} &ndash; actor path on the remote gedis server</p></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def register_actor(self, actor_name: str, actor_path: str):
-    &#34;&#34;&#34;Register actor on the server side (gedis server)
-
-    Arguments:
-        actor_name {str} -- actor name to be used in the system
-        actor_path {str} -- actor path on the remote gedis server
-
-    &#34;&#34;&#34;
-    return self.execute(&#34;system&#34;, &#34;register_actor&#34;, actor_name, actor_path)</code></pre>
+    self._load_actors()</code></pre>
 </details>
 </dd>
 </dl>
@@ -616,6 +646,23 @@ actor_path {str} &ndash; actor path on the remote gedis server</p></section>
 <li><code><a title="jumpscale.clients.base.Client.validate" href="../../core/base/meta.html#jumpscale.core.base.meta.Base.validate">validate</a></code></li>
 </ul>
 </li>
+</ul>
+</dd>
+<dt id="jumpscale.clients.gedis.gedis.RemoteException"><code class="flex name class">
+<span>class <span class="ident">RemoteException</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Common base class for all non-exit exceptions.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class RemoteException(Exception):
+    pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
 </ul>
 </dd>
 </dl>
@@ -638,24 +685,27 @@ actor_path {str} &ndash; actor path on the remote gedis server</p></section>
 <h4><code><a title="jumpscale.clients.gedis.gedis.ActorProxy" href="#jumpscale.clients.gedis.gedis.ActorProxy">ActorProxy</a></code></h4>
 </li>
 <li>
+<h4><code><a title="jumpscale.clients.gedis.gedis.ActorResult" href="#jumpscale.clients.gedis.gedis.ActorResult">ActorResult</a></code></h4>
+</li>
+<li>
 <h4><code><a title="jumpscale.clients.gedis.gedis.ActorsCollection" href="#jumpscale.clients.gedis.gedis.ActorsCollection">ActorsCollection</a></code></h4>
-<ul class="">
-<li><code><a title="jumpscale.clients.gedis.gedis.ActorsCollection.actors_names" href="#jumpscale.clients.gedis.gedis.ActorsCollection.actors_names">actors_names</a></code></li>
-</ul>
 </li>
 <li>
 <h4><code><a title="jumpscale.clients.gedis.gedis.GedisClient" href="#jumpscale.clients.gedis.gedis.GedisClient">GedisClient</a></code></h4>
-<ul class="two-column">
-<li><code><a title="jumpscale.clients.gedis.gedis.GedisClient.doc" href="#jumpscale.clients.gedis.gedis.GedisClient.doc">doc</a></code></li>
+<ul class="">
+<li><code><a title="jumpscale.clients.gedis.gedis.GedisClient.disable_deserialization" href="#jumpscale.clients.gedis.gedis.GedisClient.disable_deserialization">disable_deserialization</a></code></li>
 <li><code><a title="jumpscale.clients.gedis.gedis.GedisClient.execute" href="#jumpscale.clients.gedis.gedis.GedisClient.execute">execute</a></code></li>
 <li><code><a title="jumpscale.clients.gedis.gedis.GedisClient.hostname" href="#jumpscale.clients.gedis.gedis.GedisClient.hostname">hostname</a></code></li>
 <li><code><a title="jumpscale.clients.gedis.gedis.GedisClient.list_actors" href="#jumpscale.clients.gedis.gedis.GedisClient.list_actors">list_actors</a></code></li>
 <li><code><a title="jumpscale.clients.gedis.gedis.GedisClient.name" href="#jumpscale.clients.gedis.gedis.GedisClient.name">name</a></code></li>
 <li><code><a title="jumpscale.clients.gedis.gedis.GedisClient.port" href="#jumpscale.clients.gedis.gedis.GedisClient.port">port</a></code></li>
-<li><code><a title="jumpscale.clients.gedis.gedis.GedisClient.ppdoc" href="#jumpscale.clients.gedis.gedis.GedisClient.ppdoc">ppdoc</a></code></li>
+<li><code><a title="jumpscale.clients.gedis.gedis.GedisClient.raise_on_error" href="#jumpscale.clients.gedis.gedis.GedisClient.raise_on_error">raise_on_error</a></code></li>
 <li><code><a title="jumpscale.clients.gedis.gedis.GedisClient.redis_client" href="#jumpscale.clients.gedis.gedis.GedisClient.redis_client">redis_client</a></code></li>
-<li><code><a title="jumpscale.clients.gedis.gedis.GedisClient.register_actor" href="#jumpscale.clients.gedis.gedis.GedisClient.register_actor">register_actor</a></code></li>
+<li><code><a title="jumpscale.clients.gedis.gedis.GedisClient.reload" href="#jumpscale.clients.gedis.gedis.GedisClient.reload">reload</a></code></li>
 </ul>
+</li>
+<li>
+<h4><code><a title="jumpscale.clients.gedis.gedis.RemoteException" href="#jumpscale.clients.gedis.gedis.RemoteException">RemoteException</a></code></h4>
 </li>
 </ul>
 </li>

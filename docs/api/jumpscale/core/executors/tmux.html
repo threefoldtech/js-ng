@@ -27,7 +27,9 @@
 
 &#34;&#34;&#34;
 import libtmux
-from jumpscale.loader import j
+from jumpscale.core.logging import export_module_as as logger
+
+from .command_builder import cmd_from_args
 
 __all__ = [&#34;execute_in_window&#34;]
 
@@ -39,39 +41,50 @@ def create_session(session_name, kill_if_exists=False):
     return server.new_session(session_name, kill_session=kill_if_exists)
 
 
+def kill_session(session_name):
+    return server.kill_session(session_name)
+
+
+def get_session(session_name):
+    try:
+        session = server.find_where({&#34;session_name&#34;: session_name})
+        if not session:
+            return create_session(session_name)
+    except libtmux.exc.LibTmuxException:
+        return create_session(session_name)
+    return session
+
+
 def get_js_session():
-    s = server.find_where({&#34;session_name&#34;: JS_SESSION_NAME})
-    if not s:
-        return create_session(JS_SESSION_NAME)
-    else:
-        return s
+    return get_session(JS_SESSION_NAME)
 
 
 def get_js_window(window_name):
-    s = get_js_session()
-    w = server.find_where({&#34;window_name&#34;: window_name})
-    if not w:
-        w = s.new_window(window_name)
-        w.rename_window(window_name)
-
-    return w
+    return get_window(session_name=JS_SESSION_NAME, window_name=window_name)
 
 
-def get_window(window_name):
-    w = server.find_where({&#34;window_name&#34;: window_name})
-    if not w:
-        w = get_js_window(window_name)
-    return w
+def get_window(session_name, window_name):
+    session = get_session(session_name)
+    window = session.find_where({&#34;window_name&#34;: window_name})
+    if not window:
+        window = session.new_window(window_name)
+    return window
 
 
-def execute_in_window(window_name, cmd):
-    try:
-        server.list_sessions()
-    except:
-        j.logger.error(&#34;tmux isn&#39;t running&#34;)
-        server.new_session(JS_SESSION_NAME)
-    w = get_window(window_name)
-    w.attached_pane.send_keys(cmd)</code></pre>
+@cmd_from_args
+def execute_in_window(cmd, window_name, session_name=None):
+    &#34;&#34;&#34;
+    execute a command in a new tmux window
+
+    Args:
+        cmd (str or list): command as a string or an argument list, e.g. `&#34;ls -la&#34;` or `[&#34;ls&#34;, &#34;la&#34;]`
+        window_name (str): window name
+    &#34;&#34;&#34;
+    if session_name:
+        window = get_window(session_name, window_name)
+    else:
+        window = get_js_window(window_name)
+    window.attached_pane.send_keys(cmd)</code></pre>
 </details>
 </section>
 <section>
@@ -82,20 +95,33 @@ def execute_in_window(window_name, cmd):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="jumpscale.core.executors.tmux.execute_in_window"><code class="name flex">
-<span>def <span class="ident">execute_in_window</span></span>(<span>window_name, cmd)</span>
+<span>def <span class="ident">execute_in_window</span></span>(<span>cmd, window_name, session_name=None)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>execute a command in a new tmux window</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>cmd</code></strong> :&ensp;<code>str</code> or <code>list</code></dt>
+<dd>command as a string or an argument list, e.g. <code>"ls -la"</code> or <code>["ls", "la"]</code></dd>
+<dt><strong><code>window_name</code></strong> :&ensp;<code>str</code></dt>
+<dd>window name</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def execute_in_window(window_name, cmd):
-    try:
-        server.list_sessions()
-    except:
-        j.logger.error(&#34;tmux isn&#39;t running&#34;)
-        server.new_session(JS_SESSION_NAME)
-    w = get_window(window_name)
-    w.attached_pane.send_keys(cmd)</code></pre>
+<pre><code class="python">@cmd_from_args
+def execute_in_window(cmd, window_name, session_name=None):
+    &#34;&#34;&#34;
+    execute a command in a new tmux window
+
+    Args:
+        cmd (str or list): command as a string or an argument list, e.g. `&#34;ls -la&#34;` or `[&#34;ls&#34;, &#34;la&#34;]`
+        window_name (str): window name
+    &#34;&#34;&#34;
+    if session_name:
+        window = get_window(session_name, window_name)
+    else:
+        window = get_js_window(window_name)
+    window.attached_pane.send_keys(cmd)</code></pre>
 </details>
 </dd>
 </dl>

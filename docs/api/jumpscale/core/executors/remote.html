@@ -22,10 +22,10 @@
 <section id="section-intro">
 <p>Executor remote allows executing commands within specific env on the local machine. using the executor framework you can retrieve the stdout, stderr, and the return code as well.</p>
 <pre><code>JS-NG&gt; with j.core.executors.RemoteExecutor(host=&quot;localhost&quot;, connect_kwargs={&quot;key_filename&quot;:
-                                                                              &quot;/home/xmonader/.ssh/id_rsa&quot;,}) as c: 
-            c.run(&quot;hostname&quot;)                           
+                                                                              &quot;/home/xmonader/.ssh/id_rsa&quot;,}) as c:
+            c.run(&quot;hostname&quot;)
 xmonader-ThinkPad-E580
-JS-NG&gt; 
+JS-NG&gt;
 </code></pre>
 <details class="source">
 <summary>Source code</summary>
@@ -34,15 +34,35 @@ Executor remote allows executing commands within specific env on the local machi
 
 ```
 JS-NG&gt; with j.core.executors.RemoteExecutor(host=&#34;localhost&#34;, connect_kwargs={&#34;key_filename&#34;:
-                                                                              &#34;/home/xmonader/.ssh/id_rsa&#34;,}) as c: 
-            c.run(&#34;hostname&#34;)                           
+                                                                              &#34;/home/xmonader/.ssh/id_rsa&#34;,}) as c:
+            c.run(&#34;hostname&#34;)
 xmonader-ThinkPad-E580
-JS-NG&gt; 
-``` 
+JS-NG&gt;
+```
 &#34;&#34;&#34;
 
 
 import fabric
+
+from .command_builder import cmd_from_args
+
+
+@cmd_from_args
+def execute(cmd, command_ctx, connection_ctx):
+    &#34;&#34;&#34;
+    execute a command on a remote context
+
+    Args:
+        cmd (str or list): command as a string or an argument list, e.g. `&#34;ls -la&#34;` or `[&#34;ls&#34;, &#34;la&#34;]`
+        command_ctx (dict): command runner context (the same as local `execute`)
+        connection_ctx (dict): context passed to fabric e.g. fabric.Connection(host, user=None, port=None, config=None, gateway=None, forward_agent=None, connect_timeout=None, connect_kwargs=None, inline_ssh_env=None)
+
+    Returns:
+        tuple: return code, stdout, stderr
+    &#34;&#34;&#34;
+    with fabric.Connection(**connection_ctx) as c:
+        res = c.run(cmd, **command_ctx)
+        return res.return_code, res.stdout, res.stderr
 
 
 class RemoteExecutor:
@@ -64,18 +84,16 @@ class RemoteExecutor:
         return self.connection.sftp()
 
     def run(self, cmd, **command_ctx):
-        with fabric.Connection(**self._connection_ctx) as c:
-            res = c.run(cmd, **command_ctx)
-            return res.return_code, res.stdout, res.stderr
+        &#34;&#34;&#34;
+        execute a command
 
+        Args:
+            cmd (str or list): &#34;ls -la&#34; or [&#34;ls&#34;, &#34;-la&#34;]
 
-def execute(cmd, command_ctx, connection_ctx):
-    &#34;&#34;&#34;
-    kwargs: fabric.Connection(host, user=None, port=None, config=None, gateway=None, forward_agent=None, connect_timeout=None, connect_kwargs=None, inline_ssh_env=None)
-    &#34;&#34;&#34;
-    with fabric.Connection(**connection_ctx) as c:
-        res = c.run(cmd, **command_ctx)
-        return res.return_code, res.stdout, res.stderr</code></pre>
+        Returns:
+            tuple: return code, stdout, stderr
+        &#34;&#34;&#34;
+        return execute(cmd, command_ctx, self._connection_ctx)</code></pre>
 </details>
 </section>
 <section>
@@ -89,12 +107,35 @@ def execute(cmd, command_ctx, connection_ctx):
 <span>def <span class="ident">execute</span></span>(<span>cmd, command_ctx, connection_ctx)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>kwargs: fabric.Connection(host, user=None, port=None, config=None, gateway=None, forward_agent=None, connect_timeout=None, connect_kwargs=None, inline_ssh_env=None)</p></section>
+<section class="desc"><p>execute a command on a remote context</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>cmd</code></strong> :&ensp;<code>str</code> or <code>list</code></dt>
+<dd>command as a string or an argument list, e.g. <code>"ls -la"</code> or <code>["ls", "la"]</code></dd>
+<dt><strong><code>command_ctx</code></strong> :&ensp;<code>dict</code></dt>
+<dd>command runner context (the same as local <a title="jumpscale.core.executors.remote.execute" href="#jumpscale.core.executors.remote.execute"><code>execute()</code></a>)</dd>
+<dt><strong><code>connection_ctx</code></strong> :&ensp;<code>dict</code></dt>
+<dd>context passed to fabric e.g. fabric.Connection(host, user=None, port=None, config=None, gateway=None, forward_agent=None, connect_timeout=None, connect_kwargs=None, inline_ssh_env=None)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>tuple</code></strong></dt>
+<dd>return code, stdout, stderr</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def execute(cmd, command_ctx, connection_ctx):
+<pre><code class="python">@cmd_from_args
+def execute(cmd, command_ctx, connection_ctx):
     &#34;&#34;&#34;
-    kwargs: fabric.Connection(host, user=None, port=None, config=None, gateway=None, forward_agent=None, connect_timeout=None, connect_kwargs=None, inline_ssh_env=None)
+    execute a command on a remote context
+
+    Args:
+        cmd (str or list): command as a string or an argument list, e.g. `&#34;ls -la&#34;` or `[&#34;ls&#34;, &#34;la&#34;]`
+        command_ctx (dict): command runner context (the same as local `execute`)
+        connection_ctx (dict): context passed to fabric e.g. fabric.Connection(host, user=None, port=None, config=None, gateway=None, forward_agent=None, connect_timeout=None, connect_kwargs=None, inline_ssh_env=None)
+
+    Returns:
+        tuple: return code, stdout, stderr
     &#34;&#34;&#34;
     with fabric.Connection(**connection_ctx) as c:
         res = c.run(cmd, **command_ctx)
@@ -133,9 +174,16 @@ def execute(cmd, command_ctx, connection_ctx):
         return self.connection.sftp()
 
     def run(self, cmd, **command_ctx):
-        with fabric.Connection(**self._connection_ctx) as c:
-            res = c.run(cmd, **command_ctx)
-            return res.return_code, res.stdout, res.stderr</code></pre>
+        &#34;&#34;&#34;
+        execute a command
+
+        Args:
+            cmd (str or list): &#34;ls -la&#34; or [&#34;ls&#34;, &#34;-la&#34;]
+
+        Returns:
+            tuple: return code, stdout, stderr
+        &#34;&#34;&#34;
+        return execute(cmd, command_ctx, self._connection_ctx)</code></pre>
 </details>
 <h3>Instance variables</h3>
 <dl>
@@ -166,13 +214,30 @@ def sftp(self):
 <span>def <span class="ident">run</span></span>(<span>self, cmd, **command_ctx)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>execute a command</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>cmd</code></strong> :&ensp;<code>str</code> or <code>list</code></dt>
+<dd>"ls -la" or ["ls", "-la"]</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>tuple</code></strong></dt>
+<dd>return code, stdout, stderr</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def run(self, cmd, **command_ctx):
-    with fabric.Connection(**self._connection_ctx) as c:
-        res = c.run(cmd, **command_ctx)
-        return res.return_code, res.stdout, res.stderr</code></pre>
+    &#34;&#34;&#34;
+    execute a command
+
+    Args:
+        cmd (str or list): &#34;ls -la&#34; or [&#34;ls&#34;, &#34;-la&#34;]
+
+    Returns:
+        tuple: return code, stdout, stderr
+    &#34;&#34;&#34;
+    return execute(cmd, command_ctx, self._connection_ctx)</code></pre>
 </details>
 </dd>
 </dl>

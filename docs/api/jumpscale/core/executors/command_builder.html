@@ -22,9 +22,36 @@
 <section id="section-intro">
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def format_cmd(cmd):
+<pre><code class="python">from functools import wraps
+from subprocess import list2cmdline
+
+
+def format_cmd(cmd):
     ## code around it to run in tmux.
-    pass</code></pre>
+    pass
+
+
+def cmd_from_args(func):
+    &#34;&#34;&#34;
+    a decorator to allow passing cmd as a list, with auto-escaping using `subprocess.list2cmdline`
+
+    cmd must be the first positional arguments
+
+    Args:
+        func (function): the function to decorate
+
+    Returns:
+        function: a new function
+    &#34;&#34;&#34;
+
+    @wraps(func)
+    def inner(cmd, *args, **kwargs):
+        if isinstance(cmd, list):
+            cmd = list2cmdline(cmd)
+
+        return func(cmd, *args, **kwargs)
+
+    return inner</code></pre>
 </details>
 </section>
 <section>
@@ -34,6 +61,47 @@
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="jumpscale.core.executors.command_builder.cmd_from_args"><code class="name flex">
+<span>def <span class="ident">cmd_from_args</span></span>(<span>func)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>a decorator to allow passing cmd as a list, with auto-escaping using <code>subprocess.list2cmdline</code></p>
+<p>cmd must be the first positional arguments</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>func</code></strong> :&ensp;<code>function</code></dt>
+<dd>the function to decorate</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>function</code></strong></dt>
+<dd>a new function</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def cmd_from_args(func):
+    &#34;&#34;&#34;
+    a decorator to allow passing cmd as a list, with auto-escaping using `subprocess.list2cmdline`
+
+    cmd must be the first positional arguments
+
+    Args:
+        func (function): the function to decorate
+
+    Returns:
+        function: a new function
+    &#34;&#34;&#34;
+
+    @wraps(func)
+    def inner(cmd, *args, **kwargs):
+        if isinstance(cmd, list):
+            cmd = list2cmdline(cmd)
+
+        return func(cmd, *args, **kwargs)
+
+    return inner</code></pre>
+</details>
+</dd>
 <dt id="jumpscale.core.executors.command_builder.format_cmd"><code class="name flex">
 <span>def <span class="ident">format_cmd</span></span>(<span>cmd)</span>
 </code></dt>
@@ -64,6 +132,7 @@
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="jumpscale.core.executors.command_builder.cmd_from_args" href="#jumpscale.core.executors.command_builder.cmd_from_args">cmd_from_args</a></code></li>
 <li><code><a title="jumpscale.core.executors.command_builder.format_cmd" href="#jumpscale.core.executors.command_builder.format_cmd">format_cmd</a></code></li>
 </ul>
 </li>

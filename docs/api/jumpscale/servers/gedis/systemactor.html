@@ -22,45 +22,78 @@
 <section id="section-intro">
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">from .baseactor import BaseActor
-import importlib
-import os
+<pre><code class="python">import os
 import sys
 import json
+import inspect
+from jumpscale.loader import j
+from jumpscale.servers.gedis.baseactor import BaseActor, actor_method
+
+
+class CoreActor(BaseActor):
+    def __init__(self):
+        super().__init__()
+        self._server = None
+        self.path = __file__
+
+    def set_server(self, server):
+        self._server = server
+
+    @actor_method
+    def list_actors(self) -&gt; list:
+        &#34;&#34;&#34;List available actors
+
+        Returns:
+            list -- list of available actors
+        &#34;&#34;&#34;
+        return list(self._server._loaded_actors.keys())
+
 
 class SystemActor(BaseActor):
-    def __init__(self, server):
-        self.server = server
+    def __init__(self):
+        super().__init__()
+        self._server = None
+        self.path = __file__
 
-    def list_actors(self):
-        return json.dumps(list(self.server.actors.keys()))
+    def set_server(self, server):
+        self._server = server
 
+    @actor_method
     def register_actor(self, actor_name: str, actor_path: str) -&gt; bool:
         &#34;&#34;&#34;Register new actor
-        
+
         Arguments:
             actor_name {str} -- actor name within gedis server.
             actor_path {str} -- actor path on gedis server machine.
-        
+
         Returns:
             bool -- True if registered.
         &#34;&#34;&#34;
+        module = j.tools.codeloader.load_python_module(actor_path)
+        actor = module.Actor()
+        actor.path = actor_path
+        result = actor.__validate_actor__()
 
-        actor_name = actor_name.decode()
-        actor_path = actor_path.decode()
+        if not result[&#34;valid&#34;]:
+            raise j.exceptions.Validation(
+                &#34;Actor {} is not valid, check the following errors {}&#34;.format(actor_name, result[&#34;errors&#34;])
+            )
 
-        if actor_name in self.server.actors:
-            return 1
-        module_python_name = os.path.dirname(actor_path)
-        module_name = os.path.splitext(module_python_name)[0]
-        spec = importlib.util.spec_from_file_location(module_name, actor_path)
-        module = importlib.util.module_from_spec(spec)
-        sys.modules[spec.name] = module
-        spec.loader.exec_module(module)
-        self.server.actors[actor_name] = module.Actor()
-        print(self.server.actors)
+        self._server._register_actor(actor_name, actor)
+        return True
 
-        return 1</code></pre>
+    @actor_method
+    def unregister_actor(self, actor_name: str) -&gt; bool:
+        &#34;&#34;&#34;Register actor
+
+        Arguments:
+            actor_name {str} -- actor name
+
+        Returns:
+            bool -- True if actors is unregistered
+        &#34;&#34;&#34;
+        self._server._unregister_actor(actor_name)
+        return True</code></pre>
 </details>
 </section>
 <section>
@@ -72,47 +105,30 @@ class SystemActor(BaseActor):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="jumpscale.servers.gedis.systemactor.SystemActor"><code class="flex name class">
-<span>class <span class="ident">SystemActor</span></span>
-<span>(</span><span>server)</span>
+<dt id="jumpscale.servers.gedis.systemactor.CoreActor"><code class="flex name class">
+<span>class <span class="ident">CoreActor</span></span>
 </code></dt>
 <dd>
 <section class="desc"></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class SystemActor(BaseActor):
-    def __init__(self, server):
-        self.server = server
+<pre><code class="python">class CoreActor(BaseActor):
+    def __init__(self):
+        super().__init__()
+        self._server = None
+        self.path = __file__
 
-    def list_actors(self):
-        return json.dumps(list(self.server.actors.keys()))
+    def set_server(self, server):
+        self._server = server
 
-    def register_actor(self, actor_name: str, actor_path: str) -&gt; bool:
-        &#34;&#34;&#34;Register new actor
-        
-        Arguments:
-            actor_name {str} -- actor name within gedis server.
-            actor_path {str} -- actor path on gedis server machine.
-        
+    @actor_method
+    def list_actors(self) -&gt; list:
+        &#34;&#34;&#34;List available actors
+
         Returns:
-            bool -- True if registered.
+            list -- list of available actors
         &#34;&#34;&#34;
-
-        actor_name = actor_name.decode()
-        actor_path = actor_path.decode()
-
-        if actor_name in self.server.actors:
-            return 1
-        module_python_name = os.path.dirname(actor_path)
-        module_name = os.path.splitext(module_python_name)[0]
-        spec = importlib.util.spec_from_file_location(module_name, actor_path)
-        module = importlib.util.module_from_spec(spec)
-        sys.modules[spec.name] = module
-        spec.loader.exec_module(module)
-        self.server.actors[actor_name] = module.Actor()
-        print(self.server.actors)
-
-        return 1</code></pre>
+        return list(self._server._loaded_actors.keys())</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -120,17 +136,100 @@ class SystemActor(BaseActor):
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="jumpscale.servers.gedis.systemactor.SystemActor.list_actors"><code class="name flex">
+<dt id="jumpscale.servers.gedis.systemactor.CoreActor.list_actors"><code class="name flex">
 <span>def <span class="ident">list_actors</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>List available actors</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>list</code> &ndash; <code>list</code> of <code>available</code> <code>actors</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@actor_method
+def list_actors(self) -&gt; list:
+    &#34;&#34;&#34;List available actors
+
+    Returns:
+        list -- list of available actors
+    &#34;&#34;&#34;
+    return list(self._server._loaded_actors.keys())</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.servers.gedis.systemactor.CoreActor.set_server"><code class="name flex">
+<span>def <span class="ident">set_server</span></span>(<span>self, server)</span>
 </code></dt>
 <dd>
 <section class="desc"></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def list_actors(self):
-    return json.dumps(list(self.server.actors.keys()))</code></pre>
+<pre><code class="python">def set_server(self, server):
+    self._server = server</code></pre>
 </details>
 </dd>
+</dl>
+</dd>
+<dt id="jumpscale.servers.gedis.systemactor.SystemActor"><code class="flex name class">
+<span>class <span class="ident">SystemActor</span></span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class SystemActor(BaseActor):
+    def __init__(self):
+        super().__init__()
+        self._server = None
+        self.path = __file__
+
+    def set_server(self, server):
+        self._server = server
+
+    @actor_method
+    def register_actor(self, actor_name: str, actor_path: str) -&gt; bool:
+        &#34;&#34;&#34;Register new actor
+
+        Arguments:
+            actor_name {str} -- actor name within gedis server.
+            actor_path {str} -- actor path on gedis server machine.
+
+        Returns:
+            bool -- True if registered.
+        &#34;&#34;&#34;
+        module = j.tools.codeloader.load_python_module(actor_path)
+        actor = module.Actor()
+        actor.path = actor_path
+        result = actor.__validate_actor__()
+
+        if not result[&#34;valid&#34;]:
+            raise j.exceptions.Validation(
+                &#34;Actor {} is not valid, check the following errors {}&#34;.format(actor_name, result[&#34;errors&#34;])
+            )
+
+        self._server._register_actor(actor_name, actor)
+        return True
+
+    @actor_method
+    def unregister_actor(self, actor_name: str) -&gt; bool:
+        &#34;&#34;&#34;Register actor
+
+        Arguments:
+            actor_name {str} -- actor name
+
+        Returns:
+            bool -- True if actors is unregistered
+        &#34;&#34;&#34;
+        self._server._unregister_actor(actor_name)
+        return True</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="jumpscale.servers.gedis.baseactor.BaseActor" href="baseactor.html#jumpscale.servers.gedis.baseactor.BaseActor">BaseActor</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
 <dt id="jumpscale.servers.gedis.systemactor.SystemActor.register_actor"><code class="name flex">
 <span>def <span class="ident">register_actor</span></span>(<span>self, actor_name, actor_path)</span>
 </code></dt>
@@ -143,32 +242,68 @@ actor_path {str} &ndash; actor path on gedis server machine.</p>
 <p>bool &ndash; True if registered.</p></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def register_actor(self, actor_name: str, actor_path: str) -&gt; bool:
+<pre><code class="python">@actor_method
+def register_actor(self, actor_name: str, actor_path: str) -&gt; bool:
     &#34;&#34;&#34;Register new actor
-    
+
     Arguments:
         actor_name {str} -- actor name within gedis server.
         actor_path {str} -- actor path on gedis server machine.
-    
+
     Returns:
         bool -- True if registered.
     &#34;&#34;&#34;
+    module = j.tools.codeloader.load_python_module(actor_path)
+    actor = module.Actor()
+    actor.path = actor_path
+    result = actor.__validate_actor__()
 
-    actor_name = actor_name.decode()
-    actor_path = actor_path.decode()
+    if not result[&#34;valid&#34;]:
+        raise j.exceptions.Validation(
+            &#34;Actor {} is not valid, check the following errors {}&#34;.format(actor_name, result[&#34;errors&#34;])
+        )
 
-    if actor_name in self.server.actors:
-        return 1
-    module_python_name = os.path.dirname(actor_path)
-    module_name = os.path.splitext(module_python_name)[0]
-    spec = importlib.util.spec_from_file_location(module_name, actor_path)
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    self.server.actors[actor_name] = module.Actor()
-    print(self.server.actors)
+    self._server._register_actor(actor_name, actor)
+    return True</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.servers.gedis.systemactor.SystemActor.set_server"><code class="name flex">
+<span>def <span class="ident">set_server</span></span>(<span>self, server)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def set_server(self, server):
+    self._server = server</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.servers.gedis.systemactor.SystemActor.unregister_actor"><code class="name flex">
+<span>def <span class="ident">unregister_actor</span></span>(<span>self, actor_name)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Register actor</p>
+<h2 id="arguments">Arguments</h2>
+<p>actor_name {str} &ndash; actor name</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>bool</code> &ndash; <code>True</code> <code>if</code> <code>actors</code> <code>is</code> <code>unregistered</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@actor_method
+def unregister_actor(self, actor_name: str) -&gt; bool:
+    &#34;&#34;&#34;Register actor
 
-    return 1</code></pre>
+    Arguments:
+        actor_name {str} -- actor name
+
+    Returns:
+        bool -- True if actors is unregistered
+    &#34;&#34;&#34;
+    self._server._unregister_actor(actor_name)
+    return True</code></pre>
 </details>
 </dd>
 </dl>
@@ -190,10 +325,18 @@ actor_path {str} &ndash; actor path on gedis server machine.</p>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
+<h4><code><a title="jumpscale.servers.gedis.systemactor.CoreActor" href="#jumpscale.servers.gedis.systemactor.CoreActor">CoreActor</a></code></h4>
+<ul class="">
+<li><code><a title="jumpscale.servers.gedis.systemactor.CoreActor.list_actors" href="#jumpscale.servers.gedis.systemactor.CoreActor.list_actors">list_actors</a></code></li>
+<li><code><a title="jumpscale.servers.gedis.systemactor.CoreActor.set_server" href="#jumpscale.servers.gedis.systemactor.CoreActor.set_server">set_server</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="jumpscale.servers.gedis.systemactor.SystemActor" href="#jumpscale.servers.gedis.systemactor.SystemActor">SystemActor</a></code></h4>
 <ul class="">
-<li><code><a title="jumpscale.servers.gedis.systemactor.SystemActor.list_actors" href="#jumpscale.servers.gedis.systemactor.SystemActor.list_actors">list_actors</a></code></li>
 <li><code><a title="jumpscale.servers.gedis.systemactor.SystemActor.register_actor" href="#jumpscale.servers.gedis.systemactor.SystemActor.register_actor">register_actor</a></code></li>
+<li><code><a title="jumpscale.servers.gedis.systemactor.SystemActor.set_server" href="#jumpscale.servers.gedis.systemactor.SystemActor.set_server">set_server</a></code></li>
+<li><code><a title="jumpscale.servers.gedis.systemactor.SystemActor.unregister_actor" href="#jumpscale.servers.gedis.systemactor.SystemActor.unregister_actor">unregister_actor</a></code></li>
 </ul>
 </li>
 </ul>
