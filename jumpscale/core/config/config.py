@@ -82,6 +82,7 @@ __all__ = [
     "Environment",
     "get",
     "set",
+    "set_default",
     "get_current_version",
 ]
 
@@ -155,14 +156,14 @@ def update_config(data):
         toml.dump(data, f)
 
 
-def get(key):
+def get(key, default=None):
     """ Retrives value from jumpscale config
 
     Arguments:
         key (str): the key you wish to retrieve
     """
     conf = get_config()
-    return conf.get(key)
+    return conf.get(key, default)
 
 
 def set(key, val):
@@ -175,6 +176,26 @@ def set(key, val):
     conf = get_config()
     conf[key] = val
     update_config(conf)
+
+
+def set_default(key, val):
+    """ Sets key to value in jumpscale config and returns 
+
+    Arguments:
+        key (str): the key you wish to update
+        val: value to update with and to return if key doesn't exist in configurations
+    
+    Returns:
+        val (str): returned if key doesn't exist in configuration or the value of key in configurations
+    """
+    conf = get_config()
+    if key in conf:
+        return conf[key]
+    else:
+        set(key, val)
+        return val
+
+
 
 
 def migrate_config():
