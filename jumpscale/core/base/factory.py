@@ -499,12 +499,10 @@ class StoredFactory(events.Handler, Factory):
         """
         lazy-load all instance configuration
 
-        it will a new class for this factory with property descriptors for all instances listed by the store
+        it will create a new class for this factory with property descriptors for all instances listed by the store
         """
-        # get a class name
-        cls_name = self.location.name.replace(".", "")
         # get a new class based on self.__class__
-        new_cls = type(cls_name, (self.__class__,), {})
+        new_cls = type(self.__class__.__name__, (self.__class__,), {})
 
         # list all instance names in the store and set a property descriptor as an attribute
         for name in self.store.list_all():
@@ -578,3 +576,14 @@ class StoredFactory(events.Handler, Factory):
 
     def __hash__(self):
         return hash(self.location)
+
+    def __str__(self):
+        """
+        readale string for this factory
+
+        Returns:
+            str
+        """
+        return f"{self.__class__.__name__}({self.type.__name__})"
+
+    __repr__ = __str__

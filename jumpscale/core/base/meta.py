@@ -469,3 +469,47 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
             bool: `True` if equal, `False` otherwise
         """
         return type(self) == type(other) and self.to_dict() == other.to_dict()
+
+    def __str__(self):
+        """
+        construct a readable string of base objects as  key-value list
+
+        example:
+
+        ```python
+        print(j.servers.openresty.tttt.websites.test.locations.l)
+        ```
+
+        output:
+
+        ```
+        Location(
+            instance_name='l',
+            parent=Website(instance_name_='test'),
+            name=None,
+            path_url='/',
+            is_auth=False,
+            force_https=False,
+            ...
+        )
+        ```
+
+        Returns:
+            str: readable string
+        """
+        data = {}
+
+        if self.instance_name:
+            data["instance_name"] = self.instance_name.__repr__()
+
+        if self.parent and self.parent.instance_name:
+            parent_instance_name = self.parent.instance_name.__repr__()
+            data["parent"] = f"{self.parent.__class__.__name__}(instance_name_={parent_instance_name})"
+
+        for name, field in self._get_fields().items():
+            data[name] = self._get_value(name, field).__repr__()
+
+        values = ",\n".join([f"  {name}={value}" for name, value in data.items()])
+        return f"{self.__class__.__name__}(\n{values}\n)"
+
+    __repr__ = __str__
