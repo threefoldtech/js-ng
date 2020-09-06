@@ -86,7 +86,7 @@ __all__ = [
     "get_current_version",
 ]
 
-__version__ = "11.0.0-a2"
+__version__ = "11.0.0-a3"
 
 
 config_root = os.path.expanduser(os.path.join("~/.config", "jumpscale"))
