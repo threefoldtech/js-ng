@@ -161,6 +161,7 @@ def get(key, default=None):
 
     Arguments:
         key (str): the key you wish to retrieve
+        default (object): return value if key doesn't exist in configurations
     """
     conf = get_config()
     return conf.get(key, default)
