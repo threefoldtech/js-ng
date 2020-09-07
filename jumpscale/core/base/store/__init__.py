@@ -50,7 +50,7 @@ class Location:
 
     def __init__(self, *name_list, type_=None):
         self.type = type_
-        self.name_list = list(name_list)
+        self.name_list = [name for name in name_list if name]
 
     @property
     def name(self):

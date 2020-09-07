@@ -417,6 +417,10 @@ class TestStoredFactory(unittest.TestCase):
         with self.assertRaisesRegex(fields.ValidationError, "^release_date: *"):
             bmw.release_date = "qwe"
 
+    def test_create_instance_with_sub_factories_without_factory(self):
+        client = Client()
+        self.assertEqual(client.users.count, 0)
+
     def tearDown(self):
         for name in self.factory.list_all():
             self.factory.delete(name)
