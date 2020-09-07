@@ -7,6 +7,7 @@ import re
 from jumpscale.loader import j
 
 SSH_URL_MATCH = "^(git@)(?P<netloc>.*?)(:|/)(?P<path>.*?)/?$"
+HTTP_REPO_URL = r"^(https://)?(?P<provider>.+)(?P<suffix>\..+)\/(?P<account>.+)\/(?P<repo>.+)/?$"
 
 
 def rewrite_git_https_url_to_ssh(url):
