@@ -57,7 +57,6 @@ Then trying to write a new script e.g. `test.py`:
 
 ![jumpscale-autocompletion.png](images/jumpscale-autocompletion.png)
 
-
 ### Recommended extensions
 
 - `autoDocString` to ensure correct docstrings.
@@ -68,18 +67,3 @@ Then trying to write a new script e.g. `test.py`:
 - `Git graph` view a graph of your repository.
 - `Prettify JSON`
 - `TabNine` AI based code completion
-
-
-➜  test poetry config --list
-cache-dir = "/home/username/.cache/pypoetry"
-virtualenvs.create = true
-virtualenvs.in-project = false
-virtualenvs.path = "{cache-dir}/virtualenvs"  # /home/username/.cache/pypoetry/virtualenvs
-
-
-➜  test poetry config virtualenvs.in-project true
-➜  test poetry config --list
-cache-dir = "/home/username/.cache/pypoetry"
-virtualenvs.create = true
-virtualenvs.in-project = true
-virtualenvs.path = "{cache-dir}/virtualenvs"  # /home/username/.cache/pypoetry/virtualenvs
