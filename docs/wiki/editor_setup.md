@@ -57,6 +57,8 @@ Then trying to write a new script e.g. `test.py`:
 
 ![jumpscale-autocompletion.png](images/jumpscale-autocompletion.png)
 
+Note that global `j` object completion is only supported in `jsng` shell.
+
 ### Recommended extensions
 
 - `autoDocString` to ensure correct docstrings.
