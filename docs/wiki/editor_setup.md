@@ -76,7 +76,8 @@ If it shows something like:
 /home/username/.cache/pypoetry/virtualenvs/js-sdk-2MKXmKJD-py3.6 (Activated)
 ```
 
-Then we need to remove it first:
+Then make sure it's deactivated and you're outside this environment in the shell and do the following to remove it:
+
 
 ```
 poetry env remove js-sdk-2MKXmKJD-py3.6
