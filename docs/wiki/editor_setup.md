@@ -10,6 +10,55 @@ You only need in `user settings` specify `python.venvPath` to the directory wher
 
 and make sure to select python interpreter (Ctrl+P then select interpreter)
 
+#### Auto-completion with poetry virtual environment
+
+You can configure poetry to create the virtual environment inside the project directory so vscode can detect it and you can select its interpreter without extra vscode configuration.
+
+First, let's check current poetry configuration:
+
+```
+poetry config --list
+```
+
+It should output something like:
+
+```
+cache-dir = "/home/username/.cache/pypoetry"
+virtualenvs.create = true
+virtualenvs.in-project = false
+virtualenvs.path = "{cache-dir}/virtualenvs"  # /home/username/.cache/pypoetry/virtualenvs
+```
+
+Now we need to change `virtualenvs.in-project` configuration to be `true`, this can be done as follows:
+
+```
+poetry config virtualenvs.in-project true
+```
+
+Now we can simply clone our repository and change the directory to it, then start installation:
+
+```
+poetry install
+```
+
+And it will tell us that the newly created virtual environment will be at `.venv`:
+
+```
+Creating virtualenv js-sdk in /home/username/test/js-sdk/.venv
+Installing dependencies from lock file
+Package operations: ...
+```
+
+After successful installation, we can open vscode and press `Control + P` and try to select the interpreter, it should be listed without any extra configuration:
+
+![selecting-interpreter.png](images/selecting-interpreter.png)
+
+Then trying to write a new script e.g. `test.py`:
+
+![jumpscale-autocompletion.png](images/jumpscale-autocompletion.png)
+
+Note that global `j` object completion is only supported in `jsng` shell.
+
 ### Recommended extensions
 
 - `autoDocString` to ensure correct docstrings.
