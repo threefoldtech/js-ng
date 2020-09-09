@@ -14,6 +14,8 @@ and make sure to select python interpreter (Ctrl+P then select interpreter)
 
 You can configure poetry to create the virtual environment inside the project directory so vscode can detect it and you can select its interpreter without extra vscode configuration.
 
+Before you start, if you've an old environment in `~/.cache/pypoetry`, see how to remove it [here](#removing-old-virtual-environment-in-cache-directory).
+
 First, let's check current poetry configuration:
 
 ```
@@ -58,6 +60,34 @@ Then trying to write a new script e.g. `test.py`:
 ![jumpscale-autocompletion.png](images/jumpscale-autocompletion.png)
 
 Note that global `j` object completion is only supported in `jsng` shell.
+
+
+##### Removing old virtual environment in cache directory
+
+You should make sure that no virtual environments were created in `~/.cache/pypoetry` for your current project:
+
+```
+poetry env list --full-path
+```
+
+If it shows something like:
+
+```
+/home/username/.cache/pypoetry/virtualenvs/js-sdk-2MKXmKJD-py3.6 (Activated)
+```
+
+Then make sure it's deactivated and you're outside this environment in the shell and do the following to remove it:
+
+
+```
+poetry env remove js-sdk-2MKXmKJD-py3.6
+```
+
+Output:
+
+```
+Deleted virtualenv: /home/abom/.cache/pypoetry/virtualenvs/js-sdk-2MKXmKJD-py3.6
+```
 
 ### Recommended extensions
 
