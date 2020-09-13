@@ -27,7 +27,7 @@ class TestTmux(BaseTests):
         with self.assertRaises(LibTmuxException):
             j.core.executors.tmux.create_session(session_name)
 
-        self.assertIn(session_name, str(j.core.executors.tmux.server.sessions[0]))
+        self.assertIn(session_name, str(j.core.executors.tmux.server.sessions))
 
     def test003_get_js_session(self):
         self.info("Get js session, should pass")
