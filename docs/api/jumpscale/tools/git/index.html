@@ -33,6 +33,7 @@ import re
 from jumpscale.loader import j
 
 SSH_URL_MATCH = &#34;^(git@)(?P&lt;netloc&gt;.*?)(:|/)(?P&lt;path&gt;.*?)/?$&#34;
+HTTP_REPO_URL = r&#34;^(https://)?(?P&lt;provider&gt;.+)(?P&lt;suffix&gt;\..+)\/(?P&lt;account&gt;.+)\/(?P&lt;repo&gt;.+)/?$&#34;
 
 
 def rewrite_git_https_url_to_ssh(url):
