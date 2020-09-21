@@ -93,7 +93,7 @@ class RedisStoreTests(BaseTests):
             self.assertEqual(getattr(stored_instance.address, a), address[a])
 
     def test_02_create_more_instance(self):
-        """Test for creating more than one instance models.
+        """Test for creating more than one instance.
 
         **Test Scenario**
         #. Create three instances.

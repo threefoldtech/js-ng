@@ -3,8 +3,15 @@
 tests:
 	pytest tests -s
 
+integrationtests:
+	pytest tests -sv -m "integration"
+
+unittests:
+	pytest tests -sv -m "unittests"
+
 coverage:
 	pytest tests -s --cov=jumpscale --cov-report=xml
+
 api_docs:
 	pdoc3 jumpscale --html --output-dir docs/api --force
 

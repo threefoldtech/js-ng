@@ -10,6 +10,7 @@ from tests.base_tests import BaseTests
 SESSION_NAME = "testing_process"
 TAIL_PROCESS_NAME = "tail"
 PYTHON_SERVER_NAME = "http.server"
+HOST = "127.0.0.1"
 
 
 class ProcessTests(BaseTests):
@@ -33,7 +34,8 @@ class ProcessTests(BaseTests):
     def start_in_tmux(self, cmd):
         window_name = self.randstr()
         j.core.executors.tmux.execute_in_window(cmd, window_name, SESSION_NAME)
-        sleep(1)
+        if "tail" in cmd:
+            sleep(0.3)
 
     def get_process_pids(self, process_name):
         cmd = f"ps -aux | grep '{process_name}' | grep -v grep | awk '{{ print $2 }}'"
@@ -248,7 +250,7 @@ class ProcessTests(BaseTests):
         env_val = self.randstr()
         rc, _, error = j.sals.process.execute(cmd=cmd, env={env_name: env_val})
         self.assertFalse(rc, error)
-        sleep(1)
+        sleep(0.3)
 
         self.info("Check that the process has been started and get its pid.")
         pids = self.get_process_pids(TAIL_PROCESS_NAME)
@@ -279,6 +281,8 @@ class ProcessTests(BaseTests):
         self.start_in_tmux(cmd)
         cmd = f"python3 -m {PYTHON_SERVER_NAME} {port_2}"
         self.start_in_tmux(cmd)
+        self.assertTrue(j.sals.nettools.wait_connection_test(HOST, port_1, 2))
+        self.assertTrue(j.sals.nettools.wait_connection_test(HOST, port_2, 2))
 
         self.info("Check that the process has been started and get its pid.")
         pids = self.get_process_pids(PYTHON_SERVER_NAME)
@@ -346,6 +350,7 @@ class ProcessTests(BaseTests):
         port = randint(1000, 2000)
         cmd = f"python3 -m {PYTHON_SERVER_NAME} {port}"
         self.start_in_tmux(cmd)
+        self.assertTrue(j.sals.nettools.wait_connection_test(HOST, port, 2))
 
         self.info("Check that the server has been started.")
         pids = self.get_process_pids(PYTHON_SERVER_NAME)
@@ -392,6 +397,7 @@ class ProcessTests(BaseTests):
         port = randint(1000, 2000)
         cmd = f"python3 -m {PYTHON_SERVER_NAME} {port}"
         self.start_in_tmux(cmd)
+        self.assertTrue(j.sals.nettools.wait_connection_test(HOST, port, 2))
 
         self.info("Check that the server has been started.")
         pids = self.get_process_pids(PYTHON_SERVER_NAME)
@@ -461,7 +467,7 @@ class ProcessTests(BaseTests):
         self.info("Kill the process.")
         killed = j.sals.process.kill(pids[0])
         self.assertTrue(killed)
-        sleep(1)
+        sleep(0.1)
 
         self.info("Check that the process has been killed.")
         self.assertFalse(j.sals.process.is_alive(pids[0]))
@@ -518,13 +524,13 @@ class ProcessTests(BaseTests):
 
         if kill_method == "kill_user_processes":
             j.sals.process.kill_user_processes(username)
-            sleep(1)
+            sleep(0.1)
             self.assertFalse(j.sals.process.is_alive(user_pid))
             self.assertTrue(j.sals.process.is_alive(pids[0]))
         else:
             kill_method = getattr(j.sals.process, kill_method)
             kill_method(TAIL_PROCESS_NAME)
-            sleep(1)
+            sleep(0.1)
             self.assertFalse(j.sals.process.is_alive(user_pid))
             self.assertFalse(j.sals.process.is_alive(pids[0]))
 
@@ -610,6 +616,7 @@ class ProcessTests(BaseTests):
         python_port = randint(1000, 2000)
         cmd = f"python3 -m {PYTHON_SERVER_NAME} {python_port}"
         self.start_in_tmux(cmd)
+        self.assertTrue(j.sals.nettools.wait_connection_test(HOST, python_port, 2))
 
         self.info("Check that the server has been started.")
         python_server_pids = self.get_process_pids(PYTHON_SERVER_NAME)
@@ -620,6 +627,7 @@ class ProcessTests(BaseTests):
         redis_port = randint(2001, 3000)
         cmd = f"{process_name} --port {redis_port}"
         self.start_in_tmux(cmd)
+        self.assertTrue(j.sals.nettools.wait_connection_test(HOST, redis_port, 2))
 
         self.info("Check that the server has been started.")
         j.sals.process.is_port_listening(redis_port)

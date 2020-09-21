@@ -1,9 +1,11 @@
 from random import randint
 
+import pytest
 from jumpscale.loader import j
 from tests.base_tests import BaseTests
 
 
+@pytest.mark.integration
 class TestDockerClient(BaseTests):
     DOCKER_CLIENT_NAME = "DOCKER_{}".format(randint(100, 10000))
     DOCKER_IMAGE = "threefoldtech/js-ng"

@@ -16,12 +16,20 @@ MEMORY_ACTOR_PATH = f"{DIR_NAME}/memory_profiler.py"
 class TestGedis(TestCase):
     @classmethod
     def setUpClass(cls):
-        server = j.servers.gedis.get("test")
-        server.actor_add("test", TEST_ACTOR_PATH)
-        server.actor_add("memory", MEMORY_ACTOR_PATH)
-        gevent.spawn(server.start)
-        time.sleep(3)
+        cls.server = j.servers.gedis.get("test")
+        cls.server.actor_add("test", TEST_ACTOR_PATH)
+        cls.server.actor_add("memory", MEMORY_ACTOR_PATH)
+        gevent.spawn(cls.server.start)
+        assert j.sals.nettools.wait_connection_test(cls.server.host, cls.server.port, 3)
         cls.cl = j.clients.gedis.get("test")
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.server.actor_delete("test")
+        cls.server.actor_delete("memory")
+        cls.server.stop()
+        j.clients.gedis.delete("test")
+        j.servers.gedis.delete("test")
 
     def test01(self):
         pool = gevent.pool.Pool(POOLS_COUNT)
