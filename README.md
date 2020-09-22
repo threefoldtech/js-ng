@@ -3,7 +3,7 @@
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/threefoldtech/js-ng/development?filepath=docs%2Fnotebooks)
 ![[https://pypi.python.org/pypi/js-ng](pypi)](https://img.shields.io/pypi/v/js-ng.svg)
 [![Actions Status](https://github.com/threefoldtech/js-ng/workflows/jsng-ci/badge.svg?query=branch%3Adevelopment)](https://github.com/threefoldtech/js-ng/actions?query=branch%3Adevelopment)
-![[https://codecov.io/gh/threefoldtech/js-ng]](https://codecov.io/gh/threefoldtech/js-ng/branch/development/graph/badge.svg)
+[![[https://codecov.io/gh/threefoldtech/js-ng]](https://codecov.io/gh/threefoldtech/js-ng/branch/development/graph/badge.svg)](https://codecov.io/gh/threefoldtech/js-ng/branch/development)
 
 config management/automation framework
 
