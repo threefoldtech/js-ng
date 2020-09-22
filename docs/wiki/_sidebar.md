@@ -19,6 +19,7 @@
     * [Using Tmux](./tutorials/tmux.md)
     * [Github Actions](./tutorials/githubactions-ci.md)
     * [Docker Images](./tutorials/docker_images.md)
+    * [Writing a test](./testing_contribution.md)
 * Developers
     * Structure
     * [Developer setup](./devsetup.md)
