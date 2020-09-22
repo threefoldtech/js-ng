@@ -24,7 +24,7 @@ class TestStartupCmd(TestCase):
         cmd = self._get_instance()
         cmd.start_cmd = self.run_cmd
         cmd.start()
-        sleep(0.1)
+        sleep(0.3)
 
         self.assertTrue(cmd.is_running())
         self.assertTrue(cmd.pid)
@@ -43,7 +43,7 @@ class TestStartupCmd(TestCase):
         attached_cmd = self._get_instance()
         attached_cmd.start_cmd = self.run_cmd
         attached_cmd.start()
-        sleep(0.1)
+        sleep(0.3)
 
         cmd = self._get_instance()
         cmd.ports = [self._get_port(attached_cmd.process)]
