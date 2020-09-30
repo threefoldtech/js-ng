@@ -400,9 +400,6 @@ def is_broken_link(path: str) -> bool:
                 False if path not found or symlink is not broken
     """
     return os.path.islink(path) and not exists(path)
-        return True
-    else:
-        return False
 
 
 def rm_broken_link(path: str) -> bool:
