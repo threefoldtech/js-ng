@@ -389,7 +389,7 @@ def is_empty_dir(path: str) -> bool:
 is_binary_file = lambda path: not is_ascii_file(path)
 
 
-def is_broken_link(path: str, clean=False) -> bool:
+def is_broken_link(path: str) -> bool:
     """Checks if path is a broken symlink
 
     Args:
