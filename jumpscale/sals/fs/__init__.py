@@ -389,20 +389,33 @@ def is_empty_dir(path: str) -> bool:
 is_binary_file = lambda path: not is_ascii_file(path)
 
 
-def is_broken_link(path: str, clean=False) -> bool:
+def is_broken_link(path: str) -> bool:
     """Checks if path is a broken symlink
 
     Args:
         path (str): path to check
-        clean (bool, optional): remove symlink if broken. Defaults to False.
-
-    Raises:
-        NotImplementedError: [description]
 
     Returns:
-        bool: True if path is a broken symlink
+        bool:   True if path is a broken symlink
+                False if path not found or symlink is not broken
     """
-    raise NotImplementedError()
+    return os.path.islink(path) and not exists(path)
+
+
+def rm_broken_link(path: str) -> bool:
+    """Remove broken symlink
+
+    Args:
+        path (str): path to remove
+    
+    Returns:
+        bool: True if broken symlink removed
+    """
+    if is_broken_link(path):
+        unlink(path)
+        return True
+    else:
+        return False
 
 
 def stem(path: str) -> str:
@@ -460,7 +473,6 @@ def make_path(path):
     if not os.path.exists(path):
         os.makedirs(os.path.dirname(path), exist_ok=True)
         return pathlib.Path(path).touch()
-
 
 
 def parent(path: str) -> str:
