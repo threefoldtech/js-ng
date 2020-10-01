@@ -1,6 +1,10 @@
 from tests.base_tests import BaseTests
 from jumpscale.loader import j
 from unittest import skip
+from uuid import uuid4
+import pickle
+import os
+import datetime
 from parameterized import parameterized
 
 
@@ -9,6 +13,8 @@ class TestFS(BaseTests):
     def setUpClass(cls):
         cls.temp_path = j.sals.fs.join_paths("/tmp", cls.generate_random_text())
 
+    def random_string(self):
+        return str(uuid4())[:10]
     @classmethod
     def tearDownClass(cls):
         j.sals.fs.rmtree(cls.temp_path)
@@ -157,3 +163,178 @@ class TestFS(BaseTests):
         else:
             self.assertEqual(1, len(dirs))
             self.assertNotIn(random_dir_dest_3, dirs)
+
+    def test013_path_parts(self):
+        random_dir_dest, random_dir_dest_2, _, _ = self.create_tree()
+        random_dir_dest_3 = j.sals.fs.join_paths(random_dir_dest_2, self.generate_random_text())
+        self.info("Create dir {}".format(random_dir_dest_3))
+        parts = list(j.sals.fs.path_parts(random_dir_dest_3))
+        split_path = random_dir_dest_3.split("/")
+        split_path[0] = "/"
+        self.assertEqual(parts, split_path)
+
+    def test014_basename(self):
+        random_dir_dest, random_dir_dest_2, _, _ = self.create_tree()
+        base =  self.generate_random_text()
+        random_dir_dest_3 = j.sals.fs.join_paths(random_dir_dest_2, base)
+        self.info("Create dir {}".format(random_dir_dest_3))
+
+        basename = j.sals.fs.basename(random_dir_dest_3)
+        self.info("Get Basename of  {}".format(random_dir_dest_3))
+        self.assertEqual(basename, base)
+
+    def test16_write_read_check_binary_file(self):
+        """
+        Test case for writting, reading and checking binary file.
+        **Test scenario**
+        #. Write binary file.
+        #. Check that file has been created and it is a binary file.
+        #. Read this file and check that its content.
+        """
+        self.info("Write binary file.")
+        content = self.random_string()
+        random_dir_dest, random_dir_dest_2, _, _ = self.create_tree()
+        random_dir_dest_3 = j.sals.fs.join_paths(random_dir_dest_2, self.generate_random_text())
+        with open(random_dir_dest_3, "wb") as f:
+            pickle.dump(content, f)
+
+        self.info("Check that file has been created and it is a binary file.")
+        os.path.exists(random_dir_dest_3)
+        assert j.sals.fs.is_binary_file(random_dir_dest_3) is True
+
+        self.info("Read this file and check that its content.")
+        with open(random_dir_dest_3, "rb") as f:
+            expected_content = f.read()
+        result_content = j.sals.fs.read_binary(random_dir_dest_3)
+        assert result_content == expected_content
+
+    def test_0017_create_move_rename_copy_file(self):
+        """
+        Test case for creating, moving, renaming and copying files.
+        """
+        self.info("Create an empty file.")
+        random_dir_dest, random_dir_dest_2, _, _ = self.create_tree()
+        file_name_1 = self.generate_random_text()
+        file_path_1 = j.sals.fs.join_paths(random_dir_dest_2, file_name_1 )
+        j.sals.fs.write_file(file_path_1,"")
+
+        self.info("Check that the file is exists.")
+        assert os.path.exists(file_path_1) is True
+
+        self.info("Create a directory and move this file to this directory.")
+        dir_name_1 = self.random_string()
+        dir_path_1 = os.path.join("/tmp", dir_name_1)
+        j.sals.fs.mkdirs(dir_path_1)
+        j.sals.fs.move(file_path_1, dir_path_1)
+
+        self.info("Check that the file is moved.")
+        file_path_2 = os.path.join(dir_path_1, file_name_1)
+        assert os.path.exists(file_path_2) is True
+        assert os.path.exists(file_path_1) is False
+
+        self.info("Rename this file and Check that the file is renamed.")
+        file_name_2 = self.random_string()
+        file_path_3 = os.path.join(dir_path_1, file_name_2)
+        j.sals.fs.rename(file_path_2, file_path_3)
+        assert os.path.exists(file_path_3) is True
+        assert os.path.exists(file_path_2) is False
+
+        self.info("Write a word (W) to the copied file.")
+        file_content = self.random_string()
+        j.sals.fs.write_file(file_path_3, file_content)
+
+        self.info("Check the content of the copied file, should not be changed.")
+        content_1 = j.sals.fs.read_file(file_path_3)
+        assert content_1 == file_content
+
+        self.info("Try again to copy this file to the same directory with overwriteFile=True.")
+        j.sals.fs.write_file(file_path_3,self.random_string())
+
+        self.info("Check the content of the copied file, should be changed.")
+        content_1 = j.sals.fs.read_file(file_path_3)
+        assert content_1 != file_content
+
+
+    def test_0018_change_file_names(self):
+        """
+        Test case for changing files names using j.sal.fs.change_filenames.
+        """
+        self.info("Create a tree with many sub directories and files with a common word (W1) in their names.")
+        base_dir,_,_,_ = self.create_tree()
+        
+        self.info("Change these files names by replacing (W1) with another word (W2) with recursive=False.")
+        log_files = [
+            os.path.splitext(x)[0]
+            for x in  j.sals.fs.walk_files("/tmp")
+            if ".log" in x
+        ]
+        child_log = [os.path.splitext(os.path.join(base_dir, x))[0] for x in os.listdir(base_dir) if ".log" in x]
+        j.sals.fs.change_filenames(".log", ".java", base_dir)
+        
+        self.info("Check that children files are only changed.")
+        changed_files = [
+            os.path.splitext(x)[0]
+            for x in j.sals.fs.walk_files("/tmp")
+            if ".java" in x
+        ]
+        assert changed_files == child_log
+        
+        self.info("Change these files names again by replacing (W1) with another word (W2) with recursive=True.")
+        j.sals.fs.change_filenames(".log", ".java", base_dir)
+        
+        self.info("Check that files names are changed.")
+        java_files = [
+            os.path.splitext(x)[0]
+            for x in j.sals.fs.walk_files("/tmp")
+            if ".java" in x
+        ]
+        assert sorted(log_files) == sorted(java_files)
+
+        self.info("Create a new .py file")
+
+        file_name = f"{self.random_string()}.py"
+        file_path = os.path.join(base_dir, file_name)
+        j.sals.fs.touch(file_path)
+        
+        self.info("Change the files names with modification time not more than 2 seconds ago.")
+
+        # j.sals.fs.change_filenames(".py", ".html", base_dir) need to implement it .
+
+        files_python = [
+            x
+            for x in j.sals.fs.walk_files(base_dir)
+            if ".py" in x
+        ]
+        assert len(files_python) == 1
+
+    def test_019_change_name_files(self):
+        """
+        Test case for removing irrelevant files in a directory.
+        **Test scenario**
+        #. Create a tree with some directories and files.
+        #. Create a file with extention bak and pyc.
+        #. Change the irrelevant files, should only change files with extention bak and pyc.
+        """
+        self.info("Create a tree with some directories and files.")
+        base_dir,_,_,_ = self.create_tree()
+
+        self.info("Create a file with extention bak and pyc.")
+        bak_file = self.random_string() + ".bak"
+        bak_path = os.path.join(base_dir, bak_file)
+        j.sals.fs.touch(bak_path)
+        pyc_file = self.random_string() + ".pyc"
+        pyc_path = os.path.join(base_dir, pyc_file)
+        j.sals.fs.touch(pyc_path)
+        dirs_files_list = [x for x in j.sals.fs.walk_files(base_dir)]
+
+        assert bak_path in dirs_files_list
+        assert pyc_path in dirs_files_list
+
+        self.info("change the irrelevant files, should only change files with extention bak and pyc.")
+
+        j.sals.fs.move(bak_path, os.path.join(base_dir, self.random_string() + ".py"))
+        j.sals.fs.move(pyc_path, os.path.join(base_dir, self.random_string() + ".py"))
+        dirs_files_list = [x for x in j.sals.fs.walk_files(base_dir)]
+
+        assert bak_path not in dirs_files_list
+        assert pyc_path not in dirs_files_list
