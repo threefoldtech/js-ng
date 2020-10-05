@@ -14,7 +14,8 @@ class TestFS(BaseTests):
         cls.temp_path = j.sals.fs.join_paths("/tmp", cls.generate_random_text())
 
     def random_string(self):
-        return str(uuid4())[:10]
+        return j.data.random_names.random_name()
+
     @classmethod
     def tearDownClass(cls):
         j.sals.fs.rmtree(cls.temp_path)
@@ -165,8 +166,7 @@ class TestFS(BaseTests):
             self.assertNotIn(random_dir_dest_3, dirs)
 
     def test013_path_parts(self):
-        random_dir_dest, random_dir_dest_2, _, _ = self.create_tree()
-        random_dir_dest_3 = j.sals.fs.join_paths(random_dir_dest_2, self.generate_random_text())
+        random_dir_dest_3 = j.sals.fs.join_paths(self.temp_path, self.generate_random_text())
         self.info("Create dir {}".format(random_dir_dest_3))
         parts = list(j.sals.fs.path_parts(random_dir_dest_3))
         split_path = random_dir_dest_3.split("/")
@@ -206,7 +206,7 @@ class TestFS(BaseTests):
         with open(random_dir_dest_3, "rb") as f:
             expected_content = f.read()
         result_content = j.sals.fs.read_binary(random_dir_dest_3)
-        assert result_content == expected_content
+        self.assertEqual(result_content , expected_content)
 
     def test_0017_create_move_rename_copy_file(self):
         """
@@ -223,7 +223,7 @@ class TestFS(BaseTests):
 
         self.info("Create a directory and move this file to this directory.")
         dir_name_1 = self.random_string()
-        dir_path_1 = os.path.join("/tmp", dir_name_1)
+        dir_path_1 = os.path.join(self.temp_path, dir_name_1)
         j.sals.fs.mkdirs(dir_path_1)
         j.sals.fs.move(file_path_1, dir_path_1)
 
@@ -247,7 +247,7 @@ class TestFS(BaseTests):
         content_1 = j.sals.fs.read_file(file_path_3)
         assert content_1 == file_content
 
-        self.info("Try again to copy this file to the same directory with overwriteFile=True.")
+        self.info("Try again to copy this file to the same directory")
         j.sals.fs.write_file(file_path_3,self.random_string())
 
         self.info("Check the content of the copied file, should be changed.")
@@ -262,10 +262,10 @@ class TestFS(BaseTests):
         self.info("Create a tree with many sub directories and files with a common word (W1) in their names.")
         base_dir,_,_,_ = self.create_tree()
         
-        self.info("Change these files names by replacing (W1) with another word (W2) with recursive=False.")
+        self.info("Change these files names by replacing (W1) with another word (W2) ")
         log_files = [
             os.path.splitext(x)[0]
-            for x in  j.sals.fs.walk_files("/tmp")
+            for x in  j.sals.fs.walk_files(self.temp_path)
             if ".log" in x
         ]
         child_log = [os.path.splitext(os.path.join(base_dir, x))[0] for x in os.listdir(base_dir) if ".log" in x]
@@ -274,18 +274,15 @@ class TestFS(BaseTests):
         self.info("Check that children files are only changed.")
         changed_files = [
             os.path.splitext(x)[0]
-            for x in j.sals.fs.walk_files("/tmp")
+            for x in j.sals.fs.walk_files(self.temp_path)
             if ".java" in x
         ]
         assert changed_files == child_log
-        
-        self.info("Change these files names again by replacing (W1) with another word (W2) with recursive=True.")
-        j.sals.fs.change_filenames(".log", ".java", base_dir)
-        
+
         self.info("Check that files names are changed.")
         java_files = [
             os.path.splitext(x)[0]
-            for x in j.sals.fs.walk_files("/tmp")
+            for x in j.sals.fs.walk_files(self.temp_path)
             if ".java" in x
         ]
         assert sorted(log_files) == sorted(java_files)
@@ -296,7 +293,7 @@ class TestFS(BaseTests):
         file_path = os.path.join(base_dir, file_name)
         j.sals.fs.touch(file_path)
         
-        self.info("Change the files names with modification time not more than 2 seconds ago.")
+        #self.info("Change the files names with modification time not more than 2 seconds ago.")
 
         # j.sals.fs.change_filenames(".py", ".html", base_dir) need to implement it .
 
