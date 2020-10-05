@@ -175,7 +175,7 @@ class TestFS(BaseTests):
 
     def test014_basename(self):
         random_dir_dest, random_dir_dest_2, _, _ = self.create_tree()
-        base =  self.generate_random_text()
+        base = self.generate_random_text()
         random_dir_dest_3 = j.sals.fs.join_paths(random_dir_dest_2, base)
         self.info("Create dir {}".format(random_dir_dest_3))
 
@@ -206,7 +206,7 @@ class TestFS(BaseTests):
         with open(random_dir_dest_3, "rb") as f:
             expected_content = f.read()
         result_content = j.sals.fs.read_binary(random_dir_dest_3)
-        self.assertEqual(result_content , expected_content)
+        self.assertEqual(result_content, expected_content)
 
     def test_0017_create_move_rename_copy_file(self):
         """
@@ -215,8 +215,8 @@ class TestFS(BaseTests):
         self.info("Create an empty file.")
         random_dir_dest, random_dir_dest_2, _, _ = self.create_tree()
         file_name_1 = self.generate_random_text()
-        file_path_1 = j.sals.fs.join_paths(random_dir_dest_2, file_name_1 )
-        j.sals.fs.write_file(file_path_1,"")
+        file_path_1 = j.sals.fs.join_paths(random_dir_dest_2, file_name_1)
+        j.sals.fs.write_file(file_path_1, "")
 
         self.info("Check that the file is exists.")
         assert os.path.exists(file_path_1) is True
@@ -248,43 +248,30 @@ class TestFS(BaseTests):
         assert content_1 == file_content
 
         self.info("Try again to copy this file to the same directory")
-        j.sals.fs.write_file(file_path_3,self.random_string())
+        j.sals.fs.write_file(file_path_3, self.random_string())
 
         self.info("Check the content of the copied file, should be changed.")
         content_1 = j.sals.fs.read_file(file_path_3)
         assert content_1 != file_content
-
 
     def test_0018_change_file_names(self):
         """
         Test case for changing files names using j.sal.fs.change_filenames.
         """
         self.info("Create a tree with many sub directories and files with a common word (W1) in their names.")
-        base_dir,_,_,_ = self.create_tree()
-        
+        base_dir, _, _, _ = self.create_tree()
+
         self.info("Change these files names by replacing (W1) with another word (W2) ")
-        log_files = [
-            os.path.splitext(x)[0]
-            for x in  j.sals.fs.walk_files(self.temp_path)
-            if ".log" in x
-        ]
+        log_files = [os.path.splitext(x)[0] for x in j.sals.fs.walk_files(self.temp_path) if ".log" in x]
         child_log = [os.path.splitext(os.path.join(base_dir, x))[0] for x in os.listdir(base_dir) if ".log" in x]
         j.sals.fs.change_filenames(".log", ".java", base_dir)
-        
+
         self.info("Check that children files are only changed.")
-        changed_files = [
-            os.path.splitext(x)[0]
-            for x in j.sals.fs.walk_files(self.temp_path)
-            if ".java" in x
-        ]
+        changed_files = [os.path.splitext(x)[0] for x in j.sals.fs.walk_files(self.temp_path) if ".java" in x]
         assert changed_files == child_log
 
         self.info("Check that files names are changed.")
-        java_files = [
-            os.path.splitext(x)[0]
-            for x in j.sals.fs.walk_files(self.temp_path)
-            if ".java" in x
-        ]
+        java_files = [os.path.splitext(x)[0] for x in j.sals.fs.walk_files(self.temp_path) if ".java" in x]
         assert sorted(log_files) == sorted(java_files)
 
         self.info("Create a new .py file")
@@ -292,16 +279,12 @@ class TestFS(BaseTests):
         file_name = f"{self.random_string()}.py"
         file_path = os.path.join(base_dir, file_name)
         j.sals.fs.touch(file_path)
-        
-        #self.info("Change the files names with modification time not more than 2 seconds ago.")
+
+        # self.info("Change the files names with modification time not more than 2 seconds ago.")
 
         # j.sals.fs.change_filenames(".py", ".html", base_dir) need to implement it .
 
-        files_python = [
-            x
-            for x in j.sals.fs.walk_files(base_dir)
-            if ".py" in x
-        ]
+        files_python = [x for x in j.sals.fs.walk_files(base_dir) if ".py" in x]
         assert len(files_python) == 1
 
     def test_019_change_name_files(self):
@@ -313,7 +296,7 @@ class TestFS(BaseTests):
         #. Change the irrelevant files, should only change files with extention bak and pyc.
         """
         self.info("Create a tree with some directories and files.")
-        base_dir,_,_,_ = self.create_tree()
+        base_dir, _, _, _ = self.create_tree()
 
         self.info("Create a file with extention bak and pyc.")
         bak_file = self.random_string() + ".bak"
