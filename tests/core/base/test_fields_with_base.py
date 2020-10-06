@@ -60,6 +60,41 @@ class Host(Base):
     guest = fields.Object(Guest)
 
 
+# the following base classes are used to test field resolution with inheritance
+
+
+class ParentA(Base):
+    name = fields.String(default="A")
+
+
+class ParentB(ParentA):
+    name = fields.String(default="B")
+
+
+class Child(ParentB):
+    pass
+
+
+class ChildWithTheSameField(ParentB):
+    name = fields.String(default="C")
+
+
+class ParentBM(Base):
+    name = fields.String(default="B")
+
+
+class ChildWithMultipleParents(ParentA, ParentBM):
+    pass
+
+
+class ChildWithMultipleParentsWithDifferntOrder(ParentBM, ParentA):
+    pass
+
+
+class ChildWithMultipleParentsAndTheSameField(ParentA, ParentBM):
+    name = fields.String(default="C")
+
+
 class TestBaseWithFields(unittest.TestCase):
     def test_integer_field(self):
         user = User()
@@ -231,29 +266,15 @@ class TestBaseWithFields(unittest.TestCase):
 
         self.assertNotEqual(host1.guest.name, host2.guest.name)
 
-    def test_field_resolution_follows_mro(self):
+    def test_field_resolution_single_inheritance(self):
         """
-        this test ensures that field resolution follows MRO in case of single and multiple
-        inheritance with fields of the same name
+        Test for field resolution in case of single inheritance without defining the same field in Child
 
-        it has the following scenarios:
+        **Test Scenario**
 
-        1- single inheritance, child class does not define the same field
-        2- single inheritance, child class defines the same field
-        3- multiple inheritance, child class does not define the same field
-        4- multiple inheritance, child class defines the same field
+        #. Create instances of ParentA, ParentB and Child
+        #. Check and compare the name field default value
         """
-
-        # (1)
-        class ParentA(Base):
-            name = fields.String(default="A")
-
-        class ParentB(ParentA):
-            name = fields.String(default="B")
-
-        class Child(ParentB):
-            pass
-
         parent_a_field = ParentA()._get_fields()["name"]
         parent_b_field = ParentB()._get_fields()["name"]
         child_field = Child()._get_fields()["name"]
@@ -261,34 +282,43 @@ class TestBaseWithFields(unittest.TestCase):
         self.assertEqual(parent_b_field.default, "B")
         self.assertEqual(child_field.default, "B")
 
-        # (2)
-        class ChildWithTheSameField(ParentB):
-            name = fields.String(default="C")
+    def test_field_resolution_single_inheritance_with_child_field_defined(self):
+        """
+        Test for field resolution in case of single inheritance with the same field defined in ChildWithTheSameField
 
+        **Test Scenario**
+
+        #. Create an instance of ChildWithTheSameField
+        #. Check the name field default value
+        """
         child_field = ChildWithTheSameField()._get_fields()["name"]
         self.assertEqual(child_field.default, "C")
 
-        # (3)
-        class ParentBM(Base):
-            name = fields.String(default="B")
+    def test_field_resolution_multiple_inheritance_without_child_field_defined(self):
+        """
+        Test for field resolution in case of multuple inheritance without the same field in ChildWithMultipleParents and ChildWithMultipleParentsWithDifferntOrder
 
-        class ChildWithMultipleParents(ParentA, ParentBM):
-            pass
+        **Test Scenario**
 
+        #. Create instances of ParentBM and ChildWithMultipleParents
+        #. Check the name field default value
+        """
         parent_b_field = ParentBM()._get_fields()["name"]
         child_field = ChildWithMultipleParents()._get_fields()["name"]
         self.assertEqual(parent_b_field.default, "B")
         self.assertEqual(child_field.default, "A")
 
-        class ChildWithMultipleParentsWithDifferntOrder(ParentBM, ParentA):
-            pass
-
         child_field = ChildWithMultipleParentsWithDifferntOrder()._get_fields()["name"]
         self.assertEqual(child_field.default, "B")
 
-        # (4)
-        class ChildWithMultipleParentsAndTheSameField(ParentA, ParentBM):
-            name = fields.String(default="C")
+    def test_field_resolution_multiple_inheritance_with_child_field_defined(self):
+        """
+        Test for field resolution in case of multuple inheritance with the same field defined in ChildWithMultipleParentsAndTheSameField
 
+        **Test Scenario**
+
+        #. Create an instance of ChildWithMultipleParentsAndTheSameField
+        #. Check the name field default value
+        """
         child_field = ChildWithMultipleParentsAndTheSameField()._get_fields()["name"]
         self.assertEqual(child_field.default, "C")
