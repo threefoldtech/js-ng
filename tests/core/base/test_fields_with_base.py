@@ -230,3 +230,62 @@ class TestBaseWithFields(unittest.TestCase):
         host2.guest.name = "test2"
 
         self.assertNotEqual(host1.guest.name, host2.guest.name)
+
+    def test_field_resolution_follows_mro(self):
+        """
+        this test ensures that field resolution follows MRO in case of single and multiple
+        inheritance with fields of the same name
+
+        it has the following scenarios:
+
+        1- single inheritance, child class does not define the same field
+        2- single inheritance, child class defines the same field
+        3- multiple inheritance, child class does not define the same field
+        4- multiple inheritance, child class defines the same field
+        """
+
+        # (1)
+        class ParentA(Base):
+            name = fields.String(default="A")
+
+        class ParentB(ParentA):
+            name = fields.String(default="B")
+
+        class Child(ParentB):
+            pass
+
+        parent_a_field = ParentA()._get_fields()["name"]
+        parent_b_field = ParentB()._get_fields()["name"]
+        child_field = Child()._get_fields()["name"]
+
+        self.assertEqual(parent_a_field.default, "A")
+        self.assertEqual(parent_b_field.default, "B")
+        self.assertEqual(child_field.default, "B")
+
+        # (2)
+        class Child(ParentB):
+            name = fields.String(default="C")
+
+        child_field = Child()._get_fields()["name"]
+
+        self.assertEqual(child_field.default, "C")
+
+        # (3)
+        class ParentB(Base):
+            name = fields.String(default="B")
+
+        class Child(ParentA, ParentB):
+            pass
+
+        parent_b_field = ParentB()._get_fields()["name"]
+        child_field = Child()._get_fields()["name"]
+
+        self.assertEqual(parent_b_field.default, "B")
+        self.assertEqual(child_field.default, "A")
+
+        # (4)
+        class Child(ParentA, ParentB):
+            name = fields.String(default="C")
+
+        child_field = Child()._get_fields()["name"]
+        self.assertEqual(child_field.default, "C")
