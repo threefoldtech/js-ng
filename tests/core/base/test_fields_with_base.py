@@ -296,7 +296,7 @@ class TestBaseWithFields(unittest.TestCase):
 
     def test_field_resolution_multiple_inheritance_without_child_field_defined(self):
         """
-        Test for field resolution in case of multuple inheritance without the same field in ChildWithMultipleParents and ChildWithMultipleParentsWithDifferntOrder
+        Test for field resolution in case of multiple inheritance without the same field in ChildWithMultipleParents and ChildWithMultipleParentsWithDifferntOrder
 
         **Test Scenario**
 
@@ -313,7 +313,7 @@ class TestBaseWithFields(unittest.TestCase):
 
     def test_field_resolution_multiple_inheritance_with_child_field_defined(self):
         """
-        Test for field resolution in case of multuple inheritance with the same field defined in ChildWithMultipleParentsAndTheSameField
+        Test for field resolution in case of multiple inheritance with the same field defined in ChildWithMultipleParentsAndTheSameField
 
         **Test Scenario**
 
