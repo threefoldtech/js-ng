@@ -257,35 +257,38 @@ class TestBaseWithFields(unittest.TestCase):
         parent_a_field = ParentA()._get_fields()["name"]
         parent_b_field = ParentB()._get_fields()["name"]
         child_field = Child()._get_fields()["name"]
-
         self.assertEqual(parent_a_field.default, "A")
         self.assertEqual(parent_b_field.default, "B")
         self.assertEqual(child_field.default, "B")
 
         # (2)
-        class Child(ParentB):
+        class ChildWithTheSameField(ParentB):
             name = fields.String(default="C")
 
-        child_field = Child()._get_fields()["name"]
-
+        child_field = ChildWithTheSameField()._get_fields()["name"]
         self.assertEqual(child_field.default, "C")
 
         # (3)
-        class ParentB(Base):
+        class ParentBM(Base):
             name = fields.String(default="B")
 
-        class Child(ParentA, ParentB):
+        class ChildWithMultipleParents(ParentA, ParentBM):
             pass
 
-        parent_b_field = ParentB()._get_fields()["name"]
-        child_field = Child()._get_fields()["name"]
-
+        parent_b_field = ParentBM()._get_fields()["name"]
+        child_field = ChildWithMultipleParents()._get_fields()["name"]
         self.assertEqual(parent_b_field.default, "B")
         self.assertEqual(child_field.default, "A")
 
+        class ChildWithMultipleParentsWithDifferntOrder(ParentBM, ParentA):
+            pass
+
+        child_field = ChildWithMultipleParentsWithDifferntOrder()._get_fields()["name"]
+        self.assertEqual(child_field.default, "B")
+
         # (4)
-        class Child(ParentA, ParentB):
+        class ChildWithMultipleParentsAndTheSameField(ParentA, ParentBM):
             name = fields.String(default="C")
 
-        child_field = Child()._get_fields()["name"]
+        child_field = ChildWithMultipleParentsAndTheSameField()._get_fields()["name"]
         self.assertEqual(child_field.default, "C")
