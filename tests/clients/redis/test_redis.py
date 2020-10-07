@@ -31,7 +31,7 @@ class RedisTests(BaseTests):
         if password:
             redis_config = redis_config.replace("# requirepass foobared", f"requirepass {password}")
         j.sals.fs.write_file(self.redis_config_target_path, redis_config)
-        j.sals.process.execute(f"redis-server {self.redis_config_target_path}")
+        j.sals.process.execute(f"redis-server {self.redis_config_target_path}", die=True)
 
     @parameterized.expand([(False,), (True,)])
     def test01_get_redis_client(self, password):

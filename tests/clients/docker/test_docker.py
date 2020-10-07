@@ -8,7 +8,7 @@ from tests.base_tests import BaseTests
 @pytest.mark.integration
 class TestDockerClient(BaseTests):
     DOCKER_CLIENT_NAME = "DOCKER_{}".format(randint(100, 10000))
-    DOCKER_IMAGE = "tthreefoldtech/phusion:20.04"
+    DOCKER_IMAGE = "ubuntu:20.04"
 
     @classmethod
     def setUpClass(cls):
