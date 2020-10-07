@@ -8,7 +8,7 @@ from tests.base_tests import BaseTests
 @pytest.mark.integration
 class TestDockerClient(BaseTests):
     DOCKER_CLIENT_NAME = "DOCKER_{}".format(randint(100, 10000))
-    DOCKER_IMAGE = "ubuntu:20.04"
+    DOCKER_IMAGE = "threefoldtech/js-ng"
 
     @classmethod
     def setUpClass(cls):
