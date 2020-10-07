@@ -3,6 +3,7 @@ from math import ceil
 from random import randint
 from time import sleep
 
+import pytest
 from jumpscale.loader import j
 from parameterized import parameterized
 from tests.base_tests import BaseTests
@@ -61,19 +62,21 @@ class ProcessTests(BaseTests):
         self.assertFalse(rc, error)
         pids_processes = output.splitlines()
 
-        ports = []
-        for ip_port in ips_ports:
-            ports.append(int(ip_port.split(":")[-1]))
+        ports = {}
+        for i, ip_port in enumerate(ips_ports):
+            ports[i] = int(ip_port.split(":")[-1])
 
-        pids = []
-        for pid_process in pids_processes:
-            pids.append(int(pid_process.split("/")[0]))
+        pids = {}
+        for i, pid_process in enumerate(pids_processes):
+            pids[i] = pid_process.split("/")[0]
 
         mapping = {}
-        for i, pid in enumerate(pids):
-            if pid not in mapping.keys():
-                mapping[pid] = []
-            mapping[pid].append(ports[i])
+        for i in pids.keys():
+            if pids[i] != "-":
+                pid = int(pids[i])
+                if pid not in mapping.keys():
+                    mapping[pid] = []
+                mapping[pid].append(ports[i])
 
         return mapping
 
@@ -335,6 +338,7 @@ class ProcessTests(BaseTests):
         self.assertAlmostEqual(memory_usage["used"], used, delta=1)
         self.assertAlmostEqual(memory_usage["percent"], percent, delta=5)
 
+    @pytest.mark.skip("https://github.com/threefoldtech/js-ng/issues/467")
     def test_12_get_processes_info(self):
         """Test case for getting processes info.
 
@@ -356,10 +360,10 @@ class ProcessTests(BaseTests):
         pids = self.get_process_pids(PYTHON_SERVER_NAME)
         self.assertEqual(len(pids), 1)
 
-        self.info("Get processes self.info using SALS process.")
+        self.info("Get processes info using SALS process.")
         processes_info = j.sals.process.get_processes_info()
 
-        self.info("Check that the python server is in the processes self.info.")
+        self.info("Check that the python server is in the processes info.")
         found = False
         for process_info in processes_info:
             if process_info["pid"] == pids[0]:
@@ -475,6 +479,7 @@ class ProcessTests(BaseTests):
         self.assertFalse(pids)
 
     @parameterized.expand(["kill_all", "kill_user_processes", "kill_process_by_name"])
+    @pytest.mark.admin
     def test_16_get_kill_user_process(self, kill_method):
         """Test case for getting and killing user process/ killall processes.
 
@@ -645,7 +650,8 @@ class ProcessTests(BaseTests):
         j.sals.process.kill_process_by_port(redis_port)
 
         self.info("Check that the result from both ways are the same.")
-        self.assertEqual(sal_mapping, netstat_mapping)
+        for key in sal_mapping.keys():
+            self.assertEqual(sorted(sal_mapping[key]), sorted(netstat_mapping[key]))
 
     def test_21_get_defunct_processes(self):
         """Test case for getting defunct processes.
@@ -673,6 +679,7 @@ class ProcessTests(BaseTests):
         self.assertEqual(sorted(sal_pids), pids)
 
     @parameterized.expand(["sorted", "regex"])
+    @pytest.mark.admin
     def test_22_get_sorted_pids(self, type_):
         """Test case for getting sorted pids by username.
 

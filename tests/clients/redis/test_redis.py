@@ -21,14 +21,13 @@ class RedisTests(BaseTests):
         return j.data.idgenerator.nfromchoices(10, string.ascii_letters)
 
     def start_redis_server(self, port, password=""):
-        passwd = ""
+        redis_config_path = j.sals.fs.join_paths(j.sals.fs.parent(__file__), "redis.conf")
+        redis_config = j.sals.fs.read_file(redis_config_path)
+        redis_config = redis_config.replace("port 6379", f"port {port}")
         if password:
-            passwd = f"sed -i 's/# requirepass foobared/requirepass {password}/g' /tmp/redis.conf"
-        cmd = f"""cp /etc/redis/redis.conf /tmp
-            sed -i 's/port 6379/port {port}/g' /tmp/redis.conf
-            {passwd}
-            redis-server /tmp/redis.conf
-        """
+            redis_config = redis_config.replace("# requirepass foobared", f"requirepass {password}")
+        j.sals.fs.write_file("/tmp/redis.conf", redis_config)
+        cmd = f"redis-server /tmp/redis.conf"
         self.cmd = j.tools.startupcmd.get("test_redis")
         self.cmd.start_cmd = cmd
         self.cmd.ports = [port]
