@@ -10,12 +10,16 @@ HOST = "127.0.0.1"
 
 
 class RedisTests(BaseTests):
+    def setUp(self):
+        self.redis_instance_name = self.randstr()
+        self.redis_working_dir = "/tmp/redis"
+
     def tearDown(self):
         self.redis_client.flushall()
         self.cmd.stop(wait_for_stop=False)
-        j.tools.startupcmd.delete("test_redis")
-        j.clients.redis.delete("test_redis")
-        j.sals.fs.rmtree("/tmp/redis.conf")
+        j.tools.startupcmd.delete(self.redis_instance_name)
+        j.clients.redis.delete(self.redis_instance_name)
+        j.sals.fs.rmtree(self.redis_working_dir)
 
     def randstr(self):
         return j.data.idgenerator.nfromchoices(10, string.ascii_letters)
@@ -26,9 +30,12 @@ class RedisTests(BaseTests):
         redis_config = redis_config.replace("port 6379", f"port {port}")
         if password:
             redis_config = redis_config.replace("# requirepass foobared", f"requirepass {password}")
-        j.sals.fs.write_file("/tmp/redis.conf", redis_config)
-        cmd = f"redis-server /tmp/redis.conf"
-        self.cmd = j.tools.startupcmd.get("test_redis")
+        j.sals.fs.mkdir(self.redis_working_dir)
+        j.sals.fs.touch(j.sals.fs.join_paths(self.redis_working_dir, "redis.log"))
+        redis_config_target_path = j.sals.fs.join_paths(self.redis_working_dir, "redis.conf")
+        j.sals.fs.write_file(redis_config_target_path, redis_config)
+        cmd = f"redis-server {redis_config_target_path}"
+        self.cmd = j.tools.startupcmd.get(self.redis_instance_name)
         self.cmd.start_cmd = cmd
         self.cmd.ports = [port]
         self.cmd.start()
@@ -53,9 +60,9 @@ class RedisTests(BaseTests):
 
         self.info("Get client for redis.")
         if password:
-            self.redis_client = j.clients.redis.get("test_redis", port=port, password=passwd)
+            self.redis_client = j.clients.redis.get(self.redis_instance_name, port=port, password=passwd)
         else:
-            self.redis_client = j.clients.redis.get("test_redis", port=port)
+            self.redis_client = j.clients.redis.get(self.redis_instance_name, port=port)
 
         self.info("Try to set and get a random variable.")
         key = self.randstr()
@@ -76,7 +83,7 @@ class RedisTests(BaseTests):
         """
         self.info("Get redis client before starting the server.")
         port = randint(1000, 2000)
-        self.redis_client = j.clients.redis.get("test_redis", port=port)
+        self.redis_client = j.clients.redis.get(self.redis_instance_name, port=port)
 
         self.info("Check that redis server is not running.")
         self.assertFalse(self.redis_client.is_running())
@@ -86,7 +93,7 @@ class RedisTests(BaseTests):
         self.assertTrue(j.sals.nettools.wait_connection_test(HOST, port, 2))
 
         self.info("Get client for redis.")
-        self.redis_client = j.clients.redis.get("test_redis", port=port)
+        self.redis_client = j.clients.redis.get(self.redis_instance_name, port=port)
 
         self.info("Check that the redis server is running.")
         self.assertTrue(self.redis_client.is_running())
