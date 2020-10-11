@@ -1,4 +1,4 @@
-FROM threefoldtech/phusion:19.10
+FROM threefoldtech/phusion:20.04
 RUN apt-get update && apt-get install git python3-pip python3-venv redis-server tmux nginx -y
 RUN pip3 install poetry
 RUN mkdir -p /sandbox/code/github/threefoldtech
