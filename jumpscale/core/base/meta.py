@@ -167,19 +167,19 @@ class BaseMeta(type):
             type: a new class
         """
         # will collect class fields
-        # and also all fields of super classes, as we already have them in based
         cls_fields = {}
-        super_fields = {}
 
+        # get all fields from super classes, we have them ordered in `based`
+        # make sure not to re-add any field that's already added
+        # otherwise, fields will be resolved disorderly
         for super_cls in based:
             if hasattr(super_cls, "_fields"):
-                super_fields.update(super_cls._fields)
+                for name, field in super_cls._fields.items():
+                    if name not in attrs:
+                        attrs[name] = field
 
-        # update current attrs with super class fields
-        attrs.update(super_fields)
-
-        # now we maintain old attributes, but convert any attribute
-        # with fields.Field type to property descriptor (property object)
+        # now we maintain old attributes, but convert any attribute with
+        # fields.Field type to property descriptor (property object)
         # using get_field_property
         new_attrs = {}
         for key in attrs:
