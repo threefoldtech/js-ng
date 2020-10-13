@@ -13,9 +13,6 @@ class TestFS(BaseTests):
     def setUpClass(cls):
         cls.temp_path = j.sals.fs.join_paths("/tmp", cls.generate_random_text())
 
-    def random_string(self):
-        return j.data.random_names.random_name()
-
     @classmethod
     def tearDownClass(cls):
         j.sals.fs.rmtree(cls.temp_path)
@@ -192,7 +189,7 @@ class TestFS(BaseTests):
         #. Read this file and check that its content.
         """
         self.info("Write binary file.")
-        content = self.random_string()
+        content = self.generate_random_text()
         random_dir_dest, random_dir_dest_2, _, _ = self.create_tree()
         random_dir_dest_3 = j.sals.fs.join_paths(random_dir_dest_2, self.generate_random_text())
         with open(random_dir_dest_3, "wb") as f:
@@ -222,7 +219,7 @@ class TestFS(BaseTests):
         assert os.path.exists(file_path_1) is True
 
         self.info("Create a directory and move this file to this directory.")
-        dir_name_1 = self.random_string()
+        dir_name_1 = self.generate_random_text()
         dir_path_1 = os.path.join(self.temp_path, dir_name_1)
         j.sals.fs.mkdirs(dir_path_1)
         j.sals.fs.move(file_path_1, dir_path_1)
@@ -233,14 +230,14 @@ class TestFS(BaseTests):
         assert os.path.exists(file_path_1) is False
 
         self.info("Rename this file and Check that the file is renamed.")
-        file_name_2 = self.random_string()
+        file_name_2 = self.generate_random_text()
         file_path_3 = os.path.join(dir_path_1, file_name_2)
         j.sals.fs.rename(file_path_2, file_path_3)
         assert os.path.exists(file_path_3) is True
         assert os.path.exists(file_path_2) is False
 
         self.info("Write a word (W) to the copied file.")
-        file_content = self.random_string()
+        file_content = self.generate_random_text()
         j.sals.fs.write_file(file_path_3, file_content)
 
         self.info("Check the content of the copied file, should not be changed.")
@@ -248,7 +245,7 @@ class TestFS(BaseTests):
         assert content_1 == file_content
 
         self.info("Try again to copy this file to the same directory")
-        j.sals.fs.write_file(file_path_3, self.random_string())
+        j.sals.fs.write_file(file_path_3, self.generate_random_text())
 
         self.info("Check the content of the copied file, should be changed.")
         content_1 = j.sals.fs.read_file(file_path_3)
@@ -276,7 +273,7 @@ class TestFS(BaseTests):
 
         self.info("Create a new .py file")
 
-        file_name = f"{self.random_string()}.py"
+        file_name = f"{self.generate_random_text()}.py"
         file_path = os.path.join(base_dir, file_name)
         j.sals.fs.touch(file_path)
 
@@ -299,10 +296,10 @@ class TestFS(BaseTests):
         base_dir, _, _, _ = self.create_tree()
 
         self.info("Create a file with extention bak and pyc.")
-        bak_file = self.random_string() + ".bak"
+        bak_file = self.generate_random_text() + ".bak"
         bak_path = os.path.join(base_dir, bak_file)
         j.sals.fs.touch(bak_path)
-        pyc_file = self.random_string() + ".pyc"
+        pyc_file = self.generate_random_text() + ".pyc"
         pyc_path = os.path.join(base_dir, pyc_file)
         j.sals.fs.touch(pyc_path)
         dirs_files_list = [x for x in j.sals.fs.walk_files(base_dir)]
@@ -312,8 +309,8 @@ class TestFS(BaseTests):
 
         self.info("change the irrelevant files, should only change files with extention bak and pyc.")
 
-        j.sals.fs.move(bak_path, os.path.join(base_dir, self.random_string() + ".py"))
-        j.sals.fs.move(pyc_path, os.path.join(base_dir, self.random_string() + ".py"))
+        j.sals.fs.move(bak_path, os.path.join(base_dir, self.generate_random_text() + ".py"))
+        j.sals.fs.move(pyc_path, os.path.join(base_dir, self.generate_random_text() + ".py"))
         dirs_files_list = [x for x in j.sals.fs.walk_files(base_dir)]
 
         assert bak_path not in dirs_files_list
