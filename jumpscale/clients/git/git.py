@@ -7,8 +7,8 @@ from jumpscale.loader import j
 class GitClient(Client):
     path = fields.String()
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.__repo = None
 
     @property
@@ -72,3 +72,5 @@ class GitClient(Client):
             self.repo.git.add("-A")
         if self.repo.index.diff("HEAD"):
             return self.repo.index.commit(message)
+
+
