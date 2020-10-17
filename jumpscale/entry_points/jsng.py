@@ -29,4 +29,4 @@ def run(command):
             from ptpython.repl import embed
             sys.exit(embed(globals(), locals(), configure=ptconfig, history_filename=HISTORY_FILENAME))
     else:
-        sys.exit(print(eval(command)))
+        sys.exit(print(exec(command)))
