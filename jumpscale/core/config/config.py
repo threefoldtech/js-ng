@@ -79,7 +79,6 @@ from nacl.public import PrivateKey
 
 
 __all__ = [
-    "__version__",
     "config_path",
     "config_root",
     "get_default_config",
