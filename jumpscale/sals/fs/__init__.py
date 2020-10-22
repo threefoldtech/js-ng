@@ -407,7 +407,7 @@ def rm_broken_link(path: str) -> bool:
 
     Args:
         path (str): path to remove
-    
+
     Returns:
         bool: True if broken symlink removed
     """
@@ -695,7 +695,7 @@ def get_temp_dirname(suffix=None, prefix=None, dir=None) -> str:
 
 
 NamedTemporaryFile = tempfile.NamedTemporaryFile
-TempraryDirectory = tempfile.TemporaryDirectory
+TemporaryDirectory = tempfile.TemporaryDirectory
 mkdtemp = tempfile.mkdtemp
 mkstemp = tempfile.mkstemp
 get_temp_dir = tempfile.gettempdir

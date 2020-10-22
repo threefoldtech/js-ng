@@ -99,16 +99,16 @@ class GedisClient(Client):
             self._redisclient = j.clients.redis.get(name=f"gedis_{self.name}", hostname=self.hostname, port=self.port)
         return self._redisclient
 
-    def _load_module(self, path):
+    def _load_module(self, path, force_reload=False):
+        load_python_module(path, force_reload=force_reload)
         if path not in self._loaded_modules:
-            load_python_module(path)
             self._loaded_modules.append(path)
 
-    def _load_actors(self):
+    def _load_actors(self, force_reload=False):
         self._loaded_actors = {}
         for actor_name in self.list_actors():
             actor_info = self._get_actor_info(actor_name)
-            self._load_module(actor_info["path"])
+            self._load_module(actor_info["path"], force_reload=force_reload)
             self._loaded_actors[actor_name] = ActorProxy(actor_name, actor_info, self)
 
         self.actors = ActorsCollection(self._loaded_actors)
@@ -127,7 +127,7 @@ class GedisClient(Client):
     def reload(self):
         """Reload actors
         """
-        self._load_actors()
+        self._load_actors(force_reload=True)
 
     def execute(self, actor_name: str, actor_method: str, *args, die: bool = False, **kwargs) -> ActorResult:
         """Execute actor's method
