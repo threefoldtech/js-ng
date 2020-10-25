@@ -174,9 +174,9 @@ class BaseMeta(type):
         # otherwise, fields will be resolved disorderly
         for super_cls in based:
             if hasattr(super_cls, "_fields"):
-                for name, field in super_cls._fields.items():
-                    if name not in attrs:
-                        attrs[name] = field
+                for key, field in super_cls._fields.items():
+                    if key not in attrs:
+                        attrs[key] = field
 
         # now we maintain old attributes, but convert any attribute with
         # fields.Field type to property descriptor (property object)
