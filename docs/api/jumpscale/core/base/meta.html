@@ -28,18 +28,18 @@
 </ul>
 <p>To explain what it does, we will illustrate the following examples:</p>
 <p>If we have a class called <code>Person</code>, with the following definition:</p>
-<pre><code class="language-python">class Person:
+<pre><code class="python">class Person:
     name = fields.String(default=&quot;ahmed&quot;)
 </code></pre>
 <p>Accessing name from class or instance level will yield the same value, an instance of <code>String</code> field:</p>
-<pre><code class="language-python">Person.name  #=&gt; &lt;jumpscale.core.base.fields.String object at 0x7efd89980c18&gt;
+<pre><code class="python">Person.name  #=&gt; &lt;jumpscale.core.base.fields.String object at 0x7efd89980c18&gt;
 
 p = Person()
 p.name  #=&gt; &lt;jumpscale.core.base.fields.String object at 0x7efd89980c18&gt;
 </code></pre>
 <p>The solution to this problem is using data descriptors (see <a href="https://docs.python.org/3/howto/descriptor.html">https://docs.python.org/3/howto/descriptor.html</a>)</p>
 <p>In meta and base implementations, we use property data descriptors, so the following class:</p>
-<pre><code class="language-python">class Person(Base):
+<pre><code class="python">class Person(Base):
     name = fields.String(default=&quot;ahmed&quot;)
 </code></pre>
 <p>Should have different behavior when accessing <code>name</code> from a class or an objects, so, it will be converted by meta class to a class like:</p>
@@ -58,7 +58,7 @@ p.name  #=&gt; &lt;jumpscale.core.base.fields.String object at 0x7efd89980c18&gt
     name = property(get_name, set_name)
 </code></pre>
 <p>And accessing <code>name</code> from class and object levels will yield:</p>
-<pre><code class="language-python">Person.name  #=&gt; &lt;property object at 0x7efd89a259f8&gt;
+<pre><code class="python">Person.name  #=&gt; &lt;property object at 0x7efd89a259f8&gt;
 
 
 p = Person()
@@ -601,7 +601,7 @@ this property will be used to enable getting/setting the actual value</p>
 but do not hold the value itself, the vale will be held in the base instance</p>
 <p>the getter and setter will be called when an object is already created,
 and any field is accessed:</p>
-<pre><code class="language-python">car = Car()
+<pre><code class="python">car = Car()
 print(car.color)  #=&gt; getter will be called
 car.color = &quot;red&quot;  #=&gt; setter will be called
 </code></pre>
@@ -700,7 +700,7 @@ car.color = &quot;red&quot;  #=&gt; setter will be called
 <p>SimpleNamespace(**kwargs)</p>
 <p>base class implementation for any class with fields which supports getting/setting raw data for any instance fields.</p>
 <p>any instance can have an optional name and a parent.</p>
-<pre><code class="language-python">class Person(Base):
+<pre><code class="python">class Person(Base):
     name = fields.String()
     age = fields.Float()
 
@@ -1057,7 +1057,7 @@ print(p.name, p.age)
 </code></dt>
 <dd>
 <section class="desc"><p>get an instance from a dict</p>
-<pre><code class="language-python">class Person(Base):
+<pre><code class="python">class Person(Base):
     name = fields.String()
     age = fields.Float()
 
@@ -1130,7 +1130,7 @@ def parent(self):
 </code></dt>
 <dd>
 <section class="desc"><p>get a serializable dict from all values of all fields (except factories)</p>
-<pre><code class="language-python">class Person(Base):
+<pre><code class="python">class Person(Base):
     name = fields.String()
     age = fields.Float()
 
@@ -1206,7 +1206,7 @@ p.to_dict() #=&gt; {'name': 'ahmed', 'age': '19'}
 <dd>
 <section class="desc"><p>this class is used to get a new class with all field attributes replaced by property data descriptors.</p>
 <p>this should be used as a metaclass, example:</p>
-<pre><code class="language-python">class ExampleWithFields(metaclass=BaseMeta):
+<pre><code class="python">class ExampleWithFields(metaclass=BaseMeta):
     name = fields.String()
 </code></pre></section>
 <details class="source">
