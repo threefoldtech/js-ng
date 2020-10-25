@@ -452,6 +452,35 @@ def logger(self):
     return self.core.logging</code></pre>
 </details>
 </dd>
+<dt id="jumpscale.loader.J.packages"><code class="name">var <span class="ident">packages</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def getter(self):
+    inner_name = f&#34;__{name}&#34;
+    if hasattr(self, inner_name):
+        return getattr(self, inner_name)
+
+    full_name = f&#34;{root_module.__name__}.{name}&#34;
+    mod = importlib.import_module(full_name)
+    if mod.__spec__.origin in (&#34;namespace&#34;, None):
+        # if this module is a namespace, create a new container type
+        sub_container_type = get_container_type(full_name)
+        # expose all sub-modules of this imported module under this new type too
+        expose_all(mod, sub_container_type)
+        new_module = sub_container_type()
+    else:
+        # if it&#39;s just a module
+        if hasattr(mod, &#34;export_module_as&#34;):
+            new_module = mod.export_module_as()
+        else:
+            new_module = mod
+
+    setattr(self, inner_name, new_module)
+    return new_module</code></pre>
+</details>
+</dd>
 <dt id="jumpscale.loader.J.sals"><code class="name">var <span class="ident">sals</span></code></dt>
 <dd>
 <section class="desc"></section>
@@ -634,6 +663,7 @@ def logger(self):
 <li><code><a title="jumpscale.loader.J.exceptions" href="#jumpscale.loader.J.exceptions">exceptions</a></code></li>
 <li><code><a title="jumpscale.loader.J.install" href="#jumpscale.loader.J.install">install</a></code></li>
 <li><code><a title="jumpscale.loader.J.logger" href="#jumpscale.loader.J.logger">logger</a></code></li>
+<li><code><a title="jumpscale.loader.J.packages" href="#jumpscale.loader.J.packages">packages</a></code></li>
 <li><code><a title="jumpscale.loader.J.sals" href="#jumpscale.loader.J.sals">sals</a></code></li>
 <li><code><a title="jumpscale.loader.J.servers" href="#jumpscale.loader.J.servers">servers</a></code></li>
 <li><code><a title="jumpscale.loader.J.shell" href="#jumpscale.loader.J.shell">shell</a></code></li>

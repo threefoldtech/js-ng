@@ -190,8 +190,8 @@ class ZerotierClient(Client):
     base_url = fields.String(default=&#34;https://my.zerotier.com/api&#34;)
     token = fields.String()
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._session = None
 
     def _send_request(self, path, method=&#34;get&#34;, data=None, return_json=True):
@@ -656,6 +656,7 @@ that network</p>
 </dd>
 <dt id="jumpscale.clients.zerotier.zerotier.ZerotierClient"><code class="flex name class">
 <span>class <span class="ident">ZerotierClient</span></span>
+<span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>A simple attribute-based namespace.</p>
@@ -684,8 +685,8 @@ print(p.name, p.age)
     base_url = fields.String(default=&#34;https://my.zerotier.com/api&#34;)
     token = fields.String()
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._session = None
 
     def _send_request(self, path, method=&#34;get&#34;, data=None, return_json=True):
@@ -773,6 +774,8 @@ print(p.name, p.age)
 <dt id="jumpscale.clients.zerotier.zerotier.ZerotierClient.base_url"><code class="name">var <span class="ident">base_url</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -784,16 +787,13 @@ print(p.name, p.age)
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.clients.zerotier.zerotier.ZerotierClient.session"><code class="name">var <span class="ident">session</span></code></dt>
@@ -814,6 +814,8 @@ def session(self):
 <dt id="jumpscale.clients.zerotier.zerotier.ZerotierClient.token"><code class="name">var <span class="ident">token</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -825,16 +827,13 @@ def session(self):
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 </dl>

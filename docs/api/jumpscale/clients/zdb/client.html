@@ -458,6 +458,93 @@ print(p.name, p.age)
 <dt><strong><code>**values</code></strong></dt>
 <dd>any given field values to initiate the instance with</dd>
 </dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class ZDBAdminClient(ZDBClient):
+    def auth(self):
+        assert self.admin
+        if self.secret_:
+            # authentication should only happen in zdbadmin client
+            self.redis.execute_command(&#34;AUTH&#34;, self.secret_)
+
+    def namespace_exists(self, name):
+        assert self.admin
+        self.auth()
+        try:
+            self.redis.execute_command(&#34;NSINFO&#34;, name)
+            return True
+        except Exception as e:
+            if not &#34;Namespace not found&#34; in str(e):
+                raise j.exceptions.Base(&#34;could not check namespace:%s, error:%s&#34; % (name, e))
+            return False
+
+    def namespaces_list(self):
+        assert self.admin
+        self.auth()
+        res = self.redis.execute_command(&#34;NSLIST&#34;)
+        return [i.decode() for i in res]
+
+    def namespace_new(self, name, secret=None, maxsize=0, die=False):
+        &#34;&#34;&#34;
+        check namespace exists &amp; will return zdb client to that namespace
+
+        :param name:
+        :param secret:
+        :param maxsize:
+        :param die:
+        :return:
+        &#34;&#34;&#34;
+        assert self.admin
+        self.auth()
+        if not self.namespace_exists(name):
+            self.redis.execute_command(&#34;NSNEW&#34;, name)
+        else:
+            if die:
+                raise j.exceptions.Base(&#34;namespace already exists:%s&#34; % name)
+
+        if secret:
+            self.redis.execute_command(&#34;NSSET&#34;, name, &#34;password&#34;, secret)
+            self.redis.execute_command(&#34;NSSET&#34;, name, &#34;public&#34;, &#34;no&#34;)
+
+        if maxsize != 0:
+            self.redis.execute_command(&#34;NSSET&#34;, name, &#34;maxsize&#34;, maxsize)
+
+        ns = j.clients.zdb.client_get(
+            name=&#34;temp_%s&#34; % name, addr=self.addr, port=self.port, mode=self.mode, secret=secret, namespace=name
+        )
+
+        assert ns.ping()
+        if secret:
+            assert ns.nsinfo[&#34;public&#34;] == &#34;no&#34;
+        else:
+            assert ns.nsinfo[&#34;public&#34;] == &#34;yes&#34;
+
+        ns._data.delete()
+        return ns
+
+    def namespace_get(self, name, secret=&#34;&#34;):
+        assert self.admin
+        self.auth()
+        return self.namespace_new(name, secret)
+
+    def namespace_delete(self, name):
+        assert self.admin
+        self.auth()
+        if self.namespace_exists(name):
+            self.redis.execute_command(&#34;NSDEL&#34;, name)
+
+    def reset(self, ignore=[]):
+        &#34;&#34;&#34;
+        dangerous, will remove all namespaces &amp; all data
+        :param: list of namespace names not to reset
+        :return:
+        &#34;&#34;&#34;
+        assert self.admin
+        self.auth()
+        for name in self.namespaces_list():
+            if name not in [&#34;default&#34;] and name not in ignore:
+                self.namespace_delete(name)</code></pre>
+</details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="jumpscale.clients.zdb.client.ZDBClient" href="#jumpscale.clients.zdb.client.ZDBClient">ZDBClient</a></li>

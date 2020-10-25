@@ -32,8 +32,8 @@ class SyncthingClient(Client):
     port = fields.Integer()
     apikey = fields.String()
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.__url = None
         self.__session = None
         self.__config = None
@@ -125,14 +125,7 @@ class SyncthingClient(Client):
             return self.set_config(self.config)
 
     def add_folder(
-        self,
-        name,
-        path,
-        ignore_perms=False,
-        read_only=False,
-        rescan_intervals=10,
-        devices=None,
-        overwrite=False,
+        self, name, path, ignore_perms=False, read_only=False, rescan_intervals=10, devices=None, overwrite=False,
     ):
         folders = self.get_folders()
         idx = self._get_folder(name)
@@ -166,9 +159,7 @@ class SyncthingClient(Client):
         folders.append(folder)
         return self.set_config(self.config)
 
-    def add_device(
-        self, name, device_id, introducer=False, compression=&#34;always&#34;, overwrite=False
-    ):
+    def add_device(self, name, device_id, introducer=False, compression=&#34;always&#34;, overwrite=False):
         devices = self.get_devices()
         idx = self._get_device(name)
         if idx:
@@ -199,6 +190,7 @@ class SyncthingClient(Client):
 <dl>
 <dt id="jumpscale.clients.syncthing.syncthing.SyncthingClient"><code class="flex name class">
 <span>class <span class="ident">SyncthingClient</span></span>
+<span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>A simple attribute-based namespace.</p>
@@ -228,8 +220,8 @@ print(p.name, p.age)
     port = fields.Integer()
     apikey = fields.String()
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.__url = None
         self.__session = None
         self.__config = None
@@ -321,14 +313,7 @@ print(p.name, p.age)
             return self.set_config(self.config)
 
     def add_folder(
-        self,
-        name,
-        path,
-        ignore_perms=False,
-        read_only=False,
-        rescan_intervals=10,
-        devices=None,
-        overwrite=False,
+        self, name, path, ignore_perms=False, read_only=False, rescan_intervals=10, devices=None, overwrite=False,
     ):
         folders = self.get_folders()
         idx = self._get_folder(name)
@@ -362,9 +347,7 @@ print(p.name, p.age)
         folders.append(folder)
         return self.set_config(self.config)
 
-    def add_device(
-        self, name, device_id, introducer=False, compression=&#34;always&#34;, overwrite=False
-    ):
+    def add_device(self, name, device_id, introducer=False, compression=&#34;always&#34;, overwrite=False):
         devices = self.get_devices()
         idx = self._get_device(name)
         if idx:
@@ -394,6 +377,8 @@ print(p.name, p.age)
 <dt id="jumpscale.clients.syncthing.syncthing.SyncthingClient.apikey"><code class="name">var <span class="ident">apikey</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -405,16 +390,13 @@ print(p.name, p.age)
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.clients.syncthing.syncthing.SyncthingClient.config"><code class="name">var <span class="ident">config</span></code></dt>
@@ -432,6 +414,8 @@ def config(self):
 <dt id="jumpscale.clients.syncthing.syncthing.SyncthingClient.host"><code class="name">var <span class="ident">host</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -443,21 +427,20 @@ def config(self):
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.clients.syncthing.syncthing.SyncthingClient.port"><code class="name">var <span class="ident">port</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -469,16 +452,13 @@ def config(self):
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.clients.syncthing.syncthing.SyncthingClient.session"><code class="name">var <span class="ident">session</span></code></dt>
@@ -520,9 +500,7 @@ def url(self):
 <section class="desc"></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def add_device(
-    self, name, device_id, introducer=False, compression=&#34;always&#34;, overwrite=False
-):
+<pre><code class="python">def add_device(self, name, device_id, introducer=False, compression=&#34;always&#34;, overwrite=False):
     devices = self.get_devices()
     idx = self._get_device(name)
     if idx:
@@ -550,14 +528,7 @@ def url(self):
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def add_folder(
-    self,
-    name,
-    path,
-    ignore_perms=False,
-    read_only=False,
-    rescan_intervals=10,
-    devices=None,
-    overwrite=False,
+    self, name, path, ignore_perms=False, read_only=False, rescan_intervals=10, devices=None, overwrite=False,
 ):
     folders = self.get_folders()
     idx = self._get_folder(name)

@@ -27,19 +27,13 @@
 Helper to get nameservers information and resolving domains.
 
 &#34;&#34;&#34;
-# TODO: update code
 
-
-try:
-    import dns
-    import dns.message
-    import dns.rdataclass
-    import dns.rdatatype
-    import dns.query
-    import dns.resolver
-
-except ImportError as e:
-    print(&#34;WARNING install dnspython: &#39;pip3 install dnspython&#39;&#34;)
+import dns
+import dns.message
+import dns.rdataclass
+import dns.rdatatype
+import dns.query
+import dns.resolver
 
 
 class DNSClient:
@@ -52,7 +46,7 @@ class DNSClient:
         self.resolver.nameservers = self.nameservers
         self.resolver.port = port
 
-    def nameservers_get(self, domain=&#34;threefoldtoken.org&#34;):
+    def get_nameservers(self, domain=&#34;threefoldtoken.org&#34;):
         answer = self.resolver.query(domain, &#34;NS&#34;)
 
         res = []
@@ -60,7 +54,7 @@ class DNSClient:
             res.append(rr.target.to_text())
         return res
 
-    def namerecords_get(self, url=&#34;www.threefoldtoken.org&#34;):
+    def get_namerecords(self, url=&#34;www.threefoldtoken.org&#34;):
         &#34;&#34;&#34;
         return ip addr for a full name
         &#34;&#34;&#34;
@@ -71,8 +65,19 @@ class DNSClient:
             res.append(rr.address)
         return res
 
+    def is_free(self, domain, domain_type=&#34;A&#34;):
+        try:
+            self.query(domain, domain_type)
+        except:
+            return True
+        return False
 
-resolver = DNSClient()</code></pre>
+    def query(self, *args, **kwargs):
+        return self.resolver.query(*args, **kwargs)
+
+
+def export_module_as():
+    return DNSClient()</code></pre>
 </details>
 </section>
 <section>
@@ -80,6 +85,20 @@ resolver = DNSClient()</code></pre>
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="jumpscale.tools.dnstool.export_module_as"><code class="name flex">
+<span>def <span class="ident">export_module_as</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def export_module_as():
+    return DNSClient()</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
@@ -102,7 +121,7 @@ resolver = DNSClient()</code></pre>
         self.resolver.nameservers = self.nameservers
         self.resolver.port = port
 
-    def nameservers_get(self, domain=&#34;threefoldtoken.org&#34;):
+    def get_nameservers(self, domain=&#34;threefoldtoken.org&#34;):
         answer = self.resolver.query(domain, &#34;NS&#34;)
 
         res = []
@@ -110,7 +129,7 @@ resolver = DNSClient()</code></pre>
             res.append(rr.target.to_text())
         return res
 
-    def namerecords_get(self, url=&#34;www.threefoldtoken.org&#34;):
+    def get_namerecords(self, url=&#34;www.threefoldtoken.org&#34;):
         &#34;&#34;&#34;
         return ip addr for a full name
         &#34;&#34;&#34;
@@ -119,18 +138,28 @@ resolver = DNSClient()</code></pre>
         res = []
         for rr in answer:
             res.append(rr.address)
-        return res</code></pre>
+        return res
+
+    def is_free(self, domain, domain_type=&#34;A&#34;):
+        try:
+            self.query(domain, domain_type)
+        except:
+            return True
+        return False
+
+    def query(self, *args, **kwargs):
+        return self.resolver.query(*args, **kwargs)</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
-<dt id="jumpscale.tools.dnstool.DNSClient.namerecords_get"><code class="name flex">
-<span>def <span class="ident">namerecords_get</span></span>(<span>self, url=&#39;www.threefoldtoken.org&#39;)</span>
+<dt id="jumpscale.tools.dnstool.DNSClient.get_namerecords"><code class="name flex">
+<span>def <span class="ident">get_namerecords</span></span>(<span>self, url=&#39;www.threefoldtoken.org&#39;)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>return ip addr for a full name</p></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def namerecords_get(self, url=&#34;www.threefoldtoken.org&#34;):
+<pre><code class="python">def get_namerecords(self, url=&#34;www.threefoldtoken.org&#34;):
     &#34;&#34;&#34;
     return ip addr for a full name
     &#34;&#34;&#34;
@@ -142,20 +171,46 @@ resolver = DNSClient()</code></pre>
     return res</code></pre>
 </details>
 </dd>
-<dt id="jumpscale.tools.dnstool.DNSClient.nameservers_get"><code class="name flex">
-<span>def <span class="ident">nameservers_get</span></span>(<span>self, domain=&#39;threefoldtoken.org&#39;)</span>
+<dt id="jumpscale.tools.dnstool.DNSClient.get_nameservers"><code class="name flex">
+<span>def <span class="ident">get_nameservers</span></span>(<span>self, domain=&#39;threefoldtoken.org&#39;)</span>
 </code></dt>
 <dd>
 <section class="desc"></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def nameservers_get(self, domain=&#34;threefoldtoken.org&#34;):
+<pre><code class="python">def get_nameservers(self, domain=&#34;threefoldtoken.org&#34;):
     answer = self.resolver.query(domain, &#34;NS&#34;)
 
     res = []
     for rr in answer:
         res.append(rr.target.to_text())
     return res</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.tools.dnstool.DNSClient.is_free"><code class="name flex">
+<span>def <span class="ident">is_free</span></span>(<span>self, domain, domain_type=&#39;A&#39;)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def is_free(self, domain, domain_type=&#34;A&#34;):
+    try:
+        self.query(domain, domain_type)
+    except:
+        return True
+    return False</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.tools.dnstool.DNSClient.query"><code class="name flex">
+<span>def <span class="ident">query</span></span>(<span>self, *args, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def query(self, *args, **kwargs):
+    return self.resolver.query(*args, **kwargs)</code></pre>
 </details>
 </dd>
 </dl>
@@ -174,13 +229,20 @@ resolver = DNSClient()</code></pre>
 <li><code><a title="jumpscale.tools" href="../index.html">jumpscale.tools</a></code></li>
 </ul>
 </li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="jumpscale.tools.dnstool.export_module_as" href="#jumpscale.tools.dnstool.export_module_as">export_module_as</a></code></li>
+</ul>
+</li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
 <h4><code><a title="jumpscale.tools.dnstool.DNSClient" href="#jumpscale.tools.dnstool.DNSClient">DNSClient</a></code></h4>
 <ul class="">
-<li><code><a title="jumpscale.tools.dnstool.DNSClient.namerecords_get" href="#jumpscale.tools.dnstool.DNSClient.namerecords_get">namerecords_get</a></code></li>
-<li><code><a title="jumpscale.tools.dnstool.DNSClient.nameservers_get" href="#jumpscale.tools.dnstool.DNSClient.nameservers_get">nameservers_get</a></code></li>
+<li><code><a title="jumpscale.tools.dnstool.DNSClient.get_namerecords" href="#jumpscale.tools.dnstool.DNSClient.get_namerecords">get_namerecords</a></code></li>
+<li><code><a title="jumpscale.tools.dnstool.DNSClient.get_nameservers" href="#jumpscale.tools.dnstool.DNSClient.get_nameservers">get_nameservers</a></code></li>
+<li><code><a title="jumpscale.tools.dnstool.DNSClient.is_free" href="#jumpscale.tools.dnstool.DNSClient.is_free">is_free</a></code></li>
+<li><code><a title="jumpscale.tools.dnstool.DNSClient.query" href="#jumpscale.tools.dnstool.DNSClient.query">query</a></code></li>
 </ul>
 </li>
 </ul>

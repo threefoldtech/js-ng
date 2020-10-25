@@ -35,6 +35,7 @@ from email.mime.text import MIMEText
 from jumpscale.clients.base import Client
 from jumpscale.core.base import fields
 
+
 class MailClient(Client):
     name = fields.String()
     smtp_server = fields.String()
@@ -43,12 +44,12 @@ class MailClient(Client):
     password = fields.String()
     sender_email = fields.String()
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     @property
     def is_ssl(self):
-        self.smtp_port in [465, 587]
+        return self.smtp_port in [465, 587]
 
     def send(self, recipients, sender=&#34;&#34;, subject=&#34;&#34;, message=&#34;&#34;, files=None, mimetype=None):
         &#34;&#34;&#34; Send an email to the recipients from the sender containing the message required and any attached files given by the paths in files
@@ -71,7 +72,7 @@ class MailClient(Client):
             recipients = [recipients]
         server = smtplib.SMTP(self.smtp_server, self.smtp_port)
         server.ehlo()
-        if self._ssl:
+        if self.is_ssl:
             server.starttls()
         if self.login:
             server.login(self.login, self.password)
@@ -136,6 +137,7 @@ class MailClient(Client):
 <dl>
 <dt id="jumpscale.clients.mail.mail.MailClient"><code class="flex name class">
 <span>class <span class="ident">MailClient</span></span>
+<span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>A simple attribute-based namespace.</p>
@@ -168,12 +170,12 @@ print(p.name, p.age)
     password = fields.String()
     sender_email = fields.String()
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     @property
     def is_ssl(self):
-        self.smtp_port in [465, 587]
+        return self.smtp_port in [465, 587]
 
     def send(self, recipients, sender=&#34;&#34;, subject=&#34;&#34;, message=&#34;&#34;, files=None, mimetype=None):
         &#34;&#34;&#34; Send an email to the recipients from the sender containing the message required and any attached files given by the paths in files
@@ -196,7 +198,7 @@ print(p.name, p.age)
             recipients = [recipients]
         server = smtplib.SMTP(self.smtp_server, self.smtp_port)
         server.ehlo()
-        if self._ssl:
+        if self.is_ssl:
             server.starttls()
         if self.login:
             server.login(self.login, self.password)
@@ -264,12 +266,14 @@ print(p.name, p.age)
 <summary>Source code</summary>
 <pre><code class="python">@property
 def is_ssl(self):
-    self.smtp_port in [465, 587]</code></pre>
+    return self.smtp_port in [465, 587]</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.clients.mail.mail.MailClient.login"><code class="name">var <span class="ident">login</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -281,21 +285,20 @@ def is_ssl(self):
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.clients.mail.mail.MailClient.name"><code class="name">var <span class="ident">name</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -307,21 +310,20 @@ def is_ssl(self):
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.clients.mail.mail.MailClient.password"><code class="name">var <span class="ident">password</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -333,21 +335,20 @@ def is_ssl(self):
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.clients.mail.mail.MailClient.sender_email"><code class="name">var <span class="ident">sender_email</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -359,21 +360,20 @@ def is_ssl(self):
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.clients.mail.mail.MailClient.smtp_port"><code class="name">var <span class="ident">smtp_port</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -385,21 +385,20 @@ def is_ssl(self):
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.clients.mail.mail.MailClient.smtp_server"><code class="name">var <span class="ident">smtp_server</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -411,16 +410,13 @@ def is_ssl(self):
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 </dl>
@@ -466,7 +462,7 @@ def is_ssl(self):
         recipients = [recipients]
     server = smtplib.SMTP(self.smtp_server, self.smtp_port)
     server.ehlo()
-    if self._ssl:
+    if self.is_ssl:
         server.starttls()
     if self.login:
         server.login(self.login, self.password)

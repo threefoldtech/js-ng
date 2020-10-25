@@ -439,6 +439,26 @@ class GithubRepo:
 
         return self._issues
 
+    def download_directory(self, src, download_dir, branch=None):
+        dest = j.sals.fs.join_paths(download_dir, self.api.full_name)
+        j.sals.fs.mkdirs(dest)
+        branch = branch or self.api.default_branch
+        contents = self.api.get_dir_contents(src, ref=branch)
+
+        for content in contents:
+            if content.type == &#39;dir&#39;:
+                dir_path = j.sals.fs.join_paths(dest, content.path)
+                j.sals.fs.mkdirs(dir_path)
+                self.download_directory(content.path, download_dir, branch)
+            else:
+                file_path = j.sals.fs.join_paths(dest, content.path)
+                j.sals.fs.mkdirs(j.sals.fs.dirname(file_path))
+                file_content = self.api.get_contents(content.path, ref=branch)
+                with open(file_path, &#34;+w&#34;) as f:
+                    f.write(base64.b64decode(file_content.content).decode())
+
+        return j.sals.fs.join_paths(dest, src)
+
     def __str__(self):
         return &#34;gitrepo:%s&#34; % self.fullname
 
@@ -863,6 +883,26 @@ class GithubRepo:
 
         return self._issues
 
+    def download_directory(self, src, download_dir, branch=None):
+        dest = j.sals.fs.join_paths(download_dir, self.api.full_name)
+        j.sals.fs.mkdirs(dest)
+        branch = branch or self.api.default_branch
+        contents = self.api.get_dir_contents(src, ref=branch)
+
+        for content in contents:
+            if content.type == &#39;dir&#39;:
+                dir_path = j.sals.fs.join_paths(dest, content.path)
+                j.sals.fs.mkdirs(dir_path)
+                self.download_directory(content.path, download_dir, branch)
+            else:
+                file_path = j.sals.fs.join_paths(dest, content.path)
+                j.sals.fs.mkdirs(j.sals.fs.dirname(file_path))
+                file_content = self.api.get_contents(content.path, ref=branch)
+                with open(file_path, &#34;+w&#34;) as f:
+                    f.write(base64.b64decode(file_content.content).decode())
+
+        return j.sals.fs.join_paths(dest, src)
+
     def __str__(self):
         return &#34;gitrepo:%s&#34; % self.fullname
 
@@ -1120,6 +1160,34 @@ def types(self):
         self._milestones = []
     except Exception:
         self._log_info(&#34;Milestone &#39;%s&#39; doesn&#39;t exist. no need to delete&#34; % name)</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.clients.github.repo.GithubRepo.download_directory"><code class="name flex">
+<span>def <span class="ident">download_directory</span></span>(<span>self, src, download_dir, branch=None)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def download_directory(self, src, download_dir, branch=None):
+    dest = j.sals.fs.join_paths(download_dir, self.api.full_name)
+    j.sals.fs.mkdirs(dest)
+    branch = branch or self.api.default_branch
+    contents = self.api.get_dir_contents(src, ref=branch)
+
+    for content in contents:
+        if content.type == &#39;dir&#39;:
+            dir_path = j.sals.fs.join_paths(dest, content.path)
+            j.sals.fs.mkdirs(dir_path)
+            self.download_directory(content.path, download_dir, branch)
+        else:
+            file_path = j.sals.fs.join_paths(dest, content.path)
+            j.sals.fs.mkdirs(j.sals.fs.dirname(file_path))
+            file_content = self.api.get_contents(content.path, ref=branch)
+            with open(file_path, &#34;+w&#34;) as f:
+                f.write(base64.b64decode(file_content.content).decode())
+
+    return j.sals.fs.join_paths(dest, src)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.clients.github.repo.GithubRepo.get_color"><code class="name flex">
@@ -1485,6 +1553,7 @@ returns dict of dict keys: type, state and then issues sorted following priority
 <li><code><a title="jumpscale.clients.github.repo.GithubRepo.api" href="#jumpscale.clients.github.repo.GithubRepo.api">api</a></code></li>
 <li><code><a title="jumpscale.clients.github.repo.GithubRepo.create_milestone" href="#jumpscale.clients.github.repo.GithubRepo.create_milestone">create_milestone</a></code></li>
 <li><code><a title="jumpscale.clients.github.repo.GithubRepo.delete_milestone" href="#jumpscale.clients.github.repo.GithubRepo.delete_milestone">delete_milestone</a></code></li>
+<li><code><a title="jumpscale.clients.github.repo.GithubRepo.download_directory" href="#jumpscale.clients.github.repo.GithubRepo.download_directory">download_directory</a></code></li>
 <li><code><a title="jumpscale.clients.github.repo.GithubRepo.get_color" href="#jumpscale.clients.github.repo.GithubRepo.get_color">get_color</a></code></li>
 <li><code><a title="jumpscale.clients.github.repo.GithubRepo.get_issue" href="#jumpscale.clients.github.repo.GithubRepo.get_issue">get_issue</a></code></li>
 <li><code><a title="jumpscale.clients.github.repo.GithubRepo.get_issue_from_markdown" href="#jumpscale.clients.github.repo.GithubRepo.get_issue_from_markdown">get_issue_from_markdown</a></code></li>

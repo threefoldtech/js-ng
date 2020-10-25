@@ -22,8 +22,7 @@
 <section id="section-intro">
 <p>This module is used to manage your digital ocean account, create droplet,list all the droplets, destroy droplets, create project, list all the projects and delete project</p>
 <h1 id="prerequisites">prerequisites</h1>
-<pre><code>## Sshkey client and loaded with you public key
-</code></pre>
+<h2 id="sshkey-client-and-loaded-with-you-public-key">Sshkey client and loaded with you public key</h2>
 <p>'''python
 ssh = j.clients.sshkey.get(name= "test")
 ssh.private_key_path = "/home/rafy/.ssh/id_rsa"
@@ -31,7 +30,7 @@ ssh.load_from_file_system()
 '''</p>
 <h2 id="create-digital-ocean-client-and-set-your-token-and-load-your-sshkey">Create Digital Ocean client and set your token and load your sshkey</h2>
 <pre><code class="python">dg = j.clients.digitalocean.get(&quot;testDG&quot;)
-dg.token_ = &quot;&quot;
+dg.token = &quot;&quot;
 </code></pre>
 <h2 id="set-sshclient-you-have-created">Set sshclient you have created</h2>
 <pre><code class="python">dg.set_default_sshkey(ssh)
@@ -47,6 +46,9 @@ dg.token_ = &quot;&quot;
 <h4 id="deploy-the-project-you-have-to-specific-the-purpose">Deploy the project (you have to specific the purpose)</h4>
 <pre><code class="python">project.deploy(purpose=&quot;testing digital ocean client&quot;)
 </code></pre>
+<h4 id="deploy-the-project-as-default-one-so-the-new-droplets-will-be-automatically-added-to-your-default-project">Deploy the project as default one so the new droplets will be automatically added to your default project</h4>
+<pre><code class="python">project.deploy(purpose=&quot;testing digital ocean client&quot;,is_default=True)
+</code></pre>
 <h4 id="delete-the-project-from-digital-ocean">Delete the project from Digital Ocean</h4>
 <pre><code class="python">project.delete_remote()
 </code></pre>
@@ -58,7 +60,11 @@ dg.token_ = &quot;&quot;
 <pre><code class="python">droplet.set_digital_ocean_name(&quot;droplet-test-DO&quot;)
 </code></pre>
 <h4 id="deploy-the-droplet">Deploy the Droplet</h4>
+<p>The droplet will be deployed to you your default project</p>
 <pre><code class="python">droplet.deploy()
+</code></pre>
+<p>You can specify the project that you want the deploy the droplet to </p>
+<pre><code class="python">droplet.deploy(project_name=&quot;test project DO client&quot;)
 </code></pre>
 <h4 id="delete-the-droplet-from-digital-ocean">Delete the Droplet from Digital Ocean</h4>
 <pre><code class="python">droplet.delete_remote()
@@ -75,7 +81,7 @@ and you got digital ocean client with the name (dg)</p>
 <summary>Source code</summary>
 <pre><code class="python">&#34;&#34;&#34;This module is used to manage your digital ocean account, create droplet,list all the droplets, destroy droplets, create project, list all the projects and delete project
 # prerequisites
-    ## Sshkey client and loaded with you public key
+## Sshkey client and loaded with you public key
 &#39;&#39;&#39;python
 ssh = j.clients.sshkey.get(name= &#34;test&#34;)
 ssh.private_key_path = &#34;/home/rafy/.ssh/id_rsa&#34;
@@ -84,7 +90,7 @@ ssh.load_from_file_system()
 ## Create Digital Ocean client and set your token and load your sshkey
 ```python
 dg = j.clients.digitalocean.get(&#34;testDG&#34;)
-dg.token_ = &#34;&#34;
+dg.token = &#34;&#34;
 ```
 ## Set sshclient you have created
 ``` python
@@ -106,6 +112,10 @@ project.set_digital_ocean_name(&#34;test project DO client&#34;)
 ``` python
 project.deploy(purpose=&#34;testing digital ocean client&#34;)
 ```
+#### Deploy the project as default one so the new droplets will be automatically added to your default project
+``` python
+project.deploy(purpose=&#34;testing digital ocean client&#34;,is_default=True)
+```
 #### Delete the project from Digital Ocean
 ``` python
 project.delete_remote()
@@ -122,8 +132,13 @@ droplet = dg.droplets.new(&#34;test_droplet_dg&#34;)
 droplet.set_digital_ocean_name(&#34;droplet-test-DO&#34;)
 ```
 #### Deploy the Droplet
+The droplet will be deployed to you your default project
 ```python
 droplet.deploy()
+```
+You can specify the project that you want the deploy the droplet to
+```python
+droplet.deploy(project_name=&#34;test project DO client&#34;)
 ```
 #### Delete the Droplet from Digital Ocean
 ```python
@@ -204,7 +219,7 @@ class ProjectFactory(StoredFactory):
         for project in self.list_remote():
             if project.name == name:
                 return project
-        raise j.exceptions.Input(&#34;could not find project with name:%s on you Digital Ocean account&#34; % name)
+        raise j.exceptions.Input(&#34;could not find project with name:%s on your Digital Ocean account&#34; % name)
 
 
 class Project(Client):
@@ -251,7 +266,7 @@ class Project(Client):
             raise j.exceptions.Value(&#34;A project with the same name already exists&#34;)
 
         project = ProjectManagement(
-            token=self.parent.projects.parent_instance.token_,
+            token=self.parent.projects.parent_instance.token,
             name=self.do_name,
             purpose=purpose,
             description=description,
@@ -337,7 +352,7 @@ class DropletFactory(StoredFactory):
         for droplet in self.list_remote():
             if droplet.name.lower() == name.lower():
                 return droplet
-        raise j.exceptions.Input(&#34;could not find project with name:%s on you Digital Ocean account&#34; % name)
+        raise j.exceptions.Input(&#34;could not find droplet with name:%s on your Digital Ocean account&#34; % name)
 
     def shutdown_all(self, project_name=None):
         &#34;&#34;&#34;
@@ -442,22 +457,22 @@ class Droplet(Client):
         &#34;&#34;&#34;
         project = None
         if project_name:
-            project = self.parent.projects.get_project_exist_remote(self.do_name)
+            project = self.parent.projects.get_project_exist_remote(project_name)
             if not project:
                 raise j.exceptions.Input(&#34;could not find project with name:%s&#34; % project_name)
 
         # Get ssh
         if not sshkey:
             sshkey_do = self.parent.get_default_sshkey()
-
             if not sshkey_do:
                 # means we did not find the sshkey on digital ocean yet, need to create
                 sshkey = self.parent.sshkey
+
                 key = digitalocean.SSHKey(
-                    token=self.parent.projects.parent_instance.token_, name=sshkey.name, public_key=sshkey.public_key
+                    token=self.parent.projects.parent_instance.token, name=sshkey.name, public_key=sshkey.public_key
                 )
                 key.create()
-            sshkey_do = self.parent.get_default_sshkey()
+                sshkey_do = self.parent.get_default_sshkey()
             assert sshkey_do
             sshkey = sshkey_do.name
 
@@ -476,7 +491,7 @@ class Droplet(Client):
         img_slug_or_id = imagedo.slug if imagedo.slug else imagedo.id
 
         droplet = digitalocean.Droplet(
-            token=self.parent.droplets.parent_instance.token_,
+            token=self.parent.droplets.parent_instance.token,
             name=self.do_name,
             region=region.slug,
             image=img_slug_or_id,
@@ -502,12 +517,12 @@ class Droplet(Client):
 
 class DigitalOcean(Client):
     name = fields.String()
-    token_ = fields.String()
+    token = fields.Secret()
     projects = fields.Factory(Project, factory_type=ProjectFactory)
     droplets = fields.Factory(Droplet, factory_type=DropletFactory)
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._client = None
 
     @property
@@ -521,7 +536,7 @@ class DigitalOcean(Client):
         &#34;&#34;&#34;
 
         if not self._client:
-            self._client = digitalocean.Manager(token=self.token_)
+            self._client = digitalocean.Manager(token=self.token)
         return self._client
 
     # Images
@@ -747,6 +762,7 @@ class DigitalOcean(Client):
 <dl>
 <dt id="jumpscale.clients.digitalocean.digitalocean.DigitalOcean"><code class="flex name class">
 <span>class <span class="ident">DigitalOcean</span></span>
+<span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>A simple attribute-based namespace.</p>
@@ -773,12 +789,12 @@ print(p.name, p.age)
 <summary>Source code</summary>
 <pre><code class="python">class DigitalOcean(Client):
     name = fields.String()
-    token_ = fields.String()
+    token = fields.Secret()
     projects = fields.Factory(Project, factory_type=ProjectFactory)
     droplets = fields.Factory(Droplet, factory_type=DropletFactory)
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._client = None
 
     @property
@@ -792,7 +808,7 @@ print(p.name, p.age)
         &#34;&#34;&#34;
 
         if not self._client:
-            self._client = digitalocean.Manager(token=self.token_)
+            self._client = digitalocean.Manager(token=self.token)
         return self._client
 
     # Images
@@ -1061,13 +1077,15 @@ def client(self):
     &#34;&#34;&#34;
 
     if not self._client:
-        self._client = digitalocean.Manager(token=self.token_)
+        self._client = digitalocean.Manager(token=self.token)
     return self._client</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.clients.digitalocean.digitalocean.DigitalOcean.droplets"><code class="name">var <span class="ident">droplets</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -1079,21 +1097,18 @@ def client(self):
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.clients.digitalocean.digitalocean.DigitalOcean.images"><code class="name">var <span class="ident">images</span></code></dt>
 <dd>
-<section class="desc"><p>Return a list of digital ocean availabe images </p>
+<section class="desc"><p>Return a list of digital ocean availabe images</p>
 <p>e.g
 dg.images
 -&gt; [<Image: 31354013 CentOS 6.9 x32>,
@@ -1144,6 +1159,8 @@ def myimages(self):
 <dt id="jumpscale.clients.digitalocean.digitalocean.DigitalOcean.name"><code class="name">var <span class="ident">name</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -1155,21 +1172,20 @@ def myimages(self):
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.clients.digitalocean.digitalocean.DigitalOcean.projects"><code class="name">var <span class="ident">projects</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -1181,21 +1197,18 @@ def myimages(self):
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.clients.digitalocean.digitalocean.DigitalOcean.region_names"><code class="name">var <span class="ident">region_names</span></code></dt>
 <dd>
-<section class="desc"><p>Returns Digital Ocean regions </p>
+<section class="desc"><p>Returns Digital Ocean regions</p>
 <p>e.g
 dg.region_names
 -&gt; ['nyc1', 'sgp1', 'lon1', 'nyc3', 'ams3', 'fra1', 'tor1', 'sfo2', 'blr1']</p>
@@ -1263,7 +1276,7 @@ def sizes(self):
 </dd>
 <dt id="jumpscale.clients.digitalocean.digitalocean.DigitalOcean.sshkeys"><code class="name">var <span class="ident">sshkeys</span></code></dt>
 <dd>
-<section class="desc"><p>Return list of sshkeys on digital ocean </p>
+<section class="desc"><p>Return list of sshkeys on digital ocean</p>
 <p>e.g
 dg.sshkeys
 -&gt; [<SSHKey: 25882170 3bot_container_sandbox>,
@@ -1288,9 +1301,11 @@ def sshkeys(self):
     return self.client.get_all_sshkeys()</code></pre>
 </details>
 </dd>
-<dt id="jumpscale.clients.digitalocean.digitalocean.DigitalOcean.token_"><code class="name">var <span class="ident">token_</span></code></dt>
+<dt id="jumpscale.clients.digitalocean.digitalocean.DigitalOcean.token"><code class="name">var <span class="ident">token</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -1302,16 +1317,13 @@ def sshkeys(self):
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 </dl>
@@ -1321,7 +1333,7 @@ def sshkeys(self):
 <span>def <span class="ident">get_default_sshkey</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Return sshkey you have added to your Digital Ocean client </p>
+<section class="desc"><p>Return sshkey you have added to your Digital Ocean client</p>
 <p>e.g
 dg.get_default_sshkey()
 -&gt;
@@ -1351,7 +1363,7 @@ list : list of sshkeys</p></section>
 <span>def <span class="ident">get_image</span></span>(<span>self, name)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Return an image </p>
+<section class="desc"><p>Return an image</p>
 <p>e.g
 dg.get_image(name="CentOS")
 -&gt; <Image: 31354013 CentOS 6.9 x32></p>
@@ -1429,7 +1441,7 @@ Image : list of images</p></section>
 <span>def <span class="ident">get_region</span></span>(<span>self, name)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Returns specific region </p>
+<section class="desc"><p>Returns specific region</p>
 <p>e.g
 dg.get_region(name = 'nyc1')
 -&gt; <Region: nyc1 New York 1></p>
@@ -1499,7 +1511,7 @@ SSHKey : return the specified sshkey</p></section>
 </code></dt>
 <dd>
 <section class="desc"><p>Set sshkey you
-Digital Ocean client </p>
+Digital Ocean client</p>
 <p>e.g
 dg.set_default_sshkey(ssh)
 -&gt;
@@ -1611,22 +1623,22 @@ print(p.name, p.age)
         &#34;&#34;&#34;
         project = None
         if project_name:
-            project = self.parent.projects.get_project_exist_remote(self.do_name)
+            project = self.parent.projects.get_project_exist_remote(project_name)
             if not project:
                 raise j.exceptions.Input(&#34;could not find project with name:%s&#34; % project_name)
 
         # Get ssh
         if not sshkey:
             sshkey_do = self.parent.get_default_sshkey()
-
             if not sshkey_do:
                 # means we did not find the sshkey on digital ocean yet, need to create
                 sshkey = self.parent.sshkey
+
                 key = digitalocean.SSHKey(
-                    token=self.parent.projects.parent_instance.token_, name=sshkey.name, public_key=sshkey.public_key
+                    token=self.parent.projects.parent_instance.token, name=sshkey.name, public_key=sshkey.public_key
                 )
                 key.create()
-            sshkey_do = self.parent.get_default_sshkey()
+                sshkey_do = self.parent.get_default_sshkey()
             assert sshkey_do
             sshkey = sshkey_do.name
 
@@ -1645,7 +1657,7 @@ print(p.name, p.age)
         img_slug_or_id = imagedo.slug if imagedo.slug else imagedo.id
 
         droplet = digitalocean.Droplet(
-            token=self.parent.droplets.parent_instance.token_,
+            token=self.parent.droplets.parent_instance.token,
             name=self.do_name,
             region=region.slug,
             image=img_slug_or_id,
@@ -1679,6 +1691,8 @@ print(p.name, p.age)
 <dt id="jumpscale.clients.digitalocean.digitalocean.Droplet.do_name"><code class="name">var <span class="ident">do_name</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -1690,16 +1704,13 @@ print(p.name, p.age)
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 </dl>
@@ -1763,22 +1774,22 @@ project_name (string): project to add this droplet it. If not specified the defa
     &#34;&#34;&#34;
     project = None
     if project_name:
-        project = self.parent.projects.get_project_exist_remote(self.do_name)
+        project = self.parent.projects.get_project_exist_remote(project_name)
         if not project:
             raise j.exceptions.Input(&#34;could not find project with name:%s&#34; % project_name)
 
     # Get ssh
     if not sshkey:
         sshkey_do = self.parent.get_default_sshkey()
-
         if not sshkey_do:
             # means we did not find the sshkey on digital ocean yet, need to create
             sshkey = self.parent.sshkey
+
             key = digitalocean.SSHKey(
-                token=self.parent.projects.parent_instance.token_, name=sshkey.name, public_key=sshkey.public_key
+                token=self.parent.projects.parent_instance.token, name=sshkey.name, public_key=sshkey.public_key
             )
             key.create()
-        sshkey_do = self.parent.get_default_sshkey()
+            sshkey_do = self.parent.get_default_sshkey()
         assert sshkey_do
         sshkey = sshkey_do.name
 
@@ -1797,7 +1808,7 @@ project_name (string): project to add this droplet it. If not specified the defa
     img_slug_or_id = imagedo.slug if imagedo.slug else imagedo.id
 
     droplet = digitalocean.Droplet(
-        token=self.parent.droplets.parent_instance.token_,
+        token=self.parent.droplets.parent_instance.token,
         name=self.do_name,
         region=region.slug,
         image=img_slug_or_id,
@@ -1842,8 +1853,7 @@ str: name for the droplet which is used on digital ocean</p></section>
 <dd>
 <section class="desc"><p>Set a name for your Droplet to be used on Digital Ocean</p>
 <p>e.g
-droplet.set_digital_ocean_name("test-name")
-</p>
+droplet.set_digital_ocean_name("test-name")</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>name</code></strong> :&ensp;<code>str</code></dt>
@@ -1960,7 +1970,7 @@ to store all instance configurations.</p>
         for droplet in self.list_remote():
             if droplet.name.lower() == name.lower():
                 return droplet
-        raise j.exceptions.Input(&#34;could not find project with name:%s on you Digital Ocean account&#34; % name)
+        raise j.exceptions.Input(&#34;could not find droplet with name:%s on your Digital Ocean account&#34; % name)
 
     def shutdown_all(self, project_name=None):
         &#34;&#34;&#34;
@@ -2025,7 +2035,7 @@ to store all instance configurations.</p>
 <span>def <span class="ident">check_droplet_exist_remote</span></span>(<span>self, name)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Check droplet exists on digital ocean </p>
+<section class="desc"><p>Check droplet exists on digital ocean</p>
 <p>e.g
 dg.droplets.check_droplet_exist_remote("3git")
 -&gt; True
@@ -2063,8 +2073,7 @@ dg.droplets.check_droplet_exist_remote("sdfgdfed")
 <span>def <span class="ident">delete_all</span></span>(<span>self, ignore=None, interactive=True, project_name=None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Delete all the droplets or delete all the droplets in specific project
-</p>
+<section class="desc"><p>Delete all the droplets or delete all the droplets in specific project</p>
 <p>e.g
 dg.droplets.delete_all(project_name = "codescalers")
 dg.droplets.delete_all()</p>
@@ -2121,7 +2130,7 @@ will delete directly</dd>
 <span>def <span class="ident">get_droplet_exist_remote</span></span>(<span>self, name)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Get Droplet exists from Digital Ocean </p>
+<section class="desc"><p>Get Droplet exists from Digital Ocean</p>
 <p>e.g
 dg.droplets.get_droplet_exist_remote("3git")</p>
 <h2 id="args">Args</h2>
@@ -2149,7 +2158,7 @@ dg.droplets.get_droplet_exist_remote("3git")</p>
     for droplet in self.list_remote():
         if droplet.name.lower() == name.lower():
             return droplet
-    raise j.exceptions.Input(&#34;could not find project with name:%s on you Digital Ocean account&#34; % name)</code></pre>
+    raise j.exceptions.Input(&#34;could not find droplet with name:%s on your Digital Ocean account&#34; % name)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.clients.digitalocean.digitalocean.DropletFactory.list_remote"><code class="name flex">
@@ -2197,8 +2206,7 @@ dg.droplets.list_remote("codescalers")
 <span>def <span class="ident">shutdown_all</span></span>(<span>self, project_name=None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Shutdown all the droplets or droplets in specific project
-</p>
+<section class="desc"><p>Shutdown all the droplets or droplets in specific project</p>
 <p>e.g
 dg.droplets.shutdown_all("codescalers")
 dg.droplets.shutdown_all()</p>
@@ -2230,6 +2238,7 @@ dg.droplets.shutdown_all()</p>
 <li><code><a title="jumpscale.core.base.factory.StoredFactory.STORE" href="../../core/base/factory.html#jumpscale.core.base.factory.StoredFactory.STORE">STORE</a></code></li>
 <li><code><a title="jumpscale.core.base.factory.StoredFactory.delete" href="../../core/base/factory.html#jumpscale.core.base.factory.Factory.delete">delete</a></code></li>
 <li><code><a title="jumpscale.core.base.factory.StoredFactory.find" href="../../core/base/factory.html#jumpscale.core.base.factory.Factory.find">find</a></code></li>
+<li><code><a title="jumpscale.core.base.factory.StoredFactory.find_many" href="../../core/base/factory.html#jumpscale.core.base.factory.StoredFactory.find_many">find_many</a></code></li>
 <li><code><a title="jumpscale.core.base.factory.StoredFactory.get" href="../../core/base/factory.html#jumpscale.core.base.factory.Factory.get">get</a></code></li>
 <li><code><a title="jumpscale.core.base.factory.StoredFactory.get_instance_property" href="../../core/base/factory.html#jumpscale.core.base.factory.StoredFactory.get_instance_property">get_instance_property</a></code></li>
 <li><code><a title="jumpscale.core.base.factory.StoredFactory.handle" href="../../core/base/factory.html#jumpscale.core.base.factory.StoredFactory.handle">handle</a></code></li>
@@ -2311,7 +2320,7 @@ print(p.name, p.age)
             raise j.exceptions.Value(&#34;A project with the same name already exists&#34;)
 
         project = ProjectManagement(
-            token=self.parent.projects.parent_instance.token_,
+            token=self.parent.projects.parent_instance.token,
             name=self.do_name,
             purpose=purpose,
             description=description,
@@ -2345,6 +2354,8 @@ print(p.name, p.age)
 <dt id="jumpscale.clients.digitalocean.digitalocean.Project.do_name"><code class="name">var <span class="ident">do_name</span></code></dt>
 <dd>
 <section class="desc"><p>getter method this property</p>
+<p>will call <code>_get_value</code>, which would if the value is already defined
+and will get the default value if not</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>any</code></strong></dt>
@@ -2356,16 +2367,13 @@ print(p.name, p.age)
     &#34;&#34;&#34;
     getter method this property
 
+    will call `_get_value`, which would if the value is already defined
+    and will get the default value if not
+
     Returns:
         any: the field value
     &#34;&#34;&#34;
-    # if it&#39;s already defined, just return it
-    if hasattr(self, inner_name):
-        return getattr(self, inner_name)
-
-    # if not, it will just return the default value of the field
-    # accept raw value as default too
-    return field.from_raw(field.default)</code></pre>
+    return self._get_value(name, field)</code></pre>
 </details>
 </dd>
 </dl>
@@ -2428,7 +2436,7 @@ is_default(bool): make this the default project for your user</p>
         raise j.exceptions.Value(&#34;A project with the same name already exists&#34;)
 
     project = ProjectManagement(
-        token=self.parent.projects.parent_instance.token_,
+        token=self.parent.projects.parent_instance.token,
         name=self.do_name,
         purpose=purpose,
         description=description,
@@ -2582,7 +2590,7 @@ to store all instance configurations.</p>
         for project in self.list_remote():
             if project.name == name:
                 return project
-        raise j.exceptions.Input(&#34;could not find project with name:%s on you Digital Ocean account&#34; % name)</code></pre>
+        raise j.exceptions.Input(&#34;could not find project with name:%s on your Digital Ocean account&#34; % name)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -2596,7 +2604,7 @@ to store all instance configurations.</p>
 <span>def <span class="ident">check_project_exist_remote</span></span>(<span>self, name)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Check a project with specific name exits on Digital Ocean </p>
+<section class="desc"><p>Check a project with specific name exits on Digital Ocean</p>
 <p>e.g
 dg.projects.check_project_exist_remote("codescalers")
 -&gt; True
@@ -2659,7 +2667,7 @@ Project : a project from digital ocean with the name specified</p></section>
     for project in self.list_remote():
         if project.name == name:
             return project
-    raise j.exceptions.Input(&#34;could not find project with name:%s on you Digital Ocean account&#34; % name)</code></pre>
+    raise j.exceptions.Input(&#34;could not find project with name:%s on your Digital Ocean account&#34; % name)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.clients.digitalocean.digitalocean.ProjectFactory.list_remote"><code class="name flex">
@@ -2669,7 +2677,7 @@ Project : a project from digital ocean with the name specified</p></section>
 <section class="desc"><p>Returns list of projects on Digital Ocean</p>
 <p>e.g
 dg.projects.list_remote()
--&gt; list of projects </p>
+-&gt; list of projects</p>
 <p>Returns
 list(projects): list of projects on digital ocean</p></section>
 <details class="source">
@@ -2696,6 +2704,7 @@ list(projects): list of projects on digital ocean</p></section>
 <li><code><a title="jumpscale.core.base.factory.StoredFactory.STORE" href="../../core/base/factory.html#jumpscale.core.base.factory.StoredFactory.STORE">STORE</a></code></li>
 <li><code><a title="jumpscale.core.base.factory.StoredFactory.delete" href="../../core/base/factory.html#jumpscale.core.base.factory.Factory.delete">delete</a></code></li>
 <li><code><a title="jumpscale.core.base.factory.StoredFactory.find" href="../../core/base/factory.html#jumpscale.core.base.factory.Factory.find">find</a></code></li>
+<li><code><a title="jumpscale.core.base.factory.StoredFactory.find_many" href="../../core/base/factory.html#jumpscale.core.base.factory.StoredFactory.find_many">find_many</a></code></li>
 <li><code><a title="jumpscale.core.base.factory.StoredFactory.get" href="../../core/base/factory.html#jumpscale.core.base.factory.Factory.get">get</a></code></li>
 <li><code><a title="jumpscale.core.base.factory.StoredFactory.get_instance_property" href="../../core/base/factory.html#jumpscale.core.base.factory.StoredFactory.get_instance_property">get_instance_property</a></code></li>
 <li><code><a title="jumpscale.core.base.factory.StoredFactory.handle" href="../../core/base/factory.html#jumpscale.core.base.factory.StoredFactory.handle">handle</a></code></li>
@@ -2714,6 +2723,7 @@ list(projects): list of projects on digital ocean</p></section>
 <div class="toc">
 <ul>
 <li><a href="#prerequisites">prerequisites</a><ul>
+<li><a href="#sshkey-client-and-loaded-with-you-public-key">Sshkey client and loaded with you public key</a></li>
 <li><a href="#create-digital-ocean-client-and-set-your-token-and-load-your-sshkey">Create Digital Ocean client and set your token and load your sshkey</a></li>
 <li><a href="#set-sshclient-you-have-created">Set sshclient you have created</a></li>
 <li><a href="#use-digital-ocean-client">Use Digital Ocean client</a><ul>
@@ -2721,6 +2731,7 @@ list(projects): list of projects on digital ocean</p></section>
 <li><a href="#create-project-name-must-not-contian-spaces-or-start-with-number">Create Project (name must not contian spaces or start with number)</a></li>
 <li><a href="#set-the-name-you-want-to-deploy-with-on-digital-ocean">Set the name you want to deploy with on Digital Ocean</a></li>
 <li><a href="#deploy-the-project-you-have-to-specific-the-purpose">Deploy the project (you have to specific the purpose)</a></li>
+<li><a href="#deploy-the-project-as-default-one-so-the-new-droplets-will-be-automatically-added-to-your-default-project">Deploy the project as default one so the new droplets will be automatically added to your default project</a></li>
 <li><a href="#delete-the-project-from-digital-ocean">Delete the project from Digital Ocean</a></li>
 </ul>
 </li>
@@ -2767,7 +2778,7 @@ list(projects): list of projects on digital ocean</p></section>
 <li><code><a title="jumpscale.clients.digitalocean.digitalocean.DigitalOcean.set_default_sshkey" href="#jumpscale.clients.digitalocean.digitalocean.DigitalOcean.set_default_sshkey">set_default_sshkey</a></code></li>
 <li><code><a title="jumpscale.clients.digitalocean.digitalocean.DigitalOcean.sizes" href="#jumpscale.clients.digitalocean.digitalocean.DigitalOcean.sizes">sizes</a></code></li>
 <li><code><a title="jumpscale.clients.digitalocean.digitalocean.DigitalOcean.sshkeys" href="#jumpscale.clients.digitalocean.digitalocean.DigitalOcean.sshkeys">sshkeys</a></code></li>
-<li><code><a title="jumpscale.clients.digitalocean.digitalocean.DigitalOcean.token_" href="#jumpscale.clients.digitalocean.digitalocean.DigitalOcean.token_">token_</a></code></li>
+<li><code><a title="jumpscale.clients.digitalocean.digitalocean.DigitalOcean.token" href="#jumpscale.clients.digitalocean.digitalocean.DigitalOcean.token">token</a></code></li>
 </ul>
 </li>
 <li>
