@@ -462,6 +462,7 @@ def mkdirs(path: str, exist_ok=True):
     """
     return os.makedirs(path, exist_ok=exist_ok)
 
+makedirs = mkdirs
 
 def make_path(path):
     """
