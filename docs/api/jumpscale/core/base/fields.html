@@ -25,7 +25,7 @@
 where the data itself resides in Base objects (instances).</p>
 <p>See <a title="jumpscale.core.base.meta" href="meta.html"><code>jumpscale.core.base.meta</code></a>.</p>
 <p>Example:</p>
-<pre><code class="python">from enum import Enum
+<pre><code class="language-python">from enum import Enum
 
 class Permission(Base):
     read_posts = fields.Boolean()
@@ -1889,7 +1889,7 @@ they will converted to objects.</p>
 <dd>
 <section class="desc"><p>Enum field, to be used with <code>enum.Enum</code>.</p>
 <p>Example:</p>
-<pre><code class="python">class UserType(Enum):
+<pre><code class="language-python">class UserType(Enum):
     USER = &quot;user&quot;
     ADMIN = &quot;admin&quot;
 
@@ -2052,14 +2052,14 @@ class User(Base):
 <dd>
 <section class="desc"><p>A factory field for any <code>Base</code> type, also, you can specify your factory type/class</p>
 <p>Example:</p>
-<pre><code class="python">class User(Base):
+<pre><code class="language-python">class User(Base):
     name = fields.String()
 
 class Server(Base):
     users = fields.Factory(User)
 </code></pre>
 <p>Another example with a custom factory class:</p>
-<pre><code class="python">class User(Base):
+<pre><code class="language-python">class User(Base):
     name = fields.String()
 
 class UserFactory(StoredFactory):
