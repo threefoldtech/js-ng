@@ -2,8 +2,6 @@ import string
 
 from jumpscale.loader import j
 from tests.base_tests import BaseTests
-from os import getenv
-import time
 
 
 class SshClientTests(BaseTests):
