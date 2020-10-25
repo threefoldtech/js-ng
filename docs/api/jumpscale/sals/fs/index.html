@@ -619,6 +619,7 @@ def mkdirs(path: str, exist_ok=True):
     &#34;&#34;&#34;
     return os.makedirs(path, exist_ok=exist_ok)
 
+makedirs = mkdirs
 
 def make_path(path):
     &#34;&#34;&#34;
@@ -2282,6 +2283,40 @@ j.sals.fs.lstat("/home/rafy/testing_link")
         return pathlib.Path(path).touch()</code></pre>
 </details>
 </dd>
+<dt id="jumpscale.sals.fs.makedirs"><code class="name flex">
+<span>def <span class="ident">makedirs</span></span>(<span>path, exist_ok=True)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Creates dir as well as all non exisitng parents in the path
+e.g
+j.sals.fs.mkdirs("/home/rafy/testing_make_dir/test1/test2",exist_ok=False)
+j.sals.fs.mkdirs("/home/rafy/testing_make_dir/test1/test2",exist_ok=True)
+j.sals.fs.mkdirs("/home/rafy/testing_make_dir/test1/test2",exist_ok=False)
+-&gt; File exists: '/home/rafy/testing_make_dir/test1/test2'(raise exception as the file exist and
+exist_ok flag is false)</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
+<dd>path to create dir at</dd>
+<dt><strong><code>exist_ok</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>won't fail if directory exists. Defaults to True.</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def mkdirs(path: str, exist_ok=True):
+    &#34;&#34;&#34;Creates dir as well as all non exisitng parents in the path
+    e.g
+        j.sals.fs.mkdirs(&#34;/home/rafy/testing_make_dir/test1/test2&#34;,exist_ok=False)
+        j.sals.fs.mkdirs(&#34;/home/rafy/testing_make_dir/test1/test2&#34;,exist_ok=True)
+        j.sals.fs.mkdirs(&#34;/home/rafy/testing_make_dir/test1/test2&#34;,exist_ok=False)  -&gt; File exists: &#39;/home/rafy/testing_make_dir/test1/test2&#39;(raise exception as the file exist and  exist_ok flag is false)
+
+    Args:
+        path (str): path to create dir at
+        exist_ok (bool, optional): won&#39;t fail if directory exists. Defaults to True.
+    &#34;&#34;&#34;
+    return os.makedirs(path, exist_ok=exist_ok)</code></pre>
+</details>
+</dd>
 <dt id="jumpscale.sals.fs.mkdir"><code class="name flex">
 <span>def <span class="ident">mkdir</span></span>(<span>path, exist_ok=True)</span>
 </code></dt>
@@ -3486,6 +3521,7 @@ j.sals.fs.write_text(path="/home/rafy/testing_text.txt",data="hello world")
 <li><code><a title="jumpscale.sals.fs.lchmod" href="#jumpscale.sals.fs.lchmod">lchmod</a></code></li>
 <li><code><a title="jumpscale.sals.fs.lstat" href="#jumpscale.sals.fs.lstat">lstat</a></code></li>
 <li><code><a title="jumpscale.sals.fs.make_path" href="#jumpscale.sals.fs.make_path">make_path</a></code></li>
+<li><code><a title="jumpscale.sals.fs.makedirs" href="#jumpscale.sals.fs.makedirs">makedirs</a></code></li>
 <li><code><a title="jumpscale.sals.fs.mkdir" href="#jumpscale.sals.fs.mkdir">mkdir</a></code></li>
 <li><code><a title="jumpscale.sals.fs.mkdirs" href="#jumpscale.sals.fs.mkdirs">mkdirs</a></code></li>
 <li><code><a title="jumpscale.sals.fs.parent" href="#jumpscale.sals.fs.parent">parent</a></code></li>
