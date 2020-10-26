@@ -91,7 +91,7 @@ class AlertsHandler:
         pid: int = None,
         start_time: int = None,
         end_time: int = None,
-    ) -> Alert:
+    ) -> list:
 
         """Find alerts
 
@@ -104,8 +104,9 @@ class AlertsHandler:
             end_time {int} -- filter by end time (default: {None})
 
         Returns:
-            Alert -- alert object
+            list of Alert objects
         """
+
         appname = appname.strip().lower()
         category = category.strip().lower()
         message = message.strip().lower()
@@ -116,13 +117,15 @@ class AlertsHandler:
         for item in items:
             alert = Alert.loads(item[1])
 
-            if appname and appname != alert.appname:
+            if appname and appname != alert.appname.strip().lower():
                 continue
 
-            if category and category != alert.category:
+            if category and category != alert.category.strip().lower():
                 continue
 
-            if message and (message not in alert.message and message not in alert.public_message):
+            if message and (
+                message not in alert.message.strip().lower() and message not in alert.public_message.strip().lower()
+            ):
                 continue
 
             if start_time and start_time < alert.first_occurrence:
