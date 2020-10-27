@@ -17,7 +17,7 @@ class GitTests(BaseTests):
 
     def tearDown(self):
         j.clients.git.delete(self.instance_name)
-        j.sals.fs.rmtree(path=f"{self.repo_dir}")
+        j.sals.fs.rmtree(path=self.repo_dir)
 
     def random_name(self):
         return j.data.idgenerator.nfromchoices(10, string.ascii_letters)
@@ -49,7 +49,7 @@ class GitTests(BaseTests):
         - Check branch name.
         """
         self.info("Get the branch name")
-        branch_name = j.sals.process.execute("git branch", cwd=f"{self.repo_dir}/{self.repo_name}")
+        branch_name = j.sals.process.execute("git branch --show-current", cwd=f"{self.repo_dir}/{self.repo_name}")
 
         self.info("Check branch name")
         self.assertIn(self.git_client.branch_name, branch_name[1])
@@ -76,7 +76,7 @@ class GitTests(BaseTests):
 
         self.info("Check if file has been modifed")
         modided_file = self.git_client.get_modified_files()
-        self.assertNotEqual(len(modided_file), 0)
+        self.assertTrue(modided_file)
         self.assertEqual(file_name, modided_file["M"][0])
 
     def test04_git_add_new_file(self):
@@ -93,7 +93,7 @@ class GitTests(BaseTests):
 
         self.info("Check if a new file has been added")
         added_file = self.git_client.get_modified_files()
-        self.assertNotEqual(len(added_file), 0)
+        self.assertTrue(added_file)
         self.assertEqual(file_name, added_file["N"][0])
 
     def test05_git_commit(self):
