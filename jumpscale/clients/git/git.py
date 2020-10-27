@@ -72,5 +72,3 @@ class GitClient(Client):
             self.repo.git.add("-A")
         if self.repo.index.diff("HEAD"):
             return self.repo.index.commit(message)
-
-
