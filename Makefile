@@ -9,6 +9,9 @@ integrationtests:
 unittests:
 	pytest tests -sv -m "unittests"
 
+testdocs:
+	jsng "j.sals.testdocs.generate_tests_docs(source='tests/', target='docs/tests', clean=True)"
+
 coverage:
 	pytest tests -s --cov=jumpscale --cov-report=xml
 
