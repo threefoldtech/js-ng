@@ -40,7 +40,28 @@ class GitTests(BaseTests):
         self.info("Check that git config url equal to remote_url")
         self.assertIn(self.git_client.remote_url, git_config)
 
-    def test02_git_branch(self):
+    def test02_set_remote_ssh_url(self):
+        """Test case for setting remote url.
+
+        **Test Scenario**
+        - Get a git client.
+        - Set remote url to repo ssh url.
+        - Read the git config file.
+        - Check that remote_url equals to repo ssh url.
+        """
+        repo_ssh_url = "git@github.com:threefoldtech/js-ng.git"
+
+        self.info("Set remote url to repo ssh url")
+        self.git_client.set_remote_url(repo_ssh_url)
+
+        self.info("Read the git config file")
+        git_config = j.sals.fs.read_file(f"{self.repo_dir}/{self.repo_name}/.git/config")
+
+        self.info("Check that remote_url equals to repo ssh url")
+        self.assertEqual(self.git_client.remote_url, repo_ssh_url)
+        self.assertIn(self.git_client.remote_url, git_config)
+
+    def test03_git_branch(self):
         """Test case for checking a branch name.
 
         **Test Scenario**
@@ -54,7 +75,7 @@ class GitTests(BaseTests):
         self.info("Check branch name")
         self.assertIn(self.git_client.branch_name, branch_name[1])
 
-    def test03_git_modifed_files(self):
+    def test04_git_modifed_files(self):
         """Test case for getting the modifed files.
 
         **Test Scenario**
@@ -79,7 +100,7 @@ class GitTests(BaseTests):
         self.assertTrue(modided_file)
         self.assertEqual(file_name, modided_file["M"][0])
 
-    def test04_git_add_new_file(self):
+    def test05_git_add_new_file(self):
         """Test case for adding a new file with git.
 
         **Test Scenario**
@@ -96,7 +117,7 @@ class GitTests(BaseTests):
         self.assertTrue(added_file)
         self.assertEqual(file_name, added_file["N"][0])
 
-    def test05_git_commit(self):
+    def test06_git_commit(self):
         """Test case for committing a change.
 
         **Test Scenario**
@@ -121,7 +142,7 @@ class GitTests(BaseTests):
         self.info("Check if commit has been done")
         self.assertIn(commit_msg, str(last_commit))
 
-    def test06_git_commit_one_file(self):
+    def test07_git_commit_one_file(self):
         """Test case for checking a commit with add_all=False.
 
         **Test Scenario**
@@ -148,7 +169,7 @@ class GitTests(BaseTests):
         self.info("Check if commit has been done for one file")
         self.assertNotIn(file1_name, self.git_client.get_modified_files()["N"])
 
-    def test07_git_pull(self):
+    def test08_git_pull(self):
         """Test case for pulling a repository
 
         **Test Scenario**
