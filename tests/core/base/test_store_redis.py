@@ -56,9 +56,10 @@ class RedisStoreTests(BaseTests):
         """Test for creating, finding and deleting models.
 
         **Test Scenario**
-        #. Create model and save it.
-        #. List all instances and check that only one instance found.
-        #. Get the instance and check that all fields are stored.
+
+        - Create model and save it.
+        - List all instances and check that only one instance found.
+        - Get the instance and check that all fields are stored.
         """
         self.info("Create model and save it.")
         instance_name = self.randstr()
@@ -96,9 +97,10 @@ class RedisStoreTests(BaseTests):
         """Test for creating more than one instance.
 
         **Test Scenario**
-        #. Create three instances.
-        #. Check that the instance are stored in redis.
-        #. List all instances and check that three instance found.
+
+        - Create three instances.
+        - Check that the instance are stored in redis.
+        - List all instances and check that three instance found.
         """
         self.info("Create three instances.")
         for i in range(3):
