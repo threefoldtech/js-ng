@@ -10,8 +10,9 @@ class TestConfig(BaseTests):
         """Test case for getting jsng default config.
 
         **Test Scenario**
-        #. Get the default config.
-        #. Check that some of these config are having the default values.
+
+        - Get the default config.
+        - Check that some of these config are having the default values.
         """
         self.info("Get the default config.")
         default_config = j.core.config.get_default_config()
@@ -25,8 +26,9 @@ class TestConfig(BaseTests):
         """Test case for getting jsng config.
 
         **Test Scenario**
-        #. Get the config.
-        #. Check that some of these config keys are exist.
+
+        - Get the config.
+        - Check that some of these config keys are exist.
         """
         self.info("Get the config.")
         config = j.core.config.get_config()
@@ -40,11 +42,12 @@ class TestConfig(BaseTests):
         """Test case for updating jsng config.
 
         **Test Scenario**
-        #. Set a new key with random value.
-        #. Get the value this key.
-        #. Check that the value of this key is the same has been set.
-        #. Get the config.
-        #. Remove this key from the config and update the config.
+
+        - Set a new key with random value.
+        - Get the value this key.
+        - Check that the value of this key is the same has been set.
+        - Get the config.
+        - Remove this key from the config and update the config.
         """
         self.info("Set a new key with random value.")
         key = self.generate_random_text()
@@ -68,12 +71,13 @@ class TestConfig(BaseTests):
         """Test case for migrating config.
 
         **Test Scenario**
-        #. Get the config.
-        #. Remove factory key.
-        #. Migrate the config.
-        #. Get the new config.
-        #. Update the config to the original one.
-        #. Check that the factory key is in the new config.
+
+        - Get the config.
+        - Remove factory key.
+        - Migrate the config.
+        - Get the new config.
+        - Update the config to the original one.
+        - Check that the factory key is in the new config.
         """
         self.info("Get the config.")
         original_config = j.core.config.get_config()
@@ -100,10 +104,11 @@ class TestConfig(BaseTests):
         """Test case for generating key.
 
         **Test Scenario**
-        #. Create a temporary directory.
-        #. Generate a key in the this directory.
-        #. Check that the key has been generated.
-        #. Remove this directory.
+
+        - Create a temporary directory.
+        - Generate a key in the this directory.
+        - Check that the key has been generated.
+        - Remove this directory.
         """
         self.info("Create a temporary directory.")
         dir_path = j.sals.fs.join_paths("/tmp", self.generate_random_text())
@@ -125,9 +130,10 @@ class TestConfig(BaseTests):
         """Test case for getting environment config.
 
         **Test Scenario**
-        #. Get the config.
-        #. Get environment config.
-        #. Check that the environment config is the same as the one used in config.
+
+        - Get the config.
+        - Get environment config.
+        - Check that the environment config is the same as the one used in config.
         """
         self.info("Get the config.")
         config = j.core.config.get_config()
@@ -153,10 +159,11 @@ class TestConfig(BaseTests):
         """Test case for getting store config.
 
         **Test Scenario**
-        #. Get the config.
-        #. Get store config.
-        #. Check that the store config is the same as the one used in config.
-        #. Try to get store config for random store name, should raise error.
+
+        - Get the config.
+        - Get store config.
+        - Check that the store config is the same as the one used in config.
+        - Try to get store config for random store name, should raise error.
         """
         self.info("Get the config.")
         config = j.core.config.get_config()

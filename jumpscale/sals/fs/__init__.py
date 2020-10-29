@@ -462,7 +462,9 @@ def mkdirs(path: str, exist_ok=True):
     """
     return os.makedirs(path, exist_ok=exist_ok)
 
+
 makedirs = mkdirs
+
 
 def make_path(path):
     """
@@ -562,6 +564,19 @@ def expanduser(path: str) -> str:
         str: path with tilde `~` resolved.
     """
     return str(pathlib.Path(path).expanduser())
+
+
+def absolute(path: str) -> str:
+    """[summary]
+    e.g
+        j.sals.fs.absolute(".") -> '/home/xmonader/js-ng'
+    Args:
+        path (str): relative path `.`
+
+    Returns:
+        str: the absolute path for relative path.
+    """
+    return str(pathlib.Path(path).absolute())
 
 
 def unlink(path: str):

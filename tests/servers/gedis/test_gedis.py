@@ -96,15 +96,14 @@ class TestGedis(TestCase):
         self.assertEqual(self.cl.actors.memory.object_count("TestObject").result, 0)
 
     def test_03_reloading_actors(self):
-        """
-        Test actors reloading
-
+        """Test actors reloading
 
         **Test Scenario**
-        #. Write a simple actor to a file
-        #. Register and check this actor against a known return value of a known method
-        #. Register the actor again with and without changes to the known method
-        #. Check the return value again
+
+        - Write a simple actor to a file
+        - Register and check this actor against a known return value of a known method
+        - Register the actor again with and without changes to the known method
+        - Check the return value again
         """
         actor = j.sals.fs.read_file(RELOADING_ACTOR_PATH)
         changed_actor = j.sals.fs.read_file(RELOADING_ACTOR_CHANGED_PATH)
