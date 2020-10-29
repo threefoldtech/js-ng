@@ -1,5 +1,3 @@
-import string
-
 from jumpscale.loader import j
 from tests.base_tests import BaseTests
 
@@ -8,19 +6,17 @@ class GitTests(BaseTests):
     def setUp(self):
         super().setUp()
         self.instance_name = self.random_name()
-        self.repo_dir = f"/tmp/{self.random_name()}"
+        self.repo_dir = j.sals.fs.join_paths("/tmp", self.random_name())
         self.repo_name = "js-ng"
         self.repo_url = "https://github.com/threefoldtech/js-ng"
         j.sals.fs.mkdir(f"{self.repo_dir}")
         j.sals.process.execute(f"git clone {self.repo_url}", cwd=f"{self.repo_dir}")
-        self.git_client = j.clients.git.new(name=self.instance_name, path=f"{self.repo_dir}/{self.repo_name}/")
+        path = j.sals.fs.join_paths(self.repo_dir, self.repo_name)
+        self.git_client = j.clients.git.new(name=self.instance_name, path=path)
 
     def tearDown(self):
         j.clients.git.delete(self.instance_name)
         j.sals.fs.rmtree(path=self.repo_dir)
-
-    def random_name(self):
-        return j.data.idgenerator.nfromchoices(10, string.ascii_letters)
 
     def test01_check_git_config(self):
         """Test case for checking git config file.
