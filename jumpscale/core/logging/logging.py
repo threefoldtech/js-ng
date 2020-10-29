@@ -5,6 +5,8 @@ import json
 
 from abc import ABC, abstractmethod
 
+from loguru._get_frame import get_frame
+
 from jumpscale.loader import j
 
 
@@ -17,6 +19,9 @@ LEVELS = {
 }
 
 
+DEFAULT_APP_NAME = j.application.appname
+
+
 class LogHandler(ABC):
     """the interface every cutom log handler should implement"""
 
@@ -26,9 +31,7 @@ class LogHandler(ABC):
 
 
 class Logger:
-    def __init__(self, appname: str = "init"):
-        """Logger init method
-        """
+    def __init__(self, appname: str = DEFAULT_APP_NAME):
         self._logger = loguru.logger.bind(appname=appname)
         self._appname = appname
 
@@ -36,21 +39,20 @@ class Logger:
     def appname(self):
         return self._appname
 
-    def set_appname(self, appname):
-        self._appname = appname
-        self._logger = self._logger.bind(appname=appname)
-
     def add_handler(self, *args, **kwargs):
-        """Add handler to the logger
+        """
+        Add handler to the logger
+
         takes the same parameters of loguru.logger.add
         """
         self._logger.add(*args, **kwargs)
 
     def add_custom_handler(self, name: str, handler: LogHandler, *args, **kwargs):
-        """Add custom log handler
+        """
+        Add custom log handler
 
         Arguments:
-            handler {LogHandler} -- handler function
+            handler (LogHandler): handler function
         """
         setattr(self, name, handler)
         self._logger.add(handler._handle, **kwargs)
@@ -59,36 +61,85 @@ class Logger:
         self._logger.opt(depth=2, exception=exception).bind(category=category, data=data).log(level, message, *args)
 
     def debug(self, message, *args, category: str = "", data: dict = None):
-        """Log debug message
-        """
+        """Log debug message"""
         self._log("DEBUG", message, *args, category=category, data=data)
 
     def info(self, message, *args, category: str = "", data: dict = None):
-        """Log info message
-        """
+        """Log info message"""
         self._log("INFO", message, *args, category=category, data=data)
 
     def warning(self, message, *args, category: str = "", data: dict = None):
-        """Log warning message
-        """
+        """Log warning message"""
         self._log("WARNING", message, *args, category=category, data=data)
 
     def error(self, message, *args, category: str = "", data: dict = None):
-        """Log error message
-        """
+        """Log error message"""
         self._log("ERROR", message, *args, category=category, data=data)
 
     def critical(self, message, *args, category: str = "", data: dict = None):
-        """Log critical message
-        """
+        """Log critical message"""
         self._log("CRITICAL", message, *args, category=category, data=data)
 
     def exception(
         self, message, *args, category: str = "", data: dict = None, level: int = 40, exception: Exception = None
     ):
-        """Log exception message
-        """
+        """Log exception message"""
         self._log(LEVELS.get(level, 40), message, *args, category=category, data=data, exception=exception)
+
+
+class MainLogger(Logger):
+    def __init__(self):
+        super().__init__(DEFAULT_APP_NAME)
+
+        # mapping between module -> appname
+        self._module_appnames = {}
+        self._logger = self._logger.patch(self._add_appname_to_record)
+
+    @property
+    def appnames(self):
+        return self._module_appnames.values()
+
+    def add_appname(self, appname):
+        """
+        Add appname main logger
+
+        will set `appname` for every log that's logged from the same caller module
+
+        Args:
+            appname (str): app name
+        """
+        # from loguru/_logger.py
+        frame = get_frame(2)
+
+        try:
+            module_name = frame.f_globals["__name__"]
+        except KeyError:
+            module_name = None
+
+        self._module_appnames[module_name] = appname
+
+    def _add_appname_to_record(self, record):
+        """
+        Update appname in record["extra"] if found in module -> appname mapping
+
+        Args:
+            record (dict): loguru record
+        """
+        appname = self._module_appnames.get(record["name"])
+        if appname:
+            record["extra"]["appname"] = appname
+
+    def get(self, appname):
+        """
+        get a new logger bound to this `appname`
+
+        Args:
+            appname (str): app name
+
+        Returns:
+            Logger: a new logger
+        """
+        return Logger(appname=appname)
 
 
 class RedisLogHandler(LogHandler):
@@ -102,10 +153,6 @@ class RedisLogHandler(LogHandler):
 
         if self._dump_dir:
             j.sals.fs.mkdirs(self._dump_dir)
-
-    @property
-    def _appname(self):
-        return j.core.application.appname
 
     @property
     def _db(self):
@@ -180,7 +227,7 @@ class RedisLogHandler(LogHandler):
 
             self._clean_up(appname)
 
-    def records_count(self, appname: str = "init") -> int:
+    def records_count(self, appname: str = DEFAULT_APP_NAME) -> int:
         """Gets total number of the records of the app
 
         Arguments:
@@ -194,7 +241,7 @@ class RedisLogHandler(LogHandler):
             return int(count)
         return 0
 
-    def record_get(self, identifier: int, appname: str = "init") -> dict:
+    def record_get(self, identifier: int, appname: str = DEFAULT_APP_NAME) -> dict:
         """Get app log record by its identifier
 
         Arguments:
@@ -233,7 +280,7 @@ class RedisLogHandler(LogHandler):
         if self.dump:
             j.sals.fs.rmtree(path)
 
-    def tail(self, appname: str = "init", limit: int = None) -> iter:
+    def tail(self, appname: str = DEFAULT_APP_NAME, limit: int = None) -> iter:
         """Tail records
 
         Keyword Arguments:

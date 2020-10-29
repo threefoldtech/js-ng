@@ -228,6 +228,8 @@ class GedisServer(Base):
             response["result"] = method(*args, **kwargs)
 
         except Exception as e:
+            j.logger.exception(f"error while executing {method}", exception=e)
+
             response["error"] = str(e)
             response["error_type"] = EXCEPTIONS_MAP.get(e.__class__, GedisErrorTypes.ACTOR_ERROR.value)
 

@@ -1,9 +1,9 @@
 def export_module_as():
 
     from jumpscale.loader import j
-    from .logging import Logger, RedisLogHandler, LogHandler
+    from .logging import MainLogger, RedisLogHandler, LogHandler
 
-    logger = Logger()
+    logger = MainLogger()
     config = j.core.config.config.get_config().get("logging")
 
     if config:
