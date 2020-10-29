@@ -1,5 +1,3 @@
-import string
-
 import pytest
 from jumpscale.loader import j
 from tests.base_tests import BaseTests
@@ -13,11 +11,11 @@ class SshClientTests(BaseTests):
         self.info("Get a ssh key")
         self.ssh_client_name = self.random_name()
         self.sshkey_file_name = self.random_name()
-        self.sshkey_dir = f"/tmp/{self.random_name()}"
+        self.sshkey_dir = j.sals.fs.join_paths("/tmp", self.random_name())
         j.sals.fs.mkdir(self.sshkey_dir)
 
         self.ssh_cl = j.clients.sshkey.get(self.ssh_client_name)
-        self.ssh_cl.private_key_path = f"{self.sshkey_dir}/{self.sshkey_file_name}"
+        self.ssh_cl.private_key_path = j.sals.fs.join_paths(self.sshkey_dir, self.sshkey_file_name)
         self.ssh_cl.generate_keys()
         pub_key = self.ssh_cl.public_key
 
