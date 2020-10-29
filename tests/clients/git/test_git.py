@@ -32,7 +32,8 @@ class GitTests(BaseTests):
         - Check that url equal to remote_url.
         """
         self.info("Read the git.config file")
-        git_config = j.sals.fs.read_file(f"{self.repo_dir}/{self.repo_name}/.git/config")
+        path = j.sals.fs.join_paths(self.repo_dir, self.repo_name, ".git/config")
+        git_config = j.sals.fs.read_file(path)
 
         self.info("Check that remote_url equal to repo_url")
         self.assertEqual(self.repo_url, self.git_client.remote_url)
@@ -55,7 +56,8 @@ class GitTests(BaseTests):
         self.git_client.set_remote_url(repo_ssh_url)
 
         self.info("Read the git config file")
-        git_config = j.sals.fs.read_file(f"{self.repo_dir}/{self.repo_name}/.git/config")
+        path = j.sals.fs.join_paths(self.repo_dir, self.repo_name, ".git/config")
+        git_config = j.sals.fs.read_file(path)
 
         self.info("Check that remote_url equals to repo ssh url")
         self.assertEqual(self.git_client.remote_url, repo_ssh_url)
@@ -70,7 +72,8 @@ class GitTests(BaseTests):
         - Check branch name.
         """
         self.info("Get the branch name")
-        branch_name = j.sals.process.execute("git branch --show-current", cwd=f"{self.repo_dir}/{self.repo_name}")
+        path = j.sals.fs.join_paths(self.repo_dir, self.repo_name)
+        branch_name = j.sals.process.execute("git branch --show-current", cwd=path)
 
         self.info("Check branch name")
         self.assertIn(self.git_client.branch_name, branch_name[1])
@@ -87,13 +90,15 @@ class GitTests(BaseTests):
         """
         self.info("Create a file in repository path")
         file_name = self.random_name()
-        j.sals.fs.touch(f"{self.repo_dir}/{self.repo_name}/{file_name}")
+        path = j.sals.fs.join_paths(self.repo_dir, self.repo_name, file_name)
+        j.sals.fs.touch(path)
 
         self.info("Commit changes")
         self.git_client.commit(f"add {file_name}")
 
         self.info("modify this file")
-        j.sals.fs.write_file(f"{self.repo_dir}/{self.repo_name}/{file_name}", "test modify file")
+        path = j.sals.fs.join_paths(self.repo_dir, self.repo_name, file_name)
+        j.sals.fs.write_file(path, "test modify file")
 
         self.info("Check if file has been modifed")
         modided_file = self.git_client.get_modified_files()
@@ -110,7 +115,8 @@ class GitTests(BaseTests):
         """
         self.info("Create a file in repository path")
         file_name = self.random_name()
-        j.sals.fs.touch(f"{self.repo_dir}/{self.repo_name}/{file_name}")
+        path = j.sals.fs.join_paths(self.repo_dir, self.repo_name, file_name)
+        j.sals.fs.touch(path)
 
         self.info("Check if a new file has been added")
         added_file = self.git_client.get_modified_files()
@@ -131,13 +137,15 @@ class GitTests(BaseTests):
         commit_msg = self.random_name()
 
         self.info("Create a file in repository path")
-        j.sals.fs.touch(f"{self.repo_dir}/{self.repo_name}/{file_name}")
+        path = j.sals.fs.join_paths(self.repo_dir, self.repo_name, file_name)
+        j.sals.fs.touch(path)
 
         self.info("Commit the change of creating a new file")
         self.git_client.commit(commit_msg)
 
         self.info("Get commit logs")
-        last_commit = j.sals.process.execute("git log -1", cwd=f"{self.repo_dir}/{self.repo_name}")
+        path = j.sals.fs.join_paths(self.repo_dir, self.repo_name)
+        last_commit = j.sals.process.execute("git log -1", cwd=path)
 
         self.info("Check if commit has been done")
         self.assertIn(commit_msg, str(last_commit))
@@ -156,14 +164,17 @@ class GitTests(BaseTests):
         file2_name = self.random_name()
 
         self.info("Create a two file in repository path")
-        j.sals.fs.touch(f"{self.repo_dir}/{self.repo_name}/{file1_name}")
-        j.sals.fs.touch(f"{self.repo_dir}/{self.repo_name}/{file2_name}")
+        path_file1 = j.sals.fs.join_paths(self.repo_dir, self.repo_name, file1_name)
+        path_file2 = j.sals.fs.join_paths(self.repo_dir, self.repo_name, file2_name)
+        j.sals.fs.touch(path_file1)
+        j.sals.fs.touch(path_file2)
 
         self.info("Check that two file has been added.")
         self.assertEqual([file2_name, file1_name].sort(), self.git_client.get_modified_files()["N"].sort())
 
         self.info("Commit the file 1")
-        j.sals.process.execute(f"git add {file1_name}", cwd=f"{self.repo_dir}/{self.repo_name}")
+        path = j.sals.fs.join_paths(self.repo_dir, self.repo_name)
+        j.sals.process.execute(f"git add {file1_name}", cwd=path)
         self.git_client.commit("commit file 1", add_all=False)
 
         self.info("Check if commit has been done for one file")
@@ -183,7 +194,8 @@ class GitTests(BaseTests):
         commit_msg = self.random_name()
 
         self.info("Create a file in repository path")
-        j.sals.fs.touch(f"{self.repo_dir}/{self.repo_name}/{file_name}")
+        path = j.sals.fs.join_paths(self.repo_dir, self.repo_name, file_name)
+        j.sals.fs.touch(path)
 
         self.info("Try pull before commit and should get error")
         with self.assertRaises(j.exceptions.Input):
