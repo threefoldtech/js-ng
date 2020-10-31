@@ -16,9 +16,14 @@ entry_template = """- [{{ name }}]({{ location }})
 
 
 class Collector:
-    def __init__(self, target):
+    def __init__(self, source, target):
         self.tests_docs_locations = []
         self.target = target
+        if j.sals.fs.exists(source):
+            if not j.sals.fs.is_dir(source):
+                source = j.sals.fs.parent(source)
+            j.sals.fs.chdir(source)
+        self.source = source
 
     def pytest_collection_modifyitems(self, items):
         """This method is a pytest hook which can modify the items has been collected.
@@ -39,8 +44,10 @@ class Collector:
         name = item.name
         if doc:
             # Get target docs locations.
-            test_location = item.location[0].replace(".py", ".md")
-            target_location = j.sals.fs.join_paths(self.target, test_location)
+            absolute_test_location = str(item.fspath)
+            relative_test_location = absolute_test_location.split(self.source)[1][1:]
+            relative_test_location = relative_test_location.replace(".py", ".md")
+            target_location = j.sals.fs.join_paths(self.target, relative_test_location)
 
             # Check if the docs exists and remove them in this case to generate a new one.
             if target_location not in self.tests_docs_locations:
@@ -63,13 +70,13 @@ class Collector:
                 j.sals.fs.write_file(target_location, test_doc)
 
             # add entry to main README.md
-            location_parts = test_location.split(j.sals.fs.sep)
+            location_parts = relative_test_location.split(j.sals.fs.sep)
             if len(location_parts) == 1:
                 category = ""
             else:
                 category = location_parts[0].capitalize()
             file_name = location_parts[-1].replace(".md", "")
-            self._add_entry_to_main_readme(category, file_name, test_location)
+            self._add_entry_to_main_readme(category, file_name, relative_test_location)
 
         else:
             j.logger.warning(f"Test {name} doesn't have docstring")
@@ -126,10 +133,5 @@ def generate_tests_docs(source, target, clean=False):
     if clean and j.sals.fs.exists(target):
         j.sals.fs.rmtree(target)
 
-    if j.sals.fs.exists(source):
-        if not j.sals.fs.is_dir(source):
-            source = j.sals.fs.parent(source)
-        j.sals.fs.chdir(source)
-
-    collector = Collector(target=target)
+    collector = Collector(source=source, target=target)
     pytest.main(["--collect-only", source], plugins=[collector])
