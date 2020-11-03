@@ -1,8 +1,8 @@
 from jumpscale.loader import j
 
 
-def _get_identifier(appname, message, public_message, category, alert_type):
-    return j.data.hash.md5(":".join([appname, message, public_message, category, alert_type]))
+def _get_identifier(app_name, message, public_message, category, alert_type):
+    return j.data.hash.md5(":".join([app_name, message, public_message, category, alert_type]))
 
 
 class Alert:
@@ -10,7 +10,7 @@ class Alert:
         self.id = None
         self.type = None
         self.level = 0
-        self.appname = None
+        self.app_name = None
         self.category = None
         self.message = None
         self.public_message = None
@@ -31,7 +31,7 @@ class Alert:
 
     @property
     def identifier(self):
-        return _get_identifier(self.appname, self.message, self.public_message, self.category, self.type)
+        return _get_identifier(self.app_name, self.message, self.public_message, self.category, self.type)
 
     @property
     def json(self):
@@ -85,7 +85,7 @@ class AlertsHandler:
 
     def find(
         self,
-        appname: str = "",
+        app_name: str = "",
         category: str = "",
         message: str = "",
         pid: int = None,
@@ -96,7 +96,7 @@ class AlertsHandler:
         """Find alerts
 
         Keyword Arguments:
-            appname {str} -- filter by allert app name (default: {""})
+            app_name {str} -- filter by allert app name (default: {""})
             category {str} -- filter by alert category (default: {""})
             message {str} -- filter by alert message (default: {""})
             pid {int} -- filter by process id (default: {None})
@@ -107,7 +107,7 @@ class AlertsHandler:
             list of Alert objects
         """
 
-        appname = appname.strip().lower()
+        app_name = app_name.strip().lower()
         category = category.strip().lower()
         message = message.strip().lower()
 
@@ -117,7 +117,7 @@ class AlertsHandler:
         for item in items:
             alert = Alert.loads(item[1])
 
-            if appname and appname != alert.appname.strip().lower():
+            if app_name and app_name != alert.app_name.strip().lower():
                 continue
 
             if category and category != alert.category.strip().lower():
@@ -146,7 +146,7 @@ class AlertsHandler:
 
     def alert_raise(
         self,
-        appname,
+        app_name,
         message,
         public_message: str = "",
         category: str = "",
@@ -175,7 +175,7 @@ class AlertsHandler:
         if not self.db.is_running():
             return
 
-        identifier = _get_identifier(appname, message, public_message, category, alert_type)
+        identifier = _get_identifier(app_name, message, public_message, category, alert_type)
         alert = self.get(identifier=identifier, die=False) or Alert()
 
         if alert.id:
@@ -187,7 +187,7 @@ class AlertsHandler:
             alert.status = "new"
             alert.first_occurrence = timestamp or j.data.time.now().timestamp
 
-        alert.appname = appname
+        alert.app_name = app_name
         alert.category = category
         alert.message = message
         alert.public_message = public_message

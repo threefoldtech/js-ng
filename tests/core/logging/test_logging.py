@@ -2,6 +2,7 @@ from tests.base_tests import BaseTests
 from jumpscale.loader import j
 
 REDIS_PORT = 6379
+TEST_APP_NAME = "test"
 
 
 class TestLogging(BaseTests):
@@ -14,17 +15,20 @@ class TestLogging(BaseTests):
             cls.cmd.start_cmd = "redis-server"
             cls.cmd.ports = [REDIS_PORT]
             cls.cmd.start()
-        j.application.start("test")
+
+        j.logger.register(TEST_APP_NAME)
+        # limit max_size for testing
+        j.logger.redis._max_size = 100
 
     def setUp(self):
-        j.logger.redis.remove_all_records(j.application.appname)
+        j.logger.redis.remove_all_records(TEST_APP_NAME)
 
     def tearDown(self):
-        j.logger.redis.remove_all_records(j.application.appname)
+        j.logger.redis.remove_all_records(TEST_APP_NAME)
 
     @classmethod
     def tearDownClass(cls):
-        j.application.stop()
+        j.logger.unregister()
         if cls.cmd:
             cls.cmd.stop(wait_for_stop=False)
             j.tools.startupcmd.delete("test_logging")
@@ -54,20 +58,20 @@ class TestLogging(BaseTests):
             test_value = i + 1
             j.logger.info("message {}", test_value, category=str(test_value), data={"key": test_value})
 
-        records_count = j.logger.redis.records_count(j.application.appname)
+        records_count = j.logger.redis.records_count(TEST_APP_NAME)
         self.assertEqual(records_count, test_records_count)
 
         for i in range(records_count):
             test_value = i + 1
-            record = j.logger.redis.record_get(test_value, j.application.appname)
+            record = j.logger.redis.record_get(test_value, TEST_APP_NAME)
             self.assertEqual(record["id"], test_value)
             self.assertEqual(record["category"], str(test_value))
             self.assertEqual(record["data"]["key"], test_value)
 
-        records = j.logger.redis.tail(j.application.appname, limit=10)
+        records = j.logger.redis.tail(TEST_APP_NAME, limit=10)
         self.assertEqual(len(list(records)), 10)
 
-        records = j.logger.redis.tail(j.application.appname)
+        records = j.logger.redis.tail(TEST_APP_NAME)
         self.assertEqual(len(list(records)), j.logger.redis.max_size)
 
     def test_02_test_log_level(self):
@@ -83,3 +87,7 @@ class TestLogging(BaseTests):
                 self.assertEqual(message["level"], "ERROR")
             else:
                 self.assertEqual(message["level"], level.upper())
+
+    def test_03_test_register_invalid_app_name(self):
+        with self.assertRaises(j.exceptions.Value):
+            j.logger.register("")

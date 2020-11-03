@@ -41,7 +41,7 @@ class ErrorHandler:
         traceback_text = self._format_lines(traceback.format_exception(ttype, tvalue, tb))
 
         err_dict = {
-            "appname": j.application.appname,
+            "app_name": j.logger.default_app_name,
             "level": level,
             "message": message,
             "timestamp": timestamp,
