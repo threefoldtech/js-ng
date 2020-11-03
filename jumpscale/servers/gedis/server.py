@@ -188,8 +188,6 @@ class GedisServer(Base):
     def start(self):
         """Starts the server
         """
-        j.application.start("gedis")
-
         # handle signals
         for signal_type in (SIGTERM, SIGKILL):
             gevent.signal(signal_type, self.stop)
@@ -209,6 +207,8 @@ class GedisServer(Base):
         self._server = StreamServer((self.host, self.port), self._on_connection, spawn=Pool())
         self._server.reuse_addr = True
         self._server.start()
+
+        j.logger.info(f"Gedis server is started at {self.host}:{self.port}...")
 
     def stop(self):
         """Stops the server
