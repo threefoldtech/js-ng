@@ -44,8 +44,7 @@ class SshClientTests(BaseTests):
 
         self.docker_client.exec(self.docker_name, f"/bin/bash -c '{cmds}'")
 
-        self.container_id = self.docker_client.list()[0].id
-        self.container = self.docker_client.get(self.container_id)
+        self.container = self.docker_client.get(self.docker_name)
         self.localclient.host = self.container.attrs["NetworkSettings"]["IPAddress"]
 
     def tearDown(self):
@@ -55,7 +54,7 @@ class SshClientTests(BaseTests):
 
         self.info("Remove docker")
         self.container.stop()
-        self.docker_client.delete(self.container_id)
+        self.docker_client.delete(self.docker_name)
 
     def test01_run_command(self):
         """Test case for ssh to container.

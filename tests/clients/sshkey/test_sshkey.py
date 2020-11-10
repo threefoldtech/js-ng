@@ -87,8 +87,8 @@ class SshKeyTests(BaseTests):
         self.info("Checking that keys has been written")
         private_key_path = j.sals.fs.join_paths(dir_path, key_file_name)
         public_key_path = j.sals.fs.join_paths(dir_path, f"{key_file_name}.pub")
-        self.assertEqual(j.sals.fs.is_file(private_key_path), True)
-        self.assertEqual(j.sals.fs.is_file(public_key_path), True)
+        self.assertTrue(j.sals.fs.is_file(private_key_path))
+        self.assertTrue(j.sals.fs.is_file(public_key_path))
 
         self.assertEqual(self.ssh_cl.private_key, j.sals.fs.read_file(private_key_path))
         self.assertEqual(self.ssh_cl.public_key, j.sals.fs.read_file(public_key_path))
