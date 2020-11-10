@@ -81,8 +81,9 @@ class ProcessTests(BaseTests):
         """Test case for executing command.
 
         **Test Scenario**
-        #. Execute command.
-        #. Check the command result.
+
+        - Execute command.
+        - Check the command result.
         """
         self.info("Execute command.")
         rc, stdout, stderr = j.sals.process.execute("which ls")
@@ -95,8 +96,9 @@ class ProcessTests(BaseTests):
         """Test case for executing command with environment variable.
 
         **Test Scenario**
-        #. Execute command with environment variable.
-        #. Check that the environment varible is exist.
+
+        - Execute command with environment variable.
+        - Check that the environment varible is exist.
         """
         self.info("Execute command with environment variable.")
         env_name = self.randstr()
@@ -111,8 +113,9 @@ class ProcessTests(BaseTests):
         """Test case for executing command with timeout.
 
         **Test Scenario**
-        #. Execute command with timeout.
-        #. Make sure that the command will raise timeout error.
+
+        - Execute command with timeout.
+        - Make sure that the command will raise timeout error.
         """
         self.info("Execute command with timeout.")
         self.info("Make sure that the command will raise timeout error.")
@@ -123,8 +126,9 @@ class ProcessTests(BaseTests):
         """Test case for executing command with die.
 
         **Test Scenario**
-        #. Execute command with die.
-        #. Make sure that the command will raise error.
+
+        - Execute command with die.
+        - Make sure that the command will raise error.
         """
         self.info("Execute command with die.")
         self.info("Make sure that the command will raise error.")
@@ -136,10 +140,11 @@ class ProcessTests(BaseTests):
         """Test case for executing command with working directory.
 
         **Test Scenario**
-        #. Create a directory with one file.
-        #. Execute command in the directory has been created.
-        #. Check that the command will run on the directory has been created.
-        #. Delete created file and directory.
+
+        - Create a directory with one file.
+        - Execute command in the directory has been created.
+        - Check that the command will run on the directory has been created.
+        - Delete created file and directory.
         """
         self.info("Create a directory with one file.")
         dir_name = self.randstr()
@@ -163,9 +168,10 @@ class ProcessTests(BaseTests):
         """Test case for checking that the pid and process name are belong to the same process.
 
         **Test Scenario**
-        #. Start a process in tmux.
-        #. Get process id.
-        #. Check that the pid and process name are belong to the same process.
+
+        - Start a process in tmux.
+        - Get process id.
+        - Check that the pid and process name are belong to the same process.
         """
         self.info("Start a process in tmux.")
         cmd = f"{TAIL_PROCESS_NAME} -f /dev/null"
@@ -181,12 +187,13 @@ class ProcessTests(BaseTests):
     def test_07_check_running(self):
         """Test case for checking that process is running.
 
-        *Test Scenario**
-        #. Start a process in tmux.
-        #. Check that the process is running with one minimum instance, should be True.
-        #. Check that the process is running with two minimum instance, should be False.
-        #. Start another process in tmux.
-        #. Check that the process is running with two minimum instance, should be True.
+        **Test Scenario**
+
+        - Start a process in tmux.
+        - Check that the process is running with one minimum instance, should be True.
+        - Check that the process is running with two minimum instance, should be False.
+        - Start another process in tmux.
+        - Check that the process is running with two minimum instance, should be True.
         """
         self.info("Start a process in tmux.")
         cmd = f"{TAIL_PROCESS_NAME} -f /dev/null"
@@ -207,12 +214,13 @@ class ProcessTests(BaseTests):
     def test_08_check_start_stop(self):
         """Test case for checking starting and stopping command.
 
-        *Test Scenario**
-        #. Start a process in tmux with check_start.
-        #. Check that the process has been started.
-        #. Stop the process.
-        #. Check that the process has been stopped.
-        #. Start a process again in tmux with nrinstances=2, should fail.
+        **Test Scenario**
+
+        - Start a process in tmux with check_start.
+        - Check that the process has been started.
+        - Stop the process.
+        - Check that the process has been stopped.
+        - Start a process again in tmux with nrinstances=2, should fail.
         """
         self.info("Start a process in tmux with check_start.")
         window_name = self.randstr()
@@ -238,11 +246,12 @@ class ProcessTests(BaseTests):
     def test_09_get_process_environ(self):
         """Test case for getting process environment variables.
 
-        *Test Scenario**
-        #. Start a tail command with environment variable.
-        #. Check that the process has been started and get its pid.
-        #. Get this process environ with its pid.
-        #. Check that the environment variable has been set is in process environ.
+        **Test Scenario**
+
+        - Start a tail command with environment variable.
+        - Check that the process has been started and get its pid.
+        - Get this process environ with its pid.
+        - Check that the environment variable has been set is in process environ.
         """
         self.info("Start a tail command with environment variable.")
         cmd = f"{TAIL_PROCESS_NAME} -f /dev/null &> /dev/null &"
@@ -266,13 +275,14 @@ class ProcessTests(BaseTests):
     def test_10_get_filtered_pids(self):
         """Test case for getting filtered process pid.
 
-        *Test Scenario**
-        #. Start a tmux session with two python server process.
-        #. Check that the process has been started and get its pid.
-        #. Get this process pid with its name.
-        #. Check that there is two pids.
-        #. Get this process pid with its name and filtered with server port.
-        #. Check that only one server is found.
+        **Test Scenario**
+
+        - Start a tmux session with two python server process.
+        - Check that the process has been started and get its pid.
+        - Get this process pid with its name.
+        - Check that there is two pids.
+        - Get this process pid with its name and filtered with server port.
+        - Check that only one server is found.
         """
         self.info("Start a tmux session with two python server process.")
         port_1 = randint(1000, 2000)
@@ -305,10 +315,11 @@ class ProcessTests(BaseTests):
     def test_11_get_memory_usage(self):
         """Test case for getting memory usage.
 
-        *Test Scenario**
-        #. Get memory usage from SALS process.
-        #. Get memory usage from 'free' command.
-        #. Check that memory usage from both ways almost the same.
+        **Test Scenario**
+
+        - Get memory usage from SALS process.
+        - Get memory usage from 'free' command.
+        - Check that memory usage from both ways almost the same.
         """
         self.info("Get memory usage from SALS process.")
         memory_usage = j.sals.process.get_memory_usage()
@@ -338,13 +349,14 @@ class ProcessTests(BaseTests):
     def test_12_get_processes_info(self):
         """Test case for getting processes info.
 
-        *Test Scenario**
-        #. Start python server in tmux.
-        #. Check that the server has been started.
-        #. Get processes self.info using SALS process.
-        #. Check that the python server is in the processes self.info.
-        #. Get the current process using SALS process.
-        #. Check that this process in processes self.info.
+        **Test Scenario**
+
+        - Start python server in tmux.
+        - Check that the server has been started.
+        - Get processes self.info using SALS process.
+        - Check that the python server is in the processes self.info.
+        - Get the current process using SALS process.
+        - Check that this process in processes self.info.
         """
         self.info("Start python server in tmux.")
         port = randint(1000, 2000)
@@ -384,14 +396,15 @@ class ProcessTests(BaseTests):
     def test_13_get_kill_process_by_port(self):
         """Test case for getting and killing process by its port.
 
-        *Test Scenario**
-        #. Start python server in tmux.
-        #. Check that the server has been started.
-        #. Get the process by port.
-        #. Get pid of the process by port.
-        #. Check that the python server pid is the same one from SALS process.
-        #. Kill the server by port.
-        #. Check that the server pid is not exist.
+        **Test Scenario**
+
+        - Start python server in tmux.
+        - Check that the server has been started.
+        - Get the process by port.
+        - Get pid of the process by port.
+        - Check that the python server pid is the same one from SALS process.
+        - Kill the server by port.
+        - Check that the server pid is not exist.
         """
         self.info("Start python server in tmux.")
         port = randint(1000, 2000)
@@ -427,9 +440,10 @@ class ProcessTests(BaseTests):
     def test_14_is_installed(self):
         """Test case for is_installed method.
 
-        *Test Scenario**
-        #. Check that a package should be installed with js-ng.
-        #. Check that any random name is not installed.
+        **Test Scenario**
+
+        - Check that a package should be installed with js-ng.
+        - Check that any random name is not installed.
         """
         self.info("Check that a package should be installed with js-ng.")
         self.assertTrue(j.sals.process.is_installed("tmux"))
@@ -441,13 +455,14 @@ class ProcessTests(BaseTests):
     def test_15_get_kill_process_by_pids(self):
         """Test case for getting and killing process by pids.
 
-        *Test Scenario**
-        #. Start a tail process in tmux.
-        #. Check that the process has been started.
-        #. Get the process pids.
-        #. Check that the process pid is alive.
-        #. Kill the process.
-        #. Check that the process has been killed
+        **Test Scenario**
+
+        - Start a tail process in tmux.
+        - Check that the process has been started.
+        - Get the process pids.
+        - Check that the process pid is alive.
+        - Kill the process.
+        - Check that the process has been killed.
         """
         self.info("Start a tail process in tmux.")
         cmd = f"{TAIL_PROCESS_NAME} -f /dev/null"
@@ -478,15 +493,16 @@ class ProcessTests(BaseTests):
     def test_16_get_kill_user_process(self, kill_method):
         """Test case for getting and killing user process/ killall processes.
 
-        *Test Scenario**
-        #. Start a tail process in tmux with the current user.
-        #. Check that the process has been started.
-        #. Create a user.
-        #. Start another tail process in tmux with new user.
-        #. Check that the process has been started.
-        #. Get the user process.
-        #. Check that the process is the new user process.
-        #. Kill the user/killall process, and check that the target process killed.
+        **Test Scenario**
+
+        - Start a tail process in tmux with the current user.
+        - Check that the process has been started.
+        - Create a user.
+        - Start another tail process in tmux with new user.
+        - Check that the process has been started.
+        - Get the user process.
+        - Check that the process is the new user process.
+        - Kill the user/killall process, and check that the target process killed.
         """
         self.info("Start a tail process in tmux with the current user.")
         cmd = f"{TAIL_PROCESS_NAME} -f /dev/null"
@@ -537,10 +553,11 @@ class ProcessTests(BaseTests):
     def test_17_check_in_docker(self):
         """Test case for Checking if in docker or in host.
 
-        *Test Scenario**
-        #. Check if in docker/host with dockerenv file.
-        #. Check if in docker/host with Sals.
-        #. Check that the result from both ways are the same.
+        **Test Scenario**
+
+        - Check if in docker/host with dockerenv file.
+        - Check if in docker/host with Sals.
+        - Check that the result from both ways are the same.
         """
         self.info("Check if in docker/host with dockerenv file.")
         in_docker = j.sals.fs.exists("/.dockerenv")
@@ -556,11 +573,12 @@ class ProcessTests(BaseTests):
     def test_18_ps_find(self):
         """Test case for Checking if process exists.
 
-        *Test Scenario**
-        #. Start a tail process.
-        #. Check that the process has been started.
-        #. Check that the process exists, should be found.
-        #. Check for a random name, should not be found.
+        **Test Scenario**
+
+        - Start a tail process.
+        - Check that the process has been started.
+        - Check that the process exists, should be found.
+        - Check for a random name, should not be found.
         """
         self.info("Start a tail process.")
         cmd = f"{TAIL_PROCESS_NAME} -f /dev/null"
@@ -579,10 +597,11 @@ class ProcessTests(BaseTests):
     def test_19_set_env_var(self):
         """Test case for setting environment variable.
 
-        *Test Scenario**
-        #. Set environment variable with SAL.
-        #. Check that the environment variable is set.
-        #. Set environment variable with non equal length, should fail.
+        **Test Scenario**
+
+        - Set environment variable with SAL.
+        - Check that the environment variable is set.
+        - Set environment variable with non equal length, should fail.
         """
         self.info("Set environment variable with SAL.")
         names = [self.randstr() for i in range(5)]
@@ -603,14 +622,15 @@ class ProcessTests(BaseTests):
     def test_20_get_ports_mapping(self):
         """Test case for getting port mapping.
 
-        *Test Scenario**
-        #. Start python server.
-        #. Check that the server has been started.
-        #. Start redis server.
-        #. Check that the server has been started.
-        #. Get port mapping with netstat command.
-        #. Get port mapping with SAL.
-        #. Check that the result from both ways are the same.
+        **Test Scenario**
+
+        - Start python server.
+        - Check that the server has been started.
+        - Start redis server.
+        - Check that the server has been started.
+        - Get port mapping with netstat command.
+        - Get port mapping with SAL.
+        - Check that the result from both ways are the same.
         """
         self.info("Start python server.")
         python_port = randint(1000, 2000)
@@ -650,11 +670,12 @@ class ProcessTests(BaseTests):
     def test_21_get_defunct_processes(self):
         """Test case for getting defunct processes.
 
-        *Test Scenario**
-        #. Start a dummy zombie process.
-        #. Get zombie processes with ps command.
-        #. Get zombie processes with sal.
-        #. Check that the both ways have the same result.
+        **Test Scenario**
+
+        - Start a dummy zombie process.
+        - Get zombie processes with ps command.
+        - Get zombie processes with sal.
+        - Check that the both ways have the same result.
         """
         self.info("Start a dummy zombie process.")
         cmd = "sleep 1 & exec /bin/sleep 3"
@@ -676,14 +697,15 @@ class ProcessTests(BaseTests):
     def test_22_get_sorted_pids(self, type_):
         """Test case for getting sorted pids by username.
 
-        *Test Scenario**
-        #. Start a tail process from the currnet user.
-        #. Create two users and start tail process for each user.
-        #. Get each user pids.
-        #. Get pids sorted with username.
-        #. Check that the pids are sorted.
-        #. Get tail pids with regex filter.
-        #. Check that only pids that match the regex are returned.
+        **Test Scenario**
+
+        - Start a tail process from the currnet user.
+        - Create two users and start tail process for each user.
+        - Get each user pids.
+        - Get pids sorted with username.
+        - Check that the pids are sorted.
+        - Get tail pids with regex filter.
+        - Check that only pids that match the regex are returned.
         """
         self.info("Start a tail process from the currnet user.")
         user_pids = {}
