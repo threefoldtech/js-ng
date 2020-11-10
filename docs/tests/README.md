@@ -2,6 +2,8 @@
 
 - [test_docker](clients/docker/test_docker.md)
 - [test_redis](clients/redis/test_redis.md)
+- [test_sshclient](clients/sshclient/test_sshclient.md)
+- [test_sshkey](clients/sshkey/test_sshkey.md)
 
 ### Core
 
