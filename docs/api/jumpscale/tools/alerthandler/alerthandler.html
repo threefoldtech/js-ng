@@ -115,7 +115,7 @@ class AlertsHandler:
         pid: int = None,
         start_time: int = None,
         end_time: int = None,
-    ) -&gt; Alert:
+    ) -&gt; list:
 
         &#34;&#34;&#34;Find alerts
 
@@ -128,8 +128,9 @@ class AlertsHandler:
             end_time {int} -- filter by end time (default: {None})
 
         Returns:
-            Alert -- alert object
+            list of Alert objects
         &#34;&#34;&#34;
+
         appname = appname.strip().lower()
         category = category.strip().lower()
         message = message.strip().lower()
@@ -140,13 +141,15 @@ class AlertsHandler:
         for item in items:
             alert = Alert.loads(item[1])
 
-            if appname and appname != alert.appname:
+            if appname and appname != alert.appname.strip().lower():
                 continue
 
-            if category and category != alert.category:
+            if category and category != alert.category.strip().lower():
                 continue
 
-            if message and (message not in alert.message and message not in alert.public_message):
+            if message and (
+                message not in alert.message.strip().lower() and message not in alert.public_message.strip().lower()
+            ):
                 continue
 
             if start_time and start_time &lt; alert.first_occurrence:
@@ -438,7 +441,7 @@ def json(self):
         pid: int = None,
         start_time: int = None,
         end_time: int = None,
-    ) -&gt; Alert:
+    ) -&gt; list:
 
         &#34;&#34;&#34;Find alerts
 
@@ -451,8 +454,9 @@ def json(self):
             end_time {int} -- filter by end time (default: {None})
 
         Returns:
-            Alert -- alert object
+            list of Alert objects
         &#34;&#34;&#34;
+
         appname = appname.strip().lower()
         category = category.strip().lower()
         message = message.strip().lower()
@@ -463,13 +467,15 @@ def json(self):
         for item in items:
             alert = Alert.loads(item[1])
 
-            if appname and appname != alert.appname:
+            if appname and appname != alert.appname.strip().lower():
                 continue
 
-            if category and category != alert.category:
+            if category and category != alert.category.strip().lower():
                 continue
 
-            if message and (message not in alert.message and message not in alert.public_message):
+            if message and (
+                message not in alert.message.strip().lower() and message not in alert.public_message.strip().lower()
+            ):
                 continue
 
             if start_time and start_time &lt; alert.first_occurrence:
@@ -775,7 +781,7 @@ start_time {int} &ndash; filter by start time (default: {None})
 end_time {int} &ndash; filter by end time (default: {None})</p>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><a title="jumpscale.tools.alerthandler.alerthandler.Alert" href="#jumpscale.tools.alerthandler.alerthandler.Alert"><code>Alert</code></a> &ndash; <code>alert</code> <code>object</code></dt>
+<dt><code>list</code> of <a title="jumpscale.tools.alerthandler.alerthandler.Alert" href="#jumpscale.tools.alerthandler.alerthandler.Alert"><code>Alert</code></a> <code>objects</code></dt>
 <dd>&nbsp;</dd>
 </dl></section>
 <details class="source">
@@ -788,7 +794,7 @@ end_time {int} &ndash; filter by end time (default: {None})</p>
     pid: int = None,
     start_time: int = None,
     end_time: int = None,
-) -&gt; Alert:
+) -&gt; list:
 
     &#34;&#34;&#34;Find alerts
 
@@ -801,8 +807,9 @@ end_time {int} &ndash; filter by end time (default: {None})</p>
         end_time {int} -- filter by end time (default: {None})
 
     Returns:
-        Alert -- alert object
+        list of Alert objects
     &#34;&#34;&#34;
+
     appname = appname.strip().lower()
     category = category.strip().lower()
     message = message.strip().lower()
@@ -813,13 +820,15 @@ end_time {int} &ndash; filter by end time (default: {None})</p>
     for item in items:
         alert = Alert.loads(item[1])
 
-        if appname and appname != alert.appname:
+        if appname and appname != alert.appname.strip().lower():
             continue
 
-        if category and category != alert.category:
+        if category and category != alert.category.strip().lower():
             continue
 
-        if message and (message not in alert.message and message not in alert.public_message):
+        if message and (
+            message not in alert.message.strip().lower() and message not in alert.public_message.strip().lower()
+        ):
             continue
 
         if start_time and start_time &lt; alert.first_occurrence:
