@@ -619,7 +619,9 @@ def mkdirs(path: str, exist_ok=True):
     &#34;&#34;&#34;
     return os.makedirs(path, exist_ok=exist_ok)
 
+
 makedirs = mkdirs
+
 
 def make_path(path):
     &#34;&#34;&#34;
@@ -719,6 +721,19 @@ def expanduser(path: str) -&gt; str:
         str: path with tilde `~` resolved.
     &#34;&#34;&#34;
     return str(pathlib.Path(path).expanduser())
+
+
+def absolute(path: str) -&gt; str:
+    &#34;&#34;&#34;[summary]
+    e.g
+        j.sals.fs.absolute(&#34;.&#34;) -&gt; &#39;/home/xmonader/js-ng&#39;
+    Args:
+        path (str): relative path `.`
+
+    Returns:
+        str: the absolute path for relative path.
+    &#34;&#34;&#34;
+    return str(pathlib.Path(path).absolute())
 
 
 def unlink(path: str):
@@ -1277,6 +1292,38 @@ def fs_check(**arguments):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="jumpscale.sals.fs.absolute"><code class="name flex">
+<span>def <span class="ident">absolute</span></span>(<span>path)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>[summary]
+e.g
+j.sals.fs.absolute(".") -&gt; '/home/xmonader/js-ng'</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
+<dd>relative path <code>.</code></dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>str</code></strong></dt>
+<dd>the absolute path for relative path.</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def absolute(path: str) -&gt; str:
+    &#34;&#34;&#34;[summary]
+    e.g
+        j.sals.fs.absolute(&#34;.&#34;) -&gt; &#39;/home/xmonader/js-ng&#39;
+    Args:
+        path (str): relative path `.`
+
+    Returns:
+        str: the absolute path for relative path.
+    &#34;&#34;&#34;
+    return str(pathlib.Path(path).absolute())</code></pre>
+</details>
+</dd>
 <dt id="jumpscale.sals.fs.change_dir"><code class="name flex">
 <span>def <span class="ident">change_dir</span></span>(<span>path)</span>
 </code></dt>
@@ -3492,6 +3539,7 @@ j.sals.fs.write_text(path="/home/rafy/testing_text.txt",data="hello world")
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="jumpscale.sals.fs.absolute" href="#jumpscale.sals.fs.absolute">absolute</a></code></li>
 <li><code><a title="jumpscale.sals.fs.change_dir" href="#jumpscale.sals.fs.change_dir">change_dir</a></code></li>
 <li><code><a title="jumpscale.sals.fs.change_filenames" href="#jumpscale.sals.fs.change_filenames">change_filenames</a></code></li>
 <li><code><a title="jumpscale.sals.fs.chmod" href="#jumpscale.sals.fs.chmod">chmod</a></code></li>
