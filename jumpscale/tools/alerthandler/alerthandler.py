@@ -96,7 +96,7 @@ class AlertsHandler:
         """Find alerts
 
         Keyword Arguments:
-            app_name {str} -- filter by allert app name (default: {""})
+            app_name (str):  filter by allert app name (default: {""})
             category {str} -- filter by alert category (default: {""})
             message {str} -- filter by alert message (default: {""})
             pid {int} -- filter by process id (default: {None})

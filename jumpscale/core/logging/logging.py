@@ -308,7 +308,7 @@ class RedisLogHandler(LogHandler):
         """Gets total number of the records of the app
 
         Arguments:
-            app_name {str} -- app name
+            app_name (str): app name
 
         Returns:
             init -- total number of the records
@@ -326,7 +326,7 @@ class RedisLogHandler(LogHandler):
             app_name {str} -- app name
 
         Returns:
-            dict -- requested log record
+            dict: requested log record
         """
         count = self.records_count(app_name)
         part, index = self._map_identifier(identifier)
@@ -349,7 +349,7 @@ class RedisLogHandler(LogHandler):
         """Delete all app's log records
 
         Arguments:
-            app_name {str} -- app name
+            app_name (str): app name
         """
         self._db.delete(self._rkey % app_name, self._rkey_incr % app_name)
         path = j.sals.fs.join_paths(self.dump_dir, app_name)
