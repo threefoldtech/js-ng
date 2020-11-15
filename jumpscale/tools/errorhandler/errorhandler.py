@@ -71,7 +71,7 @@ class ErrorHandler:
         stacktrace = self._construct_stacktrace(tb)
         traceback_text = self._format_lines(traceback.format_exception(ttype, tvalue, tb))
 
-        return {"raw": traceback_text, "straceback": stacktrace, "process_id": j.application.process_id}
+        return {"raw": traceback_text, "stacktrace": stacktrace, "process_id": j.application.process_id}
 
     def _handle_exception(self, ttype, tvalue, tb, level=40, die=False, log=True, category="", data=None):
         exc_info = (ttype, tvalue, tb)
