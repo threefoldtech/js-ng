@@ -23,5 +23,5 @@ docs: api_docs
 docs-serve:
 	python3 -m http.server --directory ./docs
 
-requirements.txt:
-	 poetry lock && poetry run pip freeze > $@
+requirements:
+	 poetry export -f $@.txt --output $@.txt
