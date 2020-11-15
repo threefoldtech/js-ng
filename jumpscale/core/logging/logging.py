@@ -117,30 +117,66 @@ class MainLogger(Logger):
         if j.core.db.is_running():
             j.core.db.srem(self._apps_rkey, app_name)
 
-    def register(self, app_name):
+    def register(self, app_name, module_name=None):
         """
-        Register and mark caller module (and sub-modules) logs with a given app name
+        Register and bind given module (and sub-modules) logs with a given app name
+
+        Will also add the app to `applications` set in redis.
+
+        If `module_name` is not passed or empty, it would be the caller module name.
 
         Args:
             app_name (str): app name
+            module_name (str, optional): module name. Defaults to None.
         """
         if not app_name:
             raise Value(f"invalid app name '{app_name}'")
 
-        module_name = self._get_caller_module()
+        if not module_name:
+            module_name = self._get_caller_module()
+
         self._module_apps[module_name] = app_name
         self._add_app(app_name)
 
-        self.info(f"Logging is registered from '{module_name}' for app name '{app_name}'")
+        self.info(f"Logging from '{module_name}' is now bound to '{app_name}' app")
 
-    def unregister(self):
-        module_name = self._get_caller_module()
+    def unregister(self, module_name=None):
+        """
+        Unregister a module from log binding with the app name.
+
+        Will also remove the app from `applications` set in redis.
+
+        If `module_name` is not passed or empty, it would be the caller module name.
+
+        Args:
+            module_name (str, optional): module name. Defaults to None.
+        """
+        if not module_name:
+            module_name = self._get_caller_module()
+
         if module_name in self._module_apps:
             app_name = self._module_apps[module_name]
             del self._module_apps[module_name]
             self._remove_app(app_name)
+            self.info(f"Logging from '{module_name}' is now unbound to '{app_name}' app")
 
-        self.info(f"Logging for app name '{app_name}' is unregistered from '{module_name}'")
+    def get_app_names(self):
+        """
+        Get a set of all registered app names
+
+        If redis is running, it would get them from `applications` set.
+
+        Returns:
+            set: available app names
+        """
+        apps = {DEFAULT_APP_NAME}
+
+        if not j.core.db.is_running():
+            apps.update(self._module_apps.values())
+        else:
+            apps.update([app.decode() for app in j.core.db.smembers("applications")])
+
+        return apps
 
     def _get_app_name(self, module, sub_module=None):
         """Get app name for a given module
@@ -229,6 +265,7 @@ class RedisLogHandler(LogHandler):
         return dict(
             id=record_id,
             app_name=app_name,
+            module=record["name"],
             message=record["message"],
             level=record["level"]["no"],
             linenr=record["line"],
@@ -324,11 +361,11 @@ class RedisLogHandler(LogHandler):
         """Tail records
 
         Keyword Arguments:
-            app_name (str) -- app_name (default: {""})
-            limit (int) -- max number of record to be returned (default: {None})
+            app_name (str): app name.
+            limit (int, optional): max number of record to be returned per page (default: max size)
 
         Yields:
-            iter -- iterator of the requested logs
+            iter: iterator of the requested logs
         """
         if limit:
             limit = limit - 1
