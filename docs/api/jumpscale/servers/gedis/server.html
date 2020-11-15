@@ -212,8 +212,6 @@ class GedisServer(Base):
     def start(self):
         &#34;&#34;&#34;Starts the server
         &#34;&#34;&#34;
-        j.application.start(&#34;gedis&#34;)
-
         # handle signals
         for signal_type in (SIGTERM, SIGKILL):
             gevent.signal(signal_type, self.stop)
@@ -234,6 +232,8 @@ class GedisServer(Base):
         self._server.reuse_addr = True
         self._server.start()
 
+        j.logger.info(f&#34;Gedis server is started at {self.host}:{self.port}...&#34;)
+
     def stop(self):
         &#34;&#34;&#34;Stops the server
         &#34;&#34;&#34;
@@ -252,6 +252,8 @@ class GedisServer(Base):
             response[&#34;result&#34;] = method(*args, **kwargs)
 
         except Exception as e:
+            j.logger.exception(f&#34;error while executing {method}&#34;, exception=e)
+
             response[&#34;error&#34;] = str(e)
             response[&#34;error_type&#34;] = EXCEPTIONS_MAP.get(e.__class__, GedisErrorTypes.ACTOR_ERROR.value)
 
@@ -482,8 +484,6 @@ print(p.name, p.age)
     def start(self):
         &#34;&#34;&#34;Starts the server
         &#34;&#34;&#34;
-        j.application.start(&#34;gedis&#34;)
-
         # handle signals
         for signal_type in (SIGTERM, SIGKILL):
             gevent.signal(signal_type, self.stop)
@@ -504,6 +504,8 @@ print(p.name, p.age)
         self._server.reuse_addr = True
         self._server.start()
 
+        j.logger.info(f&#34;Gedis server is started at {self.host}:{self.port}...&#34;)
+
     def stop(self):
         &#34;&#34;&#34;Stops the server
         &#34;&#34;&#34;
@@ -522,6 +524,8 @@ print(p.name, p.age)
             response[&#34;result&#34;] = method(*args, **kwargs)
 
         except Exception as e:
+            j.logger.exception(f&#34;error while executing {method}&#34;, exception=e)
+
             response[&#34;error&#34;] = str(e)
             response[&#34;error_type&#34;] = EXCEPTIONS_MAP.get(e.__class__, GedisErrorTypes.ACTOR_ERROR.value)
 
@@ -782,8 +786,6 @@ actor_path {str} &ndash; Actor absolute path</p>
 <pre><code class="python">def start(self):
     &#34;&#34;&#34;Starts the server
     &#34;&#34;&#34;
-    j.application.start(&#34;gedis&#34;)
-
     # handle signals
     for signal_type in (SIGTERM, SIGKILL):
         gevent.signal(signal_type, self.stop)
@@ -802,7 +804,9 @@ actor_path {str} &ndash; Actor absolute path</p>
     # start the server
     self._server = StreamServer((self.host, self.port), self._on_connection, spawn=Pool())
     self._server.reuse_addr = True
-    self._server.start()</code></pre>
+    self._server.start()
+
+    j.logger.info(f&#34;Gedis server is started at {self.host}:{self.port}...&#34;)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.servers.gedis.server.GedisServer.stop"><code class="name flex">

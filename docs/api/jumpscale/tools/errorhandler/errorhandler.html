@@ -103,7 +103,7 @@ class ErrorHandler:
         message = self._format_lines(traceback.format_exception_only(ttype, tvalue))
 
         err_dict = {
-            &#34;appname&#34;: j.application.appname,
+            &#34;app_name&#34;: j.logger.default_app_name,
             &#34;level&#34;: level,
             &#34;message&#34;: message,
             &#34;timestamp&#34;: timestamp,
@@ -253,7 +253,7 @@ class ErrorHandler:
         message = self._format_lines(traceback.format_exception_only(ttype, tvalue))
 
         err_dict = {
-            &#34;appname&#34;: j.application.appname,
+            &#34;app_name&#34;: j.logger.default_app_name,
             &#34;level&#34;: level,
             &#34;message&#34;: message,
             &#34;timestamp&#34;: timestamp,
