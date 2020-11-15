@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "js-ng"
 packages = [{ include = "jumpscale" }]
-version = "11.0-b8"
+version = "11.0b9"
 description = "system automation, configuration management and RPC framework"
 authors = ["xmonader <xmonader@gmail.com>"]
 license = "MIT"
