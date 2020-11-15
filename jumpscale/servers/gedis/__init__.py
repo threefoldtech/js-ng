@@ -47,5 +47,7 @@ from jumpscale.core.base import StoredFactory
 
 def export_module_as():
     from .server import GedisServer
+    from jumpscale.loader import j
 
+    j.logger.register("gedis")
     return StoredFactory(GedisServer)
