@@ -407,7 +407,7 @@ def rm_broken_link(path: str) -> bool:
 
     Args:
         path (str): path to remove
-    
+
     Returns:
         bool: True if broken symlink removed
     """
@@ -461,6 +461,9 @@ def mkdirs(path: str, exist_ok=True):
         exist_ok (bool, optional): won't fail if directory exists. Defaults to True.
     """
     return os.makedirs(path, exist_ok=exist_ok)
+
+
+makedirs = mkdirs
 
 
 def make_path(path):
@@ -561,6 +564,19 @@ def expanduser(path: str) -> str:
         str: path with tilde `~` resolved.
     """
     return str(pathlib.Path(path).expanduser())
+
+
+def absolute(path: str) -> str:
+    """[summary]
+    e.g
+        j.sals.fs.absolute(".") -> '/home/xmonader/js-ng'
+    Args:
+        path (str): relative path `.`
+
+    Returns:
+        str: the absolute path for relative path.
+    """
+    return str(pathlib.Path(path).absolute())
 
 
 def unlink(path: str):
@@ -695,7 +711,7 @@ def get_temp_dirname(suffix=None, prefix=None, dir=None) -> str:
 
 
 NamedTemporaryFile = tempfile.NamedTemporaryFile
-TempraryDirectory = tempfile.TemporaryDirectory
+TemporaryDirectory = tempfile.TemporaryDirectory
 mkdtemp = tempfile.mkdtemp
 mkstemp = tempfile.mkstemp
 get_temp_dir = tempfile.gettempdir

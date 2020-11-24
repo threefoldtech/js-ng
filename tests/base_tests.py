@@ -21,3 +21,6 @@ class BaseTests(TestCase):
 
     def info(self, message):
         j.logger.info(message)
+
+    def random_name(self):
+        return j.data.idgenerator.nfromchoices(10, string.ascii_letters)

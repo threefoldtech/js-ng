@@ -1,10 +1,14 @@
 # Jumpscale logging
 
 ## Summary
-- [Overview](#overview)
-- [Configuration](#configuration)
-- [Logging](#logging)
-- [Handlers](#handlers)
+- [Jumpscale logging](#jumpscale-logging)
+  - [Summary](#summary)
+  - [Overview](#overview)
+  - [Configuration](#configuration)
+  - [Logging](#logging)
+  - [Handlers](#handlers)
+    - [Adding simple handlers](#adding-simple-handlers)
+    - [Adding Custom handlers](#adding-custom-handlers)
 
 
 ## Overview
@@ -31,7 +35,7 @@ dump_dir = "/tmp/logs/redis"    # Directory where the dumped logs will be saved 
 [logging.filesystem]
 enabled = true                  # Set this to true to enable filesystem handler
 level = 15                      # The min severity level from which logged messages should be sent to the handler
-log_dir = "/tmp/fs/log.txt"     # The path of the log file 
+log_dir = "/tmp/fs/log.txt"     # The path of the log file
 rotation = "5 MB"               # Max size of the log file, after reaching it a new file will be created.
 ```
 
@@ -39,10 +43,13 @@ rotation = "5 MB"               # Max size of the log file, after reaching it a 
 ## Logging
 Inside your application you can log any message and all the logs will be referenced to your application, so you can get or delete them later by your application name.
 
+By default, the application name is `init`.
+
+
 ```python
 
-# start your application and set the appname
-j.application.start("myapp")
+# register logging for app name "myapp" from current module (and sub-modules too)
+j.logger.register("myapp")
 
 j.logger.debug("my debug message")       # log debug message
 j.logger.info("my info message")        # log info message
@@ -66,6 +73,13 @@ except Exception as e:
     j.logger.exception("your message", level=30, exception=e)
 ```
 
+You can unregister logging for your app using:
+
+```
+j.logger.unregister()
+```
+
+From the the same module you called `j.logger.register("myapp")`. Note that logs will be under the default app name after this.
 
 ## Handlers
 You can add your own handler to the logging system and choose the min severity level from which logged messages should be sent to the handler.
@@ -107,7 +121,7 @@ You can access your handler class using `j.logger.<handler_name>`
 ```python
 JS-NG> j.logger.my_custom_handler.counter
 2
-JS-NG> j.logger.my_custom_handler.reset_counter() 
+JS-NG> j.logger.my_custom_handler.reset_counter()
 JS-NG> j.logger.my_custom_handler.counter
 0
 ```

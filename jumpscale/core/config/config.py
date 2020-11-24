@@ -61,8 +61,6 @@ JS-NG> j.core.config.set("favcolor", "grey")
 JS-NG> j.core.config.get("favcolor")
 'grey'
 ```
-
-
 """
 
 import os
@@ -70,6 +68,13 @@ import os
 import nacl.utils
 import nacl.encoding
 import pytoml as toml
+
+try:
+    from importlib import metadata
+except ImportError:
+    # Running on pre-3.8 Python; use importlib-metadata package
+    import importlib_metadata as metadata
+
 from nacl.public import PrivateKey
 
 
@@ -86,7 +91,9 @@ __all__ = [
     "get_current_version",
 ]
 
-__version__ = "11.0b3"
+
+package_name = "js-ng"
+__version__ = metadata.version(package_name)
 
 
 config_root = os.path.expanduser(os.path.join("~/.config", "jumpscale"))
@@ -180,12 +187,12 @@ def set(key, val):
 
 
 def set_default(key, val):
-    """ Sets key to value in jumpscale config and returns 
+    """ Sets key to value in jumpscale config and returns
 
     Arguments:
         key (str): the key you wish to update
         val: value to update with and to return if key doesn't exist in configurations
-    
+
     Returns:
         val (str): returned if key doesn't exist in configuration or the value of key in configurations
     """
@@ -195,8 +202,6 @@ def set_default(key, val):
     else:
         set(key, val)
         return val
-
-
 
 
 def migrate_config():

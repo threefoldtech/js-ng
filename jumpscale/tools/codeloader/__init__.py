@@ -17,25 +17,30 @@ JS-NG> m.a
 ```
 
 """
-
+import importlib
 import os
 import sys
-import importlib
+import types
+
+from jumpscale.sals.fs import stem
 
 
-def load_python_module(module_path: str):
-    """Loads python module by module path
-
-    Arguments:
-        module_path {str} -- absolute path of the module
+def load_python_module(module_path: str, force_reload: bool = False) -> types.ModuleType:
     """
-    from jumpscale.loader import j
+    Loads python module by path
 
+    Args:
+        module_path (str): absolute path of the module
+        force_reload (bool, optional): will reload the module if set. Defaults to False.
+
+    Returns:
+        types.ModuleType: module object
+    """
     module_uid = module_path[:-3]
-    module_name = j.sals.fs.stem(module_path)
+    module_name = stem(module_path)
     spec = importlib.util.spec_from_file_location(module_name, module_path)
 
-    if module_uid in sys.modules:
+    if module_uid in sys.modules and not force_reload:
         return sys.modules[module_uid]
 
     module = importlib.util.module_from_spec(spec)

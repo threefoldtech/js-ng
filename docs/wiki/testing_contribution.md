@@ -88,18 +88,19 @@ from unittests import TestCase
 
 class AddTest(TestCase):
     def test01_test_add(self):
-        """Test case for adding two numbers
+        """Test case for adding two numbers.
 
         **Test Scenario**
-        #. Add two numbers.
-        #. Check that the result is the adding of these two numbers.
+
+        - Add two numbers.
+        - Check that the result is the adding of these two numbers.
         """
-        #. Add two numbers.
+        # Add two numbers.
         x = 5
         y = 8
         z = add_two_numbers(x, y)
 
-        #. Check that the result is the adding of these two numbers.
+        # Check that the result is the adding of these two numbers.
         self.assertEqual(z, 13)
 ```
 
@@ -135,6 +136,14 @@ pytest -sv /path/to/file.py
 
 ```bash
 pytest -sv /path/to/file.py::ClassName::method_name
+```
+
+## Generate tests docs
+
+In jsng shell.
+
+```python
+j.sals.testdocs.generate_tests_docs(source="~/js-ng/tests/", target="~/js-ng/docs/tests")
 ```
 
 ## Important Notes

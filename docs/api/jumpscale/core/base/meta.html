@@ -236,19 +236,19 @@ class BaseMeta(type):
             type: a new class
         &#34;&#34;&#34;
         # will collect class fields
-        # and also all fields of super classes, as we already have them in based
         cls_fields = {}
-        super_fields = {}
 
+        # get all fields from super classes, we have them ordered in `based`
+        # make sure not to re-add any field that&#39;s already added
+        # otherwise, fields will be resolved disorderly
         for super_cls in based:
             if hasattr(super_cls, &#34;_fields&#34;):
-                super_fields.update(super_cls._fields)
+                for key, field in super_cls._fields.items():
+                    if key not in attrs:
+                        attrs[key] = field
 
-        # update current attrs with super class fields
-        attrs.update(super_fields)
-
-        # now we maintain old attributes, but convert any attribute
-        # with fields.Field type to property descriptor (property object)
+        # now we maintain old attributes, but convert any attribute with
+        # fields.Field type to property descriptor (property object)
         # using get_field_property
         new_attrs = {}
         for key in attrs:
@@ -1041,14 +1041,14 @@ print(p.name, p.age)
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
+<li><a title="jumpscale.tools.startupcmd.startupcmd.StartupCmd" href="../../tools/startupcmd/startupcmd.html#jumpscale.tools.startupcmd.startupcmd.StartupCmd">StartupCmd</a></li>
 <li><a title="jumpscale.clients.base.Client" href="../../clients/base.html#jumpscale.clients.base.Client">Client</a></li>
 <li><a title="jumpscale.servers.gedis.server.GedisServer" href="../../servers/gedis/server.html#jumpscale.servers.gedis.server.GedisServer">GedisServer</a></li>
+<li><a title="jumpscale.servers.gedis_http.GedisHTTPServer" href="../../servers/gedis_http/index.html#jumpscale.servers.gedis_http.GedisHTTPServer">GedisHTTPServer</a></li>
+<li><a title="jumpscale.servers.rack.rack.ServerRack" href="../../servers/rack/rack.html#jumpscale.servers.rack.rack.ServerRack">ServerRack</a></li>
 <li><a title="jumpscale.servers.openresty.location.Location" href="../../servers/openresty/location.html#jumpscale.servers.openresty.location.Location">Location</a></li>
 <li><a title="jumpscale.servers.openresty.server.Website" href="../../servers/openresty/server.html#jumpscale.servers.openresty.server.Website">Website</a></li>
 <li><a title="jumpscale.servers.openresty.server.OpenRestyServer" href="../../servers/openresty/server.html#jumpscale.servers.openresty.server.OpenRestyServer">OpenRestyServer</a></li>
-<li><a title="jumpscale.servers.gedis_http.GedisHTTPServer" href="../../servers/gedis_http/index.html#jumpscale.servers.gedis_http.GedisHTTPServer">GedisHTTPServer</a></li>
-<li><a title="jumpscale.servers.rack.rack.ServerRack" href="../../servers/rack/rack.html#jumpscale.servers.rack.rack.ServerRack">ServerRack</a></li>
-<li><a title="jumpscale.tools.startupcmd.startupcmd.StartupCmd" href="../../tools/startupcmd/startupcmd.html#jumpscale.tools.startupcmd.startupcmd.StartupCmd">StartupCmd</a></li>
 </ul>
 <h3>Static methods</h3>
 <dl>
@@ -1236,19 +1236,19 @@ p.to_dict() #=&gt; {'name': 'ahmed', 'age': '19'}
             type: a new class
         &#34;&#34;&#34;
         # will collect class fields
-        # and also all fields of super classes, as we already have them in based
         cls_fields = {}
-        super_fields = {}
 
+        # get all fields from super classes, we have them ordered in `based`
+        # make sure not to re-add any field that&#39;s already added
+        # otherwise, fields will be resolved disorderly
         for super_cls in based:
             if hasattr(super_cls, &#34;_fields&#34;):
-                super_fields.update(super_cls._fields)
+                for key, field in super_cls._fields.items():
+                    if key not in attrs:
+                        attrs[key] = field
 
-        # update current attrs with super class fields
-        attrs.update(super_fields)
-
-        # now we maintain old attributes, but convert any attribute
-        # with fields.Field type to property descriptor (property object)
+        # now we maintain old attributes, but convert any attribute with
+        # fields.Field type to property descriptor (property object)
         # using get_field_property
         new_attrs = {}
         for key in attrs:

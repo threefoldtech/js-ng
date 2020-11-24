@@ -35,17 +35,22 @@ class SystemActor(BaseActor):
         self._server = server
 
     @actor_method
-    def register_actor(self, actor_name: str, actor_path: str) -> bool:
-        """Register new actor
+    def register_actor(self, actor_name: str, actor_path: str, force_reload: bool = False) -> bool:
+        """
+        Register new actor
 
-        Arguments:
-            actor_name {str} -- actor name within gedis server.
-            actor_path {str} -- actor path on gedis server machine.
+        Args:
+            actor_name (str): actor name within gedis server.
+            actor_path (str): actor path on gedis server machine.
+            force_reload (bool, optional): reload the module if set. Defaults to False.
+
+        Raises:
+            j.exceptions.Validation: in case the actor is not valid
 
         Returns:
-            bool -- True if registered.
+            bool: True if registered
         """
-        module = j.tools.codeloader.load_python_module(actor_path)
+        module = j.tools.codeloader.load_python_module(actor_path, force_reload=force_reload)
         actor = module.Actor()
         actor.path = actor_path
         result = actor.__validate_actor__()
