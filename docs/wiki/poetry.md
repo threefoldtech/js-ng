@@ -8,7 +8,7 @@ poetry is the long waited solution for dependency management and packaging that 
 
 ## deps and locking
 
-- add `poetry add pkgname` 
+- add `poetry add pkgname`
 - remove `poetry remove pkgname`
 
 ## building packages
@@ -43,4 +43,4 @@ Pipenv doesn't help with building packages nor publishing them. you will need an
 
 ## Generating requirements.txt file
 
-You can do `poetry run make requirements.txt` to generate the requirements.txt file.
+You can do `poetry run make requirements` to generate the requirements.txt file.

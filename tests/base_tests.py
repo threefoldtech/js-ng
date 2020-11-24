@@ -1,6 +1,7 @@
 from unittest import TestCase
 
 from jumpscale.loader import j
+import string
 
 
 class BaseTests(TestCase):
@@ -17,3 +18,6 @@ class BaseTests(TestCase):
 
     def info(self, message):
         j.logger.info(message)
+
+    def random_name(self):
+        return j.data.idgenerator.nfromchoices(10, string.ascii_letters)
