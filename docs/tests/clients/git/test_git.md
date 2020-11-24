@@ -27,16 +27,16 @@ Test case for checking a branch name.
 - Get the branch name.
 - Check branch name.
 
-### test04_git_modifed_files
+### test04_git_modified_files
 
-Test case for getting the modifed files.
+Test case for getting the modified files.
 
 **Test Scenario**
 - Get a git client.
 - Create a file in repository path.
 - Commit changes
 - modify this file
-- Check if file has been modifed
+- Check if file has been modified
 
 ### test05_git_add_new_file
 

@@ -74,15 +74,15 @@ class GitTests(BaseTests):
         self.info("Check branch name")
         self.assertIn(self.git_client.branch_name, branch_name[1])
 
-    def test04_git_modifed_files(self):
-        """Test case for getting the modifed files.
+    def test04_git_modified_files(self):
+        """Test case for getting the modified files.
 
         **Test Scenario**
         - Get a git client.
         - Create a file in repository path.
         - Commit changes
         - modify this file
-        - Check if file has been modifed
+        - Check if file has been modified
         """
         self.info("Create a file in repository path")
         file_name = self.random_name()
@@ -96,10 +96,10 @@ class GitTests(BaseTests):
         path = j.sals.fs.join_paths(self.repo_dir, self.repo_name, file_name)
         j.sals.fs.write_file(path, "test modify file")
 
-        self.info("Check if file has been modifed")
-        modided_file = self.git_client.get_modified_files()
-        self.assertTrue(modided_file)
-        self.assertEqual(file_name, modided_file["M"][0])
+        self.info("Check if file has been modified")
+        modified_file = self.git_client.get_modified_files()
+        self.assertTrue(modified_file)
+        self.assertEqual(file_name, modified_file["M"][0])
 
     def test05_git_add_new_file(self):
         """Test case for adding a new file with git.
