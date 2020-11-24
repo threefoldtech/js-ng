@@ -1,5 +1,6 @@
 ### Clients
 
+- [test_git](clients/git/test_git.md)
 - [test_docker](clients/docker/test_docker.md)
 - [test_redis](clients/redis/test_redis.md)
 - [test_sshclient](clients/sshclient/test_sshclient.md)

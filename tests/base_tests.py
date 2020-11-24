@@ -16,8 +16,8 @@ class BaseTests(TestCase):
     def generate_random_text():
         return j.data.idgenerator.chars(10)
 
-    def info(self, message):
-        j.logger.info(message)
-
     def random_name(self):
         return j.data.idgenerator.nfromchoices(10, string.ascii_letters)
+
+    def info(self, message):
+        j.logger.info(message)
