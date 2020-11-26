@@ -1,4 +1,9 @@
 from jumpscale.loader import j
+import gevent
+import requests
+import os
+from io import StringIO
+import binascii
 
 
 def _get_identifier(app_name, message, public_message, category, alert_type):
@@ -144,6 +149,59 @@ class AlertsHandler:
             alerts.append(alert)
         return sorted(alerts, key=lambda alert: alert.id)
 
+    def _encode_data(self, data):
+        keys = [
+            "tid",
+            "tname",
+            "timestamp",
+            "level",
+            "message",
+            "explorer_url",
+            "vdc_name",
+            "app_name",
+            "status",
+            "category",
+            "type",
+            "count",
+        ]
+        b = StringIO()
+        for key in keys:
+            if key in data:
+                b.write(key)
+                b.write(str(data.get(key)))
+        return b.getvalue().encode()
+
+    def send_alert(self, alert):
+        VDC_NAME = os.environ.get("VDC_NAME", "")
+        EXPLORER_URL = os.environ.get("EXPLORER_URL", "")
+        MONITORING_SERVER_URL = os.environ.get("MONITORING_SERVER_URL")
+
+        if MONITORING_SERVER_URL:
+            identity_name = j.core.identity.me.instance_name
+            tid = j.core.identity.get(identity_name).tid
+            data = {
+                "tid": tid,
+                "explorer_url": EXPLORER_URL,
+                "vdc_name": VDC_NAME,
+                "app_name": alert.app_name,
+                "status": alert.status,
+                "category": alert.category,
+                "message": alert.message,
+                "level": alert.level,
+                "timestamp": alert.last_occurrence,
+                "count": alert.count,
+                "type": alert.type,
+                "tname": j.core.identity.me.tid,
+            }
+            encoded_data = self._encode_data(data)
+            signature = j.core.identity.me.nacl.signing_key.sign(encoded_data).signature
+            signature = binascii.hexlify(signature).decode()
+            data["signature"] = signature
+            try:
+                requests.post(f"{MONITORING_SERVER_URL}/alert", json=j.data.serializers.json.dumps(data))
+            except Exception as e:
+                j.tools.alerthandler.alert_raise("3bot monitoring", str(e), send_alert=False)
+
     def alert_raise(
         self,
         app_name,
@@ -155,6 +213,7 @@ class AlertsHandler:
         data: dict = None,
         timestamp: float = None,
         traceback: dict = None,
+        send_alert: bool = True,
     ) -> Alert:
 
         """Raise a new alert
@@ -202,6 +261,8 @@ class AlertsHandler:
 
         alert.tracebacks.append(traceback)
         self._save(alert)
+        if send_alert:
+            gevent.spawn(self.send_alert, alert)
         return alert
 
     def count(self) -> int:
@@ -242,12 +303,10 @@ class AlertsHandler:
             self.db.hdel(self._rkey, alert_id)
 
     def delete_all(self):
-        """Deletes all alerts
-        """
+        """Deletes all alerts"""
         self.db.delete(self._rkey, self._rkey_id)
 
     def reset(self):
-        """Delete all alerts and reset the db
-        """
+        """Delete all alerts and reset the db"""
         self.delete_all()
         self.db.delete(self._rkey_incr)
