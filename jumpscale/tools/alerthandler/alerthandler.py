@@ -1,4 +1,5 @@
 from jumpscale.loader import j
+import gevent
 
 
 def _get_identifier(app_name, message, public_message, category, alert_type):
@@ -47,6 +48,7 @@ class AlertsHandler:
         self._rkey_id = "alerts:id"
         self._rkey_incr = "alerts:id:incr"
         self._db = None
+        self.handlers = []
 
     def __dir__(self):
         return ("get", "find", "alert_raise", "count", "reset", "delete", "delete_all")
@@ -202,6 +204,9 @@ class AlertsHandler:
 
         alert.tracebacks.append(traceback)
         self._save(alert)
+        for handler_func, handler_level in self.handlers:
+            if level >= handler_level:
+                gevent.spawn(handler_func, alert)
         return alert
 
     def count(self) -> int:
@@ -242,12 +247,22 @@ class AlertsHandler:
             self.db.hdel(self._rkey, alert_id)
 
     def delete_all(self):
-        """Deletes all alerts
-        """
+        """Deletes all alerts"""
         self.db.delete(self._rkey, self._rkey_id)
 
     def reset(self):
-        """Delete all alerts and reset the db
-        """
+        """Delete all alerts and reset the db"""
         self.delete_all()
         self.db.delete(self._rkey_incr)
+
+    def register_handler(self, handler: callable, level: int = 40):
+        """Register new alert handler
+
+        Arguments:
+            handler (callable): error handler callable
+
+        Keyword Arguments:
+            level (int): exception level (default: {40})
+        """
+        if (handler, level) not in self.handlers:
+            self.handlers.append((handler, level))
