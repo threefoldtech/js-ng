@@ -7,6 +7,7 @@ import time
 
 class TestFS(BaseTests):
     def test_adding_handler(self):
+        """Tests registering alert handlers"""
         self.alert = None
 
         def alert_handler(alert):
