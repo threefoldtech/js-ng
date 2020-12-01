@@ -23,6 +23,7 @@
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">from jumpscale.loader import j
+import gevent
 
 
 def _get_identifier(app_name, message, public_message, category, alert_type):
@@ -71,6 +72,7 @@ class AlertsHandler:
         self._rkey_id = &#34;alerts:id&#34;
         self._rkey_incr = &#34;alerts:id:incr&#34;
         self._db = None
+        self.handlers = []
 
     def __dir__(self):
         return (&#34;get&#34;, &#34;find&#34;, &#34;alert_raise&#34;, &#34;count&#34;, &#34;reset&#34;, &#34;delete&#34;, &#34;delete_all&#34;)
@@ -226,6 +228,9 @@ class AlertsHandler:
 
         alert.tracebacks.append(traceback)
         self._save(alert)
+        for handler_func, handler_level in self.handlers:
+            if level &gt;= handler_level:
+                gevent.spawn(handler_func, alert)
         return alert
 
     def count(self) -&gt; int:
@@ -266,15 +271,25 @@ class AlertsHandler:
             self.db.hdel(self._rkey, alert_id)
 
     def delete_all(self):
-        &#34;&#34;&#34;Deletes all alerts
-        &#34;&#34;&#34;
+        &#34;&#34;&#34;Deletes all alerts&#34;&#34;&#34;
         self.db.delete(self._rkey, self._rkey_id)
 
     def reset(self):
-        &#34;&#34;&#34;Delete all alerts and reset the db
-        &#34;&#34;&#34;
+        &#34;&#34;&#34;Delete all alerts and reset the db&#34;&#34;&#34;
         self.delete_all()
-        self.db.delete(self._rkey_incr)</code></pre>
+        self.db.delete(self._rkey_incr)
+
+    def register_handler(self, handler: callable, level: int = 40):
+        &#34;&#34;&#34;Register new alert handler
+
+        Arguments:
+            handler (callable): error handler callable
+
+        Keyword Arguments:
+            level (int): exception level (default: {40})
+        &#34;&#34;&#34;
+        if (handler, level) not in self.handlers:
+            self.handlers.append((handler, level))</code></pre>
 </details>
 </section>
 <section>
@@ -397,6 +412,7 @@ def json(self):
         self._rkey_id = &#34;alerts:id&#34;
         self._rkey_incr = &#34;alerts:id:incr&#34;
         self._db = None
+        self.handlers = []
 
     def __dir__(self):
         return (&#34;get&#34;, &#34;find&#34;, &#34;alert_raise&#34;, &#34;count&#34;, &#34;reset&#34;, &#34;delete&#34;, &#34;delete_all&#34;)
@@ -552,6 +568,9 @@ def json(self):
 
         alert.tracebacks.append(traceback)
         self._save(alert)
+        for handler_func, handler_level in self.handlers:
+            if level &gt;= handler_level:
+                gevent.spawn(handler_func, alert)
         return alert
 
     def count(self) -&gt; int:
@@ -592,15 +611,25 @@ def json(self):
             self.db.hdel(self._rkey, alert_id)
 
     def delete_all(self):
-        &#34;&#34;&#34;Deletes all alerts
-        &#34;&#34;&#34;
+        &#34;&#34;&#34;Deletes all alerts&#34;&#34;&#34;
         self.db.delete(self._rkey, self._rkey_id)
 
     def reset(self):
-        &#34;&#34;&#34;Delete all alerts and reset the db
-        &#34;&#34;&#34;
+        &#34;&#34;&#34;Delete all alerts and reset the db&#34;&#34;&#34;
         self.delete_all()
-        self.db.delete(self._rkey_incr)</code></pre>
+        self.db.delete(self._rkey_incr)
+
+    def register_handler(self, handler: callable, level: int = 40):
+        &#34;&#34;&#34;Register new alert handler
+
+        Arguments:
+            handler (callable): error handler callable
+
+        Keyword Arguments:
+            level (int): exception level (default: {40})
+        &#34;&#34;&#34;
+        if (handler, level) not in self.handlers:
+            self.handlers.append((handler, level))</code></pre>
 </details>
 <h3>Instance variables</h3>
 <dl>
@@ -697,6 +726,9 @@ traceback {dict} &ndash; alert traceback (default: {None})</p>
 
     alert.tracebacks.append(traceback)
     self._save(alert)
+    for handler_func, handler_level in self.handlers:
+        if level &gt;= handler_level:
+            gevent.spawn(handler_func, alert)
     return alert</code></pre>
 </details>
 </dd>
@@ -762,8 +794,7 @@ identifier {str} &ndash; alert identifier (default: {None})</dd>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def delete_all(self):
-    &#34;&#34;&#34;Deletes all alerts
-    &#34;&#34;&#34;
+    &#34;&#34;&#34;Deletes all alerts&#34;&#34;&#34;
     self.db.delete(self._rkey, self._rkey_id)</code></pre>
 </details>
 </dd>
@@ -899,6 +930,33 @@ die {bool} &ndash; flag to rasie exception if alert is not found (default: {True
         raise j.core.exceptions.NotFound(&#34;Requested alert is not found&#34;)</code></pre>
 </details>
 </dd>
+<dt id="jumpscale.tools.alerthandler.alerthandler.AlertsHandler.register_handler"><code class="name flex">
+<span>def <span class="ident">register_handler</span></span>(<span>self, handler, level=40)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Register new alert handler</p>
+<h2 id="arguments">Arguments</h2>
+<dl>
+<dt><strong><code>handler</code></strong> :&ensp;<code>callable</code></dt>
+<dd>error handler callable</dd>
+</dl>
+<p>Keyword Arguments:
+level (int): exception level (default: {40})</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def register_handler(self, handler: callable, level: int = 40):
+    &#34;&#34;&#34;Register new alert handler
+
+    Arguments:
+        handler (callable): error handler callable
+
+    Keyword Arguments:
+        level (int): exception level (default: {40})
+    &#34;&#34;&#34;
+    if (handler, level) not in self.handlers:
+        self.handlers.append((handler, level))</code></pre>
+</details>
+</dd>
 <dt id="jumpscale.tools.alerthandler.alerthandler.AlertsHandler.reset"><code class="name flex">
 <span>def <span class="ident">reset</span></span>(<span>self)</span>
 </code></dt>
@@ -907,8 +965,7 @@ die {bool} &ndash; flag to rasie exception if alert is not found (default: {True
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def reset(self):
-    &#34;&#34;&#34;Delete all alerts and reset the db
-    &#34;&#34;&#34;
+    &#34;&#34;&#34;Delete all alerts and reset the db&#34;&#34;&#34;
     self.delete_all()
     self.db.delete(self._rkey_incr)</code></pre>
 </details>
@@ -950,6 +1007,7 @@ die {bool} &ndash; flag to rasie exception if alert is not found (default: {True
 <li><code><a title="jumpscale.tools.alerthandler.alerthandler.AlertsHandler.delete_all" href="#jumpscale.tools.alerthandler.alerthandler.AlertsHandler.delete_all">delete_all</a></code></li>
 <li><code><a title="jumpscale.tools.alerthandler.alerthandler.AlertsHandler.find" href="#jumpscale.tools.alerthandler.alerthandler.AlertsHandler.find">find</a></code></li>
 <li><code><a title="jumpscale.tools.alerthandler.alerthandler.AlertsHandler.get" href="#jumpscale.tools.alerthandler.alerthandler.AlertsHandler.get">get</a></code></li>
+<li><code><a title="jumpscale.tools.alerthandler.alerthandler.AlertsHandler.register_handler" href="#jumpscale.tools.alerthandler.alerthandler.AlertsHandler.register_handler">register_handler</a></code></li>
 <li><code><a title="jumpscale.tools.alerthandler.alerthandler.AlertsHandler.reset" href="#jumpscale.tools.alerthandler.alerthandler.AlertsHandler.reset">reset</a></code></li>
 </ul>
 </li>
