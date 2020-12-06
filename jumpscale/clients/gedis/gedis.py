@@ -8,7 +8,6 @@ from jumpscale.clients.base import Client
 from jumpscale.core.base import fields
 from jumpscale.loader import j
 from jumpscale.servers.gedis.server import GedisErrorTypes, deserialize, serialize
-from jumpscale.tools.codeloader import load_python_module
 
 
 class ActorResult:
@@ -32,9 +31,9 @@ class ActorProxy:
         """ActorProxy to remote actor on the server side
 
         Arguments:
-            actor_name {str} -- [description]
-            actor_info {dict} -- actor information dict e.g { method_name: { args: [], 'doc':...} }
-            gedis_client {GedisClient} -- gedis client reference
+            actor_name (str): [description]
+            actor_info (dict): actor information dict e.g ( method_name: ( args: [], 'doc':...} }
+            gedis_client (GedisClient): gedis client reference
         """
         self.actor_name = actor_name
         self.actor_info = actor_info
@@ -44,7 +43,7 @@ class ActorProxy:
         """Delegate the available functions on the ActorProxy to `actor_info` keys
 
         Returns:
-            list -- methods available on the ActorProxy
+            list: methods available on the ActorProxy
         """
         return list(self.actor_info["methods"].keys())
 
@@ -52,18 +51,19 @@ class ActorProxy:
         """Return a function representing the remote function on the actual actor
 
         Arguments:
-            attr {str} -- method name
+            attr (str): method name
 
         Returns:
-            function -- function waiting on the arguments
+            function: function waiting on the arguments
         """
 
         def function(*args, **kwargs):
             return self.client.execute(self.actor_name, method, *args, **kwargs)
 
-        func = partial(function)
-        func.__doc__ = self.actor_info["methods"][method]["doc"]
-        return func
+        method_info = self.actor_info["methods"][method]
+        function.__name__ = method
+        function.__doc__ = method_info["doc"]
+        return function
 
 
 class ActorsCollection:
@@ -89,7 +89,6 @@ class GedisClient(Client):
         super().__init__(*args, **kwargs)
         self._redisclient = None
         self._loaded_actors = {}
-        self._loaded_modules = []
         self.actors = None
         self._load_actors()
 
@@ -99,16 +98,10 @@ class GedisClient(Client):
             self._redisclient = j.clients.redis.get(name=f"gedis_{self.name}", hostname=self.hostname, port=self.port)
         return self._redisclient
 
-    def _load_module(self, path, force_reload=False):
-        load_python_module(path, force_reload=force_reload)
-        if path not in self._loaded_modules:
-            self._loaded_modules.append(path)
-
-    def _load_actors(self, force_reload=False):
+    def _load_actors(self):
         self._loaded_actors = {}
         for actor_name in self.list_actors():
             actor_info = self._get_actor_info(actor_name)
-            self._load_module(actor_info["path"], force_reload=force_reload)
             self._loaded_actors[actor_name] = ActorProxy(actor_name, actor_info, self)
 
         self.actors = ActorsCollection(self._loaded_actors)
@@ -120,30 +113,30 @@ class GedisClient(Client):
         """List actors
 
         Returns:
-            list -- List of loaded actors
+            list: List of loaded actors
         """
         return self.execute("core", "list_actors", die=True).result
 
     def reload(self):
         """Reload actors
         """
-        self._load_actors(force_reload=True)
+        self._load_actors()
 
     def execute(self, actor_name: str, actor_method: str, *args, die: bool = False, **kwargs) -> ActorResult:
         """Execute actor's method
 
         Arguments:
-            actor_name {str} -- actor name
-            actor_method {str} -- actor method
+            actor_name (str): actor name
+            actor_method (str): actor method
 
         Keyword Arguments:
-            die {bool} --  flag to raise an error when request fails (default: {False})
+            die (bool): flag to raise an error when request fails (default: {False})
 
         Raises:
             RemoteException: Raises if the request failed and raise_on_error flag is set
 
         Returns:
-            ActorResult -- request result
+            ActorResult: request result
         """
         payload = json.dumps((args, kwargs), default=serialize)
         response = self.redis_client.execute_command(actor_name, actor_method, payload)

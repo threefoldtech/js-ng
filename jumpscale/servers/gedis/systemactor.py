@@ -2,6 +2,9 @@ import os
 import sys
 import json
 import inspect
+import warnings
+from textwrap import dedent
+
 from jumpscale.loader import j
 from jumpscale.servers.gedis.baseactor import BaseActor, actor_method
 
@@ -22,7 +25,7 @@ class CoreActor(BaseActor):
         Returns:
             list -- list of available actors
         """
-        return list(self._server._loaded_actors.keys())
+        return list(self._server.actors.keys())
 
 
 class SystemActor(BaseActor):
@@ -37,7 +40,7 @@ class SystemActor(BaseActor):
     @actor_method
     def register_actor(self, actor_name: str, actor_path: str, force_reload: bool = False) -> bool:
         """
-        Register new actor
+        Register new actor from a source file.
 
         Args:
             actor_name (str): actor name within gedis server.
@@ -50,17 +53,15 @@ class SystemActor(BaseActor):
         Returns:
             bool: True if registered
         """
-        module = j.tools.codeloader.load_python_module(actor_path, force_reload=force_reload)
-        actor = module.Actor()
-        actor.path = actor_path
-        result = actor.__validate_actor__()
-
-        if not result["valid"]:
-            raise j.exceptions.Validation(
-                "Actor {} is not valid, check the following errors {}".format(actor_name, result["errors"])
+        warnings.warn(
+            dedent(
+                """Registering actors from the client side will be deprecated,
+                please do it from gedis server, using register_actor or register_actor_module instead"""
             )
+        )
 
-        self._server._register_actor(actor_name, actor)
+        module = j.tools.codeloader.load_python_module(actor_path, force_reload=force_reload)
+        self._server.register_actor_module(actor_name, module)
         return True
 
     @actor_method
@@ -73,5 +74,12 @@ class SystemActor(BaseActor):
         Returns:
             bool -- True if actors is unregistered
         """
-        self._server._unregister_actor(actor_name)
+        warnings.warn(
+            dedent(
+                """Unregistering actors from the client side will be deprecated,
+                please do it from gedis server directly, using unregister_actor instead"""
+            )
+        )
+
+        self._server.unregister_actor(actor_name)
         return True

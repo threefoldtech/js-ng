@@ -3,7 +3,9 @@ import time
 
 from unittest import TestCase, skip
 from jumpscale.loader import j
-from tests.servers.gedis.test_actors.test_actor import TestObject
+from tests.servers.gedis.test_actors import test_actor, memory_profiler
+
+TestObject = test_actor.TestObject
 
 
 COUNT = 1000
@@ -20,16 +22,16 @@ class TestGedis(TestCase):
     @classmethod
     def setUpClass(cls):
         cls.server = j.servers.gedis.get("test")
-        cls.server.actor_add("test", TEST_ACTOR_PATH)
-        cls.server.actor_add("memory", MEMORY_ACTOR_PATH)
+        cls.server.register_actor_module("test", test_actor)
+        cls.server.register_actor_module("memory", memory_profiler)
         gevent.spawn(cls.server.start)
         assert j.sals.nettools.wait_connection_test(cls.server.host, cls.server.port, 3)
         cls.cl = j.clients.gedis.get("test")
 
     @classmethod
     def tearDownClass(cls):
-        cls.server.actor_delete("test")
-        cls.server.actor_delete("memory")
+        cls.server.unregister_actor("test")
+        cls.server.unregister_actor("memory")
         cls.server.stop()
         j.clients.gedis.delete("test")
         j.servers.gedis.delete("test")
@@ -131,3 +133,16 @@ class TestGedis(TestCase):
             print(self.cl.actors.system.register_actor(actor_name, actor_path, force_reload=True))
             # self.cl.reload()
             self.assertEqual(self.cl.actors.test_reloading_actor.get_value().result, 2)
+
+    def test_04_test_registering_actors_by_module(self):
+        """Test registering actors directly by module
+
+        **Test Scenario**
+
+        - Register actor module with a different name
+        - Test calling some methods
+        """
+
+        self.server.register_actor_module("test_actor_by_module", test_actor)
+        self.cl.reload()
+        self.assertEqual(self.cl.actors.test_actor_by_module.add_two_numbers(1, 2).result, 3)

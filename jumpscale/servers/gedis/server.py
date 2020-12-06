@@ -1,21 +1,23 @@
 import inspect
 import json
-import sys
 import os
-from redis import Redis
+import sys
 from enum import Enum
 from functools import partial
 from io import BytesIO
 from signal import SIGKILL, SIGTERM
-import json
+from types import ModuleType
+
 import gevent
-from gevent.pool import Pool
 from gevent import time
+from gevent.pool import Pool
 from gevent.server import StreamServer
 from jumpscale.core.base import Base, fields
 from jumpscale.loader import j
+from redis import Redis
 from redis.connection import DefaultParser, Encoder
 from redis.exceptions import ConnectionError
+
 from .baseactor import BaseActor
 from .systemactor import CoreActor, SystemActor
 
@@ -141,49 +143,13 @@ class GedisServer(Base):
     port = fields.Integer(default=16000)
     enable_system_actor = fields.Boolean(default=True)
     run_async = fields.Boolean(default=True)
-    _actors = fields.Typed(dict, default={})
+    actors = fields.Typed(dict, default={}, stored=False)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._core_actor = CoreActor()
         self._system_actor = SystemActor()
-        self._loaded_actors = {"core": self._core_actor}
-
-    @property
-    def actors(self):
-        """Lists saved actors
-
-        Returns:
-            list -- List of saved actors
-        """
-        return self._actors
-
-    def actor_add(self, actor_name: str, actor_path: str):
-        """Adds an actor to the server
-
-        Arguments:
-            actor_name {str} -- Actor name
-            actor_path {str} -- Actor absolute path
-
-        Raises:
-            j.exceptions.Value: raises if actor name is matched one of the reserved actor names
-            j.exceptions.Value: raises if actor name is not a valid identifier
-        """
-        if actor_name in RESERVED_ACTOR_NAMES:
-            raise j.exceptions.Value("Invalid actor name")
-
-        if not actor_name.isidentifier():
-            raise j.exceptions.Value(f"Actor name should be a valid identifier")
-
-        self._actors[actor_name] = actor_path
-
-    def actor_delete(self, actor_name: str):
-        """Removes an actor from the server
-
-        Arguments:
-            actor_name {str} -- Actor name
-        """
-        self._actors.pop(actor_name, None)
+        self.actors["core"] = self._core_actor
 
     def start(self):
         """Starts the server
@@ -194,14 +160,10 @@ class GedisServer(Base):
 
         # register system actor if enabled
         if self.enable_system_actor:
-            self._register_actor("system", self._system_actor)
+            self.register_actor("system", self._system_actor)
 
         self._core_actor.set_server(self)
         self._system_actor.set_server(self)
-
-        # register saved actors
-        for actor_name, actor_path in self._actors.items():
-            self._system_actor.register_actor(actor_name, actor_path)
 
         # start the server
         self._server = StreamServer((self.host, self.port), self._on_connection, spawn=Pool())
@@ -216,11 +178,38 @@ class GedisServer(Base):
         j.logger.info("Shutting down...")
         self._server.stop()
 
-    def _register_actor(self, actor_name: str, actor_module: BaseActor):
-        self._loaded_actors[actor_name] = actor_module
+    def get_and_validate_actor(self, module: ModuleType):
+        """
+        get and validate actor object from a given module
 
-    def _unregister_actor(self, actor_name: str):
-        self._loaded_actors.pop(actor_name, None)
+        Args:
+            module (ModuleType): actor module
+
+        Raises:
+            j.exceptions.Validation: if the actor is not valid
+
+        Returns:
+            BaseActor: actor object
+        """
+        actor = module.Actor()
+        result = actor.__validate_actor__()
+
+        if not result["valid"]:
+            raise j.exceptions.Validation(
+                "Actor {} is not valid, check the following errors {}".format(actor_name, result["errors"])
+            )
+
+        return actor
+
+    def register_actor_module(self, actor_name: str, actor_module: ModuleType):
+        actor = self.get_and_validate_actor(actor_module)
+        self.register_actor(actor_name, actor)
+
+    def register_actor(self, actor_name: str, actor: BaseActor):
+        self.actors[actor_name] = actor
+
+    def unregister_actor(self, actor_name: str):
+        self.actors.pop(actor_name, None)
 
     def _execute(self, method, args, kwargs):
         response = {}
@@ -255,7 +244,7 @@ class GedisServer(Base):
                     else:
                         actor_name = request.pop(0).decode()
                         method_name = request.pop(0).decode()
-                        actor_object = self._loaded_actors.get(actor_name)
+                        actor_object = self.actors.get(actor_name)
 
                         if not actor_object:
                             response["error"] = "actor not found"
