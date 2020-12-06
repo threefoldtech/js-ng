@@ -88,12 +88,26 @@ __all__ = [
     "get",
     "set",
     "set_default",
+    "get_package_version",
     "get_current_version",
 ]
 
 
+def get_package_version(name):
+    """
+    get installed package version by name
+
+    Args:
+        name (str): package name
+
+    Returns:
+        str: installed package version
+    """
+    return metadata.version(name)
+
+
 package_name = "js-ng"
-__version__ = metadata.version(package_name)
+__version__ = get_package_version(package_name)
 
 
 config_root = os.path.expanduser(os.path.join("~/.config", "jumpscale"))
