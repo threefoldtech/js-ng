@@ -7,7 +7,7 @@ authors = ["xmonader <xmonader@gmail.com>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = "^3.6"
+python = "^3.9"
 pdoc3 = "^0.6.3"
 pytoml = "^0.1.21"
 secretconf = "^0.1.2"
@@ -22,8 +22,8 @@ pylzma = "^0.5.0"
 PyYAML = "^5.1"
 arrow = "^0.15.7"
 colorama = "^0.4.1"
-gevent = "1.4.0"
-greenlet = "0.4.16"
+gevent = "^20.9.0"
+greenlet = "^0.4.17"
 faker = "^2.0"
 terminaltables = "^3.1"
 distro = "^1.4"
@@ -53,6 +53,7 @@ codecov = "^2.0"
 hypothesis = "^4.28"
 pytest-cov = "^2.7"
 objgraph = "^3.4.1"
+pre-commit = "^2.9.3"
 
 [tool.poetry.scripts]
 jsng = "jumpscale.entry_points.jsng:run"

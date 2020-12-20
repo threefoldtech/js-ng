@@ -1072,7 +1072,7 @@ class Json(String):
 
         # if it's a string, try to load it
         try:
-            json.loads(value, encoding=self.encoding)
+            json.loads(value)
         except Exception as e:
             raise ValidationError(f"'{value}' isn't a valid json, {e}") from e
 

@@ -190,7 +190,7 @@ class GedisServer(Base):
         """
         # handle signals
         for signal_type in (SIGTERM, SIGKILL):
-            gevent.signal(signal_type, self.stop)
+            gevent.signal_handler(signal_type, self.stop)
 
         # register system actor if enabled
         if self.enable_system_actor:
