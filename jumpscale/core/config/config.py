@@ -133,11 +133,12 @@ def get_default_config():
         "private_key_path": "",
         "stores": {
             "redis": {"hostname": "localhost", "port": 6379},
+            "mongo": {"hostname": "localhost", "port": 27017},
             "filesystem": {"path": os.path.expanduser(os.path.join(config_root, "secureconfig"))},
             "whoosh": {"path": os.path.expanduser(os.path.join(config_root, "whoosh_indexes"))},
         },
         "factory": {"always_reload": False},
-        "store": "filesystem",
+        "store": "mongo",
         "threebot": {"default": "",},
         "explorer": {"default_url": "https://explorer.testnet.grid.tf/explorer",},
     }

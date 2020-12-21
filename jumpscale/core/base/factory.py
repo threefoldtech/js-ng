@@ -40,9 +40,9 @@ from .store import ConfigNotFound, KEY_FIELD_NAME, Location
 from .store.filesystem import FileSystemStore
 from .store.redis import RedisStore
 from .store.whooshfts import WhooshStore
+from .store.mongo import MongoStore
 
-
-STORES = {"filesystem": FileSystemStore, "redis": RedisStore, "whoosh": WhooshStore}
+STORES = {"filesystem": FileSystemStore, "redis": RedisStore, "whoosh": WhooshStore, "mongo": MongoStore}
 
 
 class DuplicateError(Exception):
