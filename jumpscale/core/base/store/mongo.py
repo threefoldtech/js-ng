@@ -77,7 +77,7 @@ class MongoStore(EncryptedConfigStore):
         get all names of instances (instance keys)
 
         Returns:
-            [type]: [description]
+            List[str]: list of instance names
         """
         names = [r["++key++"].replace(self.location.name, "").lstrip(".") for r in self.get_location_keys()]
 
@@ -108,8 +108,11 @@ class MongoStore(EncryptedConfigStore):
             bool: written or not
         """
         newdata = json.loads(data)
-        newdata["++key++"] = self.get_key(instance_name)
-        return self._col.insert_one(newdata)
+        thekey = self.get_key(instance_name)
+        newdata["++key++"] = thekey
+        keyquery = {"++key++": thekey}
+        newdata.pop("_id", None)  # _id is immutable, shouldn't be updated
+        return self._col.update_one(keyquery, {"$set": newdata}, upsert=True)
 
     def delete(self, instance_name):
         """
