@@ -24,7 +24,7 @@ class Student(Base):
     address = fields.Object(Address)
 
 
-class MongoStore(StoredFactory):
+class MongoStoredFactory(StoredFactory):
     STORE = mongo.MongoStore
 
 
@@ -40,7 +40,7 @@ class MongoStoreTests(BaseTests):
             cls.cmd.start_cmd = "mongod --unixSocketPrefix=/run/mongodb --config /etc/mongodb.conf"
             cls.cmd.ports = [MONGO_PORT]
             cls.cmd.start()
-        cls.factory = mongo.MongoStore(Student)
+        cls.factory = MongoStoredFactory(Student)
 
     @classmethod
     def tearDownClass(cls):
@@ -108,12 +108,7 @@ class MongoStoreTests(BaseTests):
             student.name = f"student_{i}"
             student.save()
 
-        self.info("Check that the instance are stored in redis.")
-        redis = j.clients.redis.get(self.randstr())
-        instance = redis.get(f"{__name__}.Student.instance_1")
-        self.assertTrue(instance)
-        name = j.data.serializers.json.loads(instance.decode())["name"]
-        self.assertEqual(name, "student_1")
+        self.info(self.factory.list_all())
 
         self.info("List all instances and check that three instance found.")
         total_instances = self.factory.list_all()
