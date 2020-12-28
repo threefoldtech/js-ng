@@ -7,6 +7,10 @@
 
 config management/automation framework
 
+Latest Version: [JS-NG v11.0-b10 (pre-release)](https://github.com/threefoldtech/js-ng/releases/tag/v11.0-b10)
+Next Release: JS-NG v11.1.0, Link to [Projecty](https://github.com/threefoldtech/js-ng/projects/1)
+
+
 ## Principles
 
 - pip installable
