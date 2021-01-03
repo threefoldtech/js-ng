@@ -396,31 +396,32 @@ def get_host_by_name(dnsHostname: str):
     return socket.gethostbyname(dnsHostname)
 
 
-def ping_machine(ip, pingtimeout=60, allowhostname=True):
+def ping_machine(ip, timeout=60, allowhostname=True):
     """Ping a machine to check if it's up/running and accessible
-    @param ip: Machine Ip Address
-    @param pingtimeout: time in sec after which ip will be declared as unreachable
-    @param allowhostname: allow pinging on hostname (default is false)
-    @rtype: True if machine is pingable, False otherwise
+
+    Args:
+        ip (str): Machine Ip Address
+        pingtimeout (int, optional): time in sec after which ip will be declared as unreachable. Defaults to 60.
+        allowhostname (bool, optional): allow pinging on hostname. Defaults to True.
+
+    Raises:
+        Value: if ip is Invalid ip address
+        NotImplementedError: if the function runs on unsupported system
+
+    Returns:
+        [bool]: True if machine is pingable, False otherwise
     """
     if not allowhostname:
         if not IPAddress().check(ip):
-            raise Value("Invalid ip address, set allowedhostname to use hostnames")
+            raise Value("Invalid ip address, set allowhostname to use hostnames")
 
-    start = time.time()
-    pingsucceeded = False
-    while time.time() - start < pingtimeout:
-        if jumpscale.data.platform.is_linux():
-            # ping -c 1 -W 1 IP
-            exitcode, _, _ = jumpscale.core.executors.run_local(f"ping -c 1 -W 1 -w 1 {ip}", warn=True, hide=True)
-        elif jumpscale.data.platform.is_osx():
-            exitcode, _, _ = jumpscale.core.executors.run_local(f"ping -c 1 {ip}", warn=True, hide=True)
-        if exitcode == 0:
-            pingsucceeded = True
-            return True
-        time.sleep(1)
-    if not pingsucceeded:
-        return False
+    if jumpscale.data.platform.is_linux():
+        exitcode, _, _ = jumpscale.core.executors.run_local(f"ping -c 1 -w {timeout} {ip}", warn=True, hide=True)
+    elif jumpscale.data.platform.is_osx():
+        exitcode, _, _ = jumpscale.core.executors.run_local(f"ping -t {timeout} {ip}", warn=True, hide=True)
+    else:  # unsupported platform
+        raise NotImplementedError("Not Implemented for this os")
+    return True if exitcode == 0 else False
 
 
 def download(url, localpath, username=None, passwd=None, overwrite=True):
