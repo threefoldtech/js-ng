@@ -19,7 +19,7 @@ class GedisHTTPServer(Base):
         self._client = None
         http_methods = ["GET", "POST"]
         if self.allow_cors:
-            http_methods.append("OPTIONS")
+            http_methods.extend(["OPTIONS", "PUT", "DELETE"])
         self._app.route("/<package>/<actor>/<method>", http_methods, self.enable_cors(self.handler, self.allow_cors))
 
     @property
