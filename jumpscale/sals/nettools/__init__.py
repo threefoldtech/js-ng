@@ -20,6 +20,7 @@ from jumpscale.data.types import IPAddress
 from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
 import ssl
+import ipaddress
 
 
 def tcp_connection_test(ipaddr: str, port: int, timeout: Optional[int] = None):
@@ -232,20 +233,29 @@ def get_nic_type(interface):
                     return "ETHERNET_GB"
 
 
-def get_reachable_ip_address(ip: str, port: int):
-    """Returns the first local ip address that can connect to the specified ip on the specified port
+def get_reachable_ip_address(ip: str, port: int = 0):
+    """figures out what source address would be used if some traffic were to be sent out to specified ip.
+    compatible with both IPv4 and IPv6.
 
     Args:
         ip (str): ip address
-        port (int): port number
+        port (int, optional): port number. does not matter much. No traffic is actually sent.
 
     Raises:
+        ValueError: if address does not represent a valid IPv4 or IPv6 address.
         Runtime: if can't connect
 
     Returns:
         str: ip that can connect to the specified ip
     """
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        ipaddr = ipaddress.ip_address(ip)
+    except ValueError:
+        raise
+    if ipaddr.version == 4:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    else:  # create IPv6 socket when we connect to IPv6 address
+        s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
     try:
         s.connect((ip, port))
     except BaseException:
