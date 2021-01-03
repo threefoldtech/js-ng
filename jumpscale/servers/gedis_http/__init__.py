@@ -11,12 +11,16 @@ from jumpscale.core.base import StoredFactory
 class GedisHTTPServer(Base):
     host = fields.String(default="127.0.0.1")
     port = fields.Integer(default=8000)
+    allow_cors = fields.Boolean(default=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._app = Bottle()
         self._client = None
-        self._app.route("/<package>/<actor>/<method>", ["GET", "POST", "OPTIONS"], self.enable_cors(self.handler))
+        http_methods = ["GET", "POST"]
+        if self.allow_cors:
+            http_methods.append("OPTIONS")
+        self._app.route("/<package>/<actor>/<method>", http_methods, self.enable_cors(self.handler, self.allow_cors))
 
     @property
     def client(self):
@@ -30,7 +34,7 @@ class GedisHTTPServer(Base):
         response.content_type = "application/json"
         return json.dumps(content)
 
-    def enable_cors(self, fn):
+    def enable_cors(self, fn, allow_cors=True):
         def _enable_cors(*args, **kwargs):
             # set CORS headers
             response.headers["Access-Control-Allow-Origin"] = "*"
@@ -43,7 +47,10 @@ class GedisHTTPServer(Base):
                 # actual request; reply with the actual response
                 return fn(*args, **kwargs)
 
-        return _enable_cors
+        if allow_cors:
+            return _enable_cors
+        else:
+            return fn
 
     def handler(self, package, actor, method):
         actors = self.client.actors
