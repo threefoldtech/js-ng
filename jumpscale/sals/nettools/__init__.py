@@ -19,7 +19,7 @@ import jumpscale.core.executors
 from jumpscale.data.types import IPAddress
 
 
-def tcp_connection_test(ipaddr: str, port: int, timeout: Optional[int]):
+def tcp_connection_test(ipaddr: str, port: int, timeout: Optional[int] = None):
     """tests tcp connection on specified port
 
     Args:
