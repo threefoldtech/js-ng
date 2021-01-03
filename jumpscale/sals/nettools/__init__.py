@@ -32,13 +32,9 @@ def tcp_connection_test(ipaddr: str, port: int, timeout: Optional[int] = None):
     """
     conn = None
     try:
-        conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        if timeout:
-            conn.settimeout(timeout)
-        try:
-            conn.connect((ipaddr, port))
-        except BaseException:
-            return False
+        conn = socket.create_connection((ipaddr, port), timeout)
+    except OSError as msg:
+        return False
     finally:
         if conn:
             conn.close()
