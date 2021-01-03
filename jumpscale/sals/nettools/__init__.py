@@ -20,10 +20,11 @@ from jumpscale.data.types import IPAddress
 
 
 def tcp_connection_test(ipaddr: str, port: int, timeout: Optional[int] = None):
-    """tests tcp connection on specified port
+    """tests tcp connection on specified port, compatible with both IPv4 and IPv6.
+    ensures that each side of the connection is reachable in the network.
 
     Args:
-        ipaddr (str): ip address
+        ipaddr (str): ip address or hostname
         port (int): port number
         timeout (int, optional): time before the connection test fails. Defaults to None.
 
