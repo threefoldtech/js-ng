@@ -91,28 +91,25 @@ def wait_connection_test(ipaddr: str, port: int, timeout=5):
     return False
 
 
-def wait_http_test(url: str, timeout: int = 60, verify: bool = True) -> bool:
-    """Will wait until url is reachable
+def wait_http_test(url: str, timeout: int = 60, verify: bool = True, interval_time: int = 2) -> bool:
+    """Will keep try to reach specified url every {interval_time} sec until url become reachable or {timeout} elapsed
 
     Args:
         url (str): url
-        timeout (int, optional): how long to wait for the connection. Defaults to 60.
+        timeout (int, optional): how long to keep trying to reach specified url. Defaults to 60.
         verify (bool, optional): boolean indication to verify the servers TLS certificate or not.
-
+        interval_time (int, optional): how long to wait for a response before sending a new request. Defaults to 2.
 
     Returns:
         bool: true if the test succeeds
     """
-    for _ in range(timeout):
-        try:
-            if check_url_reachable(url, timeout, verify):
-                return True
-        except:
-            pass
-
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        if check_url_reachable(url, interval_time, verify):
+            return True
+        # be gentle on system resource in case the above call to check_url_reachable() returned immediately (edge cases)
         time.sleep(1)
-    else:
-        return False
+    return False
 
 
 def check_url_reachable(url: str, timeout=5, verify=True):
