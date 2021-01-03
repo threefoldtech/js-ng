@@ -76,7 +76,7 @@ def wait_connection_test(ipaddr: str, port: int, timeout=5):
     """Will wait until port listens on the specified address
 
     Args:
-        ipaddr (str): ip address
+        ipaddr (str): ip address, or hostname
         port (int): port number
         timeout_total (int, optional): how long to wait for the connection. Defaults to 5.
 
