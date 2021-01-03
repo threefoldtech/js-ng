@@ -83,13 +83,12 @@ def wait_connection_test(ipaddr: str, port: int, timeout=5):
     Returns:
         bool: True if the test succeeds, False otherwise
     """
-    port = int(port)
-    end = now().timestamp + timeout
-    while True:
-        if now().timestamp > end:
-            return False
+    # port = int(port)
+    deadline = time.time() + timeout
+    while time.time() < deadline:
         if tcp_connection_test(ipaddr, port, timeout=2):
             return True
+    return False
 
 
 def wait_http_test(url: str, timeout: int = 60, verify: bool = True) -> bool:
