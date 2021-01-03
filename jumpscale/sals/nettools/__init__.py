@@ -20,7 +20,7 @@ from jumpscale.data.types import IPAddress
 from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
 import ssl
-import ipaddress
+import json
 
 
 def tcp_connection_test(ipaddr: str, port: int, timeout: Optional[int] = None):
@@ -270,82 +270,68 @@ def get_default_ip_config(ip: str = "8.8.8.8"):
         ip (str): ip address. default to '8.8.8.8'
 
     Returns:
-        tuple: default nic and address
+        tuple: default nic name and its ip address
     """
     ipaddr = get_reachable_ip_address(ip)
     for nic in get_network_info():
-        for ipaddrv4 in nic["ip"]:
+        for ipaddrv4, _ in nic["ip"]:
             if ipaddrv4 == ipaddr:
                 return nic["name"], ipaddr
-        for ipaddrv6 in nic["ip6"]:
+        for ipaddrv6, _ in nic["ip6"]:
             if ipaddrv6 == ipaddr:
                 return nic["name"], ipaddr
 
 
 def get_network_info(device=None):
+    """Get network info
+
+    Args:
+        device (str, optional): device name. Defaults to None.
+
+    Raises:
+        Runtime: if it could not find the specified device
+        NotImplementedError: if the function runs on unsupported OS
+
+    Returns:
+        Dict, or list of dicts if device arg used: network info
+        [{'ip': [('127.0.0.1', 8)], 'ip6': [('::1', 128)], 'mac': '00:00:00:00:00:00', 'name': 'lo'},
+        {'ip': [('192.168.1.6', 24)],
+         'ip6': [('fdb4:f58e:3c34:300:91f0:9c76:e1fb:d060', 64), ...],
+         'mac': 'd8:9c:67:2a:f2:53',
+         'name': 'wlp3s0'}, ...]
     """
-    Get network info
 
-    [{'cidr': 8, 'ip': ['127.0.0.1'], 'mac': '00:00:00:00:00:00', 'name': 'lo'},
-        {'cidr': 24,
-        'ip': ['192.168.0.105'],
-        'ip6': ['...','...],
-        'mac': '80:ee:73:a9:19:05',
-        'name': 'enp2s0'},
-        {'cidr': 0, 'ip': [], 'mac': '80:ee:73:a9:19:06', 'name': 'enp3s0'},
-        {'cidr': 16,
-        'ip': ['172.17.0.1'],
-        'mac': '02:42:97:63:e6:ba',
-        'name': 'docker0'}]
-
-    :param device: device name, defaults to None
-    :type device: str, optional
-    :raises RuntimeError: if the platform isn't implemented
-    :return: network info
-    :rtype: list or dict if device is specified
-    """
-    IPBLOCKS = re.compile(r"(^|\n)(?P<block>\d+:.*?)(?=(\n\d+)|$)", re.S)
-    IPMAC = re.compile(r"^\s+link/\w+\s+(?P<mac>(\w+:){5}\w{2})", re.M)
-    IPIP = re.compile(r"\s+?inet\s(?P<ip>(\d+\.){3}\d+)/(?P<cidr>\d+)", re.M)
-    IPNAME = re.compile(r"^\d+: (?P<name>.*?)(?=:)", re.M)
-
-    def block_parse(block):
-        result = {"ip": [], "ip6": [], "cidr": [], "mac": "", "name": ""}
-        for rec in (IPMAC, IPNAME):
-            match = rec.search(block)
-            if match:
-                result.update(match.groupdict())
-        for mrec in (IPIP,):
-            for m in mrec.finditer(block):
-                for key, value in list(m.groupdict().items()):
-                    result[key].append(value)
-        _, IPV6, _ = jumpscale.core.executors.run_local(
-            "ifconfig %s |  awk '/inet6/{print $2}'" % result["name"], hide=True
-        )
-        for ipv6 in IPV6.split("\n"):
-            result["ip6"].append(ipv6)
-        if isinstance(result["cidr"], list):
-            if len(result["cidr"]) == 0:
-                result["cidr"] = 0
-            else:
-                result["cidr"] = int(result["cidr"][0])
+    def clean(nic_info):
+        result = {
+            "ip": [(addr["local"], addr["prefixlen"]) for addr in nic_info["addr_info"] if addr["family"] == "inet"],
+            "ip6": [(addr["local"], addr["prefixlen"]) for addr in nic_info["addr_info"] if addr["family"] == "inet6"],
+            "mac": nic_info["address"],
+            "name": nic_info["ifname"],
+        }
         return result
 
-    def networkinfo_get():
-        _, output, _ = jumpscale.core.executors.run_local("ip a", hide=True)
-        for m in IPBLOCKS.finditer(output):
-            block = m.group("block")
-            yield block_parse(block)
+    def networkinfo_get(device):
+        if not device:
+            device = ""
+        exitcode, output, _ = jumpscale.core.executors.run_local(f"ip -j addr show {device}", hide=True)
+        if exitcode != 0:
+            raise Runtime("could not find device")
+        res = json.loads(output)
 
-    res = []
-    for nic in networkinfo_get():
-        if nic["name"] == device:
-            return nic
-        res.append(nic)
+        for nic_info in res:
+            yield clean(nic_info)
 
-    if device is not None:
-        raise Runtime("could not find device")
-    return res
+    if jumpscale.data.platform.is_linux():
+        if not device:
+            res = []
+            for nic in networkinfo_get(device):
+                res.append(nic)
+            return res
+        else:
+            return list(networkinfo_get(device))[0]
+    else:
+        # TODO: make it OSX Compatible
+        raise NotImplementedError("this function supports only linux at the moment.")
 
 
 def get_mac_address(interface: str):
@@ -485,7 +471,7 @@ def download(url, localpath, username=None, passwd=None, overwrite=True):
 
 def _netobject_get(device: str):
     n = get_network_info(device)
-    net = ipaddress.IPv4Network(n["ip"][0] + "/" + str(n["cidr"]), strict=False)
+    net = ipaddress.IPv4Network(n["ip"][0][0] + "/" + str(n["ip"][0][1]), strict=False)
     return net
 
 
