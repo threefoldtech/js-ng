@@ -17,6 +17,9 @@ import jumpscale.data.platform
 import jumpscale.sals.fs
 import jumpscale.core.executors
 from jumpscale.data.types import IPAddress
+from urllib.request import Request, urlopen
+from urllib.error import URLError, HTTPError
+import ssl
 
 
 def tcp_connection_test(ipaddr: str, port: int, timeout: Optional[int] = None):
@@ -112,13 +115,14 @@ def wait_http_test(url: str, timeout: int = 60, verify: bool = True, interval_ti
     return False
 
 
-def check_url_reachable(url: str, timeout=5, verify=True):
+def check_url_reachable(url: str, timeout=5, verify=True, fake_user_agent=True):
     """Check that given url is reachable
 
     Args:
         url (str): url to test
         timeout (int, optional): timeout of test. Defaults to 5.
         verify (bool, optional): boolean indication to verify the servers TLS certificate or not.
+        fake_user_agent (bool, optional): boolean indication to fake the user-agent and act like noraml browser or not.
 
     Raises:
         Input: raises if not correct url
@@ -126,13 +130,36 @@ def check_url_reachable(url: str, timeout=5, verify=True):
     Returns:
         bool: True if the test succeeds, False otherwise
     """
+    # fake the user-agent, to act like a normal browser
+    # because some services will block requests from python default user-agent
+    # ex: www.amazon.com, and it will looks unreachable to our code, unless we fake the user-agent.
+    HEADERS = {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/603.1.30 (KHTML, like Gecko) Version/10.1 Safari/603.1.30"
+    }
+    METHOD = "GET"
+
+    if timeout:
+        socket.setdefaulttimeout(timeout)
+
+    context = None
+    if not verify:
+        # opt out of certificate verification on a single connection
+        context = ssl._create_unverified_context()
+
+    req = Request(url, headers=HEADERS if fake_user_agent else None, method=METHOD)
     try:
-        code = jumpscale.tools.http.get(url, timeout=timeout, verify=verify).status_code
-        return code == 200
-    except jumpscale.tools.http.exceptions.MissingSchema:
-        raise Input("Please specify correct url with correct scheme")
-    except jumpscale.tools.http.exceptions.ConnectionError:
+        response = urlopen(req, timeout=timeout, context=context)
+    except HTTPError as msg:
+        # The server couldn't fulfill the request.
+        status = msg.code
         return False
+    except URLError as msg:
+        # We failed to reach a server.
+        return False
+    else:
+        status = response.code
+        response.close()
+        return True if status in range(200, 300) else False
 
 
 def get_nic_names():
