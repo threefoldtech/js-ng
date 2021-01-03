@@ -263,18 +263,23 @@ def get_reachable_ip_address(ip: str, port: int = 0):
     return s.getsockname()[0]
 
 
-def get_default_ip_config():
-    """get default nic and address
+def get_default_ip_config(ip: str = "8.8.8.8"):
+    """get default nic and address, by default, the one exposed to internet
+
+    Args:
+        ip (str): ip address. default to '8.8.8.8'
 
     Returns:
         tuple: default nic and address
     """
-    ipaddr = get_reachable_ip_address("8.8.8.8", 22)
-    for item in get_network_info():
-        for ipaddr2 in item["ip"]:
-            # print "%s %s"%(ipaddr2,ipaddr)
-            if str(ipaddr) == str(ipaddr2):
-                return item["name"], ipaddr
+    ipaddr = get_reachable_ip_address(ip)
+    for nic in get_network_info():
+        for ipaddrv4 in nic["ip"]:
+            if ipaddrv4 == ipaddr:
+                return nic["name"], ipaddr
+        for ipaddrv6 in nic["ip6"]:
+            if ipaddrv6 == ipaddr:
+                return nic["name"], ipaddr
 
 
 def get_network_info(device=None):
