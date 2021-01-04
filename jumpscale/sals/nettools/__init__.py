@@ -160,7 +160,7 @@ def check_url_reachable(url: str, timeout=5, verify=True, fake_user_agent=True):
     else:
         status = response.code
         response.close()
-        return True if status in range(200, 300) else False
+        return status in range(200, 300)
 
 
 def get_nic_names():
