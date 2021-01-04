@@ -421,7 +421,7 @@ def ping_machine(ip, timeout=60, allowhostname=True):
         exitcode, _, _ = jumpscale.core.executors.run_local(f"ping -o -t {timeout} {ip}", warn=True, hide=True)
     else:  # unsupported platform
         raise NotImplementedError("Not Implemented for this os")
-    return True if exitcode == 0 else False
+    return exitcode == 0
 
 
 def download(url, localpath, username=None, passwd=None, overwrite=True):
