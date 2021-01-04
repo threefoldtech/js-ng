@@ -418,7 +418,7 @@ def ping_machine(ip, timeout=60, allowhostname=True):
     if jumpscale.data.platform.is_linux():
         exitcode, _, _ = jumpscale.core.executors.run_local(f"ping -c 1 -w {timeout} {ip}", warn=True, hide=True)
     elif jumpscale.data.platform.is_osx():
-        exitcode, _, _ = jumpscale.core.executors.run_local(f"ping -t {timeout} {ip}", warn=True, hide=True)
+        exitcode, _, _ = jumpscale.core.executors.run_local(f"ping -o -t {timeout} {ip}", warn=True, hide=True)
     else:  # unsupported platform
         raise NotImplementedError("Not Implemented for this os")
     return True if exitcode == 0 else False
