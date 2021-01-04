@@ -5,13 +5,11 @@ Docs for nettools
 # TODO: test *2
 
 import time
-import urllib3
 import socket
 import ipaddress
 import re
 from typing import Optional
-from jumpscale.core.exceptions import Value, Runtime, Input
-from jumpscale.data.time import now
+from jumpscale.core.exceptions import Value, Runtime
 import jumpscale.tools.http
 import jumpscale.data.platform
 import jumpscale.sals.fs
