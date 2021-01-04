@@ -301,7 +301,7 @@ def get_network_info(device=None):
          'name': 'wlp3s0'}, ...]
     """
 
-    def clean(nic_info):
+    def _clean(nic_info):
         result = {
             "ip": [(addr["local"], addr["prefixlen"]) for addr in nic_info["addr_info"] if addr["family"] == "inet"],
             "ip6": [(addr["local"], addr["prefixlen"]) for addr in nic_info["addr_info"] if addr["family"] == "inet6"],
@@ -310,7 +310,7 @@ def get_network_info(device=None):
         }
         return result
 
-    def networkinfo_get(device):
+    def _get_info(device):
         if not device:
             device = ""
         exitcode, output, _ = jumpscale.core.executors.run_local(f"ip -j addr show {device}", hide=True)
@@ -319,16 +319,16 @@ def get_network_info(device=None):
         res = json.loads(output)
 
         for nic_info in res:
-            yield clean(nic_info)
+            yield _clean(nic_info)
 
     if jumpscale.data.platform.is_linux():
         if not device:
             res = []
-            for nic in networkinfo_get(device):
+            for nic in _get_info(device):
                 res.append(nic)
             return res
         else:
-            return list(networkinfo_get(device))[0]
+            return list(_get_info(device))[0]
     else:
         # TODO: make it OSX Compatible
         raise NotImplementedError("this function supports only linux at the moment.")
