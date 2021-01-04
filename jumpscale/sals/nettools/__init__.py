@@ -23,7 +23,7 @@ import ssl
 import json
 
 
-def tcp_connection_test(ipaddr: str, port: int, timeout: Optional[int] = None):
+def tcp_connection_test(ipaddr: str, port: int, timeout: Optional[int] = None) -> bool:
     """tests tcp connection on specified port, compatible with both IPv4 and IPv6.
     ensures that each side of the connection is reachable in the network.
 
@@ -46,7 +46,7 @@ def tcp_connection_test(ipaddr: str, port: int, timeout: Optional[int] = None):
     return True
 
 
-def udp_connection_test(ipaddr: str, port: int, timeout=1, message=b"PING"):
+def udp_connection_test(ipaddr: str, port: int, timeout: Optional[int] = 1, message=b"PING") -> bool:
     """tests udp connection on specified port by sending specified message
 
     Args:
@@ -76,7 +76,7 @@ def udp_connection_test(ipaddr: str, port: int, timeout=1, message=b"PING"):
     return True
 
 
-def wait_connection_test(ipaddr: str, port: int, timeout=5):
+def wait_connection_test(ipaddr: str, port: int, timeout: Optional[int] = 5) -> bool:
     """Will wait until port listens on the specified address
 
     Args:
@@ -95,7 +95,9 @@ def wait_connection_test(ipaddr: str, port: int, timeout=5):
     return False
 
 
-def wait_http_test(url: str, timeout: int = 60, verify: bool = True, interval_time: int = 2) -> bool:
+def wait_http_test(
+    url: str, timeout: Optional[int] = 60, verify: Optional[bool] = True, interval_time: Optional[int] = 2
+) -> bool:
     """Will keep try to reach specified url every {interval_time} sec until url become reachable or {timeout} elapsed
 
     Args:
@@ -116,7 +118,9 @@ def wait_http_test(url: str, timeout: int = 60, verify: bool = True, interval_ti
     return False
 
 
-def check_url_reachable(url: str, timeout=5, verify=True, fake_user_agent=True):
+def check_url_reachable(
+    url: str, timeout: Optional[int] = 5, verify: Optional[bool] = True, fake_user_agent: Optional[bool] = True
+) -> bool:
     """Check that given url is reachable
 
     Args:
@@ -163,7 +167,7 @@ def check_url_reachable(url: str, timeout=5, verify=True, fake_user_agent=True):
         return status in range(200, 300)
 
 
-def get_nic_names():
+def get_nic_names() -> list:
     """Get Nics on this machine
 
     Returns:
@@ -172,7 +176,7 @@ def get_nic_names():
     return [nic["name"] for nic in get_network_info()]
 
 
-def get_nic_type(interface):
+def get_nic_type(interface: str) -> str:
     """Get Nic Type on a certain interface
 
     Args:
@@ -233,7 +237,7 @@ def get_nic_type(interface):
                     return "ETHERNET_GB"
 
 
-def get_reachable_ip_address(ip: str, port: int = 0):
+def get_reachable_ip_address(ip: str, port: Optional[int] = 0) -> str:
     """figures out what source address would be used if some traffic were to be sent out to specified ip.
     compatible with both IPv4 and IPv6.
 
@@ -263,7 +267,7 @@ def get_reachable_ip_address(ip: str, port: int = 0):
     return s.getsockname()[0]
 
 
-def get_default_ip_config(ip: str = "8.8.8.8"):
+def get_default_ip_config(ip: Optional[str] = "8.8.8.8") -> tuple:
     """get default nic and address, by default, the one exposed to internet
 
     Args:
@@ -282,7 +286,7 @@ def get_default_ip_config(ip: str = "8.8.8.8"):
                 return nic["name"], ipaddr
 
 
-def get_network_info(device=None):
+def get_network_info(device: Optional[str] = None) -> list:
     """Get network info
 
     Args:
@@ -301,7 +305,7 @@ def get_network_info(device=None):
          'name': 'wlp3s0'}, ...]
     """
 
-    def _clean(nic_info):
+    def _clean(nic_info: dict):
         result = {
             "ip": [(addr["local"], addr["prefixlen"]) for addr in nic_info["addr_info"] if addr["family"] == "inet"],
             "ip6": [(addr["local"], addr["prefixlen"]) for addr in nic_info["addr_info"] if addr["family"] == "inet6"],
@@ -310,7 +314,7 @@ def get_network_info(device=None):
         }
         return result
 
-    def _get_info(device):
+    def _get_info(device: str):
         if not device:
             device = ""
         exitcode, output, _ = jumpscale.core.executors.run_local(f"ip -j addr show {device}", hide=True)
@@ -334,7 +338,7 @@ def get_network_info(device=None):
         raise NotImplementedError("this function supports only linux at the moment.")
 
 
-def get_mac_address(interface: str):
+def get_mac_address(interface: str) -> str:
     """Return the MAC address of this interface
 
     Args:
@@ -346,7 +350,7 @@ def get_mac_address(interface: str):
     return get_network_info(interface)["mac"]
 
 
-def get_host_name():
+def get_host_name() -> str:
     """Get hostname of the machine
 
     Returns:
@@ -355,7 +359,7 @@ def get_host_name():
     return socket.gethostname()
 
 
-def is_nic_connected(interface: str):
+def is_nic_connected(interface: str) -> bool:
     """check if interface is connected
 
     Args:
@@ -384,7 +388,7 @@ def is_nic_connected(interface: str):
         return output in expectResults
 
 
-def get_host_by_name(dnsHostname: str):
+def get_host_by_name(dnsHostname: str) -> str:
     """get host address by its name
 
     Args:
@@ -396,7 +400,7 @@ def get_host_by_name(dnsHostname: str):
     return socket.gethostbyname(dnsHostname)
 
 
-def ping_machine(ip, timeout=60, allowhostname=True):
+def ping_machine(ip: str, timeout: Optional[int] = 60, allowhostname: Optional[bool] = True) -> bool:
     """Ping a machine to check if it's up/running and accessible
 
     Args:
@@ -409,7 +413,7 @@ def ping_machine(ip, timeout=60, allowhostname=True):
         NotImplementedError: if the function runs on unsupported system
 
     Returns:
-        [bool]: True if machine is pingable, False otherwise
+        bool: True if machine is pingable, False otherwise
     """
     if not allowhostname:
         if not IPAddress().check(ip):
@@ -424,7 +428,13 @@ def ping_machine(ip, timeout=60, allowhostname=True):
     return exitcode == 0
 
 
-def download(url, localpath, username=None, passwd=None, overwrite=True):
+def download(
+    url: str,
+    localpath: str,
+    username: Optional[str] = None,
+    passwd: Optional[str] = None,
+    overwrite: Optional[bool] = True,
+):
     """Download a url to a file or a directory, supported protocols: http, https, ftp, file
     @param url: URL to download from
     @type url: string
@@ -470,13 +480,13 @@ def download(url, localpath, username=None, passwd=None, overwrite=True):
             return response.content
 
 
-def _netobject_get(device: str):
+def _netobject_get(device: str) -> ipaddress.IPv4Network:
     n = get_network_info(device)
     net = ipaddress.IPv4Network(n["ip"][0][0] + "/" + str(n["ip"][0][1]), strict=False)
     return net
 
 
-def netrange_get(device, skip_begin=10, skip_end=10):
+def netrange_get(device: str, skip_begin: Optional[int] = 10, skip_end: Optional[int] = 10) -> tuple:
     """
     Get ($fromip,$topip) from range attached to device, skip the mentioned ip addresses.
 
