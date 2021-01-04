@@ -149,7 +149,7 @@ def check_url_reachable(
         # opt out of certificate verification on a single connection
         context = ssl._create_unverified_context()
 
-    req = Request(url, headers=HEADERS if fake_user_agent else None, method=METHOD)
+    req = Request(url, headers=HEADERS if fake_user_agent else {}, method=METHOD)
     try:
         response = urlopen(req, timeout=timeout, context=context)
     except HTTPError as msg:
