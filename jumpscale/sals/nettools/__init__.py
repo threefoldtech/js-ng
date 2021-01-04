@@ -159,6 +159,8 @@ def check_url_reachable(
     except URLError as msg:
         # We failed to reach a server.
         return False
+    except socket.timeout:
+        return False
     else:
         status = response.code
         response.close()
