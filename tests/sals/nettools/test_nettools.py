@@ -7,7 +7,7 @@ import socketserver
 
 
 @pytest.mark.parametrize("ipaddr, port, timeout", [("1.1.1.1", 53, 5), ("8.8.8.8", 53, 5), ("172.217.21.4", 80, 5)])
-def test_01_tcp_connection_test_to_plublic_ip_succeed(ipaddr, port, timeout):
+def test_01_tcp_connection_test_to_public_ip_succeed(ipaddr, port, timeout):
     """Test case to establish a connection to specified address and initiate
     the three-way handshake and check if the connection succeded.
 
@@ -21,7 +21,7 @@ def test_01_tcp_connection_test_to_plublic_ip_succeed(ipaddr, port, timeout):
 
 
 @pytest.mark.parametrize("ipaddr, port, timeout", [("1.1.1.1", 52, 2), ("8.8.8.8", 52, 2), ("172.217.21.4", 70, 2)])
-def test_02_tcp_connection_test_to_plublic_ip_timeout(ipaddr, port, timeout):
+def test_02_tcp_connection_test_to_public_ip_timeout(ipaddr, port, timeout):
     """Test case for establish a connection to specified address and initiate
     the three-way handshake where the port is unreachable and check if the
     connection will timeout.
