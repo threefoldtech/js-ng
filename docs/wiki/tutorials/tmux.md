@@ -7,7 +7,7 @@ JS-NG>session = j.core.executors.tmux.create_session("watching system processes"
 ## Creating a window inside session
 
 ```
-JS-NG> x.new_window()                                                              
+JS-NG> session.new_window()                                                              
 Window(@1 1:zsh, Session($0 ps))
 ```
 ## Get or create js session
