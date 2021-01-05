@@ -210,3 +210,15 @@ def test_09_udp_connection_test(ipaddr, port, timeout, message):
     """
     return_value = nettools.udp_connection_test(ipaddr, port, timeout, message)
     assert return_value
+
+
+def test_10_get_nic_names():
+    """Test case for getting a list of all availabe nics
+
+    **Test Scenario**
+
+    - Execute the function get_nic_names
+    - check the function result if we got non empty list
+    """
+    results = nettools.get_nic_names()
+    assert isinstance(results, list) and len(results)
