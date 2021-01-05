@@ -328,8 +328,12 @@ def get_network_info(device: Optional[str] = None) -> list:
 
     def _clean(nic_info: dict):
         result = {
-            "ip": [(addr["local"], addr["prefixlen"]) for addr in nic_info["addr_info"] if addr["family"] == "inet"],
-            "ip6": [(addr["local"], addr["prefixlen"]) for addr in nic_info["addr_info"] if addr["family"] == "inet6"],
+            "ip": [
+                (addr["local"], addr["prefixlen"]) for addr in nic_info["addr_info"] if addr.get("family") == "inet"
+            ],
+            "ip6": [
+                (addr["local"], addr["prefixlen"]) for addr in nic_info["addr_info"] if addr.get("family") == "inet6"
+            ],
             "mac": nic_info["address"],
             "name": nic_info["ifname"],
         }
