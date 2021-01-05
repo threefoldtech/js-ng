@@ -192,3 +192,12 @@ def test_08_check_url_reachable_failed(server_status_code):
     is_reachable = nettools.check_url_reachable(url)
 
     assert not is_reachable
+
+
+@pytest.mark.parametrize(
+    "ipaddr, port, timeout, message",
+    [("8.8.8.8", 53, 5, b"\xaa\xaa\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00\x07example\x03com\x00\x00\x01\x00\x01")],
+)
+def test_09_udp_connection_test(ipaddr, port, timeout, message):
+    return_value = nettools.udp_connection_test(ipaddr, port, timeout, message)
+    assert return_value
