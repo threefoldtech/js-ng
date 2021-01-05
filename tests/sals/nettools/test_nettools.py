@@ -5,6 +5,7 @@ import subprocess
 import concurrent.futures
 import socketserver
 import socket
+import ipaddress
 
 
 @pytest.mark.parametrize("ipaddr, port, timeout", [("1.1.1.1", 53, 5), ("8.8.8.8", 53, 5), ("www.google.com", 80, 5)])
@@ -222,3 +223,45 @@ def test_10_get_nic_names():
     """
     results = nettools.get_nic_names()
     assert isinstance(results, list) and len(results)
+
+
+@pytest.mark.parametrize("ip", ["127.0.0.1", "::1"])
+def test_11_get_reachable_ip_address_local(ip):
+    """Test case for getting the source address that would be used if some traffic were to be sent out to specified ip
+
+    **Test Scenario**
+
+    - Execute the function get_reachable_ip_address uses both ipv4, ipv6 localhost address
+    - check the function result. expected same ip address used (only because tested with localhost ip address)
+    """
+    result = nettools.get_reachable_ip_address(ip)
+    assert result == ip
+
+
+@pytest.mark.parametrize("ip, expected", [("127.0.0.10", ("lo", "127.0.0.1")), ("::1", ("lo", "::1"))])
+def test_12_get_default_ip_config(ip, expected):
+    """Test case for getting default nic name and its ip address
+    that would be used if some traffic were to be sent out to specified ip
+
+    **Test Scenario**
+
+    - Execute the function get_reachable_ip_address uses both ipv4, ipv6 localhost address
+    - check the function result. expected same ip address used (only because tested with localhost ip address)
+    """
+    result = nettools.get_default_ip_config(ip)
+    assert result == expected
+
+
+def test_13_get_network_info():
+    result = nettools.get_network_info()
+    assert (
+        isinstance(result, list)
+        and len(result)
+        and all(map(lambda k: k in result[0].keys(), ["ip", "ip6", "mac", "name"]))
+    )
+
+
+def test_14_get_network_info_specific_device_loopback():
+    device = "lo"
+    result = nettools.get_network_info(device)
+    assert isinstance(result, dict) and all(map(lambda k: k in result.keys(), ["ip", "ip6", "mac", "name"]))
