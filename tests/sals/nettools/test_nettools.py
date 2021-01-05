@@ -260,12 +260,10 @@ def test_13_get_network_info():
     - Execute the function get_network_info without args
     - check the function result. expected to get a list of dicts
     """
-    result = nettools.get_network_info()
-    assert (
-        isinstance(result, list)
-        and len(result)
-        and all(map(lambda k: k in result[0].keys(), ["ip", "ip6", "mac", "name"]))
-    )
+    results = nettools.get_network_info()
+    assert isinstance(results, list) and len(results)
+    for result in results:
+        assert isinstance(result, dict) and all(map(lambda k: k in result.keys(), ["ip", "ip6", "mac", "name"]))
 
 
 def test_14_get_network_info_specific_device_loopback():
