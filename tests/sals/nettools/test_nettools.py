@@ -278,4 +278,5 @@ def test_14_get_network_info_specific_device_loopback():
     """
     device = "lo"
     result = nettools.get_network_info(device)
+    print(result)
     assert isinstance(result, dict) and all(map(lambda k: k in result.keys(), ["ip", "ip6", "mac", "name"]))
