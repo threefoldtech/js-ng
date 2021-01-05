@@ -274,8 +274,10 @@ def get_reachable_ip_address(ip: str, port: Optional[int] = 0) -> str:
         s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
     try:
         s.connect((ip, port))
-    except BaseException:
+    except OSError:
         raise Runtime("Cannot connect to %s:%s, check network configuration" % (ip, port))
+    except ValueError:
+        raise
     return s.getsockname()[0]
 
 
