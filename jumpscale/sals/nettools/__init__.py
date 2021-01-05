@@ -44,8 +44,9 @@ def tcp_connection_test(ipaddr: str, port: int, timeout: Optional[int] = None) -
     return True
 
 
-def udp_connection_test(ipaddr: str, port: int, timeout: Optional[int] = 1, message=b"PING") -> bool:
-    """tests udp connection on specified port by sending specified message
+def udp_connection_test(ipaddr: str, port: int, timeout: Optional[int] = 1, message: Optional[bytes] = b"") -> bool:
+    """tests udp connection on specified port by sending specified message and expecting
+    to receive at least one byte from the socket as an indicator of connection success
 
     Args:
         ipaddr (str): ip address
@@ -53,24 +54,32 @@ def udp_connection_test(ipaddr: str, port: int, timeout: Optional[int] = 1, mess
         timeout (int, optional): time before the connection test fails. Defaults to None.
         message (str, optional): message to send. Defaults to b"PING"
 
+    Raises:
+        ValueError: raises if invalid ip address was used
+
     Returns:
         bool: True if the test succeeds, False otherwise
     """
-    conn = socket.socket(type=socket.SOCK_DGRAM)
+    try:
+        ip = ipaddress.ip_address(ipaddr)
+    except ValueError:
+        raise
+    if ip.version == 4:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    else:  # create IPv6 socket when we connect to IPv6 address
+        sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
     if timeout:
-        conn.settimeout(timeout)
+        sock.settimeout(timeout)
     try:
-        conn.connect((ipaddr, port))
-    except BaseException:
-        conn.close()
+        sock.sendto(message, (ip, port))
+        # expecting to receive at least one byte from the socket as indication to succeed connection
+        data, _ = sock.recvfrom(1)
+    except socket.timeout:
         return False
-
-    conn.send(message)
-
-    try:
-        conn.recvfrom(8192)
-    except Exception:
+    except OSError:
         return False
+    finally:
+        sock.close()
     return True
 
 
