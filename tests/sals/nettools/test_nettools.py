@@ -163,7 +163,7 @@ def test_07_check_url_reachable_succeed(server_status_code, verify, fake_user_ag
 
     **Test Scenario**
 
-    - Execute the function check_url_reachable_succeed and send requests to custom url that mimic different responses
+    - Execute the function check_url_reachable and send requests to custom url that mimic different responses
       to test againest specified list of responses (considered reachable 2xx)
     - test while verifying the servers TLS certificate turned on and off
     - test while fakeing user agnet turned on and off
@@ -183,7 +183,7 @@ def test_08_check_url_reachable_failed(server_status_code):
 
     **Test Scenario**
 
-    - Execute the function check_url_reachable_succeed and send requests to custom url that mimic different responses
+    - Execute the function check_url_reachable and send requests to custom url that mimic different responses
       to test againest specified list of responses (considered unreachable 4xx, 5xx)
     - check the function result.
     """
@@ -199,5 +199,14 @@ def test_08_check_url_reachable_failed(server_status_code):
     [("8.8.8.8", 53, 5, b"\xaa\xaa\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00\x07example\x03com\x00\x00\x01\x00\x01")],
 )
 def test_09_udp_connection_test(ipaddr, port, timeout, message):
+    """Test case for create udp socket and sending specified message the specified ip and udp port
+    and wait to receive at least one byte from the socket
+
+    **Test Scenario**
+
+    - Execute the function udp_connection_test, connect to dns.google.com on udp port 53
+    with manully craft dns query message and wait for at least one byte.
+    - check the function result.
+    """
     return_value = nettools.udp_connection_test(ipaddr, port, timeout, message)
     assert return_value
