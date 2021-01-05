@@ -137,7 +137,7 @@ def check_url_reachable(
         fake_user_agent (bool, optional): boolean indication to fake the user-agent and act like noraml browser or not.
 
     Raises:
-        Input: raises if not correct url
+        ValueError: raises if not correct url
 
     Returns:
         bool: True if the test succeeds, False otherwise
@@ -165,11 +165,14 @@ def check_url_reachable(
         # The server couldn't fulfill the request.
         status = msg.code
         return False
-    except URLError as msg:
+    except URLError:
         # We failed to reach a server.
         return False
     except socket.timeout:
         return False
+    except ValueError:
+        # invalid url
+        raise
     else:
         status = response.code
         response.close()
