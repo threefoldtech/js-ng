@@ -287,17 +287,24 @@ def get_default_ip_config(ip: Optional[str] = "8.8.8.8") -> tuple:
     Args:
         ip (str): ip address. default to '8.8.8.8'
 
+    Raises:
+        ValueError: if address does not represent a valid IPv4 or IPv6 address.
+
     Returns:
         tuple: default nic name and its ip address
     """
-    ipaddr = get_reachable_ip_address(ip)
+    try:
+        ipaddr = ipaddress.ip_address(ip)
+    except ValueError:
+        raise
+    address_family = "ip" if ipaddr.version == 4 else "ip6"
+    source_addr = get_reachable_ip_address(ip)
     for nic in get_network_info():
-        for ipaddrv4, _ in nic["ip"]:
-            if ipaddrv4 == ipaddr:
-                return nic["name"], ipaddr
-        for ipaddrv6, _ in nic["ip6"]:
-            if ipaddrv6 == ipaddr:
-                return nic["name"], ipaddr
+        for candidate_ip, _ in nic[address_family]:
+            if candidate_ip == source_addr:
+                default_nic = (nic["name"], source_addr)
+                break
+    return default_nic
 
 
 def get_network_info(device: Optional[str] = None) -> list:
