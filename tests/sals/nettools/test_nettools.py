@@ -4,24 +4,25 @@ import time
 import subprocess
 import concurrent.futures
 import socketserver
+import socket
 
 
 @pytest.mark.parametrize("ipaddr, port, timeout", [("1.1.1.1", 53, 5), ("8.8.8.8", 53, 5), ("www.google.com", 80, 5)])
-def test_01_tcp_connection_test_to_public_ip_succeed(ipaddr, port, timeout):
+def test_01_tcp_connection_test_to_public_ipv4_succeed(ipaddr, port, timeout):
     """Test case to establish a connection to specified address and initiate
     the three-way handshake and check if the connection succeded.
 
     **Test Scenario**
 
     - connect to Publicly available services that have a known ip and a tcp
-      port open.
+      port open. test using ip or hostname
     - Check the connection result. should return True.
     """
     assert nettools.tcp_connection_test(ipaddr, port, timeout)
 
 
-@pytest.mark.parametrize("ipaddr, port, timeout", [("1.1.1.1", 52, 2), ("8.8.8.8", 52, 2), ("172.217.21.4", 70, 2)])
-def test_02_tcp_connection_test_to_public_ip_timeed_out(ipaddr, port, timeout):
+@pytest.mark.parametrize("ipaddr, port, timeout", [("1.1.1.1", 52, 2), ("8.8.8.8", 52, 2), ("www.google.com", 70, 2)])
+def test_02_tcp_connection_test_to_public_ipv4_timed_out(ipaddr, port, timeout):
     """Test case for establish a connection to specified address and initiate
     the three-way handshake where the port is unreachable and check if the
     connection will timeout.
@@ -34,7 +35,7 @@ def test_02_tcp_connection_test_to_public_ip_timeed_out(ipaddr, port, timeout):
     assert not nettools.tcp_connection_test(ipaddr, port, timeout)
 
 
-def test_03_wait_connection_test_succeed():
+def test_03_wait_connection_test_ipv4_succeed():
     """Test case for waiting until port listens on the specified address
 
     **Test Scenario**
@@ -50,16 +51,42 @@ def test_03_wait_connection_test_succeed():
         port = s.server_address[1]
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        future = executor.submit(nettools.wait_connection_test, "127.0.0.1", port, TIMEOUT)
+        future = executor.submit(nettools.wait_connection_test, "::1", port, TIMEOUT)
         time.sleep(4)
-        subprocess.Popen(["nc", "-l", str(port)])
+        subprocess.Popen(["nc", "-l", "::1", str(port)])
         return_value = future.result()
 
     assert return_value
 
 
+def test_04_wait_connection_test_ipv6_succeed():
+    """Test case for waiting until port listens on the specified address
+
+    **Test Scenario**
+
+    - Execute the function wait_connection_test on a new thread to wait for a tcp on random free port on the local host.
+    - wait 4 sec.
+    - run netcat command to start listen on that port.
+    - check the function result.
+    """
+    TIMEOUT = 4
+    # getting random free port for ::1
+    with socket.socket(socket.AF_INET6, socket.SOCK_STREAM) as s:
+        s.bind(("::1", 0))
+        port = s.getsockname()[1]
+
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future = executor.submit(nettools.wait_connection_test, "::1", port, TIMEOUT)
+            time.sleep(1)
+            s.listen()
+            time.sleep(1)
+            return_value = not future.running() and future.result()
+
+    assert return_value
+
+
 @pytest.mark.parametrize("server_status_code", [200, 201, 202, 203, 204, 205, 206])
-def test_04_wait_http_test_succeed(server_status_code):
+def test_05_wait_http_test_succeed(server_status_code):
     """Test case for trying to reach specified url every default interval time sec
     until url become reachable (get 2xx http response) or {timeout} elapsed
 
@@ -97,7 +124,7 @@ def test_04_wait_http_test_succeed(server_status_code):
     assert return_value
 
 
-def test_05_wait_http_test_timed_out():
+def test_06_wait_http_test_timed_out():
     """Test case for trying to reach specified url every default interval time sec
      but timed out before getting 2xx http response
 
@@ -130,7 +157,7 @@ def test_05_wait_http_test_timed_out():
         (206, True, False),
     ],
 )
-def test_06_check_url_reachable_succeed(server_status_code, verify, fake_user_agent):
+def test_07_check_url_reachable_succeed(server_status_code, verify, fake_user_agent):
     """Test case for sending get request to specified url and check if it is reachable
     (get 2xx http response) or {timeout} elapsed
 
@@ -150,7 +177,7 @@ def test_06_check_url_reachable_succeed(server_status_code, verify, fake_user_ag
 
 
 @pytest.mark.parametrize("server_status_code", [400, 403, 500, 501, 503])
-def test_07_check_url_reachable_failed(server_status_code):
+def test_08_check_url_reachable_failed(server_status_code):
     """Test case for sending get request to specified url and check if it is reachable
     (get 2xx http response) or {timeout} elapsed
 
