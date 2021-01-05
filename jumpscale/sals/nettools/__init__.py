@@ -71,7 +71,7 @@ def udp_connection_test(ipaddr: str, port: int, timeout: Optional[int] = 1, mess
     if timeout:
         sock.settimeout(timeout)
     try:
-        sock.sendto(message, (ip, port))
+        sock.sendto(message, (ipaddr, port))
         # expecting to receive at least one byte from the socket as indication to succeed connection
         data, _ = sock.recvfrom(1)
     except socket.timeout:
