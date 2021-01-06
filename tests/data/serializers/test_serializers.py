@@ -2,7 +2,6 @@ import pytest
 import base64
 import msgpack
 import yaml
-import pickle
 from jumpscale.loader import j
 
 
@@ -11,12 +10,6 @@ def test_base64():
     assert j.data.serializers.base64.encode(b"omar") == base64.b64encode(b"omar")
     assert j.data.serializers.base64.decode("omar") == base64.b64decode("omar".encode())
     assert j.data.serializers.base64.decode(b"omar") == base64.b64decode(b"omar")
-
-
-def test_pickle():
-    obj = pickle.dumps(b"omar")
-    assert j.data.serializers.pickle.compress(b"omar") == obj
-    assert j.data.serializers.pickle.decompress(obj) == pickle.loads(obj)
 
 
 def test_json():
