@@ -41,9 +41,6 @@ class ZDBClient(Client):
         self._redis = None
         self.nsname = self.nsname.lower().strip()
 
-        # if j.data.bcdb._master:
-        #     self._model.trigger_add(self._update_trigger)
-
     def _update_trigger(self, obj, action, **kwargs):
         if action in ["save", "change"]:
             self._redis = None

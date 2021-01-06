@@ -11,12 +11,12 @@ import ipaddress
 import re
 from typing import Optional
 from jumpscale.core.exceptions import Value, Runtime, Input
+from jumpscale.core.base.fields import IPAddress
 from jumpscale.data.time import now
 import jumpscale.tools.http
 import jumpscale.data.platform
 import jumpscale.sals.fs
 import jumpscale.core.executors
-from jumpscale.data.types import IPAddress
 
 
 def tcp_connection_test(ipaddr: str, port: int, timeout: Optional[int]):
@@ -383,7 +383,7 @@ def ping_machine(ip, pingtimeout=60, allowhostname=True):
     @rtype: True if machine is pingable, False otherwise
     """
     if not allowhostname:
-        if not IPAddress().check(ip):
+        if not IPAddress().validate(ip):
             raise Value("Invalid ip address, set allowedhostname to use hostnames")
 
     start = time.time()
