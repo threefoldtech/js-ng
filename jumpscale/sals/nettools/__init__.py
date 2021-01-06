@@ -328,6 +328,7 @@ def get_network_info(device: Optional[str] = None) -> list:
     """
 
     def _clean(nic_info: dict):
+        print(f"nic info:\n {nic_info}")
         result = {
             "ip": [(addr["local"], addr["prefixlen"]) for addr in nic_info["addr_info"] if addr["family"] == "inet"],
             "ip6": [(addr["local"], addr["prefixlen"]) for addr in nic_info["addr_info"] if addr["family"] == "inet6"],
@@ -348,9 +349,9 @@ def get_network_info(device: Optional[str] = None) -> list:
         else:
             _, output, _ = jumpscale.core.executors.run_local(f"ip -j addr show", hide=True, warn=True)
             # stdout = subprocess.check_output("ip -j addr show", shell=True)
-
+        print(f"output:\n{output}")
         res = json.loads(output)
-
+        print(f"json:\n{res}")
         for nic_info in res:
             yield _clean(nic_info)
 
@@ -359,9 +360,13 @@ def get_network_info(device: Optional[str] = None) -> list:
             res = []
             for nic in _get_info():
                 res.append(nic)
+            print(f"final result without args:\n{res}")
             return res
         else:
-            return next(_get_info())
+            res = next(_get_info())
+            print(f"final result with arg:\n{res}")
+            return res
+
     else:
         # TODO: make it OSX Compatible
         raise NotImplementedError("this function supports only linux at the moment.")
