@@ -278,3 +278,18 @@ def test_14_get_network_info_specific_device_loopback():
     result = nettools.get_network_info(device)
     print(result)
     assert isinstance(result, dict) and all(map(lambda k: k in result.keys(), ["ip", "ip6", "mac", "name"]))
+
+
+def test_15_get_mac_address():
+    """Test case for getting the MAC address all network interfaces in the machine
+
+    **Test Scenario**
+
+    - Execute the function get_nic_names to get list of all nics
+    - loop through the list and call get_mac_address function
+    - check the function result for every interface name. expected to get 6 groups of characters separated by colon
+    """
+    nic_names = nettools.get_nic_names()
+    for nic_name in nic_names:
+        mac_addr = nettools.get_mac_address(nic_name)
+        assert len(mac_addr.split(":")) == 6
