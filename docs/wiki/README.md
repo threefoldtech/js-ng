@@ -13,6 +13,11 @@
     * [Developing a SAL](./tutorials/developing_sal.md)
     * [Developing a client](./tutorials/developing_client.md)
     * [Using jsync](./tutorials/jsync.md)
+    * [Using Startup Commands](./tutorials/startup_commands.md)
+    * [Using Tmux](./tutorials/tmux.md)
+    * [Github Actions](./tutorials/githubactions-ci.md)
+    * [Docker Images](./tutorials/docker_images.md)
+    * [Writing a test](./testing_contribution.md)
     <!-- * Developing a Builder -->
 * Developers
     * Structure
@@ -29,7 +34,7 @@
     * [Logging](./logging.md)
     * [Exceptions](./exceptions.md)
     * [Errors](./errorhandling.md)
-    * RPC
+    * [RPC](./rpc.md)
     * [JS-NG Shell](./jsng_shell.md)
     * [API](generated_apis.md)
     * Builders
