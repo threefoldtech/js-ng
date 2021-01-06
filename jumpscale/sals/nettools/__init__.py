@@ -19,6 +19,7 @@ from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
 import ssl
 import json
+import subprocess
 
 
 def tcp_connection_test(ipaddr: str, port: int, timeout: Optional[int] = None) -> bool:
@@ -339,13 +340,14 @@ def get_network_info(device: Optional[str] = None) -> list:
         }
         return result
 
-    def _get_info(device: str):
-        if not device:
-            device = ""
-        exitcode, output, _ = jumpscale.core.executors.run_local(f"ip -j addr show {device}", hide=True)
-        if exitcode != 0:
+    def _get_info():
+        if device:
+            completed_proc = subprocess.run(["ip", "-j", "addr", "show", device], capture_output=True)
+        else:
+            completed_proc = subprocess.run(["ip", "-j", "addr", "show"], capture_output=True)
+        if completed_proc.returncode != 0:
             raise Runtime("could not find device")
-        res = json.loads(output)
+        res = json.loads(completed_proc.stdout)
 
         for nic_info in res:
             yield _clean(nic_info)
@@ -353,11 +355,11 @@ def get_network_info(device: Optional[str] = None) -> list:
     if jumpscale.data.platform.is_linux():
         if not device:
             res = []
-            for nic in _get_info(device):
+            for nic in _get_info():
                 res.append(nic)
             return res
         else:
-            return list(_get_info(device))[0]
+            return next(_get_info())
     else:
         # TODO: make it OSX Compatible
         raise NotImplementedError("this function supports only linux at the moment.")
