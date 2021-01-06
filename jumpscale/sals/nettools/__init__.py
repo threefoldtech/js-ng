@@ -379,7 +379,7 @@ def get_mac_address(interface: str) -> str:
     return get_network_info(interface)["mac"]
 
 
-def get_host_name() -> str:
+def get_host_name() -> str:  # pragma: no cover - we're just proxying
     """Get hostname of the machine
 
     Returns:
@@ -417,7 +417,7 @@ def is_nic_connected(interface: str) -> bool:
         return output in expectResults
 
 
-def get_host_by_name(dnsHostname: str) -> str:
+def get_host_by_name(dnsHostname: str) -> str:  # pragma: no cover - we're just proxying
     """get host address by its name
 
     Args:
