@@ -51,13 +51,13 @@ Installing dependencies from lock file
 Package operations: ...
 ```
 
-After successful installation, we can open vscode and press `Control +Shift + P` and try to select the interpreter, it should be listed without any extra configuration:
+ After successful installation, we can open vscode and press `Control +Shift + P` and try to select the interpreter, it should be listed without any extra configuration:
 
-![selecting-interpreter.png](selecting_interpreter.png)
+![selecting-interpreter.png](images/selecting-interpreter.png)
 
 Then trying to write a new script e.g. `test.py`:
 
-![jumpscale-autocompletion.png](jumpscale_autocompletion.png)
+![jumpscale-autocompletion.png](images/jumpscale-autocompletion.png)
 
 Note that global `j` object completion is only supported in `jsng` shell.
 
