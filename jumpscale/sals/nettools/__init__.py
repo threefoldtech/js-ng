@@ -342,12 +342,14 @@ def get_network_info(device: Optional[str] = None) -> list:
 
     def _get_info():
         if device:
-            completed_proc = subprocess.run(["ip", "-j", "addr", "show", device], capture_output=True)
+            try:
+                stdout = subprocess.check_output(f"ip -j addr show {device}", shell=True)
+            except subprocess.CalledProcessError:
+                raise Runtime("could not find device")
         else:
-            completed_proc = subprocess.run(["ip", "-j", "addr", "show"], capture_output=True)
-        if completed_proc.returncode != 0:
-            raise Runtime("could not find device")
-        res = json.loads(completed_proc.stdout)
+            stdout = subprocess.check_output("ip -j addr show", shell=True)
+
+        res = json.loads(stdout)
 
         for nic_info in res:
             yield _clean(nic_info)
