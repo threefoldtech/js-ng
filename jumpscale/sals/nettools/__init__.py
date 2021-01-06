@@ -349,7 +349,7 @@ def get_network_info(device: Optional[str] = None) -> list:
             # _, output, _ = jumpscale.core.executors.run_local(f"ip -j addr show", hide=True, warn=True)
             stdout = subprocess.check_output("ip -j addr show", shell=True)
 
-        res = json.loads(output)
+        res = json.loads(stdout)
 
         for nic_info in res:
             yield _clean(nic_info)
