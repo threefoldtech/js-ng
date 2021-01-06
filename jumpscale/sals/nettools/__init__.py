@@ -338,18 +338,18 @@ def get_network_info(device: Optional[str] = None) -> list:
 
     def _get_info():
         if device:
-            # exitcode, output, _ = jumpscale.core.executors.run_local(f"ip -j addr show {device}", hide=True, warn=True)
-            # if exitcode != 0:
-            #     raise Runtime("could not find device")
-            try:
-                stdout = subprocess.check_output(f"ip -j addr show {device}", shell=True)
-            except subprocess.CalledProcessError:
+            exitcode, output, _ = jumpscale.core.executors.run_local(f"ip -j addr show {device}", hide=True, warn=True)
+            if exitcode != 0:
                 raise Runtime("could not find device")
+            # try:
+            #    stdout = subprocess.check_output(f"ip -j addr show {device}", shell=True)
+            # except subprocess.CalledProcessError:
+            #    raise Runtime("could not find device")
         else:
-            # _, output, _ = jumpscale.core.executors.run_local(f"ip -j addr show", hide=True, warn=True)
-            stdout = subprocess.check_output("ip -j addr show", shell=True)
+            _, output, _ = jumpscale.core.executors.run_local(f"ip -j addr show", hide=True, warn=True)
+            # stdout = subprocess.check_output("ip -j addr show", shell=True)
 
-        res = json.loads(stdout)
+        res = json.loads(output)
 
         for nic_info in res:
             yield _clean(nic_info)
