@@ -107,7 +107,7 @@ In jumpscale configuration, you can set `always_load` in factory setting section
 always_reload = false
 ```
 
-If se to true, the following example would work (from two different shells):
+If set to true, the following example would work (from two different shells):
 
 First get an instance in the first shell:
 
