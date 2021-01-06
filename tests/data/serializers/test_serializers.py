@@ -1,6 +1,5 @@
 import pytest
 import base64
-import pylzma
 import msgpack
 import yaml
 import pickle
@@ -53,12 +52,6 @@ def test_json():
     assert json_dump_file == json_dump
 
     j.sals.fs.rmtree(file_path)
-
-
-def test_lzma():
-    obj = pylzma.compress(b"omar")
-    assert j.data.serializers.lzma.compress(b"omar") == obj
-    assert j.data.serializers.lzma.decompress(obj) == pylzma.decompress(obj)
 
 
 def test_msgpack():
