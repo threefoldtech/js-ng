@@ -14,7 +14,9 @@ import jumpscale.tools.http
 import jumpscale.data.platform
 import jumpscale.sals.fs
 import jumpscale.core.executors
-from jumpscale.data.types import IPAddress
+from jumpscale.data.types import (
+    IPAddress,
+)  # going to remove j.data.types . use insted jumpscale.core.base.fields.IPAddress
 from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
 import ssl
@@ -353,7 +355,13 @@ def get_network_info(device: Optional[str] = None) -> list:
         res = json.loads(output)
         print(f"json:\n{res}")
         for nic_info in res:
-            yield _clean(nic_info)
+            # when use ip command with -j option and specifed interface. it returns on ubuntu < 20
+            # a list contains a requetted info alongside other partially empty dicts like this -> {'addr_info': [{}, {}]}
+            # so we need to filter those dicts to get consistent behaviour at all supported ubuntu versions.
+            if len(nic_info) > 1:
+                yield _clean(nic_info)
+            else:
+                continue
 
     if jumpscale.data.platform.is_linux():
         if not device:
