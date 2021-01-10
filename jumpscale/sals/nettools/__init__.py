@@ -460,8 +460,10 @@ def ping_machine(ip: str, timeout: Optional[int] = 60, allowhostname: Optional[b
     Returns:
         bool: True if machine is pingable, False otherwise
     """
-    if not allowhostname:
-        if not IPAddress().check(ip):
+    try:
+        _ = ipaddress.ip_address(ip)
+    except ValueError:
+        if not allowhostname:
             raise Value("Invalid ip address, set allowhostname to use hostnames")
 
     if jumpscale.data.platform.is_linux():
