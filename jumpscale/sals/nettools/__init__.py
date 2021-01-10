@@ -465,7 +465,10 @@ def ping_machine(ip: str, timeout: Optional[int] = 60, allowhostname: Optional[b
             raise Value("Invalid ip address, set allowhostname to use hostnames")
 
     if jumpscale.data.platform.is_linux():
-        exitcode, _, _ = jumpscale.core.executors.run_local(f"ping -c 1 -w {timeout} {ip}", warn=True, hide=True)
+        exitcode, output, err = jumpscale.core.executors.run_local(f"ping -c 1 -w {timeout} {ip}", warn=True, hide=True)
+        print("exit code: ", exitcode)
+        print("output: ", output)
+        print("err: ", err)
     elif jumpscale.data.platform.is_osx():
         exitcode, _, _ = jumpscale.core.executors.run_local(f"ping -o -t {timeout} {ip}", warn=True, hide=True)
     else:  # unsupported platform
