@@ -116,6 +116,9 @@ def wait_http_test(
         verify (bool, optional): boolean indication to verify the servers TLS certificate or not.
         interval_time (int, optional): how long to wait for a response before sending a new request. Defaults to 2.
 
+    Raises:
+        ValueError: raises if not correct url
+
     Returns:
         bool: true if the test succeeds
     """
