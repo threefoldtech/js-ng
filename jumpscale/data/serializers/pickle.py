@@ -1,25 +1,25 @@
-import pickle
+from pickle import dumps, loads
 
 
 def decompress(obj):
-    """dump pickle bytes object into string 
+    """convert back (loads) pickle bytes into an python object hierarchy 
     
     Arguments:
-        obj (pickle bytes) : the pickle bytes which will be dumped     
+        obj (pickle bytes) : the pickle bytes which will be unpickling     
     
     Returns:
-        string : the string
+        object : the reconstituted python object hierarchy
     """
-    return pickle.loads(obj)
+    return loads(obj)
 
 
 def compress(obj):
-    """loads the data from pickle string into pickle bytes
+    """convert (dumps) a Python object hierarchy into a byte stream
     
     Arguments:
-        obj (string) : the string
+        obj (object) : an python object hierarchy
     
     Returns:
-        pickle bytes : the loaded data from pickle stram
+        bytes-like object : the pickled representation of the object
     """
-    return pickle.dumps(obj)
+    return dumps(obj)
