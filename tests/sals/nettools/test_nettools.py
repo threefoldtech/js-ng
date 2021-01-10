@@ -6,6 +6,7 @@ import concurrent.futures
 import socketserver
 import socket
 import ipaddress
+from jumpscale.core.exceptions import Value, Runtime
 
 
 @pytest.mark.parametrize("ipaddr, port, timeout", [("1.1.1.1", 53, 5), ("8.8.8.8", 53, 5), ("www.google.com", 80, 5)])
@@ -321,3 +322,41 @@ def test_17_is_nic_connected(interface, expected):
     """
     nic_status = nettools.is_nic_connected(interface)
     assert nic_status == expected
+
+
+@pytest.mark.parametrize("ip, timeout, allowhostname", [("1.1.1.1", 4, False), ("www.google.com", 4, True),])
+def test_18_ping_machine_success(ip, timeout, allowhostname):
+    """Test case for check whether machine is up/running and accessible
+
+    **Test Scenario**
+
+    - Execute the function ping_machine once with puplic ip and once with a puplic hostname
+    - check the function result. should return True
+    """
+    result = nettools.ping_machine(ip, timeout, allowhostname)
+    assert result
+
+
+@pytest.mark.parametrize("ip, timeout, allowhostname", [("10.200.199.198", 1, False),])
+def test_19_ping_machine_timeout(ip, timeout, allowhostname):
+    """Test case for check whether the ping_machine will timeout after specfied number of seconds
+
+    **Test Scenario**
+
+    - Execute the function ping_machine with probably unused private ip address and 1 seconds timeout on a new thread
+    - wait for 2 seconds
+    - check running thread if the function timed out or still running and if it returned False
+    """
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future = executor.submit(nettools.ping_machine, ip, timeout, allowhostname)
+        time.sleep(2)
+        has_timed_out = not future.running()
+        is_false = not future.result()
+    assert has_timed_out and is_false
+
+
+@pytest.mark.parametrize("ip, timeout, allowhostname", [("www.google.com", 2, False),])
+def test_19_ping_machine_exception(ip, timeout, allowhostname):
+
+    with pytest.raises(Value):
+        nettools.ping_machine(ip, timeout, allowhostname)
