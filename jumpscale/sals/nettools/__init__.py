@@ -295,6 +295,7 @@ def get_default_ip_config(ip: Optional[str] = "8.8.8.8") -> tuple:
 
     Raises:
         ValueError: if address does not represent a valid IPv4 or IPv6 address.
+        Runtime: if can't connect
 
     Returns:
         tuple: default nic name and its ip address
