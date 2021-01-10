@@ -445,6 +445,8 @@ def get_host_by_name(dnsHostname: str) -> str:  # pragma: no cover - we're just 
 
 def ping_machine(ip: str, timeout: Optional[int] = 60, allowhostname: Optional[bool] = True) -> bool:
     """Ping a machine to check if it's up/running and accessible
+    Note: Any well-behaved device on an LAN or WAN is free to ignore nearly any traffic,
+    so PINGs, port scans, and the like are all unreliable.
 
     Args:
         ip (str): Machine Ip Address
