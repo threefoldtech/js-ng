@@ -416,8 +416,6 @@ def is_nic_connected(interface: str) -> bool:
     """
     if jumpscale.data.platform.is_linux():
         carrierfile = f"/sys/class/net/{interface}/carrier"
-        if not jumpscale.sals.fs.exists(carrierfile):
-            return False
         try:
             return int(jumpscale.sals.fs.read_file(carrierfile)) != 0
         except IOError:
