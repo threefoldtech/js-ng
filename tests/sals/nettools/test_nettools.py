@@ -324,13 +324,15 @@ def test_17_is_nic_connected(interface, expected):
     assert nic_status == expected
 
 
-@pytest.mark.parametrize("ip, timeout, allowhostname", [("1.1.1.1", 4, False), ("www.google.com", 4, True),])
+@pytest.mark.parametrize(
+    "ip, timeout, allowhostname", [("127.0.0.1", 4, False), ("localhost", 4, True), ("::1", 4, False)]
+)
 def test_18_ping_machine_success(ip, timeout, allowhostname):
     """Test case for check whether machine is up/running and accessible
 
     **Test Scenario**
 
-    - Execute the function ping_machine once with puplic ip and once with a puplic hostname
+    - Execute the function ping_machine once with localhsot ipv4 and ipv6 addresses and with a local machine hostname
     - check the function result. should return True
     """
     result = nettools.ping_machine(ip, timeout, allowhostname)
@@ -357,6 +359,12 @@ def test_19_ping_machine_timeout(ip, timeout, allowhostname):
 
 @pytest.mark.parametrize("ip, timeout, allowhostname", [("www.google.com", 2, False),])
 def test_19_ping_machine_exception(ip, timeout, allowhostname):
+    """Test case for check whether the ping_machine will raise exception when it receive a host name while allowhostname is false
 
+    **Test Scenario**
+
+    - Execute the function ping_machine with a hostname
+    - assert the raised exception
+    """
     with pytest.raises(Value):
         nettools.ping_machine(ip, timeout, allowhostname)
