@@ -293,3 +293,31 @@ def test_15_get_mac_address():
     for nic_name in nic_names:
         mac_addr = nettools.get_mac_address(nic_name)
         assert len(mac_addr.split(":")) == 6
+
+
+def test_16_is_nic_connected():
+    """Test case for check whether interface is up or down
+
+    **Test Scenario**
+
+    - Execute the function get_nic_names to get list of all nics
+    - loop through the list and call is_nic_connected function
+    - check the function result for every interface name. expected to get a bool type
+    """
+    nic_names = nettools.get_nic_names()
+    for nic_name in nic_names:
+        nic_status = nettools.is_nic_connected(nic_name)
+        assert isinstance(nic_status, bool)
+
+
+@pytest.mark.parametrize("interface, expected", [("lo", True)])
+def test_17_is_nic_connected(interface, expected):
+    """Test case for check whether interface is up or down
+
+    **Test Scenario**
+
+    - Execute the function get_nic_names with lo interface as arg and expect it to be up
+    - check the function result. should return True
+    """
+    nic_status = nettools.is_nic_connected(interface)
+    assert nic_status == expected
