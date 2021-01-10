@@ -424,14 +424,13 @@ def is_nic_connected(interface: str) -> bool:
             return False
 
     elif jumpscale.data.platform.is_osx():
-        command = f"dladm show-dev -p -o STATE {interface}"
-        expectResults = ["up", "unknown"]
-
-        exitcode, output, _ = jumpscale.core.executors.run_local(command, warn=True, hide=True)
-        if exitcode != 0:
-            return False
-        output = output.strip()
-        return output in expectResults
+        # superuser.com/questions/203272/
+        command = "ifconfig -{} | sed -E 's/[[:space:]:].*//;/^$/d"
+        option = {"up": "u", "down": "d"}
+        stdout = subprocess.check_output(command.format(option["up"]), shell=True)
+        output = stdout.decode("utf-8")
+        up_interfaces = output.split()
+        return interface in up_interfaces
 
 
 def get_host_by_name(dnsHostname: str) -> str:  # pragma: no cover - we're just proxying
