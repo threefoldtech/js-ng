@@ -22,10 +22,8 @@ jobs:
         experimental: [false]
         include:
           - python-version: 3.9
-            os: ${{ matrix.os }}
             experimental: true
           - os: ubuntu-20.04
-            python-versiob: ${{ matrix.python-version }}
             experimental: true
     steps:
       - uses: actions/checkout@v2
