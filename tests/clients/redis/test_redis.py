@@ -12,26 +12,25 @@ HOST = "127.0.0.1"
 class RedisTests(BaseTests):
     def setUp(self):
         self.redis_instance_name = self.randstr()
-        self.redis_config_target_path = "/tmp/redis.conf"
         self.port = randint(1000, 2000)
 
     def tearDown(self):
         self.redis_client.flushall()
-        j.sals.process.kill_process_by_port(self.port)
+        self.cmd.stop(wait_for_stop=False)
+        j.tools.startupcmd.delete(self.redis_instance_name)
         j.clients.redis.delete(self.redis_instance_name)
-        j.sals.fs.rmtree(self.redis_config_target_path)
 
     def randstr(self):
         return j.data.idgenerator.nfromchoices(10, string.ascii_letters)
 
     def start_redis_server(self, port, password=""):
-        redis_config_path = j.sals.fs.join_paths(j.sals.fs.parent(__file__), "redis.conf")
-        redis_config = j.sals.fs.read_file(redis_config_path)
-        redis_config = redis_config.replace("port 6379", f"port {port}")
+        cmd = f"redis-server --port {self.port} --bind {HOST}"  
         if password:
-            redis_config = redis_config.replace("# requirepass foobared", f"requirepass {password}")
-        j.sals.fs.write_file(self.redis_config_target_path, redis_config)
-        j.sals.process.execute(f"redis-server {self.redis_config_target_path}", die=True)
+            cmd += f" --requirepass {password}"
+        self.cmd = j.tools.startupcmd.get(self.redis_instance_name)
+        self.cmd.start_cmd = cmd
+        self.cmd.ports = [port]
+        self.cmd.start()
 
     @parameterized.expand([(False,), (True,)])
     def test01_get_redis_client(self, password):
