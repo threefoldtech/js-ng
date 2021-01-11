@@ -12,10 +12,19 @@ on:
 jobs:
   build:
     runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.experimental }}
     strategy:
+      fail-fast: false
+      max-parallel: 9
       matrix:
-        os: [ubuntu-18.04, ubuntu-20.04]
         python-version: [3.6, 3.7, 3.8]
+        os: [ubuntu-18.04]
+        experimental: [false]
+        include:
+          - python-version: 3.9
+            experimental: true
+          - os: ubuntu-20.04
+            experimental: true
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
