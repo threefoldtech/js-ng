@@ -49,14 +49,15 @@ def test_03_wait_connection_test_ipv4_succeed():
     """
     TIMEOUT = 6
     # getting random free port
-    with socketserver.TCPServer(("localhost", 0), None) as s:
-        port = s.server_address[1]
-
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        future = executor.submit(nettools.wait_connection_test, "::1", port, TIMEOUT)
-        time.sleep(4)
-        subprocess.Popen(["nc", "-l", "::1", str(port)])
-        return_value = future.result()
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(("127.0.0.1", 0))
+        port = s.getsockname()[1]
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future = executor.submit(nettools.wait_connection_test, "127.0.0.1", port, TIMEOUT)
+            time.sleep(4)
+            # subprocess.Popen(["nc", "-l", "127.0.0.1", str(port)])
+            s.listen()
+            return_value = future.result()
 
     assert return_value
 
