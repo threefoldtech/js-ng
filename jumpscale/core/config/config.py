@@ -138,7 +138,7 @@ def get_default_config():
             "whoosh": {"path": os.path.expanduser(os.path.join(config_root, "whoosh_indexes"))},
         },
         "factory": {"always_reload": False},
-        "store": "mongo",
+        "store": "filesystem",
         "threebot": {"default": "",},
         "explorer": {"default_url": "https://explorer.testnet.grid.tf/explorer",},
     }

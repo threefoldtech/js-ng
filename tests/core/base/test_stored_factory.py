@@ -9,7 +9,7 @@ from enum import Enum
 # TODO: move fields to fields or types module
 
 from jumpscale.core.base import Base, DuplicateError, Factory, StoredFactory, fields
-from jumpscale.core.base.store import filesystem, redis, whooshfts
+from jumpscale.core.base.store import filesystem, redis, whooshfts, mongo
 from parameterized import parameterized_class
 from jumpscale.loader import j
 
@@ -103,8 +103,17 @@ class WhooshFactory(StoredFactory):
     STORE = whooshfts.WhooshStore
 
 
+class MongoFactory(StoredFactory):
+    STORE = mongo.MongoStore
+
+
 @parameterized_class(
-    [{"factory_class": FilesystemFactory}, {"factory_class": RedisFactory}, {"factory_class": WhooshFactory}]
+    [
+        {"factory_class": FilesystemFactory},
+        {"factory_class": RedisFactory},
+        {"factory_class": WhooshFactory},
+        {"factory_class": MongoFactory},
+    ]
 )
 class TestStoredFactory(unittest.TestCase):
 
