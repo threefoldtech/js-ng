@@ -35,10 +35,11 @@ class RedisTests(BaseTests):
     def test01_get_redis_client(self, password):
         """Test case for getting redis client with/without password.
 
-        **Test scenario**
-        #. Start redis server with/without password.
-        #. Get client for redis.
-        #. Try to set and get a random variable.
+        **Test Scenario**
+
+        - Start redis server with/without password.
+        - Get client for redis.
+        - Try to set and get a random variable.
         """
         self.info("Start redis server with/without password.")
         passwd = self.randstr()
@@ -63,14 +64,15 @@ class RedisTests(BaseTests):
         self.assertEqual(result.decode(), value)
 
     def test_02_is_running(self):
-        """Test case for Checking redis is running
+        """Test case for Checking redis is running.
 
-        **Test scenario**
-        #. Get redis client before starting the server.
-        #. Check that redis server is not running.
-        #. Start redis server.
-        #. Get client for redis.
-        #. Check that the redis server is running.
+        **Test Scenario**
+
+        - Get redis client before starting the server.
+        - Check that redis server is not running.
+        - Start redis server.
+        - Get client for redis.
+        - Check that the redis server is running.
         """
         self.info("Get redis client before starting the server.")
         self.redis_client = j.clients.redis.get(self.redis_instance_name, port=self.port)

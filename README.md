@@ -14,26 +14,25 @@ config management/automation framework
 - pluggable
 - docs and tests are as important as code
 
-
 ## Contribution
 
 - Clean code (pep-8)
 - Documentation
 - Tests
 
-
 ## Development environment
+
 - install [poetry](https://poetry.eustace.io)
 - clone this repository, then
-    - `poetry install`
+  - `poetry install`
 
 ### Accessing the virtualenv
+
 To access the virtual env `poetry shell`
 
-
 ## Interacting with js-ng Environment
-if you are out of the virtualenv shell, make sure to prefix all of your commands with `poetry run`
 
+if you are out of the virtualenv shell, make sure to prefix all of your commands with `poetry run`
 
 ## Accessing jsng (custom shell)
 
@@ -44,19 +43,26 @@ if you have any problems related to `setuptools`, just try to upgrade it before 
 ```bash
 python3 -m pip install setuptools -U
 ```
+
 ## Running tests
+
 - `make tests`
 
 ## Generating docs
+
 - `make docs`
 
+## Generate tests docs
+
+- `make testdocs`
 
 ## building dists
+
 - `poetry build`
 
 ## publishing
-- `poetry publish`
 
+- `poetry publish`
 
 ## API Docs
 
@@ -69,10 +75,13 @@ We already prepared a docsify [wiki](https://threefoldtech.github.io/js-ng/wiki)
 ## Contribution
 
 ### Pre-commit
+
 We use pre-commit to enforce certain coding style and checks while contributing to js-ng repository. Please make sure to install
 
 #### Installation
+
 It's as easy as `python3 -m pip install pre-commit`
 
 #### Installing pre-commit hooks in the repository
+
 Execute `pre-commit install`

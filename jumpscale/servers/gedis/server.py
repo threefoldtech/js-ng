@@ -8,7 +8,6 @@ from functools import partial
 from io import BytesIO
 from signal import SIGKILL, SIGTERM
 import json
-import better_exceptions
 import gevent
 from gevent.pool import Pool
 from gevent import time
@@ -189,8 +188,6 @@ class GedisServer(Base):
     def start(self):
         """Starts the server
         """
-        j.application.start("gedis")
-
         # handle signals
         for signal_type in (SIGTERM, SIGKILL):
             gevent.signal(signal_type, self.stop)
@@ -211,6 +208,8 @@ class GedisServer(Base):
         self._server.reuse_addr = True
         self._server.start()
 
+        j.logger.info(f"Gedis server is started at {self.host}:{self.port}...")
+
     def stop(self):
         """Stops the server
         """
@@ -229,6 +228,8 @@ class GedisServer(Base):
             response["result"] = method(*args, **kwargs)
 
         except Exception as e:
+            j.logger.exception(f"error while executing {method}", exception=e)
+
             response["error"] = str(e)
             response["error_type"] = EXCEPTIONS_MAP.get(e.__class__, GedisErrorTypes.ACTOR_ERROR.value)
 

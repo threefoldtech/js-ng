@@ -1,8 +1,9 @@
 from jumpscale.loader import j
+import gevent
 
 
-def _get_identifier(appname, message, public_message, category, alert_type):
-    return j.data.hash.md5(":".join([appname, message, public_message, category, alert_type]))
+def _get_identifier(app_name, message, public_message, category, alert_type):
+    return j.data.hash.md5(":".join([app_name, message, public_message, category, alert_type]))
 
 
 class Alert:
@@ -10,7 +11,7 @@ class Alert:
         self.id = None
         self.type = None
         self.level = 0
-        self.appname = None
+        self.app_name = None
         self.category = None
         self.message = None
         self.public_message = None
@@ -31,7 +32,7 @@ class Alert:
 
     @property
     def identifier(self):
-        return _get_identifier(self.appname, self.message, self.public_message, self.category, self.type)
+        return _get_identifier(self.app_name, self.message, self.public_message, self.category, self.type)
 
     @property
     def json(self):
@@ -47,6 +48,7 @@ class AlertsHandler:
         self._rkey_id = "alerts:id"
         self._rkey_incr = "alerts:id:incr"
         self._db = None
+        self.handlers = []
 
     def __dir__(self):
         return ("get", "find", "alert_raise", "count", "reset", "delete", "delete_all")
@@ -85,18 +87,18 @@ class AlertsHandler:
 
     def find(
         self,
-        appname: str = "",
+        app_name: str = "",
         category: str = "",
         message: str = "",
         pid: int = None,
         start_time: int = None,
         end_time: int = None,
-    ) -> Alert:
+    ) -> list:
 
         """Find alerts
 
         Keyword Arguments:
-            appname {str} -- filter by allert app name (default: {""})
+            app_name (str):  filter by allert app name (default: {""})
             category {str} -- filter by alert category (default: {""})
             message {str} -- filter by alert message (default: {""})
             pid {int} -- filter by process id (default: {None})
@@ -104,9 +106,10 @@ class AlertsHandler:
             end_time {int} -- filter by end time (default: {None})
 
         Returns:
-            Alert -- alert object
+            list of Alert objects
         """
-        appname = appname.strip().lower()
+
+        app_name = app_name.strip().lower()
         category = category.strip().lower()
         message = message.strip().lower()
 
@@ -116,13 +119,15 @@ class AlertsHandler:
         for item in items:
             alert = Alert.loads(item[1])
 
-            if appname and appname != alert.appname:
+            if app_name and app_name != alert.app_name.strip().lower():
                 continue
 
-            if category and category != alert.category:
+            if category and category != alert.category.strip().lower():
                 continue
 
-            if message and (message not in alert.message and message not in alert.public_message):
+            if message and (
+                message not in alert.message.strip().lower() and message not in alert.public_message.strip().lower()
+            ):
                 continue
 
             if start_time and start_time < alert.first_occurrence:
@@ -143,7 +148,7 @@ class AlertsHandler:
 
     def alert_raise(
         self,
-        appname,
+        app_name,
         message,
         public_message: str = "",
         category: str = "",
@@ -172,7 +177,7 @@ class AlertsHandler:
         if not self.db.is_running():
             return
 
-        identifier = _get_identifier(appname, message, public_message, category, alert_type)
+        identifier = _get_identifier(app_name, message, public_message, category, alert_type)
         alert = self.get(identifier=identifier, die=False) or Alert()
 
         if alert.id:
@@ -184,7 +189,7 @@ class AlertsHandler:
             alert.status = "new"
             alert.first_occurrence = timestamp or j.data.time.now().timestamp
 
-        alert.appname = appname
+        alert.app_name = app_name
         alert.category = category
         alert.message = message
         alert.public_message = public_message
@@ -199,6 +204,9 @@ class AlertsHandler:
 
         alert.tracebacks.append(traceback)
         self._save(alert)
+        for handler_func, handler_level in self.handlers:
+            if level >= handler_level:
+                gevent.spawn(handler_func, alert)
         return alert
 
     def count(self) -> int:
@@ -239,12 +247,22 @@ class AlertsHandler:
             self.db.hdel(self._rkey, alert_id)
 
     def delete_all(self):
-        """Deletes all alerts
-        """
+        """Deletes all alerts"""
         self.db.delete(self._rkey, self._rkey_id)
 
     def reset(self):
-        """Delete all alerts and reset the db
-        """
+        """Delete all alerts and reset the db"""
         self.delete_all()
         self.db.delete(self._rkey_incr)
+
+    def register_handler(self, handler: callable, level: int = 40):
+        """Register new alert handler
+
+        Arguments:
+            handler (callable): error handler callable
+
+        Keyword Arguments:
+            level (int): exception level (default: {40})
+        """
+        if (handler, level) not in self.handlers:
+            self.handlers.append((handler, level))
