@@ -52,6 +52,14 @@ except ImportError:
     pass
 
 
+try:
+    from .store.mongo import MongoStore
+
+    STORES["mongo"] = MongoStore
+except ImportError:
+    pass
+
+
 class DuplicateError(Exception):
     """
     raised when you try to create an instance by the same name of an existing one for a factory
