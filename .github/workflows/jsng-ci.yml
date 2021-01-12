@@ -38,7 +38,7 @@ jobs:
       - name: Gathering deps
         run: |
           sudo apt-get update
-          sudo apt-get install -y git python3-setuptools tmux redis
+          sudo apt-get install -y git python3-setuptools tmux redis net-tools
           sudo pip3 install poetry
       - name: Install
         run: |
