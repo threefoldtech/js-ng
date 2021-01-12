@@ -23,7 +23,7 @@ class RedisTests(BaseTests):
         return j.data.idgenerator.nfromchoices(10, string.ascii_letters)
 
     def start_redis_server(self, port, password=""):
-        cmd = f"redis-server --port {self.port} --bind {HOST}"  
+        cmd = f"redis-server --port {self.port} --bind {HOST}"
         if password:
             cmd += f" --requirepass {password}"
         self.cmd = j.tools.startupcmd.get(self.redis_instance_name)
