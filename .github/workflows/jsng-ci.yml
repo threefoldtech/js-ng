@@ -11,10 +11,24 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.experimental }}
     strategy:
+      fail-fast: false
+      # max-parallel: 9
       matrix:
+        os: [ubuntu-18.04]
         python-version: [3.6, 3.7, 3.8]
+        experimental: [false]
+        include:
+          - os: ubuntu-20.04
+            python-version: 3.8
+            experimental: true
+            name: Experimental build - latest Ubuntu
+          - python-version: 3.9
+            os: ubuntu-18.04
+            experimental: true
+            name: Experimental build - latest Python
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
@@ -24,7 +38,7 @@ jobs:
       - name: Gathering deps
         run: |
           sudo apt-get update
-          sudo apt-get install -y git python3-setuptools tmux redis mongodb
+          sudo apt-get install -y git python3-setuptools tmux redis net-tools mongodb
           sudo pip3 install poetry
       - name: Install
         run: |
