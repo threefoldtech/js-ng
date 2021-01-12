@@ -3,23 +3,23 @@
     * [Intro](./intro.md)
     * [Installation](./installation.md)
     * [Installation for JS-NG developers](./devsetup.md)
-    * Docker based setup
     * [Interacting with the development shell: jsng](./jsng_shell.md)
     * FAQ - soon
     * [API](generated_apis.md)
+    <!-- * Docker based setup -->
 * Tutorials
     * [Interacting with Filesystem](./tutorials/salfs.md)
     * [Platform information](./tutorials/platforminfo.md)
     * [Interacting with configurations](./configmgmt.md)
     * [Developing a SAL](./tutorials/developing_sal.md)
     * [Developing a client](./tutorials/developing_client.md)
-    * Developing a Builder
     * [Using jsync](./tutorials/jsync.md)
     * [Using Startup Commands](./tutorials/startup_commands.md)
     * [Using Tmux](./tutorials/tmux.md)
     * [Github Actions](./tutorials/githubactions-ci.md)
     * [Docker Images](./tutorials/docker_images.md)
     * [Writing a test](./testing_contribution.md)
+    <!-- * Developing a Builder -->
 * Developers
     * Structure
     * [Developer setup](./devsetup.md)

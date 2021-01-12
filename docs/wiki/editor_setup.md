@@ -51,7 +51,7 @@ Installing dependencies from lock file
 Package operations: ...
 ```
 
-After successful installation, we can open vscode and press `Control + P` and try to select the interpreter, it should be listed without any extra configuration:
+ After successful installation, we can open vscode and press `Control +Shift + P` and try to select the interpreter, it should be listed without any extra configuration:
 
 ![selecting-interpreter.png](images/selecting-interpreter.png)
 
