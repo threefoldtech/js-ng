@@ -1,7 +1,7 @@
 import string
 from math import ceil
 from random import randint
-from time import sleep
+from gevent import sleep
 
 import pytest
 from jumpscale.loader import j
@@ -36,7 +36,7 @@ class ProcessTests(BaseTests):
         window_name = self.randstr()
         j.core.executors.tmux.execute_in_window(cmd, window_name, SESSION_NAME)
         if "tail" in cmd:
-            sleep(0.3)
+            sleep(1)
 
     def get_process_pids(self, process_name):
         cmd = f"ps -aux | grep '{process_name}' | grep -v grep | awk '{{ print $2 }}'"
@@ -253,7 +253,7 @@ class ProcessTests(BaseTests):
         env_val = self.randstr()
         rc, _, error = j.sals.process.execute(cmd=cmd, env={env_name: env_val})
         self.assertFalse(rc, error)
-        sleep(0.3)
+        sleep(1)
 
         self.info("Check that the process has been started and get its pid.")
         pids = self.get_process_pids(TAIL_PROCESS_NAME)
@@ -471,7 +471,7 @@ class ProcessTests(BaseTests):
         self.info("Kill the process.")
         killed = j.sals.process.kill(pids[0])
         self.assertTrue(killed)
-        sleep(0.1)
+        sleep(1)
 
         self.info("Check that the process has been killed.")
         self.assertFalse(j.sals.process.is_alive(pids[0]))
@@ -529,13 +529,13 @@ class ProcessTests(BaseTests):
 
         if kill_method == "kill_user_processes":
             j.sals.process.kill_user_processes(username)
-            sleep(0.1)
+            sleep(1)
             self.assertFalse(j.sals.process.is_alive(user_pid))
             self.assertTrue(j.sals.process.is_alive(pids[0]))
         else:
             kill_method = getattr(j.sals.process, kill_method)
             kill_method(TAIL_PROCESS_NAME)
-            sleep(0.1)
+            sleep(1)
             self.assertFalse(j.sals.process.is_alive(user_pid))
             self.assertFalse(j.sals.process.is_alive(pids[0]))
 

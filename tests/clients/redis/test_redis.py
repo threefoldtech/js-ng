@@ -1,6 +1,5 @@
 import string
 from random import randint
-from time import sleep
 
 from jumpscale.loader import j
 from parameterized import parameterized
@@ -12,7 +11,7 @@ HOST = "127.0.0.1"
 class RedisTests(BaseTests):
     def setUp(self):
         self.redis_instance_name = self.randstr()
-        self.port = randint(1000, 2000)
+        self.port = randint(20000, 21000)
 
     def tearDown(self):
         self.redis_client.flushall()
