@@ -39,10 +39,17 @@ from .events import InstanceCreateEvent, InstanceDeleteEvent
 from .store import ConfigNotFound, KEY_FIELD_NAME, Location
 from .store.filesystem import FileSystemStore
 from .store.redis import RedisStore
-from .store.whooshfts import WhooshStore
 
 
-STORES = {"filesystem": FileSystemStore, "redis": RedisStore, "whoosh": WhooshStore}
+STORES = {"filesystem": FileSystemStore, "redis": RedisStore}
+
+
+try:
+    from .store.whooshfts import WhooshStore
+
+    STORES["whoosh"] = WhooshStore
+except ImportError:
+    pass
 
 
 class DuplicateError(Exception):

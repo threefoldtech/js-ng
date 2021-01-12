@@ -12,6 +12,10 @@ import types
 import jumpscale
 
 
+class OptionalModuleError(Exception):
+    pass
+
+
 def get_container_type(full_name: str) -> type:
     """
     get a new type to be used as a container
@@ -44,7 +48,14 @@ def get_lazy_import_property(name, root_module, container_type):
         else:
             # if it's just a module
             if hasattr(mod, "export_module_as"):
-                new_module = mod.export_module_as()
+                try:
+                    new_module = mod.export_module_as()
+                except ImportError:
+                    if hasattr(mod, "__optional__") and mod.__optional__:
+                        raise OptionalModuleError(
+                            f"module was not installed, try installing again with '{name}' as an extra"
+                        )
+                    raise
             else:
                 new_module = mod
 

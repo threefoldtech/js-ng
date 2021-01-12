@@ -28,7 +28,7 @@ jobs:
           sudo pip3 install poetry
       - name: Install
         run: |
-          sudo poetry install
+          sudo poetry install -E all
       - name: Generate coverage report and run tests
         run: |
           sudo poetry run python3 -m pytest tests -sv --cov=jumpscale --cov-report=xml

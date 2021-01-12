@@ -1,5 +1,4 @@
 import better_exceptions
-import pudb
 import sys
 import traceback
 
@@ -194,23 +193,29 @@ def ptconfig(repl):
         ' Pressing Control-B will insert "pdb.set_trace()" '
         event.cli.current_buffer.insert_text("\nimport pdb; pdb.set_trace()\n")
 
-    @repl.add_key_binding(Keys.ControlJ)
-    def _debug_event(event):
-        """
-        custom binding for pudb, to allow debugging a statement and also
-        post-mortem debugging in case of any exception
-        """
-        b = event.cli.current_buffer
-        app = get_app()
+    try:
+        import pudb
 
-        statements = b.document.text.strip()
-        if statements:
-            _globals = repl.get_globals()
-            _globals["_MODULE_SOURCE_CODE"] = statements
-            app.exit(pudb.runstatement(statements, globals=_globals, locals=repl.get_locals()))
-            app.pre_run_callables.append(b.reset)
-        else:
-            pudb.pm()
+        @repl.add_key_binding(Keys.ControlJ)
+        def _debug_event(event):
+            """
+            custom binding for pudb, to allow debugging a statement and also
+            post-mortem debugging in case of any exception
+            """
+            b = event.cli.current_buffer
+            app = get_app()
+
+            statements = b.document.text.strip()
+            if statements:
+                _globals = repl.get_globals()
+                _globals["_MODULE_SOURCE_CODE"] = statements
+                app.exit(pudb.runstatement(statements, globals=_globals, locals=repl.get_locals()))
+                app.pre_run_callables.append(b.reset)
+            else:
+                pudb.pm()
+
+    except ImportError:
+        pass
 
     # Custom key binding for some simple autocorrection while typing.
 

@@ -22,4 +22,9 @@ from . import msgpack
 from . import pickle
 from . import toml
 from . import yaml
-from . import dill
+
+try:
+    from . import dill
+except ImportError:
+    # optional module
+    pass
