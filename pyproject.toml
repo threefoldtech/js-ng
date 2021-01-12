@@ -54,7 +54,7 @@ terminaltable = ["terminaltables"]
 syncer = ["watchdog"]
 git = ["GitPython"]
 docker = ["docker"]
-all = ["dill", "Whoosh", "mongo", "faker", "terminaltables", "watchdog", "GitPython", "docker"]
+all = ["dill", "Whoosh", "pymongo", "faker", "terminaltables", "watchdog", "GitPython", "docker"]
 
 [tool.poetry.dev-dependencies]
 ipython = "^7.6"
