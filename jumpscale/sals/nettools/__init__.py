@@ -28,6 +28,10 @@ def tcp_connection_test(ipaddr: str, port: int, timeout: Optional[int] = None) -
     """tests tcp connection on specified port, compatible with both IPv4 and IPv6.
     ensures that each side of the connection is reachable in the network.
 
+    Raises:
+        socket.gaierror: raised for address-related errors.
+        socket.herror: raised for address-related errors.
+
     Args:
         ipaddr (str): ip address or hostname
         port (int): port number
@@ -39,12 +43,15 @@ def tcp_connection_test(ipaddr: str, port: int, timeout: Optional[int] = None) -
     conn = None
     try:
         conn = socket.create_connection((ipaddr, port), timeout)
-    except OSError as msg:
+    except (socket.gaierror, socket.herror):
+        # raised for address-related errors
+        raise
+    except OSError:
+        # (ConnectionRefusedError, socket.timeout, OSError)
         return False
-    finally:
-        if conn:
-            conn.close()
-    return True
+    else:
+        conn.close()
+        return True
 
 
 def udp_connection_test(ipaddr: str, port: int, timeout: Optional[int] = 1, message: Optional[bytes] = b"") -> bool:
@@ -155,6 +162,8 @@ def check_url_reachable(
     """
     # fake the user-agent, to act like a normal browser
     # because some services will block requests from python default user-agent
+    # By default urllib identifies itself as Python-urllib/x.y (e.g. Python-urllib/2.5),
+    # which may confuse the site, or just plain not work.
     # ex: www.amazon.com, and it will looks unreachable to our code, unless we fake the user-agent.
     HEADERS = {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/603.1.30 (KHTML, like Gecko) Version/10.1 Safari/603.1.30"
@@ -174,6 +183,7 @@ def check_url_reachable(
         response = urlopen(req, timeout=timeout, context=context)
     except HTTPError as msg:
         # The server couldn't fulfill the request.
+        # codes in the 400–599 range.
         status = msg.code
         return False
     except URLError:
@@ -185,9 +195,11 @@ def check_url_reachable(
         # invalid url
         raise
     else:
-        status = response.code
+        # the default handlers handle redirects (codes in the 300 range)
+        # and codes in the 400-599 range will raise HTTPError
+        # only in cases where codes in the 100–299 range (success) will reach this `else` branch
         response.close()
-        return status in range(200, 300)
+        return True
 
 
 def get_nic_names() -> list:
@@ -497,9 +509,9 @@ def download(
         raise Value("Local path to download the url to can not be None or empty string")
     filename = ""
     if localpath == "-":
-        filename = "-"
+        filename = "-"  # ?
     if jumpscale.sals.fs.exists(localpath) and jumpscale.sals.fs.is_dir(localpath):
-        filename = jumpscale.sals.fs.join_paths(localpath, jumpscale.sals.fs.basename(url))
+        filename = jumpscale.sals.fs.join_paths(localpath, jumpscale.sals.fs.basename(url))  # this will not work alawys
     else:
         if jumpscale.sals.fs.is_dir(jumpscale.sals.fs.dirname(localpath)):
             filename = localpath
@@ -528,7 +540,7 @@ def download(
 
 def _netobject_get(device: str) -> ipaddress.IPv4Network:
     n = get_network_info(device)
-    net = ipaddress.IPv4Network(n["ip"][0][0] + "/" + str(n["ip"][0][1]), strict=False)
+    net = ipaddress.IPv4Network(n["ip"][0][0] + "/" + str(n["ip"][0][1]), sdirnametrict=False)
     return net
 
 
