@@ -35,8 +35,7 @@ class ProcessTests(BaseTests):
     def start_in_tmux(self, cmd):
         window_name = self.randstr()
         j.core.executors.tmux.execute_in_window(cmd, window_name, SESSION_NAME)
-        if "tail" in cmd:
-            sleep(1)
+        sleep(1)
 
     def get_process_pids(self, process_name):
         cmd = f"ps -aux | grep '{process_name}' | grep -v grep | awk '{{ print $2 }}'"
@@ -288,8 +287,8 @@ class ProcessTests(BaseTests):
         - Check that only one server is found.
         """
         self.info("Start a tmux session with two python server process.")
-        port_1 = randint(1000, 2000)
-        port_2 = randint(2001, 3000)
+        port_1 = randint(20000, 21000)
+        port_2 = randint(22000, 23000)
         cmd = f"python3 -m {PYTHON_SERVER_NAME} {port_1}"
         self.start_in_tmux(cmd)
         cmd = f"python3 -m {PYTHON_SERVER_NAME} {port_2}"
@@ -363,7 +362,7 @@ class ProcessTests(BaseTests):
         - Check that this process in processes self.info.
         """
         self.info("Start python server in tmux.")
-        port = randint(1000, 2000)
+        port = randint(10000, 20000)
         cmd = f"python3 -m {PYTHON_SERVER_NAME} {port}"
         self.start_in_tmux(cmd)
         self.assertTrue(j.sals.nettools.wait_connection_test(HOST, port, 2))
@@ -411,7 +410,7 @@ class ProcessTests(BaseTests):
         - Check that the server pid is not exist.
         """
         self.info("Start python server in tmux.")
-        port = randint(1000, 2000)
+        port = randint(10000, 20000)
         cmd = f"python3 -m {PYTHON_SERVER_NAME} {port}"
         self.start_in_tmux(cmd)
         self.assertTrue(j.sals.nettools.wait_connection_test(HOST, port, 2))
@@ -638,7 +637,7 @@ class ProcessTests(BaseTests):
         - Check that the result from both ways are the same.
         """
         self.info("Start python server.")
-        python_port = randint(1000, 2000)
+        python_port = randint(10000, 20000)
         cmd = f"python3 -m {PYTHON_SERVER_NAME} {python_port}"
         self.start_in_tmux(cmd)
         self.assertTrue(j.sals.nettools.wait_connection_test(HOST, python_port, 2))
