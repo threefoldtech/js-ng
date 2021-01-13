@@ -936,14 +936,6 @@ security = ["pyOpenSSL (>=0.14)", "cryptography (>=1.3.4)"]
 socks = ["PySocks (>=1.5.6,!=1.5.7)", "win-inet-pton"]
 
 [[package]]
-name = "secretconf"
-version = "0.1.2"
-description = "manage your secrets and configurations easily"
-category = "main"
-optional = false
-python-versions = "*"
-
-[[package]]
 name = "six"
 version = "1.15.0"
 description = "Python 2 and 3 compatibility utilities"
@@ -1113,7 +1105,7 @@ whoosh = ["Whoosh"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6"
-content-hash = "8c80dccfb7b8470ca97567ad1a57876b50ff55ca2e10b0e7f9e0070f670a3dae"
+content-hash = "bb1802fbffb4a6402331956e6f61a047c0fede888f726db866a67939d229d692"
 
 [metadata.files]
 appdirs = [
@@ -1743,10 +1735,6 @@ redis = [
 requests = [
     {file = "requests-2.25.1-py2.py3-none-any.whl", hash = "sha256:c210084e36a42ae6b9219e00e48287def368a26d03a048ddad7bfee44f75871e"},
     {file = "requests-2.25.1.tar.gz", hash = "sha256:27973dd4a904a4f13b263a19c866c13b92a39ed1c964655f025f3f8d3d75b804"},
-]
-secretconf = [
-    {file = "secretconf-0.1.2-py3-none-any.whl", hash = "sha256:e1b556b3de83852b9ae97a85b0041987968689efd6673f2cfbb5d5808c968e02"},
-    {file = "secretconf-0.1.2.tar.gz", hash = "sha256:89aa68c7bcd995aad277a0dadaaf9f92c2e22d56a17bc4f923a01077e097eb47"},
 ]
 six = [
     {file = "six-1.15.0-py2.py3-none-any.whl", hash = "sha256:8b74bedcbbbaca38ff6d7491d76f2b06b3592611af620f8426e82dddb04a5ced"},

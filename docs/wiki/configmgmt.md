@@ -172,10 +172,10 @@ Only `json` serialization is now supported, if you need to get a serializable di
 
 We use public key encryption, implementation is at `j.data.nacl`.
 For keys, we use the key that's generated and saved at `private_key_path`.
-There is a key that's auto-generated for you, to generate a new key, use `hush_keygen` and `jsctl` to set the path:
+There is a key that's auto-generated for you, to generate a new key, use `jsctl` to generate a new key and update the config:
 
 ```
-hush_keygen --name test
+jsctl genkey . test
 jsctl config update private_key_path "`pwd`/test.priv"
 ```
 

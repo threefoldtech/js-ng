@@ -1,6 +1,7 @@
 import click
 
-from jumpscale.core.config import get_default_config, update_config, get_config
+from jumpscale.core.config import generate_key, get_config, get_default_config, update_config
+from jumpscale.sals.fs import join_paths
 import toml
 
 
@@ -51,7 +52,7 @@ def traverse_config(name):
     return config, prop, path[-1]
 
 
-@click.group()
+@click.group(help="list, view and update current configuration")
 def config():
     pass
 
@@ -106,6 +107,16 @@ def update(name, value):
 @click.group()
 def cli():
     pass
+
+
+@cli.command()
+@click.argument("path", type=click.Path(exists=True))
+@click.argument("basename", required=False)
+def genkey(path, basename=None):
+    """generates private and public keys inside the given directory path"""
+    if not basename:
+        basename = "key"
+    generate_key(join_paths(path, basename))
 
 
 cli.add_command(config)

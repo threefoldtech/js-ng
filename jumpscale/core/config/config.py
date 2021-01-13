@@ -89,6 +89,7 @@ __all__ = [
     "set",
     "set_default",
     "get_current_version",
+    "generate_key",
 ]
 
 
