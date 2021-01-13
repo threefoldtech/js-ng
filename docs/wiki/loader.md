@@ -1,6 +1,7 @@
-# Loader implementation
+# Loader
+We provide a loader which loads all sub-modules of `jumpscale` under a single object, and imports any of them only when accessed. This will make it easy to access different SALs and clients from a single global object in e.g. shells.
 
-For normal imports, we don't need a global `j` object, but for ease of access and the shell, we provide a loader which loads all sub-modules under `jumpscale` under a single object, and imports any module once it's accessed, see the following different examples:
+See the following example to demonstrate the differnce between normal imports and the loader:
 
 Using direct **imports**:
 ```python
@@ -19,9 +20,9 @@ print(j.sals.fs.exists("/path/to/file"))
 
 When using the loader, the module `jumpscale.sals.fs` won't be imported until accessed.
 
-
 ## Code structure
-the idea is with hierarchy like this
+The idea is with hierarchy like this
+
 ```
 project1/
          /rootnamespace (jumpscale)
@@ -40,12 +41,13 @@ project2/
                 ... pkg1
                 ... pkg2
 ```
-- we get all the paths of the `root namespace`
-- we get all the sub-namespaces
-- we get all the inner packages and import any of them (lazily).
+
+- We get all the paths of the `root namespace`
+- We get all the sub-namespaces
+- We get all the inner packages and import any of them (lazily).
 
 
-# real example
+## Real example
 ```
 js-ng
 ├── jumpscale   <- root namespace
@@ -82,25 +84,7 @@ js-ng
     └── test_loads_j.py
 ```
 
-```
-js-sdk
-├── jumpscale
-│   ├── clients
-│   │   └── gitlab
-│   │       ├── gitlab.py
-│   │       └── __init__.py
-│   ├── sals
-│   │   └── zos
-│   │       ├── __init__.py
-│   │       └── zos.py
-│   └── tools
-├── README.md
-└── tests
-    └── test_success.py
-```
-
-
-## How is it implemented?
+## Implementation
 
 The loader is implemented at `loader.py`.
 
@@ -163,25 +147,8 @@ Lazy imports are done via property access:
 ```python
 def get_lazy_import_property(name, root_module, container_type):
     def getter(self):
-        inner_name = f"__{name}"
-        if hasattr(self, inner_name):
-            return getattr(self, inner_name)
-
-        full_name = f"{root_module.__name__}.{name}"
-        mod = importlib.import_module(full_name)
-        if mod.__spec__.origin in ("namespace", None):
-            # if this module is a namespace, create a new container type
-            sub_container_type = get_container_type(full_name)
-            # expose all sub-modules of this imported module under this new type too
-            expose_all(mod, sub_container_type)
-            new_module = sub_container_type()
-        else:
-            # if it's just a module
-            if hasattr(mod, "export_module_as"):
-                new_module = mod.export_module_as()
-            else:
-                new_module = mod
-
+        ...
+        ...
         setattr(self, inner_name, new_module)
         return new_module
 

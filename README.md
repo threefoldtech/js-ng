@@ -10,7 +10,7 @@ config management/automation framework
 ## Principles
 
 - pip installable
-- facilities exposed under `god object`: `j`
+- facilities exposed under a [global loader](docs/wiki/loader.md): `j`
 - pluggable
 - docs and tests are as important as code
 
@@ -25,6 +25,11 @@ config management/automation framework
 - install [poetry](https://poetry.eustace.io)
 - clone this repository, then
   - `poetry install`
+
+- some modules are [optional (extras)](https://python-poetry.org/docs/pyproject/#extras), you can install all or any of them like:
+  - `poetry install -E whoosh`: for whoosh store backend only
+  - `poetry install -E all`: with all optional modules
+
 
 ### Accessing the virtualenv
 

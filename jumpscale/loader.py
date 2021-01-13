@@ -50,12 +50,13 @@ def get_lazy_import_property(name, root_module, container_type):
             if hasattr(mod, "export_module_as"):
                 try:
                     new_module = mod.export_module_as()
-                except ImportError:
+                except ImportError as err:
                     if hasattr(mod, "__optional__") and mod.__optional__:
                         raise OptionalModuleError(
-                            f"module was not installed, try installing again with '{name}' as an extra"
-                        )
-                    raise
+                            f"module was not installed, try installing again with '{name}' as an extra\n"
+                            f"e.g. 'poetry install -E {name}' or 'pip install js-ng[fake]'"
+                        ) from err
+                    raise err
             else:
                 new_module = mod
 
