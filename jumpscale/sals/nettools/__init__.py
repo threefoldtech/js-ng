@@ -548,3 +548,49 @@ def netrange_get(device: str, skip_begin: Optional[int] = 10, skip_end: Optional
     """
     n = _netobject_get(device)
     return (str(n[0] + skip_begin), str(n[-1] - skip_end))
+
+
+def get_free_port(ipv6: Optional[bool] = False, udp: Optional[bool] = False, return_socket: Optional[bool] = False):
+    """Bind an ipv4 or ipv6 socket to port 0 to make OS pick a random, free and
+    available port from 1024 to 65535.
+
+    you can optionally choose to reuse the socket by set return_socket to True
+    but then it is your responsibility to close that socket calling its close
+    method after you finish with it to free the selected port.
+    by default you got tcp port, but setting udp to True will set socket type to UDP
+
+    Args:
+        ipv6 (bool, optional): weather to bind the free port to 127.0.0.1 or ::1. Defaults to False.
+        udp (bool, optional): set sokcet type to udp instaed of tcp. Defaults to False.
+        return_socket (bool, optional): return the socket alongside the port to reuse it. Defaults to False.
+
+    Returns:
+        int: returns a random free port from 1024 to 65535 range.
+        Optional[soket]: in the case of return_socket set to True, socket will be returned alongside the port in a tuple.
+
+    Example:
+        # get a free TCP port that currently not binded to 127.0.0.1
+        port = get_free_port()
+        # get a free UDP port that currently not binded to 127.0.0.1
+        port = get_free_port(udp=True)
+        # get a free TCP port that currently not binded to ::1
+        port = get_free_port(ipv6=True)
+        # get a free TCP port that currently not binded to 127.0.0.1
+        # and reuse the socket instead of creating a socket and bind it to selected port
+        port, sock = get_free_port(return_socket=True)
+        sock.listen()
+        ..
+        sock.close()
+    """
+    socket_type = socket.SOCK_DGRAM if udp else socket.SOCK_STREAM
+    # Picking a random port is not a good idea - let the OS pick one for you.
+    if ipv6:
+        sock = socket.socket(socket.AF_INET6, socket_type)
+        sock.bind(("::1", 0))
+    else:
+        sock = socket.socket(socket.AF_INET, socket_type)
+        sock.bind(("127.0.0.1", 0))
+    # retrieve the selected port with getsockname() right after bind()
+    port = sock.getsockname()[1]
+    # returns port or (port, socket) depend on the bool value of return_socket
+    return (port, sock) if return_socket else port
