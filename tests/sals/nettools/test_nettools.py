@@ -49,15 +49,13 @@ def test_03_wait_connection_test_ipv4_succeed():
     """
     TIMEOUT = 6
     # getting random free port
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind(("127.0.0.1", 0))
-        port = s.getsockname()[1]
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            future = executor.submit(nettools.wait_connection_test, "127.0.0.1", port, TIMEOUT)
-            time.sleep(4)
-            # subprocess.Popen(["nc", "-l", "127.0.0.1", str(port)])
-            s.listen()
-            return_value = future.result()
+    port, sock = nettools.get_free_port(return_socket=True)
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future = executor.submit(nettools.wait_connection_test, "127.0.0.1", port, TIMEOUT)
+        time.sleep(4)
+        # subprocess.Popen(["nc", "-l", "127.0.0.1", str(port)])
+        sock.listen()
+        return_value = future.result()
 
     assert return_value
 
@@ -74,16 +72,14 @@ def test_04_wait_connection_test_ipv6_succeed():
     """
     TIMEOUT = 4
     # getting random free port for ::1
-    with socket.socket(socket.AF_INET6, socket.SOCK_STREAM) as s:
-        s.bind(("::1", 0))
-        port = s.getsockname()[1]
+    port, sock = nettools.get_free_port(ipv6=True, return_socket=True)
 
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            future = executor.submit(nettools.wait_connection_test, "::1", port, TIMEOUT)
-            time.sleep(1)
-            s.listen()
-            time.sleep(1)
-            return_value = not future.running() and future.result()
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future = executor.submit(nettools.wait_connection_test, "::1", port, TIMEOUT)
+        time.sleep(1)
+        sock.listen()
+        time.sleep(1)
+        return_value = not future.running() and future.result()
 
     assert return_value
 
@@ -116,8 +112,7 @@ def test_05_wait_http_test_succeed(server_status_code):
 
     host_name = "localhost"
     # getting random free port
-    with socketserver.TCPServer((host_name, 0), None) as s:
-        server_port = s.server_address[1]
+    server_port = nettools.get_free_port()
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
         future = executor.submit(nettools.wait_http_test, f"http://{host_name}:{server_port}", 5)
@@ -139,8 +134,7 @@ def test_06_wait_http_test_timed_out():
     """
     host_name = "localhost"
     # getting random free port
-    with socketserver.TCPServer((host_name, 0), None) as s:
-        server_port = s.server_address[1]
+    server_port = nettools.get_free_port()
     with concurrent.futures.ThreadPoolExecutor() as executor:
         future = executor.submit(nettools.wait_http_test, f"http://{host_name}:{server_port}", 1)
         time.sleep(2)
