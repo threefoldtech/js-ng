@@ -14,14 +14,19 @@ import jumpscale.tools.http
 import jumpscale.data.platform
 import jumpscale.sals.fs
 import jumpscale.core.executors
-from jumpscale.data.types import (
-    IPAddress,
-)  # going to remove j.data.types . use insted jumpscale.core.base.fields.IPAddress
 from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
 import ssl
 import json
 import subprocess
+from urllib.parse import urlparse
+from pathlib import Path
+import shutil
+from urllib.request import build_opener, HTTPPasswordMgrWithDefaultRealm, HTTPBasicAuthHandler, install_opener
+from collections import namedtuple
+from os.path import basename
+
+# going to remove j.data.types . use insted jumpscale.core.base.fields.IPAddress
 
 
 def tcp_connection_test(ipaddr: str, port: int, timeout: Optional[int] = None) -> bool:
