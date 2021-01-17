@@ -366,16 +366,16 @@ def get_network_info(device: Optional[str] = None) -> list:
 
     def _get_info():
         if device:
-            exitcode, output, _ = jumpscale.core.executors.run_local(f"ip -j addr show {device}", hide=True, warn=True)
-            if exitcode != 0:
-                raise Runtime("could not find device")
-            # try:
-            #    stdout = subprocess.check_output(f"ip -j addr show {device}", shell=True)
-            # except subprocess.CalledProcessError:
+            # exitcode, output, _ = jumpscale.core.executors.run_local(f"ip -j addr show {device}", hide=True, warn=True)
+            # if exitcode != 0:
             #    raise Runtime("could not find device")
+            try:
+                output = subprocess.check_output(f"ip -j addr show {device}", shell=True)
+            except subprocess.CalledProcessError:
+                raise RuntimeError("could not find device")
         else:
-            _, output, _ = jumpscale.core.executors.run_local(f"ip -j addr show", hide=True, warn=True)
-            # stdout = subprocess.check_output("ip -j addr show", shell=True)
+            # _, output, _ = jumpscale.core.executors.run_local("ip -j addr show", hide=True, warn=True)
+            output = subprocess.check_output("ip -j addr show", shell=True)
         res = json.loads(output)
         for nic_info in res:
             # when use ip command with -j option and specifed interface. it returns on ubuntu < 20
@@ -480,12 +480,22 @@ def ping_machine(ip: str, timeout: Optional[int] = 60, allowhostname: Optional[b
         _ = ipaddress.ip_address(ip)
     except ValueError:
         if not allowhostname:
-            raise Value("Invalid ip address, set allowhostname to use hostnames")
+            raise ValueError("Invalid ip address, set allowhostname to use hostnames")
 
     if jumpscale.data.platform.is_linux():
-        exitcode, output, err = jumpscale.core.executors.run_local(f"ping -c 1 -w {timeout} {ip}", warn=True, hide=True)
+        try:
+            _ = subprocess.check_output(f"ping -c 1 -w {timeout} {ip}", shell=True)
+            exitcode = 0
+        except subprocess.CalledProcessError:
+            exitcode = -1
+        # exitcode, output, err = jumpscale.core.executors.run_local(f"ping -c 1 -w {timeout} {ip}", warn=True, hide=True)
     elif jumpscale.data.platform.is_osx():
-        exitcode, _, _ = jumpscale.core.executors.run_local(f"ping -o -t {timeout} {ip}", warn=True, hide=True)
+        try:
+            _ = subprocess.check_output(f"ping -o -t {timeout} {ip}", shell=True)
+            exitcode = 0
+        except subprocess.CalledProcessError:
+            exitcode = -1
+        # exitcode, _, _ = jumpscale.core.executors.run_local(f"ping -o -t {timeout} {ip}", warn=True, hide=True)
     else:  # unsupported platform
         raise NotImplementedError("Not Implemented for this os")
     return exitcode == 0
