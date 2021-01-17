@@ -503,54 +503,132 @@ def ping_machine(ip: str, timeout: Optional[int] = 60, allowhostname: Optional[b
 
 def download(
     url: str,
-    localpath: str,
+    localpath: Optional[str] = "",
     username: Optional[str] = None,
     passwd: Optional[str] = None,
     overwrite: Optional[bool] = True,
+    append_to_home: Optional[bool] = False,
+    name_from_url: Optional[bool] = True,
 ):
     """Download a url to a file or a directory, supported protocols: http, https, ftp, file
-    @param url: URL to download from
-    @type url: string
-    @param localpath: filename or directory to download the url to pass - to return data
-    @type localpath: string
-    @param username: username for the url if it requires authentication
-    @type username: string
-    @param passwd: password for the url if it requires authentication
-    @type passwd: string
+
+    Args:
+        url (str): URL to download from
+        localpath (str): filename or directory to download the url to. pass None to return the data. Defaults to ''.
+        username (str, optional): username for the url if it requires authentication. Defaults to None.
+        passwd (str, optional): password for the url if it requires authentication. Defaults to None.
+        overwrite (bool, optional): if the file exists, it will be truncated. Defaults to True.
+        append_to_home (bool, optional): if set to true, any relative path specified in localpath arg
+            will be appended to the user home directory (that guaranteed to have a write permission). if set
+            to False any relative localpath set by user will append to the current working directory. if user
+            specified a absolute localpath (start with /) append_to_home will have no effect. Defaults to False.
+        name_from_url (bool, optional): if set to true, localpath will treated as a dir, and will try to get
+            the file name from the url or fallback to auto generated name. Defaults to True.
+
+    Raises:
+        PermissionError: [description]
+        FileNotFoundError: [description]
+        FileExistsError: [description]
+        ValueError: [description]
+        URLError: [description]
+
+    Returns:
+        namedtuple: namedtuple('DownloadResult', ['localpath', 'content', content_length])
+            - localpath (pathlib.Path)
+            - content (bytes): only if localpath is None else it will be None always
+            - content_length: the content length as returned from the response headers
+
+    Todo:
+        - better performance with Multi-Threaded
+        - support resume
+
+    Examples:
+        # use default values for args will download the url to cwd and get the name from the url,
+        # if the file already exists, it will overwrited.
+        >>> nettools.download('https://www.7-zip.org/a/7z1900-extra.7z')
+        DownloadResult(localpath=PosixPath('/home/sameh/projects/js-ng/7z1900-extra.7z'), content=None, content_length='929117')
+
     """
-    if not url:
-        raise Value("URL can not be None or empty string")
-    if not localpath:
-        raise Value("Local path to download the url to can not be None or empty string")
-    filename = ""
-    if localpath == "-":
-        filename = "-"  # ?
-    if jumpscale.sals.fs.exists(localpath) and jumpscale.sals.fs.is_dir(localpath):
-        filename = jumpscale.sals.fs.join_paths(localpath, jumpscale.sals.fs.basename(url))  # this will not work alawys
+    DownloadResult = namedtuple("DownloadResult", ["localpath", "content", "content_length"])
+    file_name = ""
+
+    try:
+        parsed_url = urlparse(url)
+    except ValueError:
+        raise
+
+    if name_from_url:
+        file_name = basename(parsed_url.path)  # TODO: insure safe file name and fall back if can't get the file name
+    elif localpath == "":
+        raise ValueError("localpath can't be empty when name_from_url is False")
+
+    if username and passwd:
+        if parsed_url.scheme == "ftp":
+            url = "ftp://%s:%s@" % (username, passwd) + url.split("://")[1]
+        elif parsed_url.scheme in ("http", "https"):
+            # create a password manager
+            password_mgr = HTTPPasswordMgrWithDefaultRealm()
+
+            # Add the username and password.
+            # If we knew the realm, we could use it instead of None.
+            password_mgr.add_password(None, parsed_url.netloc, username, passwd)
+
+            handler = HTTPBasicAuthHandler(password_mgr)
+
+            # create "opener" (OpenerDirector instance)
+            opener = build_opener(handler)
+
+            install_opener(opener)
+
+    req = Request(url)
+    req.add_header(
+        "User-agent",
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36",
+    )
+    try:
+        response = urlopen(req)
+        content_length = response.headers.get("Content-Length")
+        # print(response.headers)
+        # print(response.code)
+        # print(response.url)
+    except URLError as e:
+        if hasattr(e, "reason"):
+            msg = "We failed to reach a server."
+            msg += " Reason: " + e.reason
+        elif hasattr(e, "code"):
+            msg = "The server couldn't fulfill the request."
+            msg += " Error code: " + e.code
+        # print(msg)
+        raise
+    if localpath is not None:
+        file_path = Path(localpath) / file_name
+        if not file_path.is_absolute() and append_to_home:
+            file_path = Path.home() / file_path
+
+        dir_path = file_path.parent
+
+        try:
+            dir_path.mkdir(parents=True, exist_ok=True)
+        except (PermissionError, FileNotFoundError):
+            raise
+
+        if overwrite:
+            file_mode = "wb"  # if exists will turncated
+        else:
+            file_mode = "xb"  # if exists will raise excaption
+
+        try:
+            f_handler = file_path.open(file_mode)
+        except (PermissionError, FileNotFoundError, FileExistsError):
+            raise
     else:
-        if jumpscale.sals.fs.is_dir(jumpscale.sals.fs.dirname(localpath)):
-            filename = localpath
-        else:
-            raise Value("Local path is an invalid path")
+        return DownloadResult(localpath=None, content=response.read(), content_length=content_length)
+    try:
+        shutil.copyfileobj(response, f_handler, length=8 * 1024 * 1024)
 
-    if not jumpscale.sals.fs.exists(filename):
-        overwrite = True
-
-    if overwrite:
-        if username and passwd and jumpscale.tools.http.urllib3.util.parse_url(url).scheme == "ftp":
-            url = url.split("://")[0] + "://%s:%s@" % (username, passwd) + url.split("://")[1]
-        response = jumpscale.tools.http.get(
-            url, stream=True, auth=jumpscale.tools.http.auth.HTTPBasicAuth(username, passwd)
-        )
-        response.raise_for_status()
-        if filename != "-":
-            with open(filename, "wb") as fw:
-                for chunk in response.iter_content(chunk_size=2048):
-                    if chunk:  # filter out keep-alive new chunks
-                        fw.write(chunk)
-            return
-        else:
-            return response.content
+        return DownloadResult(localpath=file_path.resolve(), content=None, content_length=content_length)
+    finally:
+        f_handler.close()
 
 
 def _netobject_get(device: str) -> ipaddress.IPv4Network:
