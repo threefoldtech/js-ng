@@ -390,7 +390,10 @@ def test_20_download_ftp(url, localpath, username, passwd, overwrite, append_to_
     assert result.localpath.stat().st_size == int(result.content_length)
 
     print(result.localpath)
-    result.localpath.unlink(missing_ok=False)
+    try:
+        result.localpath.unlink()
+    except FileNotFoundError:
+        pass
 
 
 @pytest.mark.parametrize(
@@ -414,8 +417,10 @@ def test_21_download_https(url, localpath, username, passwd, overwrite, append_t
     assert Path.cwd().name in result.localpath.parts
     assert result.localpath.stat().st_size == int(result.content_length)
     print(result.localpath)
-    result.localpath.unlink(missing_ok=False)
-    # result.localpath.parent.rmdir()
+    try:
+        result.localpath.unlink()
+    except FileNotFoundError:
+        pass
 
 
 @pytest.mark.parametrize(
@@ -439,7 +444,10 @@ def test_22_download_http(url, localpath, username, passwd, overwrite, append_to
     assert Path.cwd().name in result.localpath.parts
     assert result.localpath.stat().st_size == int(result.content_length)
     print(result.localpath)
-    result.localpath.unlink(missing_ok=False)
+    try:
+        result.localpath.unlink()
+    except FileNotFoundError:
+        pass
 
 
 @pytest.mark.parametrize(
@@ -462,7 +470,10 @@ def test_23_download_append_to_home(url, localpath, username, passwd, overwrite,
     assert result.localpath.name == "test_23_downloaded"
     assert result.localpath.parts[1] == "home"
     print(result.localpath)
-    result.localpath.unlink(missing_ok=False)
+    try:
+        result.localpath.unlink()
+    except FileNotFoundError:
+        pass
 
 
 @pytest.mark.parametrize(
@@ -497,7 +508,10 @@ def test_24_download_create_parents(url, localpath, username, passwd, overwrite,
     assert "files" in result.localpath.parts
     assert Path.cwd().name in result.localpath.parts
     print(result.localpath)
-    result.localpath.unlink(missing_ok=False)
+    try:
+        result.localpath.unlink()
+    except FileNotFoundError:
+        pass
     result.localpath.parent.rmdir()
     result.localpath.parent.parent.rmdir()
 
@@ -520,7 +534,10 @@ def test_25_download_name_from_url(url, localpath, username, passwd, overwrite, 
     assert result.localpath.exists()
     assert result.localpath.name == "TestSSLServer4.txt"
     print(result.localpath)
-    result.localpath.unlink(missing_ok=False)
+    try:
+        result.localpath.unlink()
+    except FileNotFoundError:
+        pass
 
 
 @pytest.mark.parametrize(
@@ -550,7 +567,10 @@ def test_26_download_overwrite_False(url, localpath, username, passwd, overwrite
     with pytest.raises(FileExistsError):
         nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
     print(result.localpath)
-    result.localpath.unlink(missing_ok=False)
+    try:
+        result.localpath.unlink()
+    except FileNotFoundError:
+        pass
 
 
 @pytest.mark.parametrize(
@@ -571,12 +591,15 @@ def test_27_download_overwrite_True(url, localpath, username, passwd, overwrite,
     assert result.localpath.exists()
     result = nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
     print(result.localpath)
-    result.localpath.unlink(missing_ok=False)
+    try:
+        result.localpath.unlink()
+    except FileNotFoundError:
+        pass
 
 
 @pytest.mark.parametrize(
     "url, localpath, username, passwd, overwrite, append_to_home, name_from_url",
-    [("http://ftp.sas.com/techsup/download/TestSSLServer4.txt", "/", None, None, False, False, True),],
+    [("http://ftp.sas.com/techsup/download/TestSSLServer4.txt", "unwriteable_dir", None, None, False, True, True),],
 )
 def test_28_download_to_unwritable_dir(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
     """Test case for download a resource from url to localpath when user don't have proper Permissions
@@ -586,8 +609,23 @@ def test_28_download_to_unwritable_dir(url, localpath, username, passwd, overwri
     - Execute the function download passing in an url and a localpath consists of the root directory
     - assert the raised exception
     """
+    import os
+    import stat
+
+    NO_WRITING = ~stat.S_IWUSR & ~stat.S_IWGRP & ~stat.S_IWOTH
+    WRITING = stat.S_IWUSR & stat.S_IWGRP & stat.S_IWOTH
+
+    def edit_write_permissions(path, permissions):
+        current_permissions = stat.S_IMODE(os.lstat(path).st_mode)
+        os.chmod(path, current_permissions & permissions)
+
+    dir_path = Path.home() / Path(localpath)
+    Path.mkdir(dir_path)
+    edit_write_permissions(dir_path, NO_WRITING)
     with pytest.raises(PermissionError):
         nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
+    edit_write_permissions(dir_path, WRITING)
+    dir_path.rmdir()
 
 
 @pytest.mark.parametrize(
