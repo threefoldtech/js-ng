@@ -1,12 +1,15 @@
 import pytest
 import jumpscale.sals.nettools as nettools
 import time
-import subprocess
+
+# import subprocess
 import concurrent.futures
-import socketserver
-import socket
-import ipaddress
-from jumpscale.core.exceptions import Value, Runtime
+
+# import socketserver
+# import socket
+# import ipaddress
+# from jumpscale.core.exceptions import Value, Runtime
+from pathlib import Path
 
 
 @pytest.mark.parametrize("ipaddr, port, timeout", [("1.1.1.1", 53, 5), ("8.8.8.8", 53, 5), ("www.google.com", 80, 5)])
@@ -361,5 +364,264 @@ def test_19_ping_machine_exception(ip, timeout, allowhostname):
     - Execute the function ping_machine with a hostname
     - assert the raised exception
     """
-    with pytest.raises(Value):
+    with pytest.raises(ValueError):
         nettools.ping_machine(ip, timeout, allowhostname)
+
+
+@pytest.mark.parametrize(
+    "url, localpath, username, passwd, overwrite, append_to_home, name_from_url",
+    [("ftp://ftp.sas.com/techsup/download/TestSSLServer4.zip", "test_20_downloaded", None, None, True, False, False),],
+)
+def test_20_download_ftp(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
+    """Test case for download a resource from ftp server
+
+    **Test Scenario**
+
+    - Execute the function download passing in an ftp link and a localpath consisit of just filename
+    - assert the downloaded file succesfully downloaded.
+    - assert tha downloaded file have correct name
+    - asser the downloaded file exists in the current working directory
+    - remove the file
+    """
+    result = nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
+    assert result.localpath.exists()
+    assert result.localpath.name == "test_20_downloaded"
+    assert Path.cwd().name in result.localpath.parts
+    assert result.localpath.stat().st_size == int(result.content_length)
+
+    print(result.localpath)
+    result.localpath.unlink(missing_ok=False)
+
+
+@pytest.mark.parametrize(
+    "url, localpath, username, passwd, overwrite, append_to_home, name_from_url",
+    [("https://statweb.stanford.edu/~jhf/ftp/README", "test_21_downloaded", None, None, True, False, False),],
+)
+def test_21_download_https(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
+    """Test case for download a resource from https link
+
+    **Test Scenario**
+
+    - Execute the function download passing in an http link and a localpath consisit of just filename
+    - assert the downloaded file succesfully downloaded.
+    - assert tha downloaded file have correct name
+    - asser the downloaded file exists in the current working directory
+    - remove the file
+    """
+    result = nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
+    assert result.localpath.exists()
+    assert result.localpath.name == "test_21_downloaded"
+    assert Path.cwd().name in result.localpath.parts
+    assert result.localpath.stat().st_size == int(result.content_length)
+    print(result.localpath)
+    result.localpath.unlink(missing_ok=False)
+    # result.localpath.parent.rmdir()
+
+
+@pytest.mark.parametrize(
+    "url, localpath, username, passwd, overwrite, append_to_home, name_from_url",
+    [("http://ftp.sas.com/techsup/download/TestSSLServer4.txt", "test_22_downloaded", None, None, True, False, False),],
+)
+def test_22_download_http(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
+    """Test case for download a resource from http link
+
+    **Test Scenario**
+
+    - Execute the function download passing in an ftp link and a localpath consisit of just filename
+    - assert the downloaded file succesfully downloaded.
+    - assert tha downloaded file have correct name
+    - asser the downloaded file exists in the current working directory
+    - remove the file
+    """
+    result = nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
+    assert result.localpath.exists()
+    assert result.localpath.name == "test_22_downloaded"
+    assert Path.cwd().name in result.localpath.parts
+    assert result.localpath.stat().st_size == int(result.content_length)
+    print(result.localpath)
+    result.localpath.unlink(missing_ok=False)
+
+
+@pytest.mark.parametrize(
+    "url, localpath, username, passwd, overwrite, append_to_home, name_from_url",
+    [("ftp://ftp.sas.com/techsup/download/TestSSLServer4.zip", "test_23_downloaded", None, None, True, True, False),],
+)
+def test_23_download_append_to_home(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
+    """Test case for download a resource from url to localpath relative to user home directory
+
+    **Test Scenario**
+
+    - Execute the function download passing in an url and a localpath consisit of just filename.
+    - assert the downloaded file succesfully downloaded.
+    - assert tha downloaded file have correct name
+    - asser the downloaded file exists in the user home directory
+    - remove the file
+    """
+    result = nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
+    assert result.localpath.exists()
+    assert result.localpath.name == "test_23_downloaded"
+    assert result.localpath.parts[1] == "home"
+    print(result.localpath)
+    result.localpath.unlink(missing_ok=False)
+
+
+@pytest.mark.parametrize(
+    "url, localpath, username, passwd, overwrite, append_to_home, name_from_url",
+    [
+        (
+            "https://statweb.stanford.edu/~jhf/ftp/README",
+            "downloaded_test_24/files/test_24_downloaded",
+            None,
+            None,
+            True,
+            False,
+            False,
+        ),
+    ],
+)
+def test_24_download_create_parents(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
+    """Test case for download a resource from url to localpath that don't exists
+
+    **Test Scenario**
+
+    - Execute the function download passing in an url and a localpath consisit chain of directories that not exists
+    - assert the downloaded file succesfully downloaded.
+    - assert tha downloaded file have correct name
+    - assert the parents directories successfuly created
+    - remove the file, and its parents dir
+    """
+    result = nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
+    assert result.localpath.exists()
+    assert result.localpath.name == "test_24_downloaded"
+    assert "downloaded_test_24" in result.localpath.parts
+    assert "files" in result.localpath.parts
+    assert Path.cwd().name in result.localpath.parts
+    print(result.localpath)
+    result.localpath.unlink(missing_ok=False)
+    result.localpath.parent.rmdir()
+    result.localpath.parent.parent.rmdir()
+
+
+@pytest.mark.parametrize(
+    "url, localpath, username, passwd, overwrite, append_to_home, name_from_url",
+    [("http://ftp.sas.com/techsup/download/TestSSLServer4.txt", "", None, None, True, False, True),],
+)
+def test_25_download_name_from_url(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
+    """Test case for download a resource from url to cwd and get the filename from the url
+
+    **Test Scenario**
+
+    - Execute the function download passing in an url and a localpath consisit of empty string
+    - assert the downloaded file succesfully downloaded.
+    - assert tha downloaded file have correct name from the url
+    - remove the file
+    """
+    result = nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
+    assert result.localpath.exists()
+    assert result.localpath.name == "TestSSLServer4.txt"
+    print(result.localpath)
+    result.localpath.unlink(missing_ok=False)
+
+
+@pytest.mark.parametrize(
+    "url, localpath, username, passwd, overwrite, append_to_home, name_from_url",
+    [
+        (
+            "http://ftp.sas.com/techsup/download/TestSSLServer4.txt",
+            "downloaded_test_26",
+            None,
+            None,
+            False,
+            False,
+            False,
+        ),
+    ],
+)
+def test_26_download_overwrite_False(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
+    """Test case for download a resource from url to localpath when the file already exists
+
+    **Test Scenario**
+
+    - Execute the function download passing in an url and a localpath consisit of desired filename and assigning False to overwrite
+    - assert the raised exception
+    """
+    result = nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
+    assert result.localpath.exists()
+    with pytest.raises(FileExistsError):
+        nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
+    print(result.localpath)
+    result.localpath.unlink(missing_ok=False)
+
+
+@pytest.mark.parametrize(
+    "url, localpath, username, passwd, overwrite, append_to_home, name_from_url",
+    [("http://ftp.sas.com/techsup/download/TestSSLServer4.txt", "downloaded_test_27", None, None, True, False, False),],
+)
+def test_27_download_overwrite_True(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
+    """Test case for download a resource from url to localpath when the file already exists
+
+    **Test Scenario**
+
+    - Execute the function download passing in an url and a localpath consisit of desired filename and assigning True to overwrite
+    - assert the result
+    - Execute the function download pagain assing in the same url and the same localpath and assigning True to overwrite
+    - remove the file
+    """
+    result = nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
+    assert result.localpath.exists()
+    result = nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
+    print(result.localpath)
+    result.localpath.unlink(missing_ok=False)
+
+
+@pytest.mark.parametrize(
+    "url, localpath, username, passwd, overwrite, append_to_home, name_from_url",
+    [("http://ftp.sas.com/techsup/download/TestSSLServer4.txt", "/", None, None, False, False, True),],
+)
+def test_28_download_to_unwritable_dir(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
+    """Test case for download a resource from url to localpath when user don't have proper Permissions
+
+    **Test Scenario**
+
+    - Execute the function download passing in an url and a localpath consists of the root directory
+    - assert the raised exception
+    """
+    with pytest.raises(PermissionError):
+        nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
+
+
+@pytest.mark.parametrize(
+    "url, localpath, username, passwd, overwrite, append_to_home, name_from_url",
+    [("http://ftp.sas.com/techsup/download/TestSSLServer4.txt", None, None, None, False, False, True),],
+)
+def test_29_download_return_content(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
+    """Test case for download a resource from url to localpath when user don't have proper Permissions
+
+    **Test Scenario**
+
+    - Execute the function download passing in an url and a localpath consists of the root directory
+    - assert the raised exception
+    """
+    result = nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
+    assert not result.localpath and result.content
+    assert len(result.content) == int(result.content_length)
+
+
+def test_get_free_port():
+    """Test case for getting free ports and use it.
+
+    **Test Scenario**
+
+    - Execute the function get_free_port many time (500)
+    -the function will bind the port to 127.0.0.1 amd return a socket
+    - as long as no OSError exception (in case if port already in use) the port selected by the function (by OS) is free
+    - clean up and close all sockets
+    """
+    sockets = []
+    try:
+        for i in range(500):
+            p, s = nettools.get_free_port(return_socket=True)
+            sockets.append(s)
+    finally:
+        for s in sockets:
+            s.close()
