@@ -468,7 +468,7 @@ def test_23_download_append_to_home(url, localpath, username, passwd, overwrite,
     result = nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
     assert result.localpath.exists()
     assert result.localpath.name == "test_23_downloaded"
-    assert result.localpath.parts[1] == "home"
+    assert Path.home().name in result.localpath.parts
     print(result.localpath)
     try:
         result.localpath.unlink()
