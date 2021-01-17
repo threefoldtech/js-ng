@@ -672,17 +672,17 @@ def get_free_port(ipv6: Optional[bool] = False, udp: Optional[bool] = False, ret
 
     Example:
         # get a free TCP port that currently not binded to 127.0.0.1
-        port = get_free_port()
+        >>> port = get_free_port()
         # get a free UDP port that currently not binded to 127.0.0.1
-        port = get_free_port(udp=True)
+        >>> port = get_free_port(udp=True)
         # get a free TCP port that currently not binded to ::1
-        port = get_free_port(ipv6=True)
+        >>> port = get_free_port(ipv6=True)
         # get a free TCP port that currently not binded to 127.0.0.1
         # and reuse the socket instead of creating a socket and bind it to selected port
-        port, sock = get_free_port(return_socket=True)
-        sock.listen()
+        >>> port, sock = get_free_port(return_socket=True)
+        >>> sock.listen()
         ..
-        sock.close()
+        >>> sock.close()
     """
     socket_type = socket.SOCK_DGRAM if udp else socket.SOCK_STREAM
     # Picking a random port is not a good idea - let the OS pick one for you.
