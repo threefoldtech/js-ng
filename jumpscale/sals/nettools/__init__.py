@@ -638,18 +638,15 @@ def _netobject_get(device: str) -> ipaddress.IPv4Network:
 
 
 def netrange_get(device: str, skip_begin: Optional[int] = 10, skip_end: Optional[int] = 10) -> tuple:
-    """
-    Get ($fromip,$topip) from range attached to device, skip the mentioned ip addresses.
+    """Get ($fromip,$topip) from range attached to device, skip the mentioned ip addresses.
 
-    :param device: device name
-    :type device: str
-    :param skip_begin: ips to skip from the begining of the range, defaults to 10
-    :type skip_begin: int, optional
-    :param skip_end: ips to skip from the end of the range, defaults to 10
-    :type skip_end: int, optional
+    Args:
+        device (str): [description]
+        skip_begin (Optional[int], optional): ips to skip from the begining of the range, Defaults to 10.
+        skip_end (Optional[int], optional): ips to skip from the end of the range, Defaults to 10.
 
-    :return: ip range for this device
-    :rtype: tuple
+    Returns:
+        tuple: ip range for this device
     """
     n = _netobject_get(device)
     return (str(n[0] + skip_begin), str(n[-1] - skip_end))
