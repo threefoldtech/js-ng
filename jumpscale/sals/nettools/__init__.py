@@ -181,10 +181,10 @@ def check_url_reachable(
     req = Request(url, headers=HEADERS if fake_user_agent else {}, method=METHOD)
     try:
         response = urlopen(req, timeout=timeout, context=context)
-    except HTTPError as msg:
+    except HTTPError:
         # The server couldn't fulfill the request.
         # codes in the 400–599 range.
-        status = msg.code
+        # status = msg.code
         return False
     except URLError:
         # We failed to reach a server.
@@ -282,7 +282,7 @@ def get_reachable_ip_address(ip: str, port: Optional[int] = 0) -> str:
 
     Raises:
         ValueError: if address does not represent a valid IPv4 or IPv6 address.
-        Runtime: if can't connect
+        RuntimeError: if can't connect
 
     Returns:
         str: ip that can connect to the specified ip
@@ -298,7 +298,7 @@ def get_reachable_ip_address(ip: str, port: Optional[int] = 0) -> str:
     try:
         s.connect((ip, port))
     except OSError:
-        raise Runtime("Cannot connect to %s:%s, check network configuration" % (ip, port))
+        raise RuntimeError("Cannot connect to %s:%s, check network configuration" % (ip, port))
     except ValueError:
         raise
     return s.getsockname()[0]
@@ -312,7 +312,7 @@ def get_default_ip_config(ip: Optional[str] = "8.8.8.8") -> tuple:
 
     Raises:
         ValueError: if address does not represent a valid IPv4 or IPv6 address.
-        Runtime: if can't connect
+        RuntimeError: if can't connect
 
     Returns:
         tuple: default nic name and its ip address
@@ -465,7 +465,7 @@ def ping_machine(ip: str, timeout: Optional[int] = 60, allowhostname: Optional[b
         allowhostname (bool, optional): allow pinging on hostname. Defaults to True.
 
     Raises:
-        Value: if ip is Invalid ip address
+        ValueError: if ip is Invalid ip address
         NotImplementedError: if the function runs on unsupported system
 
     Returns:
