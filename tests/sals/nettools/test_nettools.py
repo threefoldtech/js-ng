@@ -637,12 +637,13 @@ def test_29_download_to_unwritable_dir(url, localpath, username, passwd, overwri
     [("http://ftp.sas.com/techsup/download/TestSSLServer4.txt", None, None, None, False, False, True),],
 )
 def test_30_download_return_content(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
-    """Test case for download a resource from url to localpath when user don't have proper Permissions
+    """Test case for download a resource from url and return the content
 
     **Test Scenario**
 
-    - Execute the function download passing in an url and a localpath consists of the root directory
-    - Assert the raised exception
+    - Execute the function download passing in an url and set localpath to None
+    - Assert that we got the content
+    - Assert that returned content size is equal to one from the response headers
     """
     result = nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
     assert not result.localpath and result.content
