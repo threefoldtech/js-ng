@@ -1,8 +1,9 @@
 import string
 from math import ceil
 from random import randint
-from time import sleep
+from gevent import sleep
 
+import pytest
 from jumpscale.loader import j
 from parameterized import parameterized
 from tests.base_tests import BaseTests
@@ -34,8 +35,7 @@ class ProcessTests(BaseTests):
     def start_in_tmux(self, cmd):
         window_name = self.randstr()
         j.core.executors.tmux.execute_in_window(cmd, window_name, SESSION_NAME)
-        if "tail" in cmd:
-            sleep(0.3)
+        sleep(1)
 
     def get_process_pids(self, process_name):
         cmd = f"ps -aux | grep '{process_name}' | grep -v grep | awk '{{ print $2 }}'"
@@ -61,19 +61,21 @@ class ProcessTests(BaseTests):
         self.assertFalse(rc, error)
         pids_processes = output.splitlines()
 
-        ports = []
-        for ip_port in ips_ports:
-            ports.append(int(ip_port.split(":")[-1]))
+        ports = {}
+        for i, ip_port in enumerate(ips_ports):
+            ports[i] = int(ip_port.split(":")[-1])
 
-        pids = []
-        for pid_process in pids_processes:
-            pids.append(int(pid_process.split("/")[0]))
+        pids = {}
+        for i, pid_process in enumerate(pids_processes):
+            pids[i] = pid_process.split("/")[0]
 
         mapping = {}
-        for i, pid in enumerate(pids):
-            if pid not in mapping.keys():
-                mapping[pid] = []
-            mapping[pid].append(ports[i])
+        for i in pids.keys():
+            if pids[i] != "-":
+                pid = int(pids[i])
+                if pid not in mapping.keys():
+                    mapping[pid] = []
+                mapping[pid].append(ports[i])
 
         return mapping
 
@@ -259,7 +261,7 @@ class ProcessTests(BaseTests):
         env_val = self.randstr()
         rc, _, error = j.sals.process.execute(cmd=cmd, env={env_name: env_val})
         self.assertFalse(rc, error)
-        sleep(0.3)
+        sleep(1)
 
         self.info("Check that the process has been started and get its pid.")
         pids = self.get_process_pids(TAIL_PROCESS_NAME)
@@ -285,8 +287,8 @@ class ProcessTests(BaseTests):
         - Check that only one server is found.
         """
         self.info("Start a tmux session with two python server process.")
-        port_1 = randint(1000, 2000)
-        port_2 = randint(2001, 3000)
+        port_1 = randint(20000, 21000)
+        port_2 = randint(22000, 23000)
         cmd = f"python3 -m {PYTHON_SERVER_NAME} {port_1}"
         self.start_in_tmux(cmd)
         cmd = f"python3 -m {PYTHON_SERVER_NAME} {port_2}"
@@ -346,6 +348,7 @@ class ProcessTests(BaseTests):
         self.assertAlmostEqual(memory_usage["used"], used, delta=1)
         self.assertAlmostEqual(memory_usage["percent"], percent, delta=5)
 
+    @pytest.mark.skip("https://github.com/threefoldtech/js-ng/issues/467")
     def test_12_get_processes_info(self):
         """Test case for getting processes info.
 
@@ -359,7 +362,7 @@ class ProcessTests(BaseTests):
         - Check that this process in processes self.info.
         """
         self.info("Start python server in tmux.")
-        port = randint(1000, 2000)
+        port = randint(10000, 20000)
         cmd = f"python3 -m {PYTHON_SERVER_NAME} {port}"
         self.start_in_tmux(cmd)
         self.assertTrue(j.sals.nettools.wait_connection_test(HOST, port, 2))
@@ -368,10 +371,10 @@ class ProcessTests(BaseTests):
         pids = self.get_process_pids(PYTHON_SERVER_NAME)
         self.assertEqual(len(pids), 1)
 
-        self.info("Get processes self.info using SALS process.")
+        self.info("Get processes info using SALS process.")
         processes_info = j.sals.process.get_processes_info()
 
-        self.info("Check that the python server is in the processes self.info.")
+        self.info("Check that the python server is in the processes info.")
         found = False
         for process_info in processes_info:
             if process_info["pid"] == pids[0]:
@@ -407,7 +410,7 @@ class ProcessTests(BaseTests):
         - Check that the server pid is not exist.
         """
         self.info("Start python server in tmux.")
-        port = randint(1000, 2000)
+        port = randint(10000, 20000)
         cmd = f"python3 -m {PYTHON_SERVER_NAME} {port}"
         self.start_in_tmux(cmd)
         self.assertTrue(j.sals.nettools.wait_connection_test(HOST, port, 2))
@@ -482,7 +485,7 @@ class ProcessTests(BaseTests):
         self.info("Kill the process.")
         killed = j.sals.process.kill(pids[0])
         self.assertTrue(killed)
-        sleep(0.1)
+        sleep(1)
 
         self.info("Check that the process has been killed.")
         self.assertFalse(j.sals.process.is_alive(pids[0]))
@@ -490,6 +493,7 @@ class ProcessTests(BaseTests):
         self.assertFalse(pids)
 
     @parameterized.expand(["kill_all", "kill_user_processes", "kill_process_by_name"])
+    @pytest.mark.admin
     def test_16_get_kill_user_process(self, kill_method):
         """Test case for getting and killing user process/ killall processes.
 
@@ -540,13 +544,13 @@ class ProcessTests(BaseTests):
 
         if kill_method == "kill_user_processes":
             j.sals.process.kill_user_processes(username)
-            sleep(0.1)
+            sleep(1)
             self.assertFalse(j.sals.process.is_alive(user_pid))
             self.assertTrue(j.sals.process.is_alive(pids[0]))
         else:
             kill_method = getattr(j.sals.process, kill_method)
             kill_method(TAIL_PROCESS_NAME)
-            sleep(0.1)
+            sleep(1)
             self.assertFalse(j.sals.process.is_alive(user_pid))
             self.assertFalse(j.sals.process.is_alive(pids[0]))
 
@@ -633,7 +637,7 @@ class ProcessTests(BaseTests):
         - Check that the result from both ways are the same.
         """
         self.info("Start python server.")
-        python_port = randint(1000, 2000)
+        python_port = randint(10000, 20000)
         cmd = f"python3 -m {PYTHON_SERVER_NAME} {python_port}"
         self.start_in_tmux(cmd)
         self.assertTrue(j.sals.nettools.wait_connection_test(HOST, python_port, 2))
@@ -665,7 +669,8 @@ class ProcessTests(BaseTests):
         j.sals.process.kill_process_by_port(redis_port)
 
         self.info("Check that the result from both ways are the same.")
-        self.assertEqual(sal_mapping, netstat_mapping)
+        for key in sal_mapping.keys():
+            self.assertEqual(sorted(sal_mapping[key]), sorted(netstat_mapping[key]))
 
     def test_21_get_defunct_processes(self):
         """Test case for getting defunct processes.
@@ -694,6 +699,7 @@ class ProcessTests(BaseTests):
         self.assertEqual(sorted(sal_pids), pids)
 
     @parameterized.expand(["sorted", "regex"])
+    @pytest.mark.admin
     def test_22_get_sorted_pids(self, type_):
         """Test case for getting sorted pids by username.
 

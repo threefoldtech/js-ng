@@ -21,12 +21,12 @@ JS-NG> cmd.stop()
 ```
 ## Getting pid of the running process(command)
 ```
-JS-NG> cmd.pid()
+JS-NG> cmd.pid
 2132
 ```
 ## Getting process of the running command
 ```
-JS-NG> cmd.process()                                                                 
+JS-NG> cmd.process
 psutil.Process(pid=968692, name='python3', started='00:34:01')
 ```
 ### Waiting for a command to stop
