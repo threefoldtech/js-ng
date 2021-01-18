@@ -120,7 +120,7 @@ def test_05_wait_http_test_succeed(server_status_code):
     with concurrent.futures.ThreadPoolExecutor() as executor:
         future = executor.submit(nettools.wait_http_test, f"http://{host_name}:{server_port}", 5)
         time.sleep(2)
-        _ = executor.submit(start_http_server, host_name, server_port)
+        executor.submit(start_http_server, host_name, server_port)
         return_value = future.result()
     assert return_value
 
