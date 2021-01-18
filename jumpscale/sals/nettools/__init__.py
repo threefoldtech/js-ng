@@ -110,7 +110,7 @@ def wait_connection_test(ipaddr: str, port: int, timeout: Optional[int] = 5) -> 
         bool: True if the test succeeds, False otherwise
     """
     # port = int(port)
-    interval = int(timeout <= 2) or 2
+    interval = 1 if timeout <= 2 else 2
     deadline = time.time() + timeout
     while time.time() < deadline:
         start = time.time()
