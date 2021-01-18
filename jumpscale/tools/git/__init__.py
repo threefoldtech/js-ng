@@ -196,8 +196,8 @@ def find_git_path(path, die=True):
     :raises Exception when no git path can be found
     """
     while path != "":
-        if j.sal.fs.exists(path=j.sal.fs.joinPaths(path, ".git")):
+        if j.sals.fs.exists(path=j.sals.fs.join_paths(path, ".git")):
             return path
-        path = j.sal.fs.getParent(path)
+        path = j.sals.fs.parent(path)
     if die:
         raise j.exceptions.Input("Cannot find git path in:%s" % path)
