@@ -780,7 +780,7 @@ def read_bytes(path: str) -&gt; bytes:
 read_binary = read_file_binary = read_bytes
 
 
-def write_text(path: str, data: str, encoding=None):
+def write_text(path: str, data: str, encoding=None, append=False):
     &#34;&#34;&#34;write text `data` to path `path` with encoding
     e.g
         j.sals.fs.write_text(path=&#34;/home/rafy/testing_text.txt&#34;,data=&#34;hello world&#34;)  -&gt; 11
@@ -789,30 +789,40 @@ def write_text(path: str, data: str, encoding=None):
         path (str): path to write to
         data (str): ascii content
         encoding ([type], optional): encoding. Defaults to None.
+        append (bool, optional): indicate whether to open the file in append mode or not.
 
     Returns:
-        int: Return the decoded contents of the pointed-to file as a string
+        int: returning the number of characters written.
 
     &#34;&#34;&#34;
-    return pathlib.Path(path).write_text(data, encoding)
+    p = pathlib.Path(path)
+    mode = &#34;at&#34; if append else &#34;wt&#34;
+    with p.open(mode=mode, encoding=encoding) as f:
+        return f.write(data)
 
 
 write_ascii = write_file = write_text
 
 
-def write_bytes(path: str, data: bytes):
+def write_bytes(path: str, data: bytes, append=False):
     &#34;&#34;&#34;write binary `data` to path `path`
+
+    If file does not exist, it creates a new file. If file exists it truncates the file unless append arg is True
     e.g
         j.sals.fs.write_bytes(path=&#34;/home/rafy/testing_text.txt&#34;,data=b&#34;hello world&#34;)  -&gt; 11
 
     Args:
         path (str): path to write to
         data (bytes): binary content
+        append (bool, optional): indicate whether to open the file in append mode or not.
 
     Returns:
-        int: Return the binary contents of the pointed-to file as a bytes object
+        int:  returning the number of characters written.
     &#34;&#34;&#34;
-    return pathlib.Path(path).write_bytes(data)
+    p = pathlib.Path(path)
+    mode = &#34;ab&#34; if append else &#34;wb&#34;
+    with p.open(mode=mode) as f:
+        return f.write(data)
 
 
 write_binary = write_file_binary = write_bytes
@@ -3253,7 +3263,7 @@ for el in walk('/tmp', filter= lambda x: len(x)&gt;4 and (j.sals.fs.is_file(x) o
 </details>
 </dd>
 <dt id="jumpscale.sals.fs.write_ascii"><code class="name flex">
-<span>def <span class="ident">write_ascii</span></span>(<span>path, data, encoding=None)</span>
+<span>def <span class="ident">write_ascii</span></span>(<span>path, data, encoding=None, append=False)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>write text <code>data</code> to path <code>path</code> with encoding
@@ -3268,15 +3278,17 @@ j.sals.fs.write_text(path="/home/rafy/testing_text.txt",data="hello world")
 <dd>ascii content</dd>
 <dt><strong><code>encoding</code></strong> :&ensp;[<code>type</code>], optional</dt>
 <dd>encoding. Defaults to None.</dd>
+<dt><strong><code>append</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>indicate whether to open the file in append mode or not.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>int</code></strong></dt>
-<dd>Return the decoded contents of the pointed-to file as a string</dd>
+<dd>returning the number of characters written.</dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def write_text(path: str, data: str, encoding=None):
+<pre><code class="python">def write_text(path: str, data: str, encoding=None, append=False):
     &#34;&#34;&#34;write text `data` to path `path` with encoding
     e.g
         j.sals.fs.write_text(path=&#34;/home/rafy/testing_text.txt&#34;,data=&#34;hello world&#34;)  -&gt; 11
@@ -3285,19 +3297,24 @@ j.sals.fs.write_text(path="/home/rafy/testing_text.txt",data="hello world")
         path (str): path to write to
         data (str): ascii content
         encoding ([type], optional): encoding. Defaults to None.
+        append (bool, optional): indicate whether to open the file in append mode or not.
 
     Returns:
-        int: Return the decoded contents of the pointed-to file as a string
+        int: returning the number of characters written.
 
     &#34;&#34;&#34;
-    return pathlib.Path(path).write_text(data, encoding)</code></pre>
+    p = pathlib.Path(path)
+    mode = &#34;at&#34; if append else &#34;wt&#34;
+    with p.open(mode=mode, encoding=encoding) as f:
+        return f.write(data)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.sals.fs.write_binary"><code class="name flex">
-<span>def <span class="ident">write_binary</span></span>(<span>path, data)</span>
+<span>def <span class="ident">write_binary</span></span>(<span>path, data, append=False)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>write binary <code>data</code> to path <code>path</code>
+<section class="desc"><p>write binary <code>data</code> to path <code>path</code></p>
+<p>If file does not exist, it creates a new file. If file exists it truncates the file unless append arg is True
 e.g
 j.sals.fs.write_bytes(path="/home/rafy/testing_text.txt",data=b"hello world")
 -&gt; 11</p>
@@ -3307,34 +3324,43 @@ j.sals.fs.write_bytes(path="/home/rafy/testing_text.txt",data=b"hello world")
 <dd>path to write to</dd>
 <dt><strong><code>data</code></strong> :&ensp;<code>bytes</code></dt>
 <dd>binary content</dd>
+<dt><strong><code>append</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>indicate whether to open the file in append mode or not.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>int</code></strong></dt>
-<dd>Return the binary contents of the pointed-to file as a bytes object</dd>
+<dd>returning the number of characters written.</dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def write_bytes(path: str, data: bytes):
+<pre><code class="python">def write_bytes(path: str, data: bytes, append=False):
     &#34;&#34;&#34;write binary `data` to path `path`
+
+    If file does not exist, it creates a new file. If file exists it truncates the file unless append arg is True
     e.g
         j.sals.fs.write_bytes(path=&#34;/home/rafy/testing_text.txt&#34;,data=b&#34;hello world&#34;)  -&gt; 11
 
     Args:
         path (str): path to write to
         data (bytes): binary content
+        append (bool, optional): indicate whether to open the file in append mode or not.
 
     Returns:
-        int: Return the binary contents of the pointed-to file as a bytes object
+        int:  returning the number of characters written.
     &#34;&#34;&#34;
-    return pathlib.Path(path).write_bytes(data)</code></pre>
+    p = pathlib.Path(path)
+    mode = &#34;ab&#34; if append else &#34;wb&#34;
+    with p.open(mode=mode) as f:
+        return f.write(data)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.sals.fs.write_bytes"><code class="name flex">
-<span>def <span class="ident">write_bytes</span></span>(<span>path, data)</span>
+<span>def <span class="ident">write_bytes</span></span>(<span>path, data, append=False)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>write binary <code>data</code> to path <code>path</code>
+<section class="desc"><p>write binary <code>data</code> to path <code>path</code></p>
+<p>If file does not exist, it creates a new file. If file exists it truncates the file unless append arg is True
 e.g
 j.sals.fs.write_bytes(path="/home/rafy/testing_text.txt",data=b"hello world")
 -&gt; 11</p>
@@ -3344,31 +3370,39 @@ j.sals.fs.write_bytes(path="/home/rafy/testing_text.txt",data=b"hello world")
 <dd>path to write to</dd>
 <dt><strong><code>data</code></strong> :&ensp;<code>bytes</code></dt>
 <dd>binary content</dd>
+<dt><strong><code>append</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>indicate whether to open the file in append mode or not.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>int</code></strong></dt>
-<dd>Return the binary contents of the pointed-to file as a bytes object</dd>
+<dd>returning the number of characters written.</dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def write_bytes(path: str, data: bytes):
+<pre><code class="python">def write_bytes(path: str, data: bytes, append=False):
     &#34;&#34;&#34;write binary `data` to path `path`
+
+    If file does not exist, it creates a new file. If file exists it truncates the file unless append arg is True
     e.g
         j.sals.fs.write_bytes(path=&#34;/home/rafy/testing_text.txt&#34;,data=b&#34;hello world&#34;)  -&gt; 11
 
     Args:
         path (str): path to write to
         data (bytes): binary content
+        append (bool, optional): indicate whether to open the file in append mode or not.
 
     Returns:
-        int: Return the binary contents of the pointed-to file as a bytes object
+        int:  returning the number of characters written.
     &#34;&#34;&#34;
-    return pathlib.Path(path).write_bytes(data)</code></pre>
+    p = pathlib.Path(path)
+    mode = &#34;ab&#34; if append else &#34;wb&#34;
+    with p.open(mode=mode) as f:
+        return f.write(data)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.sals.fs.write_file"><code class="name flex">
-<span>def <span class="ident">write_file</span></span>(<span>path, data, encoding=None)</span>
+<span>def <span class="ident">write_file</span></span>(<span>path, data, encoding=None, append=False)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>write text <code>data</code> to path <code>path</code> with encoding
@@ -3383,15 +3417,17 @@ j.sals.fs.write_text(path="/home/rafy/testing_text.txt",data="hello world")
 <dd>ascii content</dd>
 <dt><strong><code>encoding</code></strong> :&ensp;[<code>type</code>], optional</dt>
 <dd>encoding. Defaults to None.</dd>
+<dt><strong><code>append</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>indicate whether to open the file in append mode or not.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>int</code></strong></dt>
-<dd>Return the decoded contents of the pointed-to file as a string</dd>
+<dd>returning the number of characters written.</dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def write_text(path: str, data: str, encoding=None):
+<pre><code class="python">def write_text(path: str, data: str, encoding=None, append=False):
     &#34;&#34;&#34;write text `data` to path `path` with encoding
     e.g
         j.sals.fs.write_text(path=&#34;/home/rafy/testing_text.txt&#34;,data=&#34;hello world&#34;)  -&gt; 11
@@ -3400,19 +3436,24 @@ j.sals.fs.write_text(path="/home/rafy/testing_text.txt",data="hello world")
         path (str): path to write to
         data (str): ascii content
         encoding ([type], optional): encoding. Defaults to None.
+        append (bool, optional): indicate whether to open the file in append mode or not.
 
     Returns:
-        int: Return the decoded contents of the pointed-to file as a string
+        int: returning the number of characters written.
 
     &#34;&#34;&#34;
-    return pathlib.Path(path).write_text(data, encoding)</code></pre>
+    p = pathlib.Path(path)
+    mode = &#34;at&#34; if append else &#34;wt&#34;
+    with p.open(mode=mode, encoding=encoding) as f:
+        return f.write(data)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.sals.fs.write_file_binary"><code class="name flex">
-<span>def <span class="ident">write_file_binary</span></span>(<span>path, data)</span>
+<span>def <span class="ident">write_file_binary</span></span>(<span>path, data, append=False)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>write binary <code>data</code> to path <code>path</code>
+<section class="desc"><p>write binary <code>data</code> to path <code>path</code></p>
+<p>If file does not exist, it creates a new file. If file exists it truncates the file unless append arg is True
 e.g
 j.sals.fs.write_bytes(path="/home/rafy/testing_text.txt",data=b"hello world")
 -&gt; 11</p>
@@ -3422,31 +3463,39 @@ j.sals.fs.write_bytes(path="/home/rafy/testing_text.txt",data=b"hello world")
 <dd>path to write to</dd>
 <dt><strong><code>data</code></strong> :&ensp;<code>bytes</code></dt>
 <dd>binary content</dd>
+<dt><strong><code>append</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>indicate whether to open the file in append mode or not.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>int</code></strong></dt>
-<dd>Return the binary contents of the pointed-to file as a bytes object</dd>
+<dd>returning the number of characters written.</dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def write_bytes(path: str, data: bytes):
+<pre><code class="python">def write_bytes(path: str, data: bytes, append=False):
     &#34;&#34;&#34;write binary `data` to path `path`
+
+    If file does not exist, it creates a new file. If file exists it truncates the file unless append arg is True
     e.g
         j.sals.fs.write_bytes(path=&#34;/home/rafy/testing_text.txt&#34;,data=b&#34;hello world&#34;)  -&gt; 11
 
     Args:
         path (str): path to write to
         data (bytes): binary content
+        append (bool, optional): indicate whether to open the file in append mode or not.
 
     Returns:
-        int: Return the binary contents of the pointed-to file as a bytes object
+        int:  returning the number of characters written.
     &#34;&#34;&#34;
-    return pathlib.Path(path).write_bytes(data)</code></pre>
+    p = pathlib.Path(path)
+    mode = &#34;ab&#34; if append else &#34;wb&#34;
+    with p.open(mode=mode) as f:
+        return f.write(data)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.sals.fs.write_text"><code class="name flex">
-<span>def <span class="ident">write_text</span></span>(<span>path, data, encoding=None)</span>
+<span>def <span class="ident">write_text</span></span>(<span>path, data, encoding=None, append=False)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>write text <code>data</code> to path <code>path</code> with encoding
@@ -3461,15 +3510,17 @@ j.sals.fs.write_text(path="/home/rafy/testing_text.txt",data="hello world")
 <dd>ascii content</dd>
 <dt><strong><code>encoding</code></strong> :&ensp;[<code>type</code>], optional</dt>
 <dd>encoding. Defaults to None.</dd>
+<dt><strong><code>append</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>indicate whether to open the file in append mode or not.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>int</code></strong></dt>
-<dd>Return the decoded contents of the pointed-to file as a string</dd>
+<dd>returning the number of characters written.</dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def write_text(path: str, data: str, encoding=None):
+<pre><code class="python">def write_text(path: str, data: str, encoding=None, append=False):
     &#34;&#34;&#34;write text `data` to path `path` with encoding
     e.g
         j.sals.fs.write_text(path=&#34;/home/rafy/testing_text.txt&#34;,data=&#34;hello world&#34;)  -&gt; 11
@@ -3478,12 +3529,16 @@ j.sals.fs.write_text(path="/home/rafy/testing_text.txt",data="hello world")
         path (str): path to write to
         data (str): ascii content
         encoding ([type], optional): encoding. Defaults to None.
+        append (bool, optional): indicate whether to open the file in append mode or not.
 
     Returns:
-        int: Return the decoded contents of the pointed-to file as a string
+        int: returning the number of characters written.
 
     &#34;&#34;&#34;
-    return pathlib.Path(path).write_text(data, encoding)</code></pre>
+    p = pathlib.Path(path)
+    mode = &#34;at&#34; if append else &#34;wt&#34;
+    with p.open(mode=mode, encoding=encoding) as f:
+        return f.write(data)</code></pre>
 </details>
 </dd>
 </dl>
