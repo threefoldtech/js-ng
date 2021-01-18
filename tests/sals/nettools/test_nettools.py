@@ -661,8 +661,8 @@ def test_get_free_port():
     """
     sockets = []
     try:
-        for i in range(500):
-            p, s = nettools.get_free_port(return_socket=True)
+        for _ in range(500):
+            _, s = nettools.get_free_port(return_socket=True)
             sockets.append(s)
     finally:
         for s in sockets:
