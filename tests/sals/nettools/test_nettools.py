@@ -356,7 +356,7 @@ def test_19_ping_machine_timeout(ip, timeout, allowhostname):
 
 
 @pytest.mark.parametrize("ip, timeout, allowhostname", [("www.google.com", 2, False),])
-def test_19_ping_machine_exception(ip, timeout, allowhostname):
+def test_20_ping_machine_exception(ip, timeout, allowhostname):
     """Test case for check whether the ping_machine will raise exception when it receive a host name while allowhostname is false
 
     **Test Scenario**
@@ -370,9 +370,9 @@ def test_19_ping_machine_exception(ip, timeout, allowhostname):
 
 @pytest.mark.parametrize(
     "url, localpath, username, passwd, overwrite, append_to_home, name_from_url",
-    [("ftp://ftp.sas.com/techsup/download/TestSSLServer4.zip", "test_20_downloaded", None, None, True, False, False),],
+    [("ftp://ftp.sas.com/techsup/download/TestSSLServer4.zip", "test_21_downloaded", None, None, True, False, False),],
 )
-def test_20_download_ftp(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
+def test_21_download_ftp(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
     """Test case for download a resource from ftp server
 
     **Test Scenario**
@@ -385,7 +385,7 @@ def test_20_download_ftp(url, localpath, username, passwd, overwrite, append_to_
     """
     result = nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
     assert result.localpath.exists()
-    assert result.localpath.name == "test_20_downloaded"
+    assert result.localpath.name == "test_21_downloaded"
     assert Path.cwd().name in result.localpath.parts
     assert result.localpath.stat().st_size == int(result.content_length)
 
@@ -398,41 +398,14 @@ def test_20_download_ftp(url, localpath, username, passwd, overwrite, append_to_
 
 @pytest.mark.parametrize(
     "url, localpath, username, passwd, overwrite, append_to_home, name_from_url",
-    [("https://statweb.stanford.edu/~jhf/ftp/README", "test_21_downloaded", None, None, True, False, False),],
+    [("https://statweb.stanford.edu/~jhf/ftp/README", "test_22_downloaded", None, None, True, False, False),],
 )
-def test_21_download_https(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
+def test_22_download_https(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
     """Test case for download a resource from https link
 
     **Test Scenario**
 
     - Execute the function download passing in a https link and a localpath consists of just filename
-    - assert the downloaded file successfully downloaded.
-    - assert the downloaded file have the correct name
-    - assert the downloaded file exists in the current working directory
-    - remove the file
-    """
-    result = nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
-    assert result.localpath.exists()
-    assert result.localpath.name == "test_21_downloaded"
-    assert Path.cwd().name in result.localpath.parts
-    assert result.localpath.stat().st_size == int(result.content_length)
-    print(result.localpath)
-    try:
-        result.localpath.unlink()
-    except FileNotFoundError:
-        pass
-
-
-@pytest.mark.parametrize(
-    "url, localpath, username, passwd, overwrite, append_to_home, name_from_url",
-    [("http://ftp.sas.com/techsup/download/TestSSLServer4.txt", "test_22_downloaded", None, None, True, False, False),],
-)
-def test_22_download_http(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
-    """Test case for download a resource from http link
-
-    **Test Scenario**
-
-    - Execute the function download passing in a http link and a localpath consists of just filename
     - assert the downloaded file successfully downloaded.
     - assert the downloaded file have the correct name
     - assert the downloaded file exists in the current working directory
@@ -452,9 +425,36 @@ def test_22_download_http(url, localpath, username, passwd, overwrite, append_to
 
 @pytest.mark.parametrize(
     "url, localpath, username, passwd, overwrite, append_to_home, name_from_url",
-    [("ftp://ftp.sas.com/techsup/download/TestSSLServer4.zip", "test_23_downloaded", None, None, True, True, False),],
+    [("http://ftp.sas.com/techsup/download/TestSSLServer4.txt", "test_23_downloaded", None, None, True, False, False),],
 )
-def test_23_download_append_to_home(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
+def test_23_download_http(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
+    """Test case for download a resource from http link
+
+    **Test Scenario**
+
+    - Execute the function download passing in a http link and a localpath consists of just filename
+    - assert the downloaded file successfully downloaded.
+    - assert the downloaded file have the correct name
+    - assert the downloaded file exists in the current working directory
+    - remove the file
+    """
+    result = nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
+    assert result.localpath.exists()
+    assert result.localpath.name == "test_23_downloaded"
+    assert Path.cwd().name in result.localpath.parts
+    assert result.localpath.stat().st_size == int(result.content_length)
+    print(result.localpath)
+    try:
+        result.localpath.unlink()
+    except FileNotFoundError:
+        pass
+
+
+@pytest.mark.parametrize(
+    "url, localpath, username, passwd, overwrite, append_to_home, name_from_url",
+    [("ftp://ftp.sas.com/techsup/download/TestSSLServer4.zip", "test_24_downloaded", None, None, True, True, False),],
+)
+def test_24_download_append_to_home(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
     """Test case for download a resource from url to localpath relative to user home directory
 
     **Test Scenario**
@@ -467,7 +467,7 @@ def test_23_download_append_to_home(url, localpath, username, passwd, overwrite,
     """
     result = nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
     assert result.localpath.exists()
-    assert result.localpath.name == "test_23_downloaded"
+    assert result.localpath.name == "test_24_downloaded"
     assert Path.home().name in result.localpath.parts
     print(result.localpath)
     try:
@@ -481,7 +481,7 @@ def test_23_download_append_to_home(url, localpath, username, passwd, overwrite,
     [
         (
             "https://statweb.stanford.edu/~jhf/ftp/README",
-            "downloaded_test_24/files/test_24_downloaded",
+            "downloaded_test_25/files/test_25_downloaded",
             None,
             None,
             True,
@@ -490,7 +490,7 @@ def test_23_download_append_to_home(url, localpath, username, passwd, overwrite,
         ),
     ],
 )
-def test_24_download_create_parents(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
+def test_25_download_create_parents(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
     """Test case for download a resource from url to localpath that don't exists
 
     **Test Scenario**
@@ -503,8 +503,8 @@ def test_24_download_create_parents(url, localpath, username, passwd, overwrite,
     """
     result = nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
     assert result.localpath.exists()
-    assert result.localpath.name == "test_24_downloaded"
-    assert "downloaded_test_24" in result.localpath.parts
+    assert result.localpath.name == "test_25_downloaded"
+    assert "downloaded_test_25" in result.localpath.parts
     assert "files" in result.localpath.parts
     assert Path.cwd().name in result.localpath.parts
     print(result.localpath)
@@ -520,7 +520,7 @@ def test_24_download_create_parents(url, localpath, username, passwd, overwrite,
     "url, localpath, username, passwd, overwrite, append_to_home, name_from_url",
     [("http://ftp.sas.com/techsup/download/TestSSLServer4.txt", "", None, None, True, False, True),],
 )
-def test_25_download_name_from_url(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
+def test_26_download_name_from_url(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
     """Test case for download a resource from url to cwd and get the filename from the url
 
     **Test Scenario**
@@ -545,7 +545,7 @@ def test_25_download_name_from_url(url, localpath, username, passwd, overwrite, 
     [
         (
             "http://ftp.sas.com/techsup/download/TestSSLServer4.txt",
-            "downloaded_test_26",
+            "downloaded_test_27",
             None,
             None,
             False,
@@ -554,7 +554,7 @@ def test_25_download_name_from_url(url, localpath, username, passwd, overwrite, 
         ),
     ],
 )
-def test_26_download_overwrite_False(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
+def test_27_download_overwrite_False(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
     """Test case for download a resource from url to localpath when the file already exists
 
     **Test Scenario**
@@ -575,9 +575,9 @@ def test_26_download_overwrite_False(url, localpath, username, passwd, overwrite
 
 @pytest.mark.parametrize(
     "url, localpath, username, passwd, overwrite, append_to_home, name_from_url",
-    [("http://ftp.sas.com/techsup/download/TestSSLServer4.txt", "downloaded_test_27", None, None, True, False, False),],
+    [("http://ftp.sas.com/techsup/download/TestSSLServer4.txt", "downloaded_test_28", None, None, True, False, False),],
 )
-def test_27_download_overwrite_True(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
+def test_28_download_overwrite_True(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
     """Test case for download a resource from url to localpath when the file already exists
 
     **Test Scenario**
@@ -602,7 +602,7 @@ def test_27_download_overwrite_True(url, localpath, username, passwd, overwrite,
     "url, localpath, username, passwd, overwrite, append_to_home, name_from_url",
     [("http://ftp.sas.com/techsup/download/TestSSLServer4.txt", "unwriteable_dir", None, None, False, True, True),],
 )
-def test_28_download_to_unwritable_dir(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
+def test_29_download_to_unwritable_dir(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
     """Test case for download a resource from url to localpath when user don't have proper Permissions
 
     **Test Scenario**
@@ -636,7 +636,7 @@ def test_28_download_to_unwritable_dir(url, localpath, username, passwd, overwri
     "url, localpath, username, passwd, overwrite, append_to_home, name_from_url",
     [("http://ftp.sas.com/techsup/download/TestSSLServer4.txt", None, None, None, False, False, True),],
 )
-def test_29_download_return_content(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
+def test_30_download_return_content(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
     """Test case for download a resource from url to localpath when user don't have proper Permissions
 
     **Test Scenario**
@@ -649,7 +649,7 @@ def test_29_download_return_content(url, localpath, username, passwd, overwrite,
     assert len(result.content) == int(result.content_length)
 
 
-def test_get_free_port():
+def test_31_get_free_port():
     """Test case for getting free ports and use it.
 
     **Test Scenario**
