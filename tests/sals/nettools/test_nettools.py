@@ -15,11 +15,11 @@ from pathlib import Path
 @pytest.mark.parametrize("ipaddr, port, timeout", [("1.1.1.1", 53, 5), ("8.8.8.8", 53, 5), ("www.google.com", 80, 5)])
 def test_01_tcp_connection_test_to_public_ipv4_succeed(ipaddr, port, timeout):
     """Test case to establish a connection to specified address and initiate
-    the three-way handshake and check if the connection succeded.
+    the three-way handshake and check if the connection succeeded.
 
     **Test Scenario**
 
-    - connect to Publicly available services that have a known ip and a tcp
+    - Connect to publicly available services that have a known ip and a tcp
       port open. test using ip or hostname
     - Check the connection result. should return True.
     """
@@ -34,7 +34,7 @@ def test_02_tcp_connection_test_to_public_ipv4_timed_out(ipaddr, port, timeout):
 
     **Test Scenario**
 
-    - try to connect to Publicly available services put using worng tcp ports.
+    - Try to connect to publicly available services but using worng tcp ports.
     - Check the connection result. should timeout after 2 sec and return False.
     """
     assert not nettools.tcp_connection_test(ipaddr, port, timeout)
@@ -164,9 +164,9 @@ def test_07_check_url_reachable_succeed(server_status_code, verify, fake_user_ag
     **Test Scenario**
 
     - Execute the function check_url_reachable and send requests to custom url that mimic different responses
-      to test againest specified list of responses (considered reachable 2xx)
+      to test against a specified list of responses (considered reachable 2xx)
     - test while verifying the servers TLS certificate turned on and off
-    - test while fakeing user agnet turned on and off
+    - test while faking user agent turned on and off
     - check the function result.
     """
 
@@ -184,7 +184,7 @@ def test_08_check_url_reachable_failed(server_status_code):
     **Test Scenario**
 
     - Execute the function check_url_reachable and send requests to custom url that mimic different responses
-      to test againest specified list of responses (considered unreachable 4xx, 5xx)
+      to test against a specified list of responses (considered unreachable 4xx, 5xx)
     - check the function result.
     """
 
@@ -205,7 +205,7 @@ def test_09_udp_connection_test(ipaddr, port, timeout, message):
     **Test Scenario**
 
     - Execute the function udp_connection_test, connect to dns.google.com on udp port 53
-    with manully craft dns query message and wait for at least one byte.
+    with manually craft dns query message and wait for at least one byte.
     - check the function result.
     """
     return_value = nettools.udp_connection_test(ipaddr, port, timeout, message)
@@ -213,7 +213,7 @@ def test_09_udp_connection_test(ipaddr, port, timeout, message):
 
 
 def test_10_get_nic_names():
-    """Test case for getting a list of all availabe nics
+    """Test case for getting a list of all available nics
 
     **Test Scenario**
 
@@ -330,7 +330,7 @@ def test_18_ping_machine_success(ip, timeout, allowhostname):
 
     **Test Scenario**
 
-    - Execute the function ping_machine once with localhsot ipv4 and ipv6 addresses and with a local machine hostname
+    - Execute the function ping_machine once with localhost ipv4 and ipv6 addresses and with a local machine hostname
     - check the function result. should return True
     """
     result = nettools.ping_machine(ip, timeout, allowhostname)
@@ -339,7 +339,7 @@ def test_18_ping_machine_success(ip, timeout, allowhostname):
 
 @pytest.mark.parametrize("ip, timeout, allowhostname", [("10.200.199.198", 1, False),])
 def test_19_ping_machine_timeout(ip, timeout, allowhostname):
-    """Test case for check whether the ping_machine will timeout after specfied number of seconds
+    """Test case for check whether the ping_machine will timeout after specified number of seconds
 
     **Test Scenario**
 
@@ -377,10 +377,10 @@ def test_20_download_ftp(url, localpath, username, passwd, overwrite, append_to_
 
     **Test Scenario**
 
-    - Execute the function download passing in an ftp link and a localpath consisit of just filename
-    - assert the downloaded file succesfully downloaded.
-    - assert tha downloaded file have correct name
-    - asser the downloaded file exists in the current working directory
+    - Execute the function download passing in a ftp link and a localpath consists of just filename
+    - assert the downloaded file successfully downloaded.
+    - assert the downloaded file have the correct name
+    - assert the downloaded file exists in the current working directory
     - remove the file
     """
     result = nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
@@ -405,10 +405,10 @@ def test_21_download_https(url, localpath, username, passwd, overwrite, append_t
 
     **Test Scenario**
 
-    - Execute the function download passing in an http link and a localpath consisit of just filename
-    - assert the downloaded file succesfully downloaded.
-    - assert tha downloaded file have correct name
-    - asser the downloaded file exists in the current working directory
+    - Execute the function download passing in a https link and a localpath consists of just filename
+    - assert the downloaded file successfully downloaded.
+    - assert the downloaded file have the correct name
+    - assert the downloaded file exists in the current working directory
     - remove the file
     """
     result = nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
@@ -432,10 +432,10 @@ def test_22_download_http(url, localpath, username, passwd, overwrite, append_to
 
     **Test Scenario**
 
-    - Execute the function download passing in an ftp link and a localpath consisit of just filename
-    - assert the downloaded file succesfully downloaded.
-    - assert tha downloaded file have correct name
-    - asser the downloaded file exists in the current working directory
+    - Execute the function download passing in a http link and a localpath consists of just filename
+    - assert the downloaded file successfully downloaded.
+    - assert the downloaded file have the correct name
+    - assert the downloaded file exists in the current working directory
     - remove the file
     """
     result = nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
@@ -459,10 +459,10 @@ def test_23_download_append_to_home(url, localpath, username, passwd, overwrite,
 
     **Test Scenario**
 
-    - Execute the function download passing in an url and a localpath consisit of just filename.
-    - assert the downloaded file succesfully downloaded.
-    - assert tha downloaded file have correct name
-    - asser the downloaded file exists in the user home directory
+    - Execute the function download passing in an url and a localpath consists of just filename.
+    - assert the downloaded file successfully downloaded.
+    - assert the downloaded file have the correct name
+    - assert the downloaded file exists in the user home directory
     - remove the file
     """
     result = nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
@@ -495,11 +495,11 @@ def test_24_download_create_parents(url, localpath, username, passwd, overwrite,
 
     **Test Scenario**
 
-    - Execute the function download passing in an url and a localpath consisit chain of directories that not exists
-    - assert the downloaded file succesfully downloaded.
-    - assert tha downloaded file have correct name
-    - assert the parents directories successfuly created
-    - remove the file, and its parents dir
+    - Execute the function download passing in an url and a localpath consists chain of directories that not exists
+    - assert the downloaded file successfully downloaded.
+    - assert the downloaded file have the correct name
+    - assert the parents' directories successfully created
+    - remove the file, and its parents' dir
     """
     result = nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
     assert result.localpath.exists()
@@ -525,8 +525,8 @@ def test_25_download_name_from_url(url, localpath, username, passwd, overwrite, 
 
     **Test Scenario**
 
-    - Execute the function download passing in an url and a localpath consisit of empty string
-    - assert the downloaded file succesfully downloaded.
+    - Execute the function download passing in an url and a localpath consists of an empty string
+    - assert the downloaded file successfully downloaded.
     - assert tha downloaded file have correct name from the url
     - remove the file
     """
@@ -559,7 +559,7 @@ def test_26_download_overwrite_False(url, localpath, username, passwd, overwrite
 
     **Test Scenario**
 
-    - Execute the function download passing in an url and a localpath consisit of desired filename and assigning False to overwrite
+    - Execute the function download passing in an url and a localpath consists of the desired filename and assigning False to overwrite
     - assert the raised exception
     """
     result = nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
@@ -582,9 +582,9 @@ def test_27_download_overwrite_True(url, localpath, username, passwd, overwrite,
 
     **Test Scenario**
 
-    - Execute the function download passing in an url and a localpath consisit of desired filename and assigning True to overwrite
+    - Execute the function download passing in an url and a localpath consists of the desired filename and assigning True to overwrite
     - assert the result
-    - Execute the function download pagain assing in the same url and the same localpath and assigning True to overwrite
+    - Execute the function download again passing in the same url and the same localpath and assigning True to overwrite
     - remove the file
     """
     result = nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
@@ -655,7 +655,7 @@ def test_get_free_port():
     **Test Scenario**
 
     - Execute the function get_free_port many time (500)
-    -the function will bind the port to 127.0.0.1 amd return a socket
+    - The function will bind the port to 127.0.0.1 and return a socket
     - as long as no OSError exception (in case if port already in use) the port selected by the function (by OS) is free
     - clean up and close all sockets
     """
