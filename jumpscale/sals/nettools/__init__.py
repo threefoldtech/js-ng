@@ -137,6 +137,7 @@ def wait_connection_test(ipaddr: str, port: int, timeout: Optional[int] = 6) -> 
         bool: True if the test succeeds, False otherwise
     """
     # port = int(port)
+    j.logger.info(f"Will wait until TCP port { port } listens on {ipaddr} or {timeout} elapsed")
     interval = 1 if timeout <= 2 else 2
     init_start = time.time()
     deadline = init_start + timeout
