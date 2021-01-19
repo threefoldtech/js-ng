@@ -1,14 +1,7 @@
 import pytest
 import jumpscale.sals.nettools as nettools
 import time
-
-# import subprocess
 import concurrent.futures
-
-# import socketserver
-# import socket
-# import ipaddress
-# from jumpscale.core.exceptions import Value, Runtime
 from pathlib import Path
 
 

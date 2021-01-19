@@ -2,8 +2,6 @@
 Docs for nettools
 
 """
-# TODO: test *2
-
 import time
 import socket
 import ipaddress
@@ -668,7 +666,7 @@ def get_free_port(ipv6: Optional[bool] = False, udp: Optional[bool] = False, ret
 
     Returns:
         int: returns a random free port from 1024 to 65535 range.
-        Optional[soket]: in the case of return_socket set to True, socket will be returned alongside the port in a tuple.
+        Optional[socket]: in the case of return_socket set to True, socket will be returned alongside the port in a tuple.
 
     Example:
         # get a free TCP port that currently not binded to 127.0.0.1
