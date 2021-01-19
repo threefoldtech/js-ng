@@ -87,25 +87,36 @@ def udp_connection_test(ipaddr: str, port: int, timeout: Optional[int] = 1, mess
     """
     try:
         ip = ipaddress.ip_address(ipaddr)
-    except ValueError:
+    except ValueError as e:
+        # raised if address does not represent a valid IPv4 or IPv6 address
+        j.logger.exception(e.message, exception=e)
         raise
     if ip.version == 4:
+        j.logger.debug("Creating a new socket using AF_INET address family")
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     else:  # create IPv6 socket when we connect to IPv6 address
+        j.logger.debug("Creating a new socket using AF_INET6 address family")
         sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
     if timeout:
         sock.settimeout(timeout)
+    j.logger.info(f"Attempting to send the a message to a remote socket at address (IP: {ipaddr}, UDP: {port})")
     try:
         sock.sendto(message, (ipaddr, port))
         # expecting to receive at least one byte from the socket as indication to succeed connection
+        j.logger.debug("Expecting to receive at least one byte from the socket as indication to succeed connection")
         data, _ = sock.recvfrom(1)
     except socket.timeout:
+        j.logger.warning(f"Timeout of {timeout}s reached while waiting for server (IP: {ipaddr}, UDP: {port}) replay")
         return False
-    except OSError:
+    except OSError as e:
+        j.logger.warning(f"UDP connection failed because of this error: {e.strerror or repr(e)}")
         return False
+    else:
+        j.logger.info("UDP test connection succeeded")
+        return True
     finally:
         sock.close()
-    return True
+        j.logger.debug("Socket closed")
 
 
 def wait_connection_test(ipaddr: str, port: int, timeout: Optional[int] = 5) -> bool:
