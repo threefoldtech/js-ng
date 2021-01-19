@@ -54,7 +54,13 @@ def tcp_connection_test(ipaddr: str, port: int, timeout: Optional[int] = None) -
         raise
     except OSError as e:
         # (ConnectionRefusedError, socket.timeout, OSError)
-        j.logger.warning(f"TCP connection attempt to ({ipaddr}, {port}) failed because of this error: {e.strerror}")
+        if hasattr(e, "message"):
+            reason = e.message
+        elif hasattr(e, "strerror") and e.strerror:
+            reason = e.strerror
+        else:
+            reason = repr(e)
+        j.logger.warning(f"TCP connection attempt to ({ipaddr}, {port}) failed because of this error: {reason}")
         return False
     else:
         j.logger.info(f"Successful TCP connection to ({ipaddr}, {port})")
