@@ -606,15 +606,15 @@ def test_29_download_to_unwritable_dir(url, localpath, username, passwd, overwri
     - Assert the raised exception when try to download a file to this dir
     - Reset the dir permissions and delete it
     """
-    import os
+    from jumpscale.sals import fs
     import stat
 
     NO_WRITING = ~stat.S_IWUSR & ~stat.S_IWGRP & ~stat.S_IWOTH
     WRITING = stat.S_IWUSR & stat.S_IWGRP & stat.S_IWOTH
 
     def edit_write_permissions(path, permissions):
-        current_permissions = stat.S_IMODE(os.lstat(path).st_mode)
-        os.chmod(path, current_permissions & permissions)
+        current_permissions = stat.S_IMODE(fs.lstat(path).st_mode)
+        fs.chmod(path, current_permissions & permissions)
 
     dir_path = Path.home() / Path(localpath)
     Path.mkdir(dir_path)
