@@ -122,7 +122,7 @@ def udp_connection_test(ipaddr: str, port: int, timeout: Optional[int] = 1, mess
 
 
 def wait_connection_test(ipaddr: str, port: int, timeout: Optional[int] = 6) -> bool:
-    """Will wait until port listens on the specified address
+    """Will wait until port listens on the specified address or {timeout} sec elapsed
 
     under the hood the function will try to connect every `interval` sec, if waiting time `timeout` set
     to value <= 2, `interval` is 1 sec, otherwise 2.
@@ -137,7 +137,7 @@ def wait_connection_test(ipaddr: str, port: int, timeout: Optional[int] = 6) -> 
         bool: True if the test succeeds, False otherwise
     """
     # port = int(port)
-    j.logger.info(f"Will wait until TCP port { port } listens on {ipaddr} or {timeout} elapsed")
+    j.logger.info(f"Will wait until TCP port { port } listens on {ipaddr} or {timeout}s elapsed")
     interval = 1 if timeout <= 2 else 2
     init_start = time.time()
     deadline = init_start + timeout
