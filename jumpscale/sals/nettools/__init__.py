@@ -138,14 +138,17 @@ def wait_connection_test(ipaddr: str, port: int, timeout: Optional[int] = 6) -> 
     """
     # port = int(port)
     interval = 1 if timeout <= 2 else 2
-    deadline = time.time() + timeout
+    init_start = time.time()
+    deadline = init_start + timeout
     while time.time() < deadline:
         start = time.time()
         if tcp_connection_test(ipaddr, port, timeout=interval):
+            j.logger.info(f"TCP test connection succeeded after waiting {time.time() - init_start:.3f}s")
             return True
         # if return immediately (err111) take a break before retry
         if time.time() - start < interval:
             time.sleep(1)
+    j.logger.warning(f"TCP test connection failed after waiting for {time.time() - init_start:.3f}s")
     return False
 
 
