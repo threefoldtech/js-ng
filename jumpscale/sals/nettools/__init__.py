@@ -23,6 +23,7 @@ import shutil
 from urllib.request import build_opener, HTTPPasswordMgrWithDefaultRealm, HTTPBasicAuthHandler, install_opener
 from collections import namedtuple
 from os.path import basename
+from jumpscale.loader import j
 
 # going to remove j.data.types . use insted jumpscale.core.base.fields.IPAddress
 
@@ -43,17 +44,22 @@ def tcp_connection_test(ipaddr: str, port: int, timeout: Optional[int] = None) -
     Returns:
         bool: True if the test succeeds, False otherwise
     """
-    conn = None
+    # conn = None
+    j.logger.info(f"Attempting to establish TCP connection to ({ipaddr}, {port})")
     try:
         conn = socket.create_connection((ipaddr, port), timeout)
-    except (socket.gaierror, socket.herror):
+    except (socket.gaierror, socket.herror) as e:
+        j.logger.exception(e.strerror, exception=e)
         # raised for address-related errors
         raise
-    except OSError:
+    except OSError as e:
         # (ConnectionRefusedError, socket.timeout, OSError)
+        j.logger.warning(f"TCP connection attempt to ({ipaddr}, {port}) failed because of this error: {e.strerror}")
         return False
     else:
+        j.logger.info(f"Successful TCP connection to ({ipaddr}, {port})")
         conn.close()
+        j.logger.debug("Connection closed")
         return True
 
 
