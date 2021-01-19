@@ -171,10 +171,12 @@ def wait_http_test(
     """
     deadline = time.time() + timeout
     while time.time() < deadline:
+        start = time.time()
         if check_url_reachable(url, interval_time, verify):
             return True
         # be gentle on system resource in case the above call to check_url_reachable() returned immediately (edge cases)
-        time.sleep(1)
+        if time.time() - start < interval_time:
+            time.sleep(1)
     return False
 
 
