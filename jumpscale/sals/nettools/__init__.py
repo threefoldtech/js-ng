@@ -157,7 +157,7 @@ def check_url_reachable(
         url (str): url to test
         timeout (int, optional): timeout of test. Defaults to 5.
         verify (bool, optional): boolean indication to verify the servers TLS certificate or not.
-        fake_user_agent (bool, optional): boolean indication to fake the user-agent and act like noraml browser or not.
+        fake_user_agent (bool, optional): boolean indication to fake the user-agent and act like normal browser or not.
 
     Raises:
         ValueError: raises if not correct url
@@ -378,9 +378,9 @@ def get_network_info(device: Optional[str] = None) -> list:
             output = subprocess.check_output("ip -j addr show", shell=True)
         res = json.loads(output)
         for nic_info in res:
-            # when use ip command with -j option and specifed interface. it returns on ubuntu < 20
-            # a list contains a requetted info alongside other partially empty dicts like this -> {'addr_info': [{}, {}]}
-            # so we need to filter those dicts to get consistent behaviour at all supported ubuntu versions.
+            # when use ip command with -j option and specified interface. it returns on ubuntu < 20
+            # a list contains a requested info alongside other partially empty dicts like this -> {'addr_info': [{}, {}]}
+            # so we need to filter those dicts to get consistent behavior at all supported ubuntu versions.
             if len(nic_info) > 1:
                 yield _clean(nic_info)
             else:
@@ -544,7 +544,7 @@ def download(
 
     Examples:
         # use default values for args will download the url to cwd and get the name from the url,
-        # if the file already exists, it will overwrited.
+        # if the file already exists, it will overwritten.
         >>> nettools.download('https://www.7-zip.org/a/7z1900-extra.7z')
         DownloadResult(localpath=PosixPath('/home/sameh/projects/js-ng/7z1900-extra.7z'), content=None, content_length='929117')
 
@@ -613,7 +613,7 @@ def download(
             raise
 
         if overwrite:
-            file_mode = "wb"  # if exists will turncated
+            file_mode = "wb"  # if exists will truncated
         else:
             file_mode = "xb"  # if exists will raise excaption
 
@@ -663,7 +663,7 @@ def get_free_port(ipv6: Optional[bool] = False, udp: Optional[bool] = False, ret
 
     Args:
         ipv6 (bool, optional): weather to bind the free port to 127.0.0.1 or ::1. Defaults to False.
-        udp (bool, optional): set sokcet type to udp instaed of tcp. Defaults to False.
+        udp (bool, optional): set socket type to udp instead of tcp. Defaults to False.
         return_socket (bool, optional): return the socket alongside the port to reuse it. Defaults to False.
 
     Returns:
