@@ -45,7 +45,7 @@ def tcp_connection_test(ipaddr: str, port: int, timeout: Optional[int] = None) -
         bool: True if the test succeeds, False otherwise
     """
     # conn = None
-    j.logger.info(f"Attempting to establish TCP connection to ({ipaddr}, {port})")
+    j.logger.info(f"Attempting to establish TCP connection to (IP: {ipaddr}, TCP: {port})")
     try:
         conn = socket.create_connection((ipaddr, port), timeout)
     except (socket.gaierror, socket.herror) as e:
@@ -60,10 +60,12 @@ def tcp_connection_test(ipaddr: str, port: int, timeout: Optional[int] = None) -
             reason = e.strerror
         else:
             reason = repr(e)
-        j.logger.warning(f"TCP connection attempt to ({ipaddr}, {port}) failed because of this error: {reason}")
+        j.logger.warning(
+            f"TCP connection attempt to (IP: {ipaddr}, TCP: {port}) failed because of this error: {reason}"
+        )
         return False
     else:
-        j.logger.info(f"Successful TCP connection to ({ipaddr}, {port})")
+        j.logger.info(f"Successful TCP connection to (IP: {ipaddr}, TCP: {port})")
         conn.close()
         j.logger.debug("Connection closed")
         return True
