@@ -156,7 +156,7 @@ def wait_connection_test(ipaddr: str, port: int, timeout: Optional[int] = 6) -> 
 def wait_http_test(
     url: str, timeout: Optional[int] = 60, verify: Optional[bool] = True, interval_time: Optional[int] = 2
 ) -> bool:
-    """Will keep try to reach specified url every {interval_time} sec until url become reachable or {timeout} elapsed
+    """Will keep try to reach specified url every {interval_time} sec until url become reachable or {timeout} sec elapsed
 
     Args:
         url (str): url
@@ -170,14 +170,19 @@ def wait_http_test(
     Returns:
         bool: true if the test succeeds
     """
+    j.logger.info(f"Will wait until URL { url } become reachable or {timeout}s elapsed")
+    j.logger.debug(f"verify: {verify}, interval_time: {interval_time}")
+    init_start = time.time()
     deadline = time.time() + timeout
     while time.time() < deadline:
         start = time.time()
         if check_url_reachable(url, interval_time, verify):
+            j.logger.info(f"URL becomes reachable after waiting for {time.time() - init_start:.3f}s")
             return True
         # be gentle on system resource in case the above call to check_url_reachable() returned immediately (edge cases)
         if time.time() - start < interval_time:
             time.sleep(1)
+    j.logger.warning(f"URL still unreachable after waiting for {time.time() - init_start:.3f}s")
     return False
 
 
