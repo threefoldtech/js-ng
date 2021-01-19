@@ -121,13 +121,17 @@ def udp_connection_test(ipaddr: str, port: int, timeout: Optional[int] = 1, mess
         j.logger.debug("Socket closed")
 
 
-def wait_connection_test(ipaddr: str, port: int, timeout: Optional[int] = 5) -> bool:
+def wait_connection_test(ipaddr: str, port: int, timeout: Optional[int] = 6) -> bool:
     """Will wait until port listens on the specified address
+
+    under the hood the function will try to connect every `interval` sec, if waiting time `timeout` set
+    to value <= 2, `interval` is 1 sec, otherwise 2.
 
     Args:
         ipaddr (str): ip address, or hostname
         port (int): port number
-        timeout_total (int, optional): how long to wait for the connection. Defaults to 5.
+        timeout_total (int, optional): how long to wait for the connection. if the timeout set to value > 2,
+            due to the way the function works, it makes sense to choose an even number. Defaults to 6.
 
     Returns:
         bool: True if the test succeeds, False otherwise
@@ -139,8 +143,8 @@ def wait_connection_test(ipaddr: str, port: int, timeout: Optional[int] = 5) -> 
         start = time.time()
         if tcp_connection_test(ipaddr, port, timeout=interval):
             return True
-        # if return immediately (err111) take a break
-        if time.time() < start + interval:
+        # if return immediately (err111) take a break before retry
+        if time.time() - start < interval:
             time.sleep(1)
     return False
 
