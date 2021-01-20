@@ -403,15 +403,26 @@ def get_default_ip_config(ip: Optional[str] = "8.8.8.8") -> tuple:
     """
     try:
         ipaddr = ipaddress.ip_address(ip)
-    except ValueError:
+    except ValueError as e:
+        # raised if address does not represent a valid IPv4 or IPv6 address
+        j.logger.exception(repr(e), exception=e)
         raise
     address_family = "ip" if ipaddr.version == 4 else "ip6"
     source_addr = get_reachable_ip_address(ip)
+    default_nic = None
     for nic in get_network_info():
         for candidate_ip, _ in nic[address_family]:
             if candidate_ip == source_addr:
                 default_nic = (nic["name"], source_addr)
                 break
+        if default_nic is not None:
+            break
+    else:
+        # The loop did not encounter a break statement.
+        # This should never happen. hivere, this part of code exists for debuging any unexpected error
+        j.logger.error(f"Didn't find the interface associated with ip {source_addr}. Check the debug messages")
+        j.logger.debug(f"Source address: {source_addr} -> Remote address: {ipaddr}")
+    j.logger.info(f"The interface associated with ip {source_addr} is {default_nic[0]}")
     return default_nic
 
 
