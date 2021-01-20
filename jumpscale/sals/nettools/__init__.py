@@ -213,35 +213,51 @@ def check_url_reachable(
     }
     METHOD = "GET"
 
+    j.logger.info(f"Will try to access {url}")
+    j.logger.debug(f"timeout: {timeout}, verify: {verify}, fake_user_agent: {fake_user_agent}")
+
     if timeout:
+        j.logger.debug(f"Setting a default timeout of {timeout}s for new sockets")
         socket.setdefaulttimeout(timeout)
 
     context = None
     if not verify:
         # opt out of certificate verification on a single connection
+        j.logger.debug("opt out of certificate verification on a single connection")
         context = ssl._create_unverified_context()
 
     req = Request(url, headers=HEADERS if fake_user_agent else {}, method=METHOD)
     try:
+        j.logger.debug(f"sending {METHOD} request to {url}")
         response = urlopen(req, timeout=timeout, context=context)
-    except HTTPError:
+    except HTTPError as e:
         # The server couldn't fulfill the request.
         # codes in the 400–599 range.
         # status = msg.code
+        j.logger.warning(f"The server couldn't fulfill the request because of this error: {e.reason}. code: {e.code}")
+        j.logger.debug(f"HTTP headers:\n{e.headers}")
         return False
-    except URLError:
+    except URLError as e:
         # We failed to reach a server.
+        j.logger.warning(f"We failed to reach a server because of this error: {e.reason}.")
         return False
     except socket.timeout:
+        j.logger.warning(f"Timeout of {timeout}s reached while waiting for an HTTP response")
         return False
-    except ValueError:
+    except ValueError as e:
         # invalid url
+        j.logger.exception(e.message, exception=e)
         raise
     else:
         # the default handlers handle redirects (codes in the 300 range)
         # and codes in the 400-599 range will raise HTTPError
         # only in cases where codes in the 100–299 range (success) will reach this `else` branch
+        j.logger.info("URL is reachable")
+        j.logger.debug(
+            f"HTTP response code: {response.code if hasattr(response, 'code') else response.status}"
+        )  # support py3.9
         response.close()
+        j.logger.debug("Connection closed")
         return True
 
 
