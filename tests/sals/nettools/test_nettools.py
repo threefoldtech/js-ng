@@ -1,8 +1,9 @@
 import pytest
-import jumpscale.sals.nettools as nettools
+from jumpscale.sals import nettools
 import time
 import concurrent.futures
 from pathlib import Path
+from jumpscale.loader import j
 
 
 @pytest.mark.parametrize("ipaddr, port, timeout", [("1.1.1.1", 53, 5), ("8.8.8.8", 53, 5), ("www.google.com", 80, 5)])
@@ -268,7 +269,6 @@ def test_14_get_network_info_specific_device_loopback():
     """
     device = "lo"
     result = nettools.get_network_info(device)
-    print(result)
     assert isinstance(result, dict) and all(map(lambda k: k in result.keys(), ["ip", "ip6", "mac", "name"]))
 
 
@@ -382,10 +382,11 @@ def test_21_download_ftp(url, localpath, username, passwd, overwrite, append_to_
     assert Path.cwd().name in result.localpath.parts
     assert result.localpath.stat().st_size == int(result.content_length)
 
-    print(result.localpath)
+    j.logger.debug(f"Going to delete the test file at: {result.localpath}")
     try:
         result.localpath.unlink()
     except FileNotFoundError:
+        j.logger.warning(f"file not found: {result.localpath}")
         pass
 
 
@@ -409,10 +410,11 @@ def test_22_download_https(url, localpath, username, passwd, overwrite, append_t
     assert result.localpath.name == "test_22_downloaded"
     assert Path.cwd().name in result.localpath.parts
     assert result.localpath.stat().st_size == int(result.content_length)
-    print(result.localpath)
+    j.logger.debug(f"Going to delete the test file at: {result.localpath}")
     try:
         result.localpath.unlink()
     except FileNotFoundError:
+        j.logger.warning(f"file not found: {result.localpath}")
         pass
 
 
@@ -436,10 +438,11 @@ def test_23_download_http(url, localpath, username, passwd, overwrite, append_to
     assert result.localpath.name == "test_23_downloaded"
     assert Path.cwd().name in result.localpath.parts
     assert result.localpath.stat().st_size == int(result.content_length)
-    print(result.localpath)
+    j.logger.debug(f"Going to delete the test file at: {result.localpath}")
     try:
         result.localpath.unlink()
     except FileNotFoundError:
+        j.logger.warning(f"file not found: {result.localpath}")
         pass
 
 
@@ -462,10 +465,11 @@ def test_24_download_append_to_home(url, localpath, username, passwd, overwrite,
     assert result.localpath.exists()
     assert result.localpath.name == "test_24_downloaded"
     assert Path.home().name in result.localpath.parts
-    print(result.localpath)
+    j.logger.debug(f"Going to delete the test file at: {result.localpath}")
     try:
         result.localpath.unlink()
     except FileNotFoundError:
+        j.logger.warning(f"file not found: {result.localpath}")
         pass
 
 
@@ -500,11 +504,13 @@ def test_25_download_create_parents(url, localpath, username, passwd, overwrite,
     assert "downloaded_test_25" in result.localpath.parts
     assert "files" in result.localpath.parts
     assert Path.cwd().name in result.localpath.parts
-    print(result.localpath)
+    j.logger.debug(f"Going to delete the test file at: {result.localpath}")
     try:
         result.localpath.unlink()
     except FileNotFoundError:
+        j.logger.warning(f"file not found: {result.localpath}")
         pass
+    j.logger.debug("Going to delete the test directories")
     result.localpath.parent.rmdir()
     result.localpath.parent.parent.rmdir()
 
@@ -526,10 +532,11 @@ def test_26_download_name_from_url(url, localpath, username, passwd, overwrite, 
     result = nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
     assert result.localpath.exists()
     assert result.localpath.name == "TestSSLServer4.txt"
-    print(result.localpath)
+    j.logger.debug(f"Going to delete the test file at: {result.localpath}")
     try:
         result.localpath.unlink()
     except FileNotFoundError:
+        j.logger.warning(f"file not found: {result.localpath}")
         pass
 
 
@@ -559,10 +566,11 @@ def test_27_download_overwrite_False(url, localpath, username, passwd, overwrite
     assert result.localpath.exists()
     with pytest.raises(FileExistsError):
         nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
-    print(result.localpath)
+    j.logger.debug(f"Going to delete the test file at: {result.localpath}")
     try:
         result.localpath.unlink()
     except FileNotFoundError:
+        j.logger.warning(f"file not found: {result.localpath}")
         pass
 
 
@@ -583,10 +591,11 @@ def test_28_download_overwrite_True(url, localpath, username, passwd, overwrite,
     result = nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
     assert result.localpath.exists()
     result = nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
-    print(result.localpath)
+    j.logger.debug(f"Going to delete the test file at: {result.localpath}")
     try:
         result.localpath.unlink()
     except FileNotFoundError:
+        j.logger.warning(f"file not found: {result.localpath}")
         pass
 
 
