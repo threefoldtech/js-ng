@@ -574,25 +574,33 @@ def ping_machine(ip: str, timeout: Optional[int] = 60, allowhostname: Optional[b
     Returns:
         bool: True if machine is pingable, False otherwise
     """
-    try:
-        _ = ipaddress.ip_address(ip)
-    except ValueError:
-        if not allowhostname:
-            raise ValueError("Invalid ip address, set allowhostname to use hostnames")
+    if not allowhostname:
+        try:
+            ipaddress.ip_address(ip)
+        except ValueError as e:
+            # raised if address does not represent a valid IPv4 or IPv6 address and allowhostname is False
+            j.logger.debug(f"Optional arg `allowhostname` is set to: {allowhostname}")
+            j.logger.exception(repr(e), exception=e)
+            raise
 
     if jumpscale.data.platform.is_linux():
         try:
             _ = subprocess.check_output(f"ping -c 1 -w {timeout} {ip}", shell=True)
+            j.logger.info(f"{ip} is pingable")
             exitcode = 0
-        except subprocess.CalledProcessError:
-            exitcode = -1
+        except subprocess.CalledProcessError as e:
+            j.logger.debug(f"cmd: {e.cmd} returns ({e.returncode}) exit code.")
+            j.logger.debug(f"Ping stdout output:\n{e.output}")
+            exitcode = e.returncode
         # exitcode, output, err = jumpscale.core.executors.run_local(f"ping -c 1 -w {timeout} {ip}", warn=True, hide=True)
     elif jumpscale.data.platform.is_osx():
         try:
             _ = subprocess.check_output(f"ping -o -t {timeout} {ip}", shell=True)
             exitcode = 0
-        except subprocess.CalledProcessError:
-            exitcode = -1
+        except subprocess.CalledProcessError as e:
+            j.logger.debug(f"cmd: {e.cmd} returns ({e.returncode}) exit code.")
+            j.logger.debug(f"Ping stdout output:\n{e.output}")
+            exitcode = e.returncode
         # exitcode, _, _ = jumpscale.core.executors.run_local(f"ping -o -t {timeout} {ip}", warn=True, hide=True)
     else:  # unsupported platform
         raise NotImplementedError("Not Implemented for this os")
