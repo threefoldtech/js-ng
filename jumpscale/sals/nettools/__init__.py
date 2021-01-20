@@ -657,15 +657,19 @@ def download(
     """
     DownloadResult = namedtuple("DownloadResult", ["localpath", "content", "content_length"])
     file_name = ""
+    j.logger.info(f"Will download a resource from {url}")
 
     try:
         parsed_url = urlparse(url)
-    except ValueError:
+    except ValueError as e:
+        j.logger.exception(repr(e), exception=e)
         raise
 
     if name_from_url:
         file_name = basename(parsed_url.path)  # TODO: insure safe file name and fall back if can't get the file name
+        j.logger.debug(f"File name parsed from the url: {file_name}")
     elif localpath == "":
+        j.logger.error(f"Improper args used.\nname_from_url: {name_from_url}\nlocalpath: {localpath}")
         raise ValueError("localpath can't be empty when name_from_url is False")
 
     if username and passwd:
@@ -694,9 +698,8 @@ def download(
     try:
         response = urlopen(req)
         content_length = response.headers.get("Content-Length")
-        # print(response.headers)
-        # print(response.code)
-        # print(response.url)
+        j.logger.debug(response.headers)
+        j.logger.debug(response.code)
     except URLError as e:
         if hasattr(e, "reason"):
             msg = "We failed to reach a server."
@@ -704,7 +707,7 @@ def download(
         elif hasattr(e, "code"):
             msg = "The server couldn't fulfill the request."
             msg += " Error code: " + e.code
-        # print(msg)
+        j.logger.exception(msg, exception=e)
         raise
     if localpath is not None:
         file_path = Path(localpath) / file_name
@@ -712,29 +715,39 @@ def download(
             file_path = Path.home() / file_path
 
         dir_path = file_path.parent
+        j.logger.debug(f"Will write the resource to: {file_path}")
 
         try:
             dir_path.mkdir(parents=True, exist_ok=True)
-        except (PermissionError, FileNotFoundError):
+        except (PermissionError, FileNotFoundError) as e:
+            j.logger.exception(e.strerror or repr(e), exception=e)
             raise
 
         if overwrite:
+            j.logger.debug("Overwrite mode enabled: if the file exists, it will truncated")
             file_mode = "wb"  # if exists will truncated
         else:
-            file_mode = "xb"  # if exists will raise excaption
+            j.logger.debug("Overwrite mode disabled: if the file exists, it will raise an exception")
+            file_mode = "xb"  # if exists will raise exception
 
         try:
             f_handler = file_path.open(file_mode)
-        except (PermissionError, FileNotFoundError, FileExistsError):
+            j.logger.info("File is open for writing")
+        except (PermissionError, FileNotFoundError, FileExistsError) as e:
+            j.logger.exception(e.strerror or repr(e), exception=e)
             raise
     else:
         return DownloadResult(localpath=None, content=response.read(), content_length=content_length)
     try:
+        j.logger.debug("Streaming the data to a file object...")
         shutil.copyfileobj(response, f_handler, length=8 * 1024 * 1024)
-
+        j.logger.info("Download complete.")
         return DownloadResult(localpath=file_path.resolve(), content=None, content_length=content_length)
     finally:
         f_handler.close()
+        j.logger.debug("File closed.")
+        response.close()
+        j.logger.debug("connection closed.")
 
 
 def _netobject_get(device: str) -> ipaddress.IPv4Network:
