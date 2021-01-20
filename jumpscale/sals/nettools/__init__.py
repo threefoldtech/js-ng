@@ -419,7 +419,7 @@ def get_default_ip_config(ip: Optional[str] = "8.8.8.8") -> tuple:
             break
     else:
         # The loop did not encounter a break statement.
-        # This should never happen. hivere, this part of code exists for debuging any unexpected error
+        # This should never happen. however, this part of code exists for debuging any unexpected error
         j.logger.error(f"Didn't find the interface associated with ip {source_addr}. Check the debug messages")
         j.logger.debug(f"Source address: {source_addr} -> Remote address: {ipaddr}")
     j.logger.info(f"The interface associated with ip {source_addr} is {default_nic[0]}")
