@@ -92,7 +92,7 @@ def udp_connection_test(ipaddr: str, port: int, timeout: Optional[int] = 1, mess
         ip = ipaddress.ip_address(ipaddr)
     except ValueError as e:
         # raised if address does not represent a valid IPv4 or IPv6 address
-        j.logger.exception(e.message, exception=e)
+        j.logger.exception(repr(e), exception=e)
         raise
     if ip.version == 4:
         j.logger.debug("Creating a new socket using AF_INET address family")
@@ -251,7 +251,7 @@ def check_url_reachable(
         return False
     except ValueError as e:
         # invalid url
-        j.logger.exception(e.message, exception=e)
+        j.logger.exception(repr(e), exception=e)
         raise
     else:
         # the default handlers handle redirects (codes in the 300 range)
