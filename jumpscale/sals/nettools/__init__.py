@@ -775,10 +775,10 @@ def get_free_port(ipv6: Optional[bool] = False, udp: Optional[bool] = False, ret
     """Bind an ipv4 or ipv6 socket to port 0 to make OS pick a random, free and
     available port from 1024 to 65535.
 
-    you can optionally choose to reuse the socket by set return_socket to True
-    but then it is your responsibility to close that socket calling its close
-    method after you finish with it to free the selected port.
-    by default you got tcp port, but setting udp to True will set socket type to UDP
+    you can optionally choose to reuse the socket by set return_socket to True (preferred to
+    To prevent race conditions from occurring) but then it is your responsibility to close
+    that socket calling its close method after you finish with it to free the selected port.
+    by default you got tcp port, but setting udp to True will set socket type to UDP.
 
     Args:
         ipv6 (bool, optional): weather to bind the free port to 127.0.0.1 or ::1. Defaults to False.
