@@ -528,8 +528,11 @@ def is_nic_connected(interface: str) -> bool:
     if jumpscale.data.platform.is_linux():
         carrierfile = f"/sys/class/net/{interface}/carrier"
         try:
-            return int(jumpscale.sals.fs.read_file(carrierfile)) != 0
-        except IOError:
+            is_up = int(jumpscale.sals.fs.read_file(carrierfile)) != 0
+            j.logger.info(f"Interface {interface} is up")
+            return is_up
+        except IOError as e:
+            j.logger.exception(e.strerror or repr(e), exception=e)
             return False
 
     elif jumpscale.data.platform.is_osx():
