@@ -1,6 +1,13 @@
-"""
-Docs for nettools
+"""Docs for nettools
 
+TODO
+
+General Note on python socket operations:
+    If you use a hostname in the host portion of IPv4/v6 socket address,the program may show a nondeterministic behavior,
+    as Python uses the first address returned from the DNS resolution. The socket address will be resolved differently
+    into an actual IPv4/v6 address, depending on the results from DNS resolution and/or the host configuration.
+    For deterministic behavior use a numeric address in host portion.
+    https://docs.python.org/3/library/socket.html
 """
 import time
 import socket
