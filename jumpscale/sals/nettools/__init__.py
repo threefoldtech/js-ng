@@ -813,5 +813,6 @@ def get_free_port(ipv6: Optional[bool] = False, udp: Optional[bool] = False, ret
         sock.bind(("127.0.0.1", 0))
     # retrieve the selected port with getsockname() right after bind()
     port = sock.getsockname()[1]
+    j.logger.debug(f"The OS picked this {'UDP' if udp else 'TCP'} port: {port}")
     # returns port or (port, socket) depend on the bool value of return_socket
     return (port, sock) if return_socket else port
