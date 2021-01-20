@@ -345,9 +345,8 @@ def get_reachable_ip_address(ip: str, port: Optional[int] = 0) -> str:
         port (int, optional): port number. does not matter much. No traffic is actually sent. Defaults to 0.
 
     Raises:
-        ValueError: if address does not represent a valid IPv4 or IPv6 address.
+        ValueError: if address does not represent a valid IPv4 or IPv6 address, or port is invalid.
         RuntimeError: if can't connect
-        OverflowError: if port not in range 0-65535 (valid port).
 
     Returns:
         str: ip that can connect to the specified ip
@@ -373,9 +372,10 @@ def get_reachable_ip_address(ip: str, port: Optional[int] = 0) -> str:
         reason = e.error if hasattr(e, "error") else repr(e)
         j.logger.exception(reason, exception=e)
         raise RuntimeError(f"Cannot connect to {ip}:{port} because of this error: {reason}")
-    except ValueError as e:
+    except (ValueError, TypeError, OverflowError) as e:
+        # incorrect port numper or type
         j.logger.exception(repr(e), exception=e)
-        raise
+        raise ValueError(repr(e))
     source_address = s.getsockname()[0]
     j.logger.debug(f"Source address {source_address} would be used to communicate with {ip}")
     return s.getsockname()[0]
