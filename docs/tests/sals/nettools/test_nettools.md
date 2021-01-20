@@ -39,7 +39,7 @@ connection will timeout.
 
 **Test Scenario**
 
-- Try to connect to publicly available services but using worng tcp ports.
+- Try to connect to publicly available services but using wrong tcp ports.
 - Check the connection result. should timeout after 2 sec and return False.
 
 ### test_02_tcp_connection_test_to_public_ipv4_timed_out[8.8.8.8-52-2]
@@ -50,7 +50,7 @@ connection will timeout.
 
 **Test Scenario**
 
-- Try to connect to publicly available services but using worng tcp ports.
+- Try to connect to publicly available services but using wrong tcp ports.
 - Check the connection result. should timeout after 2 sec and return False.
 
 ### test_02_tcp_connection_test_to_public_ipv4_timed_out[www.google.com-70-2]
@@ -61,7 +61,7 @@ connection will timeout.
 
 **Test Scenario**
 
-- Try to connect to publicly available services but using worng tcp ports.
+- Try to connect to publicly available services but using wrong tcp ports.
 - Check the connection result. should timeout after 2 sec and return False.
 
 ### test_03_wait_connection_test_ipv4_succeed
