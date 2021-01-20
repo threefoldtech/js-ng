@@ -342,29 +342,42 @@ def get_reachable_ip_address(ip: str, port: Optional[int] = 0) -> str:
 
     Args:
         ip (str): ip address
-        port (int, optional): port number. does not matter much. No traffic is actually sent.
+        port (int, optional): port number. does not matter much. No traffic is actually sent. Defaults to 0.
 
     Raises:
         ValueError: if address does not represent a valid IPv4 or IPv6 address.
         RuntimeError: if can't connect
+        OverflowError: if port not in range 0-65535 (valid port).
 
     Returns:
         str: ip that can connect to the specified ip
     """
+    j.logger.debug(f"IP: {ip}, PORT: {port}")
     try:
         ipaddr = ipaddress.ip_address(ip)
-    except ValueError:
+    except ValueError as e:
+        # raised if address does not represent a valid IPv4 or IPv6 address
+        j.logger.exception(repr(e), exception=e)
         raise
     if ipaddr.version == 4:
+        j.logger.debug("Creating a new socket using AF_INET address family")
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     else:  # create IPv6 socket when we connect to IPv6 address
+        j.logger.debug("Creating a new socket using AF_INET6 address family")
         s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
     try:
+        j.logger.info(f"Attempting to connect to a remote socket at address: {ip}:{port}")
         s.connect((ip, port))
-    except OSError:
-        raise RuntimeError("Cannot connect to %s:%s, check network configuration" % (ip, port))
-    except ValueError:
+    except OSError as e:
+        # (ConnectionRefusedError, socket.timeout, socket.herror, socket.gaierror)
+        reason = e.error if hasattr(e, "error") else repr(e)
+        j.logger.exception(reason, exception=e)
+        raise RuntimeError(f"Cannot connect to {ip}:{port} because of this error: {reason}")
+    except ValueError as e:
+        j.logger.exception(repr(e), exception=e)
         raise
+    source_address = s.getsockname()[0]
+    j.logger.debug(f"Source address {source_address} would be used to communicate with {ip}")
     return s.getsockname()[0]
 
 
