@@ -58,11 +58,13 @@ class Collector:
             # Write docs.
             j.sals.fs.mkdirs(j.sals.fs.parent(target_location))
             if j.sals.fs.exists(target_location):
-                with open(target_location, "a") as f:
-                    test_doc = j.tools.jinja2.render_template(
-                        template_text=test_template, name=name, body=doc, new_line=True
-                    )
-                    f.write(test_doc)
+                target_content = j.sals.fs.read_file(target_location)
+                if name in target_content:
+                    return
+                test_doc = j.tools.jinja2.render_template(
+                    template_text=test_template, name=name, body=doc, new_line=True
+                )
+                j.sals.fs.write_file(target_location, test_doc, append=True)
             else:
                 test_doc = j.tools.jinja2.render_template(
                     template_text=test_template, name=name, body=doc, new_line=False
