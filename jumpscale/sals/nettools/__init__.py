@@ -452,6 +452,7 @@ def get_network_info(device: Optional[str] = None) -> list:
             "mac": nic_info["address"],
             "name": nic_info["ifname"],
         }
+        j.logger.debug(result)
         return result
 
     def _get_info():
@@ -461,8 +462,11 @@ def get_network_info(device: Optional[str] = None) -> list:
             #    raise Runtime("could not find device")
             try:
                 output = subprocess.check_output(f"ip -j addr show {device}", shell=True)
-            except subprocess.CalledProcessError:
-                raise RuntimeError("could not find device")
+            except subprocess.CalledProcessError as e:
+                # the process returns a non-zero exit status.
+                # This probably happened because specified interface name does not exists
+                j.logger.exception(f"cmd: {e.cmd} returns a non-zero exit status.", exception=e)
+                raise RuntimeError(f"could not find this interface: {device}")
         else:
             # _, output, _ = jumpscale.core.executors.run_local("ip -j addr show", hide=True, warn=True)
             output = subprocess.check_output("ip -j addr show", shell=True)
@@ -474,6 +478,7 @@ def get_network_info(device: Optional[str] = None) -> list:
             if len(nic_info) > 1:
                 yield _clean(nic_info)
             else:
+                j.logger.debug(f"Discarded this improper json\n{nic_info}")
                 continue
 
     if jumpscale.data.platform.is_linux():
