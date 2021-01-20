@@ -24,6 +24,7 @@ from urllib.request import build_opener, HTTPPasswordMgrWithDefaultRealm, HTTPBa
 from collections import namedtuple
 from os.path import basename
 from jumpscale.loader import j
+from itertools import count
 
 # going to remove j.data.types . use insted jumpscale.core.base.fields.IPAddress
 
@@ -141,7 +142,9 @@ def wait_connection_test(ipaddr: str, port: int, timeout: Optional[int] = 6) -> 
     interval = 1 if timeout <= 2 else 2
     init_start = time.time()
     deadline = init_start + timeout
+    attempts = count()
     while time.time() < deadline:
+        j.logger.info(f"Attempt #{next(attempts)}")
         start = time.time()
         if tcp_connection_test(ipaddr, port, timeout=interval):
             j.logger.info(f"TCP test connection succeeded after waiting {time.time() - init_start:.3f}s")
@@ -174,7 +177,9 @@ def wait_http_test(
     j.logger.debug(f"verify: {verify}, interval_time: {interval_time}")
     init_start = time.time()
     deadline = time.time() + timeout
+    attempts = count()
     while time.time() < deadline:
+        j.logger.info(f"Attempt #{next(attempts)}")
         start = time.time()
         if check_url_reachable(url, interval_time, verify):
             j.logger.info(f"URL becomes reachable after waiting for {time.time() - init_start:.3f}s")
