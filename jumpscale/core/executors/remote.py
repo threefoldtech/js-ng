@@ -35,7 +35,22 @@ def execute(cmd, command_ctx, connection_ctx):
 
 
 class RemoteExecutor:
+    """Executor remote allows executing commands within specific env on the local machine. using the executor framework you can retrieve the stdout, stderr, and the return code as well.
+    e.g
+        with j.core.executors.RemoteExecutor(host="localhost", connect_kwargs={"key_filename":"/home/xmonader/.ssh/id_rsa",}) as c:c.run("hostname")
+
+    Args:
+        connection_ctsx(dict): context passed
+    Returns:
+        str: return the result of the executed command
+
+    """
+
     def __init__(self, **connection_ctx):
+        import ipdb
+
+        ipdb.set_trace()
+
         self._connection_ctx = connection_ctx
 
     def __enter__(self):
