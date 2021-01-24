@@ -47,10 +47,6 @@ class RemoteExecutor:
     """
 
     def __init__(self, **connection_ctx):
-        import ipdb
-
-        ipdb.set_trace()
-
         self._connection_ctx = connection_ctx
 
     def __enter__(self):
