@@ -41,6 +41,7 @@ class RemoteExecutor:
 
     Args:
         connection_ctx(dict): context passed to fabric e.g. fabric.Connection(host, user=None, port=None, config=None, gateway=None, forward_agent=None, connect_timeout=None, connect_kwargs=None, inline_ssh_env=None)
+                              connect_kwargs is currently the right place to hand in paramiko connection parameters such as pkey or key_filename. e.g connect_kwargs={"key_filename": "/home/myuser/.ssh/private.key"}
     Returns:
         str: return the result of the executed command
 
