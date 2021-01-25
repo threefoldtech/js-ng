@@ -40,7 +40,7 @@ class RemoteExecutor:
         with j.core.executors.RemoteExecutor(host="localhost", connect_kwargs={"key_filename":"/home/xmonader/.ssh/id_rsa",}) as c:c.run("hostname")
 
     Args:
-        connection_ctsx(dict): context passed to fabric e.g. fabric.Connection(host, user=None, port=None, config=None, gateway=None, forward_agent=None, connect_timeout=None, connect_kwargs=None, inline_ssh_env=None)
+        connection_ctx(dict): context passed to fabric e.g. fabric.Connection(host, user=None, port=None, config=None, gateway=None, forward_agent=None, connect_timeout=None, connect_kwargs=None, inline_ssh_env=None)
     Returns:
         str: return the result of the executed command
 
