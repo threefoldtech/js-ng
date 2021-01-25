@@ -23,16 +23,10 @@ j.sals.process.get_pid_by_port(8000)
 import math
 import os
 import os.path
-import random
 import re
-import select
 import signal
-import subprocess
-import sys
 import time
 from collections import defaultdict
-from subprocess import Popen
-
 import psutil
 import socket
 from jumpscale.loader import j
