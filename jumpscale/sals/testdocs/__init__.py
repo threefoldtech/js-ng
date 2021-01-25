@@ -34,6 +34,26 @@ class Collector:
         for item in items:
             self._generate_docs_for_item(item)
 
+    def _remove_destination_if_exists(self, location):
+        # Check if the docs exists and remove them in this case to generate a new one.
+        if location not in self.tests_docs_locations:
+            self.tests_docs_locations.append(location)
+            if j.sals.fs.exists(location):
+                j.sals.fs.rmtree(location)
+
+    def _write_docs(self, name, doc, location):
+        # Write docs.
+        j.sals.fs.mkdirs(j.sals.fs.parent(location))
+        if j.sals.fs.exists(location):
+            target_content = j.sals.fs.read_file(location)
+            if name in target_content:
+                return 0
+            test_doc = j.tools.jinja2.render_template(template_text=test_template, name=name, body=doc, new_line=True)
+            return j.sals.fs.write_file(location, test_doc, append=True)
+        else:
+            test_doc = j.tools.jinja2.render_template(template_text=test_template, name=name, body=doc, new_line=False)
+            return j.sals.fs.write_file(location, test_doc)
+
     def _generate_docs_for_item(self, item):
         """Generate a markdown docs for test scenario.
 
@@ -42,55 +62,38 @@ class Collector:
         """
         doc = item._obj.__doc__
         name = item.name
-        if doc:
-            # Get target docs locations.
-            absolute_test_location = str(item.fspath)
-            relative_test_location = absolute_test_location.split(self.source)[1][1:]
-            relative_test_location = relative_test_location.replace(".py", ".md")
-            target_location = j.sals.fs.join_paths(self.target, relative_test_location)
-
-            # Check if the docs exists and remove them in this case to generate a new one.
-            if target_location not in self.tests_docs_locations:
-                self.tests_docs_locations.append(target_location)
-                if j.sals.fs.exists(target_location):
-                    j.sals.fs.rmtree(target_location)
-
-            # Write docs.
-            j.sals.fs.mkdirs(j.sals.fs.parent(target_location))
-            if j.sals.fs.exists(target_location):
-                target_content = j.sals.fs.read_file(target_location)
-                if name in target_content:
-                    return
-                test_doc = j.tools.jinja2.render_template(
-                    template_text=test_template, name=name, body=doc, new_line=True
-                )
-                j.sals.fs.write_file(target_location, test_doc, append=True)
-            else:
-                test_doc = j.tools.jinja2.render_template(
-                    template_text=test_template, name=name, body=doc, new_line=False
-                )
-                j.sals.fs.write_file(target_location, test_doc)
-
-            # add entry to main README.md
-            location_parts = relative_test_location.split(j.sals.fs.sep)
-            if len(location_parts) == 1:
-                category = ""
-            else:
-                category = location_parts[0].capitalize()
-            file_name = location_parts[-1].replace(".md", "")
-            self._add_entry_to_main_readme(category, file_name, relative_test_location)
-
-        else:
+        if not doc:
             j.logger.warning(f"Test {name} doesn't have docstring")
+            return
 
-    def _add_entry_to_main_readme(self, category, file_name, relative_location):
+        # Get target docs locations.
+        absolute_test_location = str(item.fspath)
+        relative_test_location = absolute_test_location.split(self.source)[1][1:]
+        relative_test_location = relative_test_location.replace(".py", ".md")
+        target_location = j.sals.fs.join_paths(self.target, relative_test_location)
+
+        self._remove_destination_if_exists(target_location)
+        wrote = self._write_docs(name, doc, target_location)
+        if not wrote:
+            return
+
+        self._add_entry_to_main_readme(relative_test_location)
+
+    def _add_entry_to_main_readme(self, relative_location):
         """Add an entry to the tests main README.md use for navigation.
 
         Args:
-            category (str): Test category (e.g. sals, clients).
-            file_name (str): The name of the file name.
             relative_location (str): The relative path of the test file to the main tests README.md
         """
+        # Extract category and file name
+        location_parts = relative_location.split(j.sals.fs.sep)
+        if len(location_parts) == 1:
+            category = ""
+        else:
+            category = location_parts[0].capitalize()
+        file_name = location_parts[-1].replace(".md", "")
+
+        # Generate the entry to be added in README.md.
         readme_location = j.sals.fs.join_paths(self.target, "README.md")
         readme = ""
         if j.sals.fs.exists(readme_location):
