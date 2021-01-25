@@ -35,12 +35,12 @@ def execute(cmd, command_ctx, connection_ctx):
 
 
 class RemoteExecutor:
-    """Executor remote allows executing commands within specific env on the local machine. using the executor framework you can retrieve the stdout, stderr, and the return code as well.
+    """Remote remote allows executing commands within specific env on the remote machine. using the executor framework you can retrieve the stdout, stderr, and the return code as well.
     e.g
         with j.core.executors.RemoteExecutor(host="localhost", connect_kwargs={"key_filename":"/home/xmonader/.ssh/id_rsa",}) as c:c.run("hostname")
 
     Args:
-        connection_ctsx(dict): context passed
+        connection_ctsx(dict): context passed to fabric e.g. fabric.Connection(host, user=None, port=None, config=None, gateway=None, forward_agent=None, connect_timeout=None, connect_kwargs=None, inline_ssh_env=None)
     Returns:
         str: return the result of the executed command
 
