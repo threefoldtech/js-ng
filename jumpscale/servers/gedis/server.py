@@ -188,10 +188,6 @@ class GedisServer(Base):
     def start(self):
         """Starts the server
         """
-        # handle signals
-        for signal_type in (SIGTERM, SIGKILL):
-            gevent.signal(signal_type, self.stop)
-
         # register system actor if enabled
         if self.enable_system_actor:
             self._register_actor("system", self._system_actor)
