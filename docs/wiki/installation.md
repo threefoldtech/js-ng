@@ -1,37 +1,37 @@
-# All in one installation
+# Installation
+
+## Using pip
+
 Installation is as easy as `pip install js-ng`
-# Step-by-step installation
-## Install requierd packages
+
+## Manual installation
+
+For manual installation from source, poetry is required. This method is recommended for development to work with upstream changes
+
+### Install required packages
 ```
 apt-get update
 apt-get install git python3-venv python3-pip
 pip3 install poetry
 ```
-## clone repo
+### Clone
 ```
 git clone https://github.com/js-next/js-ng.git
 cd js-ng
-
 ```
-## User Installation
+### User Installation
 ```
-poetry update --no-dev
 poetry install --no-dev
 ```
-## developer Installation
+### Developer Installation
 ```
-poetry update
 poetry install
 ```
-## Running jsng
+### Running jsng shell
 ```
 poetry run jsng
 ```
-## Running usershell for jsng
-```
-poetry run usershell
-```
-## Running command on poetry shell, if you want to use package in jsng vnev
+### Switch to the virtual environment
 ```
 poetry shell
 ```
