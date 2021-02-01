@@ -481,6 +481,8 @@ def get_similar_processes():
 def check_running(process_name, min=1):
     """Check if there are a specific number of running processes that match the given name.
 
+    Function will check string against Process.name(), Process.exe() and Process.cmdline().
+
     Args:
         process_name (str): the target process name
         min (int, optional): min number of instances required to be running. Defaults to 1.
