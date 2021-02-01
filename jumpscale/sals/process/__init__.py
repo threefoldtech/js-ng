@@ -356,56 +356,49 @@ def check_stop(cmd, filterstr, retry=1, nrinstances=0):
         raise j.exceptions.RuntimeError("could not stop %s, found %s nr of instances." % (cmd, len(found)))
 
 
-def get_pids(process_name, match_predicate=None):
-    """Get process ID(s) for a given process
+def get_pids(process_name, match_predicate=None, limit=0, _alt_source=None):
+    """Return a list of processes ID(s) matching 'process_name'.
 
-    Arguments:
-        process {str} -- process name
+    Function will check string against Process.name(), Process.exe() and Process.cmdline()
 
-    Keyword Arguments:
-        match_predicate {callable} -- function that does matching between
-        found processes and the targested process, the function should accept
-        two arguments and return a boolean, defaults to None (default: {None})
-
-    Raises:
-        j.exceptions.RuntimeError: [description]
-        j.exceptions.NotImplemented: [description]
+    Args:
+        process_name (str): The target process name
+        match_predicate (callable, optional): Function that does matching between\
+            found processes and the targeted process, the function should accept\
+            two arguments and return a boolean. Defaults to None.
+        limit (int, optional): If not equal to 0, function will return as fast as the number\
+            of PID(s) found become equal to `limit` value.
+        _alt_source(callable or iterable, optional): Can be used to specify an alternative source\
+            of the psutil.Process objects to match against.
+            ex: get_user_processes func, or get_similar_processes.
+            if not specified, psutil.process_iter will be used. Defaults to None.
 
     Returns:
-        [list(int)] -- list of pids
+        list[int]: list of PID(s)
     """
     # default match predicate
-    # why aren't we using psutil ??
     def default_predicate(target, given):
-        return target.strip().lower() in given.lower()
+        return target.strip().lower() == given.lower()
 
-    if match_predicate is None:
-        match_predicate = default_predicate
+    match_predicate = match_predicate or default_predicate
 
-    if process_name is None:
-        raise j.exceptions.RuntimeError("process cannot be None")
-    if j.data.platform.is_unix():
-        pids = set()
-        for process in get_processes():
-            try:
-                pid = process.pid
-                if not isinstance(pid, int):
-                    continue
-                name = process.name()
-                if match_predicate(process_name, name):
-                    pids.add(pid)
-                elif match_predicate(process_name, process.exe()):
-                    pids.add(pid)
-                else:
-                    cmdline = process.cmdline()
-                    if cmdline and cmdline[0]:
-                        if match_predicate(process_name, cmdline[0]):
-                            pids.add(pid)
-            except (psutil.Error, FileNotFoundError):
-                continue
-        return list(pids)
-    else:
-        raise j.exceptions.NotImplemented("getProcessPid is only implemented for unix")
+    pids = []
+    for proc in psutil.process_iter(["name", "exe", "cmdline"]):
+        try:
+            if (
+                match_predicate(process_name, proc.info["name"])
+                or proc.info["exe"]
+                and match_predicate(process_name, os.path.basename(proc.info["exe"]))
+                or proc.info["cmdline"]
+                and match_predicate(process_name, os.path.basename(proc.info["cmdline"][0]))
+            ):
+                pids.append(proc.pid)
+                # return early if no need to iterate over all running process
+                if limit and len(pids) == limit:
+                    return pids
+        except (psutil.ZombieProcess, psutil.AccessDenied, psutil.NoSuchProcess):
+            pass
+    return pids
 
 
 def get_my_process():
