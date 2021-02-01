@@ -8,7 +8,7 @@ from jumpscale.loader import j
 from parameterized import parameterized
 from tests.base_tests import BaseTests
 
-SESSION_NAME = "testing_process"
+SESSION_NAME = "testing"
 TAIL_PROCESS_NAME = "tail"
 PYTHON_SERVER_NAME = "http.server"
 HOST = "127.0.0.1"
@@ -226,8 +226,8 @@ class ProcessTests(BaseTests):
         """
         self.info("Start a process in tmux with check_start.")
         window_name = self.randstr()
-        start_cmd = f"tmux new-window -d -t {SESSION_NAME} -n {window_name} '{TAIL_PROCESS_NAME} -f /dev/null'"
-        j.sals.process.check_start(cmd=start_cmd, filterstr=TAIL_PROCESS_NAME, nrinstances=1)
+        start_cmd = f"tmux new-window -t {SESSION_NAME} -d -n {window_name} {TAIL_PROCESS_NAME} -f /dev/null"
+        j.sals.process.check_start(cmd=start_cmd, filterstr=TAIL_PROCESS_NAME, n_instances=1)
 
         self.info("Check that the process has been started.")
         pids = self.get_process_pids(TAIL_PROCESS_NAME)
@@ -243,7 +243,7 @@ class ProcessTests(BaseTests):
 
         self.info("Start a process again in tmux with nrinstances=2, should fail.")
         with self.assertRaises(Exception):
-            j.sals.process.check_start(cmd=start_cmd, filterstr=TAIL_PROCESS_NAME, nrinstances=2)
+            j.sals.process.check_start(cmd=start_cmd, filterstr=TAIL_PROCESS_NAME, n_instances=2)
 
     def test_09_get_process_environ(self):
         """Test case for getting process environment variables.
