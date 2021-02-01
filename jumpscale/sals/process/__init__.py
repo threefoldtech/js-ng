@@ -1,22 +1,24 @@
 """This module execute process on system and manage them
-for example
-```
-#to create a process
-rc, out, err = j.sals.process.execute("ls", cwd="/tmp", showout=True)
-#this executes ls command on dir "/tmp" showing output from stdout
-#rc -> contains exit status
-#out -> the actual output
-#err -> in case an error happened this var will contains the error msg
 
-j.sals.process.is_active(10022)
-#checks if a process with this pid is active or not
+Example:
+    ```
+    #to create a process
+    >>> from jumpscale.loader import j
+    >>> rc, out, err = j.sals.process.execute("ls", cwd="/tmp", showout=True)
+    # this executes ls command on dir "/tmp" showing output from stdout
+    # rc -> contains exit status
+    # out -> the actual output
+    # err -> in case an error happened this var will contains the error msg
 
-j.sals.process.kill(10022, sig=signal.SIGTERM.value)
-#kill a process with pid 10022 with SIGTERM
+    # checks if a process with this pid is exists in the current process list
+    >>> j.sals.process.is_alive(10022)
 
-j.sals.process.get_pid_by_port(8000)
-#gets pid of the process listenning on port 8000
-```
+    # kill a process with pid 10022 with SIGTERM
+    >>> j.sals.process.kill(10022)
+
+    # gets pid of the process listenning on port 8000
+    >>> j.sals.process.get_pid_by_port(8000)
+    ```
 """
 
 
