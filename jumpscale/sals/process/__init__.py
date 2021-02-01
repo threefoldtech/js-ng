@@ -180,47 +180,46 @@ def kill_all(process_name, sig=signal.SIGKILL):
 def get_pids_filtered_sorted(filterstr, sortkey=None):
     """Get pids of process by a filter string and optionally sort by sortkey
 
-    Arguments:
-        filterstr {[str]} -- filter string.
-
-    Keyword Arguments:
-        sortkey {[str]} -- sort key for ps command (default: {None})
-        sortkey can be one of the following:
-        %cpu           cpu utilization of the process in
-        %mem           ratio of the process's resident set size  to the physical memory on the machine, expressed as a percentage.
-        cputime        cumulative CPU time, "[DD-]hh:mm:ss" format.  (alias time).
-        egid           effective group ID number of the process as a decimal integer.  (alias gid).
-        egroup         effective group ID of the process.  This will be the textual group ID, if it can be obtained and the field width permits, or a decimal representation otherwise.  (alias group).
-        euid           effective user ID (alias uid).
-        euser          effective user name.
-        gid            see egid.  (alias egid).
-        pid            a number representing the process ID (alias tgid).
-        ppid           parent process ID.
-        psr            processor that process is currently assigned to.
-        start_time     starting time or date of the process.
-
+    Args:
+        filterstr (str): filter string.
+        sortkey (str, optional): Defaults to None (sort by pid(s) ascending)
+            sortkey can be one of the following:
+            %cpu           cpu utilization of the process in
+            %mem           ratio of the process's resident set size  to the physical memory on the machine, expressed as a percentage.
+            cputime        cumulative CPU time, "[DD-]hh:mm:ss" format.  (alias time).
+            egid           effective group ID number of the process as a decimal integer.  (alias gid).
+            egroup         effective group ID of the process. This will be the textual group ID, if it can be obtained and the field width permits, or a decimal representation otherwise.  (alias group).
+            euid           effective user ID (alias uid).
+            euser          effective user name.
+            gid            see egid. (alias egid).
+            pid            a number representing the process ID (alias tgid).
+            ppid           parent process ID.
+            psr            processor that process is currently assigned to.
+            start_time     starting time or date of the process.
 
     Returns:
-        [list(int)] -- processes pids
+        list(int): processes pids
     """
-    if sortkey is not None:
-        cmd = "ps aux --sort={sortkey} | grep '{filterstr}'".format(filterstr=filterstr, sortkey=sortkey)
+    ps_to_psutil_map = {
+        "%cpu": "cpu_percent",
+        "%mem": "memory_percent",
+        "cputime": "cpu_time",
+        "psr": "cpu_num",
+        "start_time": "create_time",
+        "egid": "egid",
+        "gid": "egid",
+        "euid": "euid",
+        "uid": "euid",
+        "euser": "username",
+        "pid": "pid",
+        "ppid": "ppid",
+    }
+    if sortkey is None:  # mimic default ps commnad sorting behavior
+        sortkey = "pid"
+        desc = False
     else:
-        cmd = "ps ax | grep '{filterstr}'".format(filterstr=filterstr)
-    rc, out, err = execute(cmd)
-    # print out
-    found = []
-    for line in out.split("\n"):
-        if line.find("grep") != -1 or line.strip() == "":
-            continue
-        if line.strip() != "":
-            if line.find(filterstr) != -1:
-                line = line.strip()
-                if sortkey is not None:
-                    found.append(int([x for x in line.split(" ") if x][1]))
-                else:
-                    found.append(int(line.split(" ")[0]))
-    return found
+        desc = True
+    return get_processes_info(sort=ps_to_psutil_map[sortkey], filterstr=filterstr, desc=desc)
 
 
 def get_filtered_pids(filterstr, excludes=None):
