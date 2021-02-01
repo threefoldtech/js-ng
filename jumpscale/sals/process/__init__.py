@@ -338,35 +338,38 @@ def check_start(cmd, filterstr, n_instances=1, retry=1):
     raise j.exceptions.Runtime("could not start the required number of instances.")
 
 
-def check_stop(cmd, filterstr, retry=1, nrinstances=0):
-    """Executes a stop command and check if it is already stopped based on filterstr
+def check_stop(cmd, filterstr, retry=1, n_instances=0):
+    """Executes a stop command (possibly multiple times) and check if it is already stopped based on filterstr
 
-    Arguments:
-        cmd {str} -- command to be executed
-        filterstr {str} -- filter string
-
-    Keyword Arguments:
-        retry (int) -- number of retries (default: {1})
-        nrinstances (int) -- number of instances after stop (default: {0})
+    Args:
+        cmd (str): Command to be executed.
+        filterstr (str): Filter string.
+        retry (int, optional): Number of retries. Defaults to 1.
+        n_inst (int, optional): Number of instances after stop. Defaults to 0.
 
     Raises:
-        j.exceptions.RuntimeError: if nr of instances not matched
+        j.exceptions.Runtime: if number of instances not matched
     """
 
-    found = get_filtered_pids(filterstr)
     for i in range(retry):
-        if len(found) == nrinstances:
-            return
-        # print "START:%s"%cmd
-        execute(cmd, die=False)
-        time.sleep(1)
-        found = get_filtered_pids(filterstr)
-        for item in found:
-            kill(int(item), 9)
-        found = get_filtered_pids(filterstr)
-
-    if len(found) != 0:
-        raise j.exceptions.RuntimeError("could not stop %s, found %s nr of instances." % (cmd, len(found)))
+        if isinstance(cmd, str):
+            cmd = cmd.split()
+        proc = psutil.Popen(cmd, close_fds=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+        try:
+            rc = proc.wait(timeout=5)  # makesure the process is stable
+            # print(f'rc: {rc}')
+            if rc == 0:
+                pass  # executing the process succeeded but exited immediately!
+            else:
+                pass  # the process exited with error
+        except psutil.TimeoutExpired:
+            pass  # still running
+        found = get_pids(filterstr)
+        if len(found) == n_instances:
+            return True  # should remove? None
+        else:
+            continue
+    raise j.exceptions.Runtime(f"could not stop {cmd}, found {len(found)} of instances instead of {n_instances}")
 
 
 def get_pids(process_name, match_predicate=None, limit=0, _alt_source=None):
