@@ -577,16 +577,23 @@ def kill_process_by_name(process_name, sig=signal.SIGTERM, match_predicate=None,
         kill(pid, sig, timeout=timeout, sure_kill=sure_kill)
 
 
-def kill_process_by_port(port):
-    """Kill process by port
+def kill_process_by_port(port, ipv6=False, udp=False, sig=signal.SIGTERM, timeout=5, sure_kill=False):
+    """Kill process by port.
 
-    Arguments:
-        port (int) -- port number
+    Args:
+        port (int): The port number.
+        ipv6 (bool, optional): Whether to search the connections that using ipv6 instead of ipv4. Defaults to False.
+        udp (bool, optional): Whether to search the connections for UDP port instead of TCP. Defaults to False.
+        sig (signal, optional): See signal module constants. Defaults to signal.SIGTERM.
+        timeout (int, optional): How long to wait for a process to terminate (seconds) before raise exception\
+            or, if sure_kill=True, send a SIGKILL. Defaults to 5.
+        sure_kill (bool, optional): Whether to fallback to SIGKILL if the timeout exceeded for the terminate operation or not. Defaults to False.
+
+    Returns:
+        None
     """
-    port = int(port)
-    pid = get_pid_by_port(port)
-    if pid:
-        return kill(pid)
+    proc = get_process_by_port(port, ipv6=ipv6, udp=udp)
+    return kill(proc, sig=sig, timeout=timeout, sure_kill=sure_kill)
 
 
 def is_port_listening(port, ipv6=False):
