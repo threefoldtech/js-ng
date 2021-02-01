@@ -152,19 +152,17 @@ def kill(proc, sig=signal.SIGTERM, timeout=5, sure_kill=False):
         pass
 
 
-def ps_find(name):
-    """find process by name
+def ps_find(process_name):
+    """Check if there is any running process that match the given name.
 
-    Arguments:
-        name {str} -- process name
+    Args:
+        process_name (str): The target process name. will match against against Process.name(),\
+            Process.exe() and Process.cmdline()
 
     Returns:
-        [bool] -- True if process is found
+        bool: True if process is found, False otherwise.
     """
-    for proc in psutil.process_iter():
-        if proc.name() == name:
-            return True
-    return False
+    return len(get_pids(process_name, limit=1)) == 1
 
 
 def kill_all(name, sig=signal.SIGKILL):
