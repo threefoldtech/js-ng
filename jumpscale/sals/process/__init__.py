@@ -260,31 +260,21 @@ def get_filtered_pids(filterstr, excludes=None):
     return found
 
 
-def get_pids_filtered_by_regex(regex_list, excludes=None):
-    """get pids of a process filtered by Regex list
+def get_pids_filtered_by_regex(regex_list):
+    """Get pids of a process filtered by Regex list
 
-    Arguments:
-        regex_list {list(str)} -- list of regex expressions
-
-    Keyword Arguments:
-        excludes {list(str)} -- list of excludes (default: {None})
+    Args:
+        regex_list (list[str]): List of regex expressions.
 
     Returns:
-        [list(int)] -- list of pids
+        list(int): List of pids.
     """
-    excludes = excludes or []
     res = []
-    for process in psutil.process_iter():
-        try:
-            cmdline = process.cmdline()
-        except psutil.NoSuchProcess:
-            cmdline = None
-        except psutil.AccessDenied:
-            cmdline = None
-        if cmdline:
-            name = " ".join(cmdline)
+    for process in psutil.process_iter(attrs=["cmdline"]):
+        if process.info["cmdline"]:
+            cmdline = " ".join(process.info["cmdline"])
             for r in regex_list:
-                if name.strip() != "" and re.match(r, name):
+                if re.match(r, cmdline):
                     res.append(process.pid)
     return res
 
