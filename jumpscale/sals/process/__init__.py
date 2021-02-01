@@ -445,19 +445,20 @@ def get_process_object(pid, die=True):
 
 
 def get_user_processes(user):
-    """Get all process for a specific user
+    """Get all process for a specific user.
 
-    Arguments:
-        user {str} -- username
+    Args:
+        user (str): Te user name to match against.
 
-    Returns:
-        [list(int)] -- list of process pids for that user
+    Yields:
+        psutil.Process: psutil.Process object for all processes owned by `user`.
     """
-    result = []
-    for process in psutil.process_iter():
-        if process.username() == user:
-            result.append(process.pid)
-    return result
+    try:
+        for process in psutil.process_iter():
+            if process.username() == user:
+                yield process
+    except (psutil.AccessDenied, psutil.NoSuchProcess):
+        pass
 
 
 def kill_user_processes(user):
