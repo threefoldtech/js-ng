@@ -665,11 +665,10 @@ def get_defunct_processes():
 
 
 def get_processes():
-    """
-    get an interator for all running processes
+    """Get an interator for all running processes
 
     Yields:
-        generator: for all processes
+        psutil.Process: for all processes running
     """
     yield from psutil.process_iter()
 
