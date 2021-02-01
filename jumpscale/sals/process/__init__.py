@@ -545,20 +545,19 @@ def set_env_var(var_names, var_values):
         raise j.exceptions.RuntimeError(e)
 
 
-def get_pid_by_port(port):
+def get_pid_by_port(port, ipv6=False, udp=False):
     """Returns pids of the process that is listening on the given port
 
-    Arguments:
-        port (int) -- port number
+    Args:
+        port (int): port number
 
     Returns:
-        int -- pid of process that listen on that port
+        int or None: pid of process that listen on that port
     """
 
-    process = get_process_by_port(port)
-    if process is None:
-        return []
-    return process.pid
+    process = get_process_by_port(port, ipv6=ipv6, udp=udp)
+    if process:
+        return process.pid
 
 
 def kill_process_by_name(process_name, sig=signal.SIGTERM, match_predicate=None, timeout=5, sure_kill=False):
