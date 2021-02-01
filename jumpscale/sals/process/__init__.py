@@ -703,22 +703,16 @@ def get_processes_info():
 
 
 def get_ports_mapping(status=psutil.CONN_LISTEN):
-    """
-    get a mapping for process to ports with a status filter
+    """Get a mapping for process to ports with a status filter
 
-    it will skip any process in case of errors (e.g. permission error)
+    It will skip any process in case of errors (e.g. permission error)
 
-    example:
-
-    ```python
-    j.sals.process.get_ports_mapping(psutil.CONN_ESTABLISHED)
-    ```
-
-    or
-
-    ```
-    j.sals.process.get_ports_mapping("ESTABLISHED")
-    ```
+    Example:
+        >>> from jumpscale.loader import j
+        >>> import psutil
+        >>> j.sals.process.get_ports_mapping(psutil.CONN_ESTABLISHED)
+        >>> # or
+        >>> j.sals.process.get_ports_mapping("ESTABLISHED")
 
     Args:
         status (psutil.CONN_CONSTANT): `psutil` CONN_* constant as a filter. Defaults to psutil.CONN_LISTEN.
