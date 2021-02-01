@@ -87,19 +87,16 @@ def is_alive(pid):
 
 
 def is_installed(cmd):
-    """[summary]
-    Checks if a specific command is available on system e.g. curl
-    Arguments:
-        cmd {str} -- command to be checked
+    """Checks if a specific command is available on system e.g. curl.
+
+    Args:
+        cmd (str): Command to be checked.
 
     Returns:
-        [bool] -- True if command is installed
+        bool: True if command is available, False otherwise.
     """
-    rc, _, _ = execute("which %s" % cmd, die=False)
-    if rc:
-        return False
-    else:
-        return True
+    rc, _, _ = execute(f"which {cmd}", die=False)
+    return rc == 0
 
 
 def kill(pid, sig=signal.SIGTERM.value):
