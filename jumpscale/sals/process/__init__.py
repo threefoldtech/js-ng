@@ -549,22 +549,19 @@ def get_pid_by_port(port):
     return process.pid
 
 
-def kill_process_by_name(name, sig=signal.SIGTERM.value, match_predicate=None):
-    """Kill all processes for a given command
+def kill_process_by_name(process_name, sig=signal.SIGTERM, match_predicate=None, timeout=5, sure_kill=False):
+    """Kill all processes that match 'process_name'.
 
-    Arguments:
-        name {str} -- Name of the command that started the process(s)
-
-    Keyword Arguments:
-        sig {bool} -- os signal to send to the process(s) (default: {signal.SIGTERM.value})
-        match_predicate {callable} -- function that does matching between
-            found processes and the targested process, the function should accept
-            two arguments and return a boolean (default: {None})
+    Args:
+        process_name (str): The target process name.
+        sig (signal, optional): See signal module constants. Defaults to signal.SIGKILL
+        match_predicate (callable, optional): Function that does matching between\
+            found processes and the targeted process, the function should accept\
+            two arguments and return a boolean. Defaults to None.
     """
-    # XXX almost same as kill_all with a better function name
-    pids = get_pids(name, match_predicate=match_predicate)
+    pids = get_pids(process_name, match_predicate=match_predicate)
     for pid in pids:
-        kill(pid, sig)
+        kill(pid, sig, timeout=timeout, sure_kill=sure_kill)
 
 
 def kill_process_by_port(port):
