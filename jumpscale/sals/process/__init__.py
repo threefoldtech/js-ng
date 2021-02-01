@@ -529,17 +529,18 @@ def check_process_for_pid(pid, process_name):
         return False
 
 
-def set_env_var(varnames, varvalues):
-    """Set the value of the environment variables C{varnames}. Existing variable are overwritten
+def set_env_var(var_names, var_values):
+    """Set the value of the environment variables {varnames}. Existing variable are overwritten
 
-    Arguments:
-        varnames {list(str)} --  A list of the names of all the environment variables to set
-        varvalues {list(str)} -- A list of all values for the environment variables
-
+    Args:
+        var_names list[str]: A list of the names of all the environment variables to set
+        varvalues list[str]: A list of all values for the environment variables
+    Raises:
+        j.exceptions.RuntimeError: if error happened during setting the environment variables
     """
     try:
-        for i in range(len(varnames)):
-            os.environ[varnames[i]] = str(varvalues[i]).strip()
+        for i in range(len(var_names)):
+            os.environ[var_names[i]] = str(var_values[i]).strip()
     except Exception as e:
         raise j.exceptions.RuntimeError(e)
 
