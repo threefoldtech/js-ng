@@ -99,30 +99,56 @@ def is_installed(cmd):
     return rc == 0
 
 
-def kill(pid, sig=signal.SIGTERM.value):
-    """Kill a process with a signal
+def kill(proc, sig=signal.SIGTERM, timeout=5, sure_kill=False):
+    """Kill a process with a specified signal.
 
-    Arguments:
-        pid (int) -- pid of the process to be killed
-
-    Keyword Arguments:
-        sig {int]} -- which signal you want to kill the process with (default: {signal.SIGTERM.value})
+    Args:
+        proc (int/psutil.Process): Target process ID (PID) or psutil.Process object.
+        sig (signal, optional): See signal module constants. Defaults to signal.SIGTERM.
+        timeout (int, optional): How long to wait for a process to terminate (seconds) before raise exception\
+            or, if sure_kill=True, send a SIGKILL. Defaults to 5.
+        sure_kill (bool, optional): Whether to fallback to SIGKILL if the timeout exceeded for the terminate operation or not. Defaults to False.
 
     Raises:
-        j.exceptions.RuntimeError: in case killing process failed
+        j.exceptions.Runtime: In case killing the process failed.
+        j.exceptions.Permission: In case the permission to perform this action is denied.
 
     Returns:
-        [type] -- [description]
+        None
     """
-    pid = int(pid)
-    sig = int(sig)
-    proc = psutil.Process(pid)
     try:
+        if isinstance(proc, int):
+            proc = get_process_object(proc)
+        if proc.status() == psutil.STATUS_ZOMBIE:
+            return True
         proc.send_signal(sig)
-        # XXX return too early
-        return True
-    except Exception as e:
-        raise j.exceptions.RuntimeError("Could not kill process with id %s.\n%s" % (pid, e))
+        # Wait for a process to terminate
+        # If PID no longer exists return None immediately
+        # If timeout exceeded and the process is still alive raise TimeoutExpired exception
+        proc.wait(timeout=timeout)
+        return True  # XXX only to pass current tests
+    except psutil.TimeoutExpired as e:
+        # timeout expires and process is still alive.
+        if sure_kill and sig != signal.SIGKILL and os.name != "nt":
+            # SIGKILL not supported in windows
+            # If a process gets this signal it must quit immediately and will not perform any clean-up operations
+            proc.kill()
+            # TODO we can use timeout and catching TimeoutExpired again in case the process in an uninterruptible sleep
+            try:
+                proc.wait(1)
+            except psutil.TimeoutExpired as e:
+                if proc.status() == psutil.STATUS_ZOMBIE:
+                    return True
+                raise j.exceptions.Runtime(f"Could not kill process with pid {proc.pid}, {proc.status()}") from e
+            return True  # XXX only to pass current tests
+        else:
+            raise j.exceptions.Runtime(f"Could not kill process with pid {proc.pid}, {proc.status()}") from e
+    except psutil.AccessDenied as e:
+        # permission to perform an action is denied
+        raise j.exceptions.Permission("Permission to perform this action is denied!") from e
+    except (psutil.ZombieProcess, psutil.NoSuchProcess):
+        # Process no longer exists or Zombie (already dead)
+        pass
 
 
 def ps_find(name):
