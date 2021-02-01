@@ -295,34 +295,46 @@ def get_pids_filtered_by_regex(regex_list, excludes=None):
     return res
 
 
-def check_start(cmd, filterstr, nrinstances=1, retry=1):
-    """Run command and check if it is started based on filterstr
+def check_start(cmd, filterstr, n_instances=1, retry=1):
+    """Run command (possibly multiple times) and check if it is started based on filterstr
 
-    Arguments:
-        cmd {str} -- command to be executed
-        filterstr {str} -- filter string
-
-    Keyword Arguments:
-        instances (int) -- number of needed instances (default: {1})
-        retry (int) -- number of retries (default: {1})
+    Args:
+        cmd (str/list): Command to be executed.
+        filterstr (str): Filter string. will match against against Process.name(),\
+            Process.exe() and Process.cmdline()
+        n_instances (int, optional): Number of needed instances. Defaults to 1.
+        retry (int, optional): Number of retries to execute the command and check. Defaults to 1.
 
     Raises:
-        j.exceptions.RuntimeError: will be raised if we didn't reach number of required instances
+        j.exceptions.Runtime: will be raised if we didn't reach number of required instances.
     """
-    found = get_filtered_pids(filterstr)
     for i in range(retry):
-        # XXX why checking found list inside the loop, it won't change
-        # XXX why we excute the command many times,what we want to achieve
-        if len(found) == nrinstances:
-            return
-        # print "START:%s"%cmd
-        execute(cmd)
-        time.sleep(1)
-    found = get_filtered_pids(filterstr)
-    if len(found) != nrinstances:
-        raise j.exceptions.RuntimeError(
-            "could not start %s, found %s nr of instances. Needed %s." % (cmd, len(found), nrinstances)
-        )
+        if isinstance(cmd, str):
+            cmd = cmd.split()
+        proc = psutil.Popen(cmd, close_fds=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+        # print(cmd)
+        # print(proc.cmdline())
+        # print(f'pid: {proc.pid}')
+        # print(f'status: {proc.status()}')
+        # print(f'name: {proc.name()}')
+        # print(f'exe: {proc.exe()}')
+        # print(f'children:{proc.children(recursive=True)}')
+        # print(f'parent: {proc.parents()}')
+        try:
+            rc = proc.wait(timeout=1)  # makesure the process is stable
+            # print(f'rc: {rc}')
+            if rc == 0:  # executing the process succeeded but exited immediately!
+                pass
+            else:
+                pass  # the process exited with error
+        except psutil.TimeoutExpired:
+            pass  # still running
+        # TODO check based on command
+        if check_running(filterstr, min=n_instances):
+            return True  # XXX should remove? None
+        else:
+            continue
+    raise j.exceptions.Runtime("could not start the required number of instances.")
 
 
 def check_stop(cmd, filterstr, retry=1, nrinstances=0):
