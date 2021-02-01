@@ -759,14 +759,21 @@ def get_memory_usage():
 def get_environ(pid):
     """Gets env vars for a specific process based on pid
 
-    Arguments:
-        pid (int) -- process pid
+    Args:
+        pid (int): process pid
+
+    Raises:
+        psutil.NoSuchProcess: if process with the given PID is not found and die set to True
+        psutil.AccessDenied: if permission denied
 
     Returns:
-        [dict] -- dict of env variables
+        dict: dict of env variables
     """
-    pid = int(pid)
-    return psutil.Process(pid).environ()
+    proc = get_process_object(pid)
+    try:
+        return proc.environ()
+    except (psutil.AccessDenied, psutil.NoSuchProcess) as e:
+        raise e
 
 
 def in_docker():
