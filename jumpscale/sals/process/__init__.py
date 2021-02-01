@@ -165,21 +165,16 @@ def ps_find(process_name):
     return len(get_pids(process_name, limit=1)) == 1
 
 
-def kill_all(name, sig=signal.SIGKILL):
-    """Kill all processes with a given name
+def kill_all(process_name, sig=signal.SIGKILL):
+    """Kill all processes that match 'process_name'.
 
-    Arguments:
-        name {str} -- process name
-
-    Keyword Arguments:
-        sig (int) -- signal number (default: {signal.SIGKILL})
+    Args:
+        process_name (str): The target process name
+        sig (signal, optional): See signal module constants. Defaults to signal.SIGKILL
     """
     # XXX kill default to SIGTERM while kill_all default to SIGKILL (inconsistency)?
     # XXX almost like kill_process_by_name
-    sig = int(sig)
-    for proc in psutil.process_iter():
-        if proc.name() == name:
-            kill(proc.pid, sig)
+    kill_process_by_name(process_name, sig)
 
 
 def get_pids_filtered_sorted(filterstr, sortkey=None):
