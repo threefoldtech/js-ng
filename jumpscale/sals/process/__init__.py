@@ -223,40 +223,31 @@ def get_pids_filtered_sorted(filterstr, sortkey=None):
 
 
 def get_filtered_pids(filterstr, excludes=None):
-    """Get pids filtered by filterstr and execludes
+    """Get pids filtered by filterstr and excludes
 
-    Arguments:
-        filterstr {str} -- filter string.
-
-    Keyword Arguments:
-        excludes {list(str)} -- execlude list (default: {None})
+    Args:
+        filterstr (str): the String to filter based on.
+        excludes (list[str]): exclude list. Defaults to None.
 
     Returns:
-        [list(int)] -- pids
+        list[int]: list of pids
     """
-    excludes = excludes or []
-    cmd = "ps ax | grep '%s'" % filterstr
-    rc, out, err = j.core.executors.run_local(cmd)
-    # print out
-    found = []
-
-    def checkexclude(c, excludes):
-        for item in excludes:
-            c = c.lower()
-            if c.find(item.lower()) != -1:
-                return True
-        return False
-
-    for line in out.split("\n"):
-        if line.find("grep") != -1 or line.strip() == "":
-            continue
-        if line.strip() != "":
-            if line.find(filterstr) != -1:
-                line = line.strip()
-                if not checkexclude(line, excludes):
-                    # print "found pidline:%s"%line
-                    found.append(int(line.split(" ")[0]))
-    return found
+    pids = []
+    try:
+        for proc in psutil.process_iter(["name", "cmdline"]):
+            if proc.info["cmdline"] and filterstr in " ".join(proc.info["cmdline"]):
+                if excludes:
+                    for exclude in excludes:
+                        if exclude in " ".join(proc.info["cmdline"]):
+                            break
+                    else:
+                        pids.append(proc.pid)  # may yield proc instead
+                    continue
+                else:
+                    pids.append(proc.pid)
+        return pids
+    except (psutil.AccessDenied, psutil.NoSuchProcess):
+        pass
 
 
 def get_pids_filtered_by_regex(regex_list):
