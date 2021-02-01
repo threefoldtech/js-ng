@@ -605,26 +605,38 @@ def is_port_listening(port, ipv6=False):
     return nettools.tcp_connection_test(ip6 if ipv6 else ip4, port, timeout=5)
 
 
-def get_process_by_port(port):
-    """Returns the full name of the process that is listening on the given port
+def get_process_by_port(port, ipv6=False, udp=False):
+    """Returns the full name of the process that is listening on the given port.
 
-    Arguments:
-        port (int) -- the port for which to find the command
+    Args:
+        port (int): The port for which to find the process.
+        ipv6 (bool, optional): Whether to search the connections that using ipv6 instead of ipv4. Defaults to False.
+        udp (bool, optional): Whether to search the connections for UDP port instead of TCP. Defaults to False.
 
     Raises:
-        Runtime Error if the process is not accessible by the user
+        j.exceptions.Runtime: if the process is not accessible by the user, or no longer exists
 
     Returns:
-        [psutil.Process] -- process object
-        None -- No process found
+        psutil.Process: process object if found, otherwise None
     """
-    # XXX should we check against ESTABLISHED status?
-    pcons = [proc for proc in psutil.net_connections() if proc.laddr.port == port and proc.status == "LISTEN"]
-    if pcons:
-        pid = pcons[0].pid
-        if not pid:
-            raise j.exceptions.Runtime("No pid found maybe permission denied on the process")
-        return psutil.Process(pid)
+    for conn in psutil.net_connections():  # TODO use kind parameter
+        try:
+            # XXX should we check against ESTABLISHED status?
+            # connection.status For UDP and UNIX sockets this is always going to be psutil.CONN_NONE
+            if (
+                conn.laddr.port == port
+                and conn.status in ["LISTEN", "NONE", "ESTABLISHED"]
+                and (conn.family.name == "AF_INET6") == ipv6
+                and (conn.type.name == "SOCK_DGRAM") == udp
+            ):
+                if conn.pid:
+                    return psutil.Process(conn.pid)
+                else:
+                    raise j.exceptions.Runtime("pid is not retrievable, root is needed?")
+        except psutil.NoSuchProcess:
+            raise j.exceptions.Runtime("Process is no longer exists")
+        except psutil.AccessDenied:
+            raise j.exceptions.Runtime("Permission denied")
 
 
 def get_defunct_processes():
