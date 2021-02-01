@@ -75,15 +75,14 @@ def execute(
 
 
 def is_alive(pid):
-    """Checks if pid is Running
+    """Check whether the given PID exists in the current process list.
 
-    Arguments:
-        pid (int) -- pid of the process to be checked
+    Args:
+        pid (int): Process ID (PID) to be checked.
 
     Returns:
-        [bool] -- True if process is running
+        bool: True if the given PID exists in the current process list, False otherwise.
     """
-    pid = int(pid)
     return psutil.pid_exists(pid)
 
 
