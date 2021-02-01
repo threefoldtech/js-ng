@@ -402,10 +402,10 @@ def get_pids(process_name, match_predicate=None, limit=0, _alt_source=None):
 
 
 def get_my_process():
-    """get process object of current process
+    """Get psutil.Process object of the current process.
 
     Returns:
-        [psutil.Process] -- process object
+        (psutil.Process): psutil.Process object of the current process.
     """
     return get_process_object(os.getpid())
 
