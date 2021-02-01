@@ -549,10 +549,12 @@ def get_pid_by_port(port, ipv6=False, udp=False):
     """Returns pids of the process that is listening on the given port
 
     Args:
-        port (int): port number
+        port (int): Port number to lookup for.
+        ipv6 (bool, optional): Whether to search the connections that using ipv6 instead of ipv4. Defaults to False.
+        udp (bool, optional): Whether to search the connections for UDP port instead of TCP. Defaults to False.
 
     Returns:
-        int or None: pid of process that listen on that port
+        (int/None): Process ID that listen on that port
     """
 
     process = get_process_by_port(port, ipv6=ipv6, udp=udp)
