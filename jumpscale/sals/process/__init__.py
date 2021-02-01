@@ -126,6 +126,7 @@ def kill(pid, sig=signal.SIGTERM.value):
     proc = psutil.Process(pid)
     try:
         proc.send_signal(sig)
+        # XXX return too early
         return True
     except Exception as e:
         raise j.exceptions.RuntimeError("Could not kill process with id %s.\n%s" % (pid, e))
@@ -155,6 +156,8 @@ def kill_all(name, sig=signal.SIGKILL):
     Keyword Arguments:
         sig (int) -- signal number (default: {signal.SIGKILL})
     """
+    # XXX kill default to SIGTERM while kill_all default to SIGKILL (inconsistency)?
+    # XXX almost like kill_process_by_name
     sig = int(sig)
     for proc in psutil.process_iter():
         if proc.name() == name:
@@ -289,6 +292,8 @@ def check_start(cmd, filterstr, nrinstances=1, retry=1):
     """
     found = get_filtered_pids(filterstr)
     for i in range(retry):
+        # XXX why checking found list inside the loop, it won't change
+        # XXX why we excute the command many times,what we want to achieve
         if len(found) == nrinstances:
             return
         # print "START:%s"%cmd
@@ -537,7 +542,7 @@ def kill_process_by_name(name, sig=signal.SIGTERM.value, match_predicate=None):
             found processes and the targested process, the function should accept
             two arguments and return a boolean (default: {None})
     """
-
+    # XXX almost same as kill_all with a better function name
     pids = get_pids(name, match_predicate=match_predicate)
     for pid in pids:
         kill(pid, sig)
@@ -564,6 +569,7 @@ def is_port_listening(port):
     Returns:
         Bool: True if port is used else False
     """
+    # XXX only support ipv4, also it apparently used to pick a free port, use nettools is preferred
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         result = s.connect_ex(("127.0.0.1", port))
     return result == 0
@@ -582,6 +588,7 @@ def get_process_by_port(port):
         [psutil.Process] -- process object
         None -- No process found
     """
+    # XXX should we check against ESTABLISHED status?
     pcons = [proc for proc in psutil.net_connections() if proc.laddr.port == port and proc.status == "LISTEN"]
     if pcons:
         pid = pcons[0].pid
@@ -596,6 +603,7 @@ def get_defunct_processes():
     Returns:
         [list(int)] -- list of processes pids
     """
+    # XXX e can use psutil ex. proc.status() == psutil.STATUS_DEAD
     _, out, _ = execute("ps ax")
     llist = []
     for line in out.split("\n"):
