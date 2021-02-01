@@ -576,19 +576,21 @@ def kill_process_by_port(port):
         return kill(pid)
 
 
-def is_port_listening(port):
-    """check if the port is being used by any process
+def is_port_listening(port, ipv6=False):
+    """Check if the port is being used by any process
 
     Args:
-        port (int): port number
+        port (int): Port number
 
     Returns:
-        Bool: True if port is used else False
+        bool: True if port is used, False otherwise.
     """
-    # XXX only support ipv4, also it apparently used to pick a free port, use nettools is preferred
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        result = s.connect_ex(("127.0.0.1", port))
-    return result == 0
+    # XXX only support ipv4, also it apparently used to pick a free port, any way using nettools is preferred
+    from jumpscale.sals import nettools
+
+    ip6 = "::"
+    ip4 = "0.0.0.0"
+    return nettools.tcp_connection_test(ip6 if ipv6 else ip4, port, timeout=5)
 
 
 def get_process_by_port(port):
