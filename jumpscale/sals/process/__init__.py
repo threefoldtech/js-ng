@@ -673,24 +673,85 @@ def get_processes():
     yield from psutil.process_iter()
 
 
-def get_processes_info():
-    """
-    Get information for top 25 running processes sorted by memory usage
+def get_processes_info(user=None, sort="mem", filterstr=None, limit=25, desc=True):
+    """Get information for top running processes sorted by memory usage or CPU usage.
+
+    Args:
+        user ([type], optional): filter the processes by username. Defaults to None.
+        sort (str, optional): sort processes by resource usage, Defaults to 'mem'.
+            available option:
+                'rss' and its alias 'mem': sort by processes which consumed the most memory (Resident Set Size).
+                'cpu_times' and its alias 'cpu_time': sort by processes which consumed the most CPU time.
+                'cpu_num': sort by the CPU number this process is currently running on.
+                'cpu_percent': sort by a float representing the process CPU utilization as a percentage which can also\
+                    be > 100.0 in case of a process running multiple threads on different CPUs.
+                'memory_percent': sort py the process memory utilization, the process memory to total physical system memory as a percentage
+                'create_time': the process creation time as a floating point number expressed in seconds since the epoch.
+                'gids' and its alias 'egid': the effective group id of this process
+                'uids' and its alias 'euid': the effective user id of this process
+                'pid': sort by the process PID.
+                'ppid': sort by the process parent PID
+                'name': sort by the processes name
+                'username': sort by the name of the user that owns the process.
+                'status': sort by the current process status, one of the psutil.STATUS_* constants
+        filterstr (str, optional): the string to match against process name or command used and filter the results based on.
+        limit (int, optional): limit the results to specific number of processes. Defaults to 25.
+        desc (bool, optional): whether to sort the data returned in descending order or not. Defaults to True.
 
     Returns:
-        [list(dict)] -- list of processes info
+        list[psutil.Process]: processes objects
     """
+
+    def _get_sort_key(procObj):
+        if sort == "mem":
+            return procObj["rss"]
+        if sort == "cpu_times":
+            return procObj["cpu_time"]
+        elif sort in ["gids", "egid"]:
+            return procObj["gids"].effective
+        elif sort in ["uids", "euid"]:
+            return procObj["uids"].effective
+        else:
+            try:
+                return procObj[sort]
+            except KeyError:
+                raise j.exceptions.Runtime(f"bad filed name for sorting: {sort}")
+
     processes_list = []
-    for proc in get_processes():
+    if not filterstr:
+        p_source = get_processes() if not user else get_user_processes(user=user)
+    else:
+        # XXX it makes sense that get_pids func should returns list of psutil.Process objects instead of list of pids
+        p_source = (
+            get_user_processes(user=user)
+            if not filterstr
+            else map(get_process_object, get_pids(process_name=filterstr, _alt_source=get_user_processes(user)))
+        )
+    for proc in p_source:
         try:
             # Fetch process details as dict
-            pinfo = proc.as_dict(attrs=["pid", "name", "username"])
-            pinfo["rss"] = proc.memory_info().rss / (1024 * 1024)
+            pinfo = proc.as_dict(
+                attrs=[
+                    "cpu_num",
+                    "cpu_percent",
+                    "cpu_times",
+                    "create_time",
+                    "gids",
+                    "memory_percent",
+                    "name",
+                    "pid",
+                    "ppid",
+                    "status",
+                    "uids",
+                    "username",
+                ]
+            )
+            pinfo["rss"] = proc.memory_info().rss / (
+                1024 * 1024
+            )  # the non-swapped physical memory a process has used in Mb
+            pinfo["cpu_time"] = sum(pinfo["cpu_times"][:2])  # cumulative, excluding children and iowait
             pinfo["ports"] = []
-            try:
-                connections = proc.connections()
-            except psutil.Error:
-                continue
+            connections = proc.connections()  # need root
             if connections:
                 for conn in connections:
                     pinfo["ports"].append({"port": conn.laddr.port, "status": conn.status})
@@ -698,8 +759,6 @@ def get_processes_info():
             processes_list.append(pinfo)
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             pass
-    processes_list = sorted(processes_list, key=lambda procObj: procObj["rss"], reverse=True)
-    return processes_list[:25]
 
 
 def get_ports_mapping(status=psutil.CONN_LISTEN):
