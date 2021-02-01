@@ -462,13 +462,17 @@ def get_user_processes(user):
 
 
 def kill_user_processes(user):
-    """Kill all processes for a specific user
+    """Kill all processes for a specific user.
 
-    Arguments:
-        user {str} -- username
+    Args:
+        user (str): The user name to match against.
+
+    Returns:
+        None
     """
-    for pid in get_user_processes(user):
-        kill(pid)
+    for proc in get_user_processes(user):
+        # XXX should we use  sure_kill here ?
+        kill(proc, sure_kill=True)
 
 
 def get_similar_processes(target_proc=None):
