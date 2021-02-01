@@ -478,23 +478,18 @@ def get_similar_processes():
     return result
 
 
-def check_running(process, min=1):
-    """Checks if a process is running
+def check_running(process_name, min=1):
+    """Check if there are a specific number of running processes that match the given name.
 
-    Arguments:
-        process {str} -- process name to be checked
-
-    Keyword Arguments:
-        min (int) -- min number of instances required to be running (default: {1})
+    Args:
+        process_name (str): the target process name
+        min (int, optional): min number of instances required to be running. Defaults to 1.
 
     Returns:
-        [bool] -- true if process is running
+        bool: true if process is running, otherwise False
     """
-    if j.data.platform.is_linux():
-        pids = get_pids(process)
-        if len(pids) >= min:
-            return True
-        return False
+    pids = get_pids(process_name, limit=min)
+    return len(pids) == min
 
 
 def check_process_for_pid(pid, process_name):
