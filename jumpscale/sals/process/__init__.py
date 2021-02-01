@@ -471,21 +471,25 @@ def kill_user_processes(user):
         kill(pid)
 
 
-def get_similar_processes():
-    """Gets similar processes to current process
+def get_similar_processes(target_proc=None):
+    """Gets similar processes to current process, started with same command line and same options.
 
+    Args:
+        target_proc (int or psutil.Process, optional): pid, or psutil.Process object,\
+             if None then pid for current process will be used. Defaults to None.
     Returns:
-        [list(psutil.Process)] -- list of similar process
+        list[psutil.Process] -- list of similar process
     """
-    myprocess = get_my_process()
-    result = []
-    for item in psutil.process_iter():
-        try:
-            if item.cmdline() == myprocess.cmdline():
-                result.append(item)
-        except psutil.NoSuchProcess:
-            pass
-    return result
+    try:
+        if target_proc is None:
+            target_proc = get_my_process()
+        elif isinstance(target_proc, int):
+            target_proc = get_process_object(target_proc)
+        for proc in psutil.process_iter(["name", "cmdline"]):
+            if proc.info["cmdline"] and target_proc.cmdline() and proc.info["cmdline"] == target_proc.cmdline():
+                yield proc
+    except (psutil.AccessDenied, psutil.NoSuchProcess):
+        pass
 
 
 def check_running(process_name, min=1):
