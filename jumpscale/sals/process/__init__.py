@@ -411,23 +411,24 @@ def get_my_process():
 
 
 def get_process_object(pid, die=True):
-    """Get Process object of a process id
+    """Get psutil.Process object of a given process ID (PID).
 
-    Arguments:
-        pid (int) -- pid of the process
-
-    Keyword Arguments:
-        die {bool} -- die if process not found (default: {True})
+    Args:
+        pid (int): Process ID (PID) to get
+        die (bool, optional): Whether to raise an exception if no process with the given PID is found in the \
+            current process list or not. Defaults to True.
 
     Raises:
-        psutil.NoSuchProcess: if process not found and die = True
+        psutil.NoSuchProcess: If process with the given PID is not found and die set to True.
+        psutil.AccessDenied: If permission denied.
 
     Returns:
-        [psutil.Process] -- process object
+        psutil.Process or None: psutil.Process object if he given PID is found, None otherwise.
     """
     try:
         return psutil.Process(pid)
-    except psutil.NoSuchProcess as e:
+    except (psutil.ZombieProcess, psutil.AccessDenied, psutil.NoSuchProcess) as e:
+        # when you query processess owned by another user, especially on macOS and Windows you may get AccessDenied exception
         if die:
             raise e
         else:
