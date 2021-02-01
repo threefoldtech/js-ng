@@ -515,16 +515,18 @@ def check_running(process_name, min=1):
 def check_process_for_pid(pid, process_name):
     """Check whether a given pid actually does belong to a given process name.
 
-    Arguments:
-        pid (int) -- process pid
-        process {str} -- process name
+    Args:
+        pid (int): Process ID
+        process (str): String to match againset candidate processes name using equality operator
 
     Returns:
-        [bool] -- True if process_name matched process name of the pid
+        bool: True if process_name matched process name of the pid, False otherwise.
     """
-    pid = int(pid)
-    proc = psutil.Process(pid)
-    return proc.name() == process_name
+    try:
+        proc = psutil.Process(pid)
+        return proc.name() == process_name
+    except (psutil.AccessDenied, psutil.NoSuchProcess):
+        return False
 
 
 def set_env_var(varnames, varvalues):
