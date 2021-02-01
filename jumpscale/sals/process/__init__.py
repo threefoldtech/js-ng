@@ -614,25 +614,19 @@ def get_process_by_port(port):
 
 
 def get_defunct_processes():
-    """Gets defunc processes
+    """Gets defunct (zombie) processes.
 
     Returns:
-        [list(int)] -- list of processes pids
+        list[int]: List of processes ID(s).
     """
-    # XXX e can use psutil ex. proc.status() == psutil.STATUS_DEAD
-    _, out, _ = execute("ps ax")
-    llist = []
-    for line in out.split("\n"):
-        if line.strip() == "":
-            continue
-        if line.find("<defunct>") != -1:
-            # print "defunct:%s"%line
-            line = line.strip()
-            pid = line.split(" ", 1)[0]
-            pid = int(pid.strip())
-            llist.append(pid)
-
-    return llist
+    zombie_pids = []
+    for proc in psutil.process_iter():
+        try:
+            if proc.status() == psutil.STATUS_ZOMBIE:
+                zombie_pids.append(proc.pid)
+        except (psutil.AccessDenied, psutil.NoSuchProcess):
+            pass
+    return zombie_pids
 
 
 def get_processes():
