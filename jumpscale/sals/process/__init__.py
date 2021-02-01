@@ -737,15 +737,20 @@ def get_ports_mapping(status=psutil.CONN_LISTEN):
 
 
 def get_memory_usage():
-    """
-    Get memory status
+    """Get memory status
 
     Returns:
-        dict -- memory status info
+        dict: Memory status info, available keys ('total', 'used', 'percent')
+            'total': total physical memory in Gb (exclusive swap).
+            'used': memory used in Gb, calculated differently depending on the platform and designed for informational purposes only.
+                total - free does not necessarily match used.
+            'percent': the percentage of used memory.
     """
     memory_usage = {}
     memory_data = dict(psutil.virtual_memory()._asdict())
-    memory_usage["total"] = math.ceil(memory_data.get("total") / (1024 * 1024 * 1024))
+    memory_usage["total"] = math.ceil(
+        memory_data.get("total") / (1024 * 1024 * 1024)
+    )  # total physical memory (exclusive swap).
     memory_usage["used"] = math.ceil(memory_data.get("used") / (1024 * 1024 * 1024))
     memory_usage["percent"] = memory_data.get("percent")
     return memory_usage
