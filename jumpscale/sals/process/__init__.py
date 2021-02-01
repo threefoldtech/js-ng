@@ -590,10 +590,11 @@ def kill_process_by_port(port):
 
 
 def is_port_listening(port, ipv6=False):
-    """Check if the port is being used by any process
+    """Check if the TCP port is being used by any process
 
     Args:
         port (int): Port number
+        ipv6 (bool, optional): Whether to ipv6 localhost address instead of ipv4 localhost address. Defaults to False.
 
     Returns:
         bool: True if port is used, False otherwise.
