@@ -9,11 +9,12 @@ from enum import Enum
 # TODO: move fields to fields or types module
 
 from jumpscale.core.base import Base, DuplicateError, Factory, StoredFactory, fields
-from jumpscale.core.base.store import filesystem, redis, whooshfts
+from jumpscale.core.base.store import filesystem, redis, whooshfts, etcd
 from parameterized import parameterized_class
 from jumpscale.loader import j
 
 REDIS_PORT = 6379
+ETCD_PORT = 2379
 
 
 class Address(Base):
@@ -103,8 +104,17 @@ class WhooshFactory(StoredFactory):
     STORE = whooshfts.WhooshStore
 
 
+class EtcdFactory(StoredFactory):
+    STORE = etcd.EtcdStore
+
+
 @parameterized_class(
-    [{"factory_class": FilesystemFactory}, {"factory_class": RedisFactory}, {"factory_class": WhooshFactory}]
+    [
+        {"factory_class": FilesystemFactory},
+        {"factory_class": RedisFactory},
+        {"factory_class": WhooshFactory},
+        {"factory_class": EtcdFactory},
+    ]
 )
 class TestStoredFactory(unittest.TestCase):
 
@@ -120,12 +130,20 @@ class TestStoredFactory(unittest.TestCase):
             cls.cmd.start_cmd = "redis-server"
             cls.cmd.ports = [REDIS_PORT]
             cls.cmd.start()
+        elif issubclass(cls.factory_class, EtcdFactory) and not j.sals.nettools.tcp_connection_test(
+            "127.0.0.1", ETCD_PORT, 1
+        ):
+            cls.cmd = j.tools.startupcmd.get("test_etcd_store")
+            cls.cmd.start_cmd = "etcd --data-dir /tmp/tests/etcd"
+            cls.cmd.ports = [ETCD_PORT]
+            cls.cmd.start()
 
     @classmethod
     def tearDownClass(cls):
         if cls.cmd:
             cls.cmd.stop(wait_for_stop=False)
             j.tools.startupcmd.delete("test_store_factory")
+            j.tools.startupcmd.delete("test_etcd_store")
 
     def setUp(self):
         self.factory = self.factory_class(Client)

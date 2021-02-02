@@ -19,8 +19,8 @@ class EtcdStore(EncryptedConfigStore):
 
     def read(self, instance_name):
         key = self.get_key(instance_name)
-        if not self.etcd_client.get(instance_name)[0]:
-            raise ConfigNotFound(f"cannot find config for {instance_name} at {key}")
+        # if not self.etcd_client.get(instance_name)[0]:
+        #     raise ConfigNotFound(f"cannot find config for {instance_name} at {key}")
 
         return self.etcd_client.get(key)[0]
 
