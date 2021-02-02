@@ -1,7 +1,8 @@
 import etcd3
 import json
 
-from . import ConfigNotFound, EncryptedConfigStore
+from . import ConfigNotFound, EncryptedConfigStore, EncryptionMode
+
 from .serializers import JsonSerializer
 
 
@@ -18,10 +19,14 @@ class EtcdStore(EncryptedConfigStore):
 
     def read(self, instance_name):
         key = self.get_key(instance_name)
-        if not self.etcd_client.get(instance_name):
+        if not self.etcd_client.get(instance_name)[0]:
             raise ConfigNotFound(f"cannot find config for {instance_name} at {key}")
 
-        return self.etcd_client.get(key)[0].decode()
+        return self.etcd_client.get(key)[0]
+
+    def get(self, instance_name):
+        config = self.read(instance_name)
+        return self._process_config(config, EncryptionMode.Decrypt)
 
     def write(self, instance_name, data):
         key = self.get_key(instance_name)
@@ -30,9 +35,6 @@ class EtcdStore(EncryptedConfigStore):
 
     def list_all(self):
         return [item[1].key.decode().split(".")[-1] for item in self.etcd_client.get_all()]
-
-    # def find(self, cursor_=None, limit_=None, **query):
-    #     pass
 
     def delete(self, instance_name):
         key = self.get_key(instance_name)
