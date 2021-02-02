@@ -148,7 +148,7 @@ def kill(proc, sig=signal.SIGTERM, timeout=5, sure_kill=False):
         raise j.exceptions.Permission("Permission to perform this action is denied!") from e
     except (psutil.ZombieProcess, psutil.NoSuchProcess):
         # Process no longer exists or Zombie (already dead)
-        pass
+        return True
 
 
 def ps_find(process_name):
