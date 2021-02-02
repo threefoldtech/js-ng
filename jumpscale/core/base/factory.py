@@ -59,6 +59,12 @@ try:
 except ImportError:
     pass
 
+try:
+    from .store.etcd import EtcdStore
+
+    STORES["etcd"] = EtcdStore
+except ImportError:
+    pass
 
 class DuplicateError(Exception):
     """

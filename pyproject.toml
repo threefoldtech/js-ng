@@ -47,6 +47,7 @@ pymongo = { version = "^3.11.2", optional = true }
 dill = ["dill"]
 whoosh = ["Whoosh"]
 mongo = ["pymongo"]
+etcd3 = ["etcd3"]
 # optional modules, mostly define __optional__ = True before export_module_as
 fake = ["faker"]
 terminaltable = ["terminaltables"]
