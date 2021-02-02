@@ -126,6 +126,7 @@ def kill(proc, sig=signal.SIGTERM, timeout=5, sure_kill=False):
         # If PID no longer exists return None immediately
         # If timeout exceeded and the process is still alive raise TimeoutExpired exception
         proc.wait(timeout=timeout)
+        j.logger.debug(f"the process with PID: {proc.pid} was terminated with sig: {sig}.")
         return True  # XXX only to pass current tests
     except psutil.TimeoutExpired as e:
         # timeout expires and process is still alive.
@@ -133,21 +134,31 @@ def kill(proc, sig=signal.SIGTERM, timeout=5, sure_kill=False):
             # SIGKILL not supported in windows
             # If a process gets this signal it must quit immediately and will not perform any clean-up operations
             proc.kill()
-            # TODO we can use timeout and catching TimeoutExpired again in case the process in an uninterruptible sleep
+            j.logger.debug("SIGKILL signal sent.")
             try:
                 proc.wait(1)
+                j.logger.debug(f"the process with PID: {proc.pid} was terminated with sig: {signal.SIGKILL}.")
             except psutil.TimeoutExpired as e:
                 if proc.status() == psutil.STATUS_ZOMBIE:
+                    j.logger.debug(
+                        f"the process with PID: {proc.pid} becomes a zombie and should be considered a dead."
+                    )
                     return True
+                # the process may be in an uninterruptible sleep
+                j.logger.debug("the process may be in an uninterruptible sleep.")
+                j.logger.warning(f"Could not kill the process with pid: {proc.pid} with {sig}. Timeout: {timeout}")
                 raise j.exceptions.Runtime(f"Could not kill process with pid {proc.pid}, {proc.status()}") from e
             return True  # XXX only to pass current tests
         else:
-            raise j.exceptions.Runtime(f"Could not kill process with pid {proc.pid}, {proc.status()}") from e
+            j.logger.warning(f"Could not kill the process with pid: {proc.pid} with {sig}. Timeout: {timeout}")
+            raise j.exceptions.Runtime(f"Could not kill process with pid {proc.pid}") from e
     except psutil.AccessDenied as e:
         # permission to perform an action is denied
+        j.logger.warning("the permission is denied")
         raise j.exceptions.Permission("Permission to perform this action is denied!") from e
     except (psutil.ZombieProcess, psutil.NoSuchProcess):
         # Process no longer exists or Zombie (already dead)
+        j.logger.debug("Process is no longer exists or a Zombie (already dead)")
         return True
 
 
