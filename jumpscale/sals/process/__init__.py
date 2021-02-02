@@ -173,7 +173,8 @@ def kill_all(process_name, sig=signal.SIGKILL):
     """
     # XXX kill default to SIGTERM while kill_all default to SIGKILL (inconsistency)?
     # XXX almost like kill_process_by_name
-    kill_process_by_name(process_name, sig)
+    failed_processes = kill_process_by_name(process_name, sig)
+    return failed_processes
 
 
 def get_pids_filtered_sorted(filterstr, sortkey=None):
@@ -440,18 +441,23 @@ def get_user_processes(user):
         pass
 
 
-def kill_user_processes(user):
+def kill_user_processes(user, sure_kill=False):
     """Kill all processes for a specific user.
 
     Args:
         user (str): The user name to match against.
+        sure_kill (bool, optional): Whether to fallback to SIGKILL if the timeout exceeded for the terminate operation or not. Defaults to False.
 
     Returns:
-        None
+        None or list[int] represents the IDs of the processes remaning alive.
     """
+    failed_processes = []
     for proc in get_user_processes(user):
-        # XXX should we use  sure_kill here ?
-        kill(proc, sure_kill=True)
+        try:
+            kill(proc, sure_kill=True)
+        except (j.exceptions.Runtime, j.exceptions.Permission) as e:
+            failed_processes.append(proc.pid)
+    return failed_processes or None  # return None if the failed list is empty
 
 
 def get_similar_processes(target_proc=None):
@@ -552,8 +558,13 @@ def kill_process_by_name(process_name, sig=signal.SIGTERM, match_predicate=None,
             two arguments and return a boolean. Defaults to None.
     """
     pids = get_pids(process_name, match_predicate=match_predicate)
+    failed_processes = []
     for pid in pids:
-        kill(pid, sig, timeout=timeout, sure_kill=sure_kill)
+        try:
+            kill(pid, sig, timeout=timeout, sure_kill=sure_kill)
+        except (j.exceptions.Runtime, j.exceptions.Permission) as e:
+            failed_processes.append(pid)
+    return failed_processes or None  # return None if the failed list is empty
 
 
 def kill_process_by_port(port, ipv6=False, udp=False, sig=signal.SIGTERM, timeout=5, sure_kill=False):
