@@ -44,6 +44,12 @@ from .store.whooshfts import WhooshStore
 
 STORES = {"filesystem": FileSystemStore, "redis": RedisStore, "whoosh": WhooshStore}
 
+try:
+    from .store.etcd import EtcdStore
+
+    STORES["etcd"] = EtcdStore
+except ImportError:
+    pass
 
 class DuplicateError(Exception):
     """
