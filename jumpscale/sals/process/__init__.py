@@ -358,20 +358,40 @@ def check_stop(cmd, filterstr, retry=1, n_instances=0):
         if isinstance(cmd, str):
             cmd = cmd.split()
         proc = psutil.Popen(cmd, close_fds=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+        j.logger.debug(f"attempt no: {i}")
+        j.logger.debug(f"executed cmd: {cmd}")
+        j.logger.debug(f"proc.cmdline: {proc.cmdline()}")
+        j.logger.debug(f"pid: {proc.pid}")
+        j.logger.debug(f"status: {proc.status()}")
+        j.logger.debug(f"name: {proc.name()}")
+        j.logger.debug(f"exe: {proc.exe()}")
+        j.logger.debug(f"children: {proc.children(recursive=True)}")
+        j.logger.debug(f"parents: {proc.parents()}")
         try:
             rc = proc.wait(timeout=5)  # makesure the process is stable
             # print(f'rc: {rc}')
             if rc == 0:
-                pass  # executing the process succeeded but exited immediately!
+                # executing the process succeeded but exited immediately!
+                j.logger.debug("executing the stop command succeeded but exited immediately")
             else:
-                pass  # the process exited with error
+                # the process exited with error
+                j.logger.debug("the stop command exited with error")  # the process exited with error
         except psutil.TimeoutExpired:
-            pass  # still running
+            j.logger.debug("the start command still running after 1 sec")  # still running
         found = get_pids(filterstr)
         if len(found) == n_instances:
+            j.logger.debug(
+                f"the required {n_instances} matching the instances found using the filter string: {filterstr}"
+            )
             return True  # should remove? None
         else:
+            j.logger.debug(
+                f"the required {n_instances} not matching the instances number found using the filter string: {filterstr} yet"
+            )
             continue
+    j.logger.error(f"could not match the required number of instances ({n_instances}) after {i} attempts.")
+    j.logger.debug(f"alive: {found}")
+    j.logger.debug(f"{len(found)}")
     raise j.exceptions.Runtime(f"could not stop {cmd}, found {len(found)} of instances instead of {n_instances}")
 
 
