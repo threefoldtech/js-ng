@@ -757,8 +757,8 @@ def get_processes_info(user=None, sort="mem", filterstr=None, limit=25, desc=Tru
     else:
         # XXX it makes sense that get_pids func should returns list of psutil.Process objects instead of list of pids
         p_source = (
-            get_user_processes(user=user)
-            if not filterstr
+            map(get_process_object, get_pids(process_name=filterstr))
+            if not user
             else map(get_process_object, get_pids(process_name=filterstr, _alt_source=get_user_processes(user)))
         )
     for proc in p_source:
@@ -793,6 +793,7 @@ def get_processes_info(user=None, sort="mem", filterstr=None, limit=25, desc=Tru
             processes_list.append(pinfo)
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             pass
+    return processes_list
 
 
 def get_ports_mapping(status=psutil.CONN_LISTEN):
