@@ -40,16 +40,11 @@ from .store import ConfigNotFound, KEY_FIELD_NAME, Location
 from .store.filesystem import FileSystemStore
 from .store.redis import RedisStore
 from .store.whooshfts import WhooshStore
+from .store.etcd import EtcdStore
 
 
-STORES = {"filesystem": FileSystemStore, "redis": RedisStore, "whoosh": WhooshStore}
+STORES = {"filesystem": FileSystemStore, "redis": RedisStore, "whoosh": WhooshStore, "etcd": EtcdStore}
 
-try:
-    from .store.etcd import EtcdStore
-
-    STORES["etcd"] = EtcdStore
-except ImportError:
-    pass
 
 class DuplicateError(Exception):
     """
