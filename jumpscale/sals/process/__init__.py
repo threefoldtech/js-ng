@@ -842,6 +842,45 @@ def get_environ(pid):
         raise e
 
 
+def kill_proc_tree(
+    parent, sig=signal.SIGTERM, include_parent=True, include_grand_children=True, timeout=5, sure_kill=False
+):
+    """Kill a process and its children (including grandchildren) with signal `sig`
+
+    Args:
+        proc (int/psutil.Process): Target process ID (PID) or psutil.Process object.
+        sig (signal, optional): See signal module constants. Defaults to signal.SIGTERM.
+        include_parent (): Whether to kill the process itself. Defaults to True.
+        include_grand_children (): whether to kill recursively all grandchildren. Defaults to True.
+        timeout (int, optional): How long to wait for a process to terminate (seconds) before raise exception\
+            or, if sure_kill=True, send a SIGKILL. Defaults to 5.
+        sure_kill (bool, optional): Whether to fallback to SIGKILL if the timeout exceeded for the terminate operation or not. Defaults to False.
+    """
+    if isinstance(parent, int):
+        try:
+            parent = get_process_object(parent)
+        except (psutil.AccessDenied, psutil.NoSuchProcess):
+            return
+
+    assert parent.pid != os.getpid(), "won't kill myself"
+
+    processes = parent.children(recursive=include_grand_children)[::-1]
+    failed = []
+    if include_parent:
+        processes.append(parent)
+
+    for p in processes:
+        try:
+            kill(p, sig=sig, timeout=timeout, sure_kill=sure_kill)
+        except (j.exceptions.Runtime, j.exceptions.Permission):
+            failed.append(p)
+
+    # making sure
+    if failed:
+        gone, failed = psutil.wait_procs(failed, timeout=0)
+    return failed or None
+
+
 def in_docker():
     """will check if we are in a docker.
 
