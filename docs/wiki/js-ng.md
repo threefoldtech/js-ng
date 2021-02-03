@@ -51,8 +51,10 @@ python3 -m pip install setuptools -U
 ## building dists
 - `poetry build`
 
-## publishing
-- `poetry publish`
+## releasing & publishing
+- make sure the version is bumped in `pyproject.toml` file
+- make sure to call `poetry build`
+- then publish to pypi using `poetry publish` (note that this requires to be on the publisher account)
 
 
 ## API Docs
