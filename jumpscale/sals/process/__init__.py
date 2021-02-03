@@ -729,7 +729,7 @@ def get_processes_info(user=None, sort="mem", filterstr=None, limit=25, desc=Tru
                 'username': sort by the name of the user that owns the process.
                 'status': sort by the current process status, one of the psutil.STATUS_* constants
         filterstr (str, optional): the string to match against process name or command used and filter the results based on.
-        limit (int, optional): limit the results to specific number of processes. Defaults to 25.
+        limit (int, optional): limit the results to specific number of processes, to disable set it to -1. Defaults to 25.
         desc (bool, optional): whether to sort the data returned in descending order or not. Defaults to True.
 
     Returns:
@@ -748,10 +748,12 @@ def get_processes_info(user=None, sort="mem", filterstr=None, limit=25, desc=Tru
         else:
             try:
                 return procObj[sort]
-            except KeyError:
-                raise j.exceptions.Runtime(f"bad filed name for sorting: {sort}")
+            except KeyError as e:
+                j.logger.error(f"bad field name for sorting: {sort}")
+                raise j.exceptions.Value(f"bad field name for sorting: {sort}")
 
     processes_list = []
+    j.logger.debug(f"Args used: user={user}, sort={sort}, filterstr={filterstr}, limit={limit}, desc={desc}")
     if not filterstr:
         p_source = get_processes() if not user else get_user_processes(user=user)
     else:
@@ -791,9 +793,16 @@ def get_processes_info(user=None, sort="mem", filterstr=None, limit=25, desc=Tru
                     pinfo["ports"].append({"port": conn.laddr.port, "status": conn.status})
             # Append dict to list
             processes_list.append(pinfo)
-        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess) as e:
+            j.logger.debug(
+                "ignoring and logging an exception that occurred while iterating over system processes, not root?"
+            )
+            # j.logger.exception('an exception occurred while iterating over system processes', exception=e)
             pass
-    return processes_list
+    j.logger.debug(f"Processes found: {len(processes_list)}")
+    # sort the processes list by sort_key
+    sorted_processes = sorted(processes_list, key=_get_sort_key, reverse=desc)[:limit]
+    return sorted_processes
 
 
 def get_ports_mapping(status=psutil.CONN_LISTEN):
