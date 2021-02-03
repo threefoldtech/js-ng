@@ -417,6 +417,7 @@ def get_pids(process_name, match_predicate=None, limit=0, _alt_source=None):
     """
     # default match predicate
     def default_predicate(target, given):
+        j.logger.debug(f"matching {target} with {given}")
         return target.strip().lower() == given.lower()
 
     match_predicate = match_predicate or default_predicate
@@ -424,12 +425,11 @@ def get_pids(process_name, match_predicate=None, limit=0, _alt_source=None):
     pids = []
     for proc in psutil.process_iter(["name", "exe", "cmdline"]):
         try:
+            j.logger.debug(f"process to check: {proc.info}")
             if (
-                match_predicate(process_name, proc.info["name"])
-                or proc.info["exe"]
-                and match_predicate(process_name, os.path.basename(proc.info["exe"]))
-                or proc.info["cmdline"]
-                and match_predicate(process_name, os.path.basename(proc.info["cmdline"][0]))
+                (match_predicate(process_name, proc.info["name"]))
+                or (proc.info["exe"] and match_predicate(process_name, os.path.basename(proc.info["exe"])))
+                or (proc.info["cmdline"] and match_predicate(process_name, os.path.basename(proc.info["cmdline"][0])))
             ):
                 pids.append(proc.pid)
                 # return early if no need to iterate over all running process
