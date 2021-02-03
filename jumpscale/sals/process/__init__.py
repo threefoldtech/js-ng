@@ -545,7 +545,7 @@ def set_env_var(var_names, var_values):
 
 
 def get_pid_by_port(port, ipv6=False, udp=False):
-    """Returns pids of the process that is listening on the given port
+    """Returns the PID of the process that is listening on the given port
 
     Args:
         port (int): Port number to lookup for.
@@ -622,7 +622,7 @@ def is_port_listening(port, ipv6=False):
 
 
 def get_process_by_port(port, ipv6=False, udp=False):
-    """Returns the full name of the process that is listening on the given port.
+    """Returns the psutil.Process object that is listening on the given port.
 
     Args:
         port (int): The port for which to find the process.
