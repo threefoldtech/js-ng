@@ -754,7 +754,24 @@ def get_processes_info(user=None, sort="mem", filterstr=None, limit=25, desc=Tru
         desc (bool, optional): whether to sort the data returned in descending order or not. Defaults to True.
 
     Returns:
-        list[psutil.Process]: processes objects
+        dict: processes info as a dictionary
+            available keys [
+                    "cpu_num",
+                    "cpu_percent",
+                    "cpu_times",
+                    "create_time",
+                    "gids",
+                    "memory_percent",
+                    "name",
+                    "pid",
+                    "ppid",
+                    "status",
+                    "uids",
+                    "username",
+                    "rss",
+                    "cpu_time",
+                    "ports"
+                ]
     """
 
     def _get_sort_key(procObj):
