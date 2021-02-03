@@ -44,13 +44,13 @@ class EtcdStore(EncryptedConfigStore):
 
     def read(self, instance_name):
         """
-        read instance config from mongo
+        read instance config from etcd
 
         Args:
             instance_name (name): name
 
         Returns:
-            str: data
+            str: return json object
         """
         key = self.get_key(instance_name)
         if not self.etcd_client.get(key)[0]:
@@ -59,6 +59,15 @@ class EtcdStore(EncryptedConfigStore):
         return json.loads(self.etcd_client.get(key)[0].decode())
 
     def get(self, instance_name):
+        """
+        get instance config from etcd
+
+        Args:
+            instance_name (name): name
+
+        Returns:
+            instance: return config object
+        """
         config = self.read(instance_name)
         return self._process_config(config, EncryptionMode.Decrypt)
 
