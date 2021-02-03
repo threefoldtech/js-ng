@@ -534,7 +534,7 @@ class ProcessTests(BaseTests):
         user_pid = int(output.strip())
 
         self.info("Get the user process.")
-        user_pids = j.sals.process.get_user_processes(username)
+        user_pids = list(j.sals.process.get_user_processes(username))
         self.assertEqual(len(user_pids), 1)
 
         self.info("Check that the process is the new user process.")
