@@ -51,11 +51,17 @@ try:
 except ImportError:
     pass
 
-
 try:
     from .store.mongo import MongoStore
 
     STORES["mongo"] = MongoStore
+except ImportError:
+    pass
+
+try:
+    from .store.etcd import EtcdStore
+
+    STORES["etcd"] = EtcdStore
 except ImportError:
     pass
 

@@ -99,7 +99,7 @@ class MongoStoreTests(BaseTests):
         **Test Scenario**
 
         - Create three instances.
-        - Check that the instance are stored in redis.
+        - Check that the instance are stored in mongo.
         - List all instances and check that three instance found.
         """
         self.info("Create three instances.")
