@@ -135,7 +135,7 @@ def get_default_config():
         "stores": {
             "redis": {"hostname": "localhost", "port": 6379},
             "mongo": {"hostname": "localhost", "port": 27017},
-            "etcd": {"hostname": "localhost","port":2379},
+            "etcd": {"hostname": "localhost", "port": 2379},
             "filesystem": {"path": os.path.expanduser(os.path.join(config_root, "secureconfig"))},
             "whoosh": {"path": os.path.expanduser(os.path.join(config_root, "whoosh_indexes"))},
         },

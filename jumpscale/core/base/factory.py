@@ -51,7 +51,6 @@ try:
 except ImportError:
     pass
 
-
 try:
     from .store.mongo import MongoStore
 
@@ -65,6 +64,7 @@ try:
     STORES["etcd"] = EtcdStore
 except ImportError:
     pass
+
 
 class DuplicateError(Exception):
     """
