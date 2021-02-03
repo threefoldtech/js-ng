@@ -271,8 +271,8 @@ def get_filtered_pids(filterstr, excludes=None):
         )
         return pids
     except (psutil.AccessDenied, psutil.NoSuchProcess) as e:
-        j.logger.debug(f"logging and bypassing the exception occurred while iterating over the system processes")
-        j.logger.exception(f"exception occurred while iterating over the system processes", exception=e)
+        j.logger.debug("logging and bypassing the exception occurred while iterating over the system processes")
+        j.logger.exception("exception occurred while iterating over the system processes", exception=e)
         pass
 
 
@@ -324,12 +324,12 @@ def check_start(cmd, filterstr, n_instances=1, retry=1):
         try:
             rc = proc.wait(timeout=1)  # makesure the process is stable
             if rc == 0:  # executing the command succeeded but exited immediately!
-                j.logger.debug("executing the command succeeded but exited immediately")
+                j.logger.debug("executing the start command succeeded but exited immediately")
             else:
-                j.logger.debug("the process exited with error")  # the process exited with error
+                j.logger.debug("the start command exited with error")  # the process exited with error
             j.logger.debug(f"return code is: {rc}")
         except psutil.TimeoutExpired:
-            j.logger.debug("the command still running after 1 sec")  # still running
+            j.logger.debug("the start command still running after 1 sec")  # still running
         # TODO check based on command
         if check_running(filterstr, min=n_instances):
             j.logger.debug(f"found at least {n_instances} instances using the filter string: {filterstr}")
@@ -877,6 +877,9 @@ def kill_proc_tree(
         timeout (int, optional): How long to wait for a process to terminate (seconds) before raise exception\
             or, if sure_kill=True, send a SIGKILL. Defaults to 5.
         sure_kill (bool, optional): Whether to fallback to SIGKILL if the timeout exceeded for the terminate operation or not. Defaults to False.
+
+    Returns:
+        (list[psutil.Process]/None): list of process objects that remain alive if any. None otherwise.
     """
     if isinstance(parent, int):
         try:
