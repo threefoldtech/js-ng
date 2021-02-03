@@ -480,9 +480,15 @@ def kill_user_processes(user, sure_kill=False):
     failed_processes = []
     for proc in get_user_processes(user):
         try:
-            kill(proc, sure_kill=True)
+            kill(proc, sure_kill=sure_kill)
         except (j.exceptions.Runtime, j.exceptions.Permission) as e:
+            j.logger.exception("exception occurred while iterating over user processes", exception=e)
+            j.logger.debug("ignoring the exception..")
             failed_processes.append(proc.pid)
+    j.logger.debug(
+        "killing all user processes succeeded" if not failed_processes else "couldn't kill all user processes!"
+    )
+    j.logger.debug(f"stay alive: {len(failed_processes)}, pids -> {failed_processes}")
     return failed_processes or None  # return None if the failed list is empty
 
 
