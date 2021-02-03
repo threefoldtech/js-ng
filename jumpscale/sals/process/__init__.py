@@ -312,28 +312,32 @@ def check_start(cmd, filterstr, n_instances=1, retry=1):
         if isinstance(cmd, str):
             cmd = cmd.split()
         proc = psutil.Popen(cmd, close_fds=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
-        # print(cmd)
-        # print(proc.cmdline())
-        # print(f'pid: {proc.pid}')
-        # print(f'status: {proc.status()}')
-        # print(f'name: {proc.name()}')
-        # print(f'exe: {proc.exe()}')
-        # print(f'children:{proc.children(recursive=True)}')
-        # print(f'parent: {proc.parents()}')
+        j.logger.debug(f"attempt no: {i}")
+        j.logger.debug(f"executed cmd: {cmd}")
+        j.logger.debug(f"proc.cmdline: {proc.cmdline()}")
+        j.logger.debug(f"pid: {proc.pid}")
+        j.logger.debug(f"status: {proc.status()}")
+        j.logger.debug(f"name: {proc.name()}")
+        j.logger.debug(f"exe: {proc.exe()}")
+        j.logger.debug(f"children: {proc.children(recursive=True)}")
+        j.logger.debug(f"parents: {proc.parents()}")
         try:
             rc = proc.wait(timeout=1)  # makesure the process is stable
-            # print(f'rc: {rc}')
-            if rc == 0:  # executing the process succeeded but exited immediately!
-                pass
+            if rc == 0:  # executing the command succeeded but exited immediately!
+                j.logger.debug("executing the command succeeded but exited immediately")
             else:
-                pass  # the process exited with error
+                j.logger.debug("the process exited with error")  # the process exited with error
+            j.logger.debug(f"return code is: {rc}")
         except psutil.TimeoutExpired:
-            pass  # still running
+            j.logger.debug("the command still running after 1 sec")  # still running
         # TODO check based on command
         if check_running(filterstr, min=n_instances):
+            j.logger.debug(f"found at least {n_instances} instances using the filter string: {filterstr}")
             return True  # XXX should remove? None
         else:
+            j.logger.debug(f"the required number of instances using the filter string: {filterstr} not found yet!")
             continue
+    j.logger.error(f"could not start the required number of instances ({n_instances}) after {i} attempts.")
     raise j.exceptions.Runtime("could not start the required number of instances.")
 
 
