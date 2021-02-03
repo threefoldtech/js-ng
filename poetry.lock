@@ -1148,7 +1148,7 @@ testing = ["pytest (>=3.5,!=3.7.3)", "pytest-checkdocs (>=1.2.3)", "pytest-flake
 all = ["dill", "Whoosh", "pymongo", "faker", "terminaltables", "watchdog", "GitPython", "docker", "etcd3"]
 dill = ["dill"]
 docker = ["docker"]
-etcd3 = ["etcd3"]
+etcd = ["etcd3"]
 fake = ["faker"]
 git = ["GitPython"]
 mongo = ["pymongo"]
@@ -1159,7 +1159,7 @@ whoosh = ["Whoosh"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6"
-content-hash = "4d4864e00aa35767d9ea2be8d03337e766a5edde98606391507851d692bddc75"
+content-hash = "7bbad87590bf12815ecf3ca602e402139411ec9e3e660c65354707e51db380d4"
 
 [metadata.files]
 appdirs = [
