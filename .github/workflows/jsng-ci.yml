@@ -5,7 +5,7 @@ name: jsng-ci
 
 on:
   push:
-    branches: [ development_reduce_etcd ]
+    branches: [ development ]
   pull_request:
     branches: [ development ]
 
