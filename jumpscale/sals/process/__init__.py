@@ -181,6 +181,9 @@ def kill_all(process_name, sig=signal.SIGKILL):
     Args:
         process_name (str): The target process name
         sig (signal, optional): See signal module constants. Defaults to signal.SIGKILL
+
+    Returns:
+        None or list[int] represents the IDs of the processes remaning alive.
     """
     # XXX kill default to SIGTERM while kill_all default to SIGKILL (inconsistency)?
     # XXX almost like kill_process_by_name
@@ -567,6 +570,9 @@ def kill_process_by_name(process_name, sig=signal.SIGTERM, match_predicate=None,
         match_predicate (callable, optional): Function that does matching between\
             found processes and the targeted process, the function should accept\
             two arguments and return a boolean. Defaults to None.
+
+    Returns:
+        None or list[int] represents the IDs of the processes remaning alive.
     """
     pids = get_pids(process_name, match_predicate=match_predicate)
     failed_processes = []
