@@ -5,7 +5,7 @@ name: jsng-ci
 
 on:
   push:
-    branches: [ development ]
+    branches: [ development_reduce_etcd ]
   pull_request:
     branches: [ development ]
 
@@ -41,6 +41,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y git python3-setuptools tmux redis net-tools
           sudo pip3 install poetry
+          mkdir -p /tmp/etcd
+          curl -L https://storage.googleapis.com/etcd/v3.4.14/etcd-v3.4.14-linux-amd64.tar.gz -o /tmp/etcd-v3.4.14-linux-amd64.tar.gz
+          tar xzvf /tmp/etcd-v3.4.14-linux-amd64.tar.gz -C /tmp/etcd --strip-components=1
+          cp /tmp/etcd/etcd /usr/sbin/
+          cp /tmp/etcd/etcdctl /usr/sbin/
+          rm -f /tmp/etcd-v3.4.14-linux-amd64.tar.gz
+
       - name: Install
         run: |
           sudo poetry install -E all
