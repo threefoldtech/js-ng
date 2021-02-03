@@ -234,7 +234,7 @@ def get_pids_filtered_sorted(filterstr, sortkey=None):
     else:
         desc = True
     # return pids from process objects
-    return [p.pid for p in get_processes_info(sort=ps_to_psutil_map[sortkey], filterstr=filterstr, desc=desc)]
+    return [p["pid"] for p in get_processes_info(sort=ps_to_psutil_map[sortkey], filterstr=filterstr, desc=desc)]
 
 
 def get_filtered_pids(filterstr, excludes=None):
