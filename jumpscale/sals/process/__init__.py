@@ -249,18 +249,30 @@ def get_filtered_pids(filterstr, excludes=None):
     pids = []
     try:
         for proc in psutil.process_iter(["name", "cmdline"]):
-            if proc.info["cmdline"] and filterstr in " ".join(proc.info["cmdline"]):
+            cmd_line = " ".join(proc.info["cmdline"])
+            if proc.info["cmdline"] and filterstr in cmd_line:
+                j.logger.debug(f"found filter string: {filterstr} in command line: {cmd_line}")
                 if excludes:
                     for exclude in excludes:
-                        if exclude in " ".join(proc.info["cmdline"]):
+                        if exclude in cmd_line:
+                            j.logger.debug(
+                                f"but excluded because it contain exclude string: {exclude} in command line: {cmd_line}"
+                            )
                             break
-                    else:
+                    else:  # intended `for/else` meaning for loop finished normally with no break
                         pids.append(proc.pid)  # may yield proc instead
                     continue
                 else:
-                    pids.append(proc.pid)
+                    pids.append(proc.pid)  # may yield proc instead
+        j.logger.debug(
+            f"founded pids are: {pids}"
+            if pids
+            else f"filter string {filterstr} not found in any processes. root needed?"
+        )
         return pids
-    except (psutil.AccessDenied, psutil.NoSuchProcess):
+    except (psutil.AccessDenied, psutil.NoSuchProcess) as e:
+        j.logger.debug(f"logging and bypassing the exception occurred while iterating over the system processes")
+        j.logger.exception(f"exception occurred while iterating over the system processes", exception=e)
         pass
 
 
