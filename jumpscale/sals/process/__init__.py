@@ -196,7 +196,7 @@ def get_pids_filtered_sorted(filterstr, sortkey=None):
 
     Args:
         filterstr (str): filter string.
-        sortkey (str, optional): Defaults to None (sort by pid(s) ascending)
+        sortkey (str, optional): Defaults to None. (if no sortkey used it will sort by pid(s) ascending).
             sortkey can be one of the following:
             %cpu           cpu utilization of the process in
             %mem           ratio of the process's resident set size  to the physical memory on the machine, expressed as a percentage.
