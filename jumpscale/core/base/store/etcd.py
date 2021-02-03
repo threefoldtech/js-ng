@@ -1,5 +1,4 @@
 import etcd3
-import json
 
 from . import ConfigNotFound, EncryptedConfigStore, EncryptionMode
 
@@ -56,20 +55,7 @@ class EtcdStore(EncryptedConfigStore):
         if not self.etcd_client.get(key)[0]:
             raise ConfigNotFound(f"cannot find config for {instance_name} at {key}")
 
-        return json.loads(self.etcd_client.get(key)[0].decode())
-
-    def get(self, instance_name):
-        """
-        get instance config from etcd
-
-        Args:
-            instance_name (name): name
-
-        Returns:
-            instance: return config object
-        """
-        config = self.read(instance_name)
-        return self._process_config(config, EncryptionMode.Decrypt)
+        return self.etcd_client.get(key)[0]
 
     def write(self, instance_name, data):
         """
