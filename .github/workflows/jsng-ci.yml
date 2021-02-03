@@ -44,8 +44,8 @@ jobs:
           mkdir -p /tmp/etcd
           curl -L https://storage.googleapis.com/etcd/v3.4.14/etcd-v3.4.14-linux-amd64.tar.gz -o /tmp/etcd-v3.4.14-linux-amd64.tar.gz
           tar xzvf /tmp/etcd-v3.4.14-linux-amd64.tar.gz -C /tmp/etcd --strip-components=1
-          cp /tmp/etcd/etcd /usr/sbin/
-          cp /tmp/etcd/etcdctl /usr/sbin/
+          sudo cp /tmp/etcd/etcd /usr/sbin/
+          sudo cp /tmp/etcd/etcdctl /usr/sbin/
           rm -f /tmp/etcd-v3.4.14-linux-amd64.tar.gz
 
       - name: Install
