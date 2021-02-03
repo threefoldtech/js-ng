@@ -42,6 +42,7 @@ class ProcessTests(BaseTests):
         rc, output, error = j.sals.process.execute(cmd)
         self.assertFalse(rc, error)
         pids = list(map(int, output.splitlines()))
+        self.info(f"output: {output}")
         return pids
 
     def create_user(self, username, file_path):
