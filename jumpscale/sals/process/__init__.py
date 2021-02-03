@@ -479,7 +479,7 @@ def kill_user_processes(user, sure_kill=False):
         sure_kill (bool, optional): Whether to fallback to SIGKILL if the timeout exceeded for the terminate operation or not. Defaults to False.
 
     Returns:
-        None or list[int] represents the IDs of the processes remaning alive.
+        (list[psutil.Process]/None): list of process objects that remain alive if any. None otherwise.
     """
     failed_processes = []
     for proc in get_user_processes(user):
@@ -488,11 +488,16 @@ def kill_user_processes(user, sure_kill=False):
         except (j.exceptions.Runtime, j.exceptions.Permission) as e:
             j.logger.exception("exception occurred while iterating over user processes", exception=e)
             j.logger.debug("ignoring the exception..")
-            failed_processes.append(proc.pid)
+            failed_processes.append(proc)
     j.logger.debug(
         "killing all user processes succeeded" if not failed_processes else "couldn't kill all user processes!"
     )
-    j.logger.debug(f"stay alive: {len(failed_processes)}, pids -> {failed_processes}")
+
+    # making sure
+    if failed_processes:
+        gone, failed_processes = psutil.wait_procs(failed_processes, timeout=0)
+
+    j.logger.debug(f"stay alive: {len(failed_processes)}, pids -> {[p.pid for p in failed_processes]}")
     return failed_processes or None  # return None if the failed list is empty
 
 
