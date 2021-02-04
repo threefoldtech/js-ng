@@ -38,10 +38,10 @@ class ProcessTests(BaseTests):
         sleep(1)
 
     def get_process_pids(self, process_name):
-        cmd = f"ps -aux | grep '{process_name}' | grep -v grep | awk '{{ print $2 }}'"
+        cmd = f"pidof {process_name}"
         rc, output, error = j.sals.process.execute(cmd)
         self.assertFalse(rc, error)
-        pids = list(map(int, output.splitlines()))
+        pids = list(map(int, output.split()))
         self.info(f"output: {output}")
         return pids
 
@@ -765,10 +765,10 @@ class ProcessTests(BaseTests):
         for user in users:
             # if user == current_user and type_ == "sorted":
             #     sorted_pids.extend(user_pids[user])
-            if user == current_user and type_ == "regex":
-                sorted_pids.append(user_pids[user][0])
-            else:
-                sorted_pids.append(user_pids[user])
+            # if user == current_user and type_ == "regex":
+            #     sorted_pids.append(user_pids[user][0])
+            # else:
+            sorted_pids.extend(user_pids[user])
         if type_ == "sorted":
             self.info("Check that the pids are sorted.")
             self.assertEqual(pids, sorted_pids)
