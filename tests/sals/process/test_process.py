@@ -43,7 +43,7 @@ class ProcessTests(BaseTests):
         if full:
             options.append("-f")
         if user:
-            options.appens(f"-u {user}")
+            options.append(f"-u {user}")
 
         cmd = f"pgrep {' '.join(options)} '{process_name}'"
         rc, output, error = j.sals.process.execute(cmd)
