@@ -1,5 +1,5 @@
 import string
-import os
+import getpass
 from math import ceil
 from random import randint
 from gevent import sleep
@@ -731,7 +731,7 @@ class ProcessTests(BaseTests):
         """
         self.info("Start a tail process from the currnet user.")
         user_pids = {}
-        current_user = os.path.basename(j.sals.fs.expanduser("~"))
+        current_user = getpass.getuser()
         cmd = f"{TAIL_PROCESS_NAME} -f /dev/null"
         self.start_in_tmux(cmd)
 
