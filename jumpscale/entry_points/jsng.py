@@ -1,12 +1,10 @@
 from gevent import monkey
 
-monkey.patch_all(subprocess=False)  # noqa: E402
 import click
 import os
 import pathlib
 import sys
 
-from jumpscale.loader import j  # noqa:
 from jumpscale.core.config import get_config, get_current_version
 
 
@@ -15,10 +13,16 @@ HISTORY_FILENAME = os.path.join(BASE_CONFIG_DIR, "history.txt")
 
 
 @click.command()
+@click.option("-p/-n", "--patch/--no-patch", default=True, help="Control gevent monkey patching")
 @click.version_option(get_current_version())
 @click.argument("command", required=False)
-def run(command):
+def run(command, patch):
     """Executes the passed command and initiates a jsng shell if no command is passed."""
+    if patch:
+        monkey.patch_all(subprocess=False)  # noqa: E402
+
+    from jumpscale.loader import j  # noqa:
+
     os.makedirs(BASE_CONFIG_DIR, exist_ok=True)
     pathlib.Path(HISTORY_FILENAME).touch()
     if command is None:
