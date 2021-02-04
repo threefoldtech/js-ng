@@ -744,22 +744,11 @@ class ProcessTests(BaseTests):
         self.start_in_tmux(cmd)
 
         self.info("Get each user pids.")
-        cmd = f"pgrep -u {user_1} {TAIL_PROCESS_NAME}"
-        rc, output, error = j.sals.process.execute(cmd)
-        self.assertFalse(error)
-        self.assertTrue(output)
-        user_pids[user_1] = output.split()
+        user_pids[user_1] = self.get_process_pids(TAIL_PROCESS_NAME, user=user_1)
 
-        cmd = f"pgrep -u {user_2} {TAIL_PROCESS_NAME}"
-        rc, output, error = j.sals.process.execute(cmd)
-        self.assertFalse(error)
-        self.assertTrue(output)
-        user_pids[user_2] = output.split()
+        user_pids[user_2] = self.get_process_pids(TAIL_PROCESS_NAME, user=user_2)
 
-        pids = self.get_process_pids(TAIL_PROCESS_NAME)
-        pids.remove(user_pids[user_1])
-        pids.remove(user_pids[user_2])
-        user_pids[current_user] = pids
+        user_pids[current_user] = self.get_process_pids(TAIL_PROCESS_NAME, user=current_user)
 
         if type_ == "sorted":
             self.info("Get pids sorted with username.")
