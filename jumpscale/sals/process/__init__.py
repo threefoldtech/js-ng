@@ -191,7 +191,7 @@ def kill_all(process_name, sig=signal.SIGKILL):
     return failed_processes
 
 
-def get_pids_filtered_sorted(filterstr, sortkey=None):
+def get_pids_filtered_sorted(filterstr, sortkey=None, desc=False):
     """Get pids of process by a filter string and optionally sort by sortkey
 
     Args:
@@ -210,6 +210,7 @@ def get_pids_filtered_sorted(filterstr, sortkey=None):
             ppid           parent process ID.
             psr            processor that process is currently assigned to.
             start_time     starting time or date of the process.
+        desc: (bool, optional): Defaults to False.
 
     Returns:
         list(int): processes pids
@@ -230,9 +231,6 @@ def get_pids_filtered_sorted(filterstr, sortkey=None):
     }
     if sortkey is None:  # mimic default ps commnad sorting behavior
         sortkey = "pid"
-        desc = False
-    else:
-        desc = True
     # return pids from process objects
     return [p["pid"] for p in get_processes_info(sort=ps_to_psutil_map[sortkey], filterstr=filterstr, desc=desc)]
 
