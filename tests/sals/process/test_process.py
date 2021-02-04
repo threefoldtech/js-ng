@@ -37,10 +37,18 @@ class ProcessTests(BaseTests):
         j.core.executors.tmux.execute_in_window(cmd, window_name, SESSION_NAME)
         sleep(1)
 
-    def get_process_pids(self, process_name):
-        cmd = f"pidof {process_name}"
+    def get_process_pids(self, process_name, full=False, user=None):
+        self.info(f"process name: {process_name}")
+        options = []
+        if full:
+            options.append("-f")
+        if user:
+            options.appens(f"-u {user}")
+
+        cmd = f"pgrep {' '.join(options)} '{process_name}'"
         rc, output, error = j.sals.process.execute(cmd)
-        self.assertFalse(rc, error)
+        self.info(f"ourput: {output}, error: {error}, rc: {rc}")
+        self.assertFalse(error)
         pids = list(map(int, output.split()))
         self.info(f"output: {output}")
         return pids
@@ -298,7 +306,7 @@ class ProcessTests(BaseTests):
         self.assertTrue(j.sals.nettools.wait_connection_test(HOST, port_2, 2))
 
         self.info("Check that the process has been started and get its pid.")
-        pids = self.get_process_pids(PYTHON_SERVER_NAME)
+        pids = self.get_process_pids(PYTHON_SERVER_NAME, full=True)
         self.assertEqual(len(pids), 2)
 
         self.info("Get this process pid with its name.")
@@ -369,7 +377,7 @@ class ProcessTests(BaseTests):
         self.assertTrue(j.sals.nettools.wait_connection_test(HOST, port, 2))
 
         self.info("Check that the server has been started.")
-        pids = self.get_process_pids(PYTHON_SERVER_NAME)
+        pids = self.get_process_pids(PYTHON_SERVER_NAME, full=True)
         self.assertEqual(len(pids), 1)
 
         self.info("Get processes info using SALS process.")
@@ -417,7 +425,7 @@ class ProcessTests(BaseTests):
         self.assertTrue(j.sals.nettools.wait_connection_test(HOST, port, 2))
 
         self.info("Check that the server has been started.")
-        pids = self.get_process_pids(PYTHON_SERVER_NAME)
+        pids = self.get_process_pids(PYTHON_SERVER_NAME, full=True)
         self.assertEqual(len(pids), 1)
         self.assertTrue(j.sals.process.is_port_listening(port))
 
@@ -437,7 +445,7 @@ class ProcessTests(BaseTests):
 
         self.info("Check that the server pid is not exist.")
         self.assertTrue(killed)
-        pids = self.get_process_pids(PYTHON_SERVER_NAME)
+        pids = self.get_process_pids(PYTHON_SERVER_NAME, full=True)
         self.assertFalse(pids)
         self.assertFalse(j.sals.process.is_port_listening(port))
 
@@ -644,7 +652,7 @@ class ProcessTests(BaseTests):
         self.assertTrue(j.sals.nettools.wait_connection_test(HOST, python_port, 2))
 
         self.info("Check that the server has been started.")
-        python_server_pids = self.get_process_pids(PYTHON_SERVER_NAME)
+        python_server_pids = self.get_process_pids(PYTHON_SERVER_NAME, full=True)
         self.assertEqual(len(python_server_pids), 1)
 
         self.info("Start redis server.")
@@ -736,17 +744,17 @@ class ProcessTests(BaseTests):
         self.start_in_tmux(cmd)
 
         self.info("Get each user pids.")
-        cmd = f"ps -u {user_1} | grep {TAIL_PROCESS_NAME} | awk '{{ print $1 }}'"
+        cmd = f"pgrep -u {user_1} {TAIL_PROCESS_NAME}"
         rc, output, error = j.sals.process.execute(cmd)
-        self.assertFalse(rc, error)
+        self.assertFalse(error)
         self.assertTrue(output)
-        user_pids[user_1] = int(output.strip())
+        user_pids[user_1] = output.split()
 
-        cmd = f"ps -u {user_2} | grep {TAIL_PROCESS_NAME} | awk '{{ print $1 }}'"
+        cmd = f"pgrep -u {user_2} {TAIL_PROCESS_NAME}"
         rc, output, error = j.sals.process.execute(cmd)
-        self.assertFalse(rc, error)
+        self.assertFalse(error)
         self.assertTrue(output)
-        user_pids[user_2] = int(output.strip())
+        user_pids[user_2] = output.split()
 
         pids = self.get_process_pids(TAIL_PROCESS_NAME)
         pids.remove(user_pids[user_1])
