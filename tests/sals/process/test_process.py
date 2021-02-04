@@ -39,12 +39,22 @@ class ProcessTests(BaseTests):
         sleep(1)
 
     def get_process_pids(self, process_name, full=False, user=None):
-        self.info(f"process name: {process_name}")
+        self.info(f"user name: {process_name}")
         options = []
         if full:
             options.append("-f")
         if user:
             options.append(f"-u {user}")
+        # D    uninterruptible sleep (usually IO)
+        # I    Idle kernel thread
+        # R    running or runnable (on run queue)
+        # S    interruptible sleep (waiting for an event to complete)
+        # T    stopped by job control signal
+        # t    stopped by debugger during the tracing
+        # W    paging (not valid since the 2.6.xx kernel)
+        # X    dead (should never be seen)
+        # Z    defunct ("zombie") process, terminated but not reaped by its parent
+        options.append("-r R, S")  # this required due to bug in pgrep exists before ubuntu 20
 
         cmd = f"pgrep {' '.join(options)} '{process_name}'"
         rc, output, error = j.sals.process.execute(cmd)
