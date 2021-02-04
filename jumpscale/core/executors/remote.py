@@ -1,5 +1,5 @@
 """
-Executor remote allows executing commands within specific env on the local machine. using the executor framework you can retrieve the stdout, stderr, and the return code as well.
+Remote executor allows executing commands within specific env on any machine. using the executor framework you can retrieve the stdout, stderr, and the return code as well.
 
 ```
 JS-NG> with j.core.executors.RemoteExecutor(host="localhost", connect_kwargs={"key_filename":
@@ -35,7 +35,7 @@ def execute(cmd, command_ctx, connection_ctx):
 
 
 class RemoteExecutor:
-    """Remote remote allows executing commands within specific env on the remote machine. using the executor framework you can retrieve the stdout, stderr, and the return code as well.
+    """Remote executor allows executing commands within specific env on the any machine. using the executor framework you can retrieve the stdout, stderr, and the return code as well.
     e.g
         with j.core.executors.RemoteExecutor(host="localhost", connect_kwargs={"key_filename":"/home/xmonader/.ssh/id_rsa",}) as c:c.run("hostname")
 
