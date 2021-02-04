@@ -419,8 +419,6 @@ def get_pids(process_name, match_predicate=None, limit=0, _alt_source=None):
     # default match predicate
     def default_predicate(target, given):
         j.logger.debug(f"matching {target} with {given}")
-        if isinstance(given, list):
-            return target.strip().lower() in given
         return target.strip().lower() == given.lower()
 
     match_predicate = match_predicate or default_predicate
@@ -432,7 +430,7 @@ def get_pids(process_name, match_predicate=None, limit=0, _alt_source=None):
             if (
                 (match_predicate(process_name, proc.info["name"]))
                 or (proc.info["exe"] and match_predicate(process_name, os.path.basename(proc.info["exe"])))
-                or (proc.info["cmdline"] and match_predicate(process_name, proc.info["cmdline"]))
+                or (proc.info["cmdline"] and match_predicate(process_name, os.path.basename(proc.info["cmdline"][0])))
             ):
                 pids.append(proc.pid)
                 # return early if no need to iterate over all running process
