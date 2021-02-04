@@ -763,9 +763,9 @@ class ProcessTests(BaseTests):
         users = sorted([current_user, user_1, user_2])
         sorted_pids = []
         for user in users:
-            if user == current_user and type_ == "sorted":
-                sorted_pids.extend(user_pids[user])
-            elif user == current_user and type_ == "regex":
+            # if user == current_user and type_ == "sorted":
+            #     sorted_pids.extend(user_pids[user])
+            if user == current_user and type_ == "regex":
                 sorted_pids.append(user_pids[user][0])
             else:
                 sorted_pids.append(user_pids[user])
