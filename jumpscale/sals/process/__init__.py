@@ -316,12 +316,10 @@ def check_start(cmd, filterstr, n_instances=1, retry=1):
         j.logger.debug(f"attempt no: {i}")
         j.logger.debug(f"executed cmd: {cmd}")
         j.logger.debug(f"proc.cmdline: {proc.cmdline()}")
-        j.logger.debug(f"pid: {proc.pid}")
+        j.logger.debug(f"direct process id spawn by this command : {proc.pid}")
         j.logger.debug(f"status: {proc.status()}")
         j.logger.debug(f"name: {proc.name()}")
         j.logger.debug(f"exe: {proc.exe()}")
-        j.logger.debug(f"children: {proc.children(recursive=True)}")
-        j.logger.debug(f"parents: {proc.parents()}")
         try:
             rc = proc.wait(timeout=1)  # makesure the process is stable
             if rc == 0:  # executing the command succeeded but exited immediately!
@@ -362,12 +360,10 @@ def check_stop(cmd, filterstr, retry=1, n_instances=0):
         j.logger.debug(f"attempt no: {i}")
         j.logger.debug(f"executed cmd: {cmd}")
         j.logger.debug(f"proc.cmdline: {proc.cmdline()}")
-        j.logger.debug(f"pid: {proc.pid}")
+        j.logger.debug(f"direct process id spawn by this command : {proc.pid}")
         j.logger.debug(f"status: {proc.status()}")
         j.logger.debug(f"name: {proc.name()}")
         j.logger.debug(f"exe: {proc.exe()}")
-        j.logger.debug(f"children: {proc.children(recursive=True)}")
-        j.logger.debug(f"parents: {proc.parents()}")
         try:
             rc = proc.wait(timeout=5)  # makesure the process is stable
             # print(f'rc: {rc}')
@@ -396,7 +392,7 @@ def check_stop(cmd, filterstr, retry=1, n_instances=0):
     raise j.exceptions.Runtime(f"could not stop {cmd}, found {len(found)} of instances instead of {n_instances}")
 
 
-def get_pids(process_name, match_predicate=None, limit=0, _alt_source=None):
+def get_pids(process_name, match_predicate=None, limit=0, _alt_source=None, include_zombie=False):
     """Return a list of processes ID(s) matching 'process_name'.
 
     Function will check string against Process.name(), Process.exe() and Process.cmdline()
@@ -426,6 +422,9 @@ def get_pids(process_name, match_predicate=None, limit=0, _alt_source=None):
     pids = []
     for proc in psutil.process_iter(["name", "exe", "cmdline"]):
         try:
+            if proc.status() == psutil.STATUS_ZOMBIE and not include_zombie:
+                j.logger.debug(f"ignoring : {proc.pid} zombie process.")
+                continue
             j.logger.debug(f"process to check: {proc.info}")
             if (
                 (match_predicate(process_name, proc.info["name"]))
