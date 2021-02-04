@@ -1,6 +1,4 @@
-"""tmux module allows manipulation of tmux sessions, pane and launching background commands in it
-
-"""
+"""tmux module allows manipulation of tmux sessions, pane and launching background commands in it"""
 import libtmux
 from jumpscale.core.logging import export_module_as as logger
 
