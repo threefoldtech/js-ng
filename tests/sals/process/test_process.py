@@ -45,23 +45,19 @@ class ProcessTests(BaseTests):
             options.append("-f")
         if user:
             options.append(f"-u {user}")
-        # D    uninterruptible sleep (usually IO)
-        # I    Idle kernel thread
-        # R    running or runnable (on run queue)
-        # S    interruptible sleep (waiting for an event to complete)
-        # T    stopped by job control signal
-        # t    stopped by debugger during the tracing
-        # W    paging (not valid since the 2.6.xx kernel)
-        # X    dead (should never be seen)
-        # Z    defunct ("zombie") process, terminated but not reaped by its parent
-        options.append("-r R, S")  # this required due to bug in pgrep exists before ubuntu 20
-
         cmd = f"pgrep {' '.join(options)} '{process_name}'"
         rc, output, error = j.sals.process.execute(cmd)
         self.info(f"ourput: {output}, error: {error}, rc: {rc}")
         self.assertFalse(error)
-        pids = list(map(int, output.split()))
+        if not output:
+            return []
+        z_pids_str = " ".join(['"' + pid + '"' for pid in output.split()])  # excluding Dead processes
+        cmd = f"ps -o s= -o pid= {z_pids_str} | sed -n 's/^[^ZT][[:space:]]\+//p'"
+        rc, output, error = j.sals.process.execute(cmd)
+        self.info(f"ourput: {output}, error: {error}, rc: {rc}")
+        self.assertFalse(error)
         self.info(f"output: {output}")
+        pids = list(map(int, output.split()))
         return pids
 
     def create_user(self, username, file_path):
