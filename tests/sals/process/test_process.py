@@ -776,7 +776,7 @@ class ProcessTests(BaseTests):
             # if user == current_user and type_ == "regex":
             #     sorted_pids.append(user_pids[user][0])
             # else:
-            sorted_pids.extend(user_pids[user])
+            sorted_pids.append(user_pids[user])
         if type_ == "sorted":
             self.info("Check that the pids are sorted.")
             self.assertEqual(pids, sorted_pids)
