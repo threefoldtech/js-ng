@@ -406,6 +406,7 @@ def get_pids(process_name, match_predicate=None, limit=0, _alt_source=None, incl
             of the psutil.Process objects to match against.
             ex: get_user_processes func, or get_similar_processes.
             if not specified, psutil.process_iter will be used. Defaults to None.
+        include_zombie (bool, optional): Whether to include pid for zombie proccesses or not. Defaults to False.
 
     Returns:
         list[int]: list of PID(s)
