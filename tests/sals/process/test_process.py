@@ -38,11 +38,13 @@ class ProcessTests(BaseTests):
         j.core.executors.tmux.execute_in_window(cmd, window_name, SESSION_NAME)
         sleep(1)
 
-    def get_process_pids(self, process_name, full=False, user=None):
+    def get_process_pids(self, process_name, full=False, user=None, exact=True):
         self.info(f"user name: {process_name}")
         options = []
         if full:
             options.append("-f")
+        if exact:
+            options.append("-x")
         if user:
             options.append(f"-u {user}")
         cmd = f"pgrep {' '.join(options)} '{process_name}'"
