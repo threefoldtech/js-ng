@@ -633,7 +633,7 @@ def kill_process_by_name(process_name, sig=signal.SIGTERM, match_predicate=None,
     for pid in pids:
         try:
             kill(pid, sig, timeout=timeout, sure_kill=sure_kill)
-        except (j.exceptions.Runtime, j.exceptions.Permission) as e:
+        except (j.exceptions.Runtime, j.exceptions.Permission):
             failed_processes.append(pid)
     return failed_processes or None  # return None if the failed list is empty
 
@@ -792,7 +792,7 @@ def get_processes_info(user=None, sort="mem", filterstr=None, limit=25, desc=Tru
         else:
             try:
                 return procObj[sort]
-            except KeyError as e:
+            except KeyError:
                 j.logger.error(f"bad field name for sorting: {sort}")
                 raise j.exceptions.Value(f"bad field name for sorting: {sort}")
 
