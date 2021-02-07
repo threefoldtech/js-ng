@@ -408,7 +408,7 @@ def get_pids(process_name, match_predicate=None, limit=0, _alt_source=None, incl
             if not specified, psutil.process_iter will be used. Defaults to None.
         include_zombie (bool, optional): Whether to include pid for zombie proccesses or not. Defaults to False.
         full_cmd_line (bool, optional): The pattern is normally only matched against the process name.
-            When full_cmd_line is set to /true, the full command line is used. Defaults to False.
+            When full_cmd_line is set to True, the full command line is used. Defaults to False.
 
     Returns:
         list[int]: list of PID(s)
@@ -417,14 +417,17 @@ def get_pids(process_name, match_predicate=None, limit=0, _alt_source=None, incl
     def default_predicate(target, given):
         j.logger.debug(f"matching {target} with {given}")
         if isinstance(given, list):
-            return target in given
+            return target in " ".join(given)
         else:
             return target.strip().lower() == given.lower()
 
+    default_processes_source = psutil.process_iter(["name", "exe", "cmdline"])
+
     match_predicate = match_predicate or default_predicate
+    p_source = _alt_source or default_processes_source
 
     pids = []
-    for proc in psutil.process_iter(["name", "exe", "cmdline"]):
+    for proc in p_source:
         try:
             if proc.status() == psutil.STATUS_ZOMBIE and not include_zombie:
                 j.logger.debug(f"ignoring : {proc.pid} zombie process.")
@@ -494,7 +497,7 @@ def get_user_processes(user):
         psutil.Process: psutil.Process object for all processes owned by `user`.
     """
     try:
-        for process in psutil.process_iter():
+        for process in psutil.process_iter(["name", "exe", "cmdline"]):
             if process.username() == user:
                 yield process
     except (psutil.AccessDenied, psutil.NoSuchProcess):
@@ -545,7 +548,7 @@ def get_similar_processes(target_proc=None):
             target_proc = get_my_process()
         elif isinstance(target_proc, int):
             target_proc = get_process_object(target_proc)
-        for proc in psutil.process_iter(["name", "cmdline"]):
+        for proc in psutil.process_iter(["name", "exe", "cmdline"]):
             if proc.info["cmdline"] and target_proc.cmdline() and proc.info["cmdline"] == target_proc.cmdline():
                 yield proc
     except (psutil.AccessDenied, psutil.NoSuchProcess):
@@ -834,10 +837,14 @@ def get_processes_info(user=None, sort="mem", filterstr=None, limit=25, desc=Tru
             )  # the non-swapped physical memory a process has used in Mb
             pinfo["cpu_time"] = sum(pinfo["cpu_times"][:2])  # cumulative, excluding children and iowait
             pinfo["ports"] = []
-            connections = proc.connections()  # need root
-            if connections:
-                for conn in connections:
-                    pinfo["ports"].append({"port": conn.laddr.port, "status": conn.status})
+            try:
+                connections = proc.connections()  # need root
+            except (psutil.AccessDenied):
+                pass
+            else:
+                if connections:
+                    for conn in connections:
+                        pinfo["ports"].append({"port": conn.laddr.port, "status": conn.status})
             # Append dict to list
             processes_list.append(pinfo)
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess) as e:
