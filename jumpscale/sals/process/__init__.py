@@ -444,6 +444,7 @@ def get_pids(process_name, match_predicate=None, limit=0, _alt_source=None, incl
                 )
             ):
                 pids.append(proc.pid)
+                j.logger.debug(f"process {len(pids) }found: {proc.info}")
                 # return early if no need to iterate over all running process
                 if limit and len(pids) == limit:
                     return pids
