@@ -47,14 +47,14 @@ class ProcessTests(BaseTests):
             options.append(f"-u {user}")
         cmd = f"pgrep {' '.join(options)} '{process_name}'"
         rc, output, error = j.sals.process.execute(cmd)
-        self.info(f"ourput: {output}, error: {error}, rc: {rc}")
+        self.info(f"output: {output}, error: {error}, rc: {rc}")
         self.assertFalse(error)
         if not output:
             return []
         z_pids_str = " ".join(['"' + pid + '"' for pid in output.split()])  # excluding Dead processes
-        cmd = f"ps -o s= -o pid= {z_pids_str} | sed -n 's/^[^ZT][[:space:]]\+//p'"
+        cmd = f"ps -o s= -o pid= {z_pids_str} | sed -n 's/^[^ZT][[:space:]]\\+//p'"
         rc, output, error = j.sals.process.execute(cmd)
-        self.info(f"ourput: {output}, error: {error}, rc: {rc}")
+        self.info(f"output: {output}, error: {error}, rc: {rc}")
         self.assertFalse(error)
         self.info(f"output: {output}")
         pids = list(map(int, output.split()))
