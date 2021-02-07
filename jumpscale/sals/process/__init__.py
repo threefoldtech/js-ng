@@ -390,7 +390,7 @@ def check_stop(cmd, filterstr, retry=1, n_instances=0):
     raise j.exceptions.Runtime(f"could not stop {cmd}, found {len(found)} of instances instead of {n_instances}")
 
 
-def get_pids(process_name, match_predicate=None, limit=0, _alt_source=None, include_zombie=False):
+def get_pids(process_name, match_predicate=None, limit=0, _alt_source=None, include_zombie=False, full_cmd_line=False):
     """Return a list of processes ID(s) matching 'process_name'.
 
     Function will check string against Process.name(), Process.exe() and Process.cmdline()
@@ -407,6 +407,8 @@ def get_pids(process_name, match_predicate=None, limit=0, _alt_source=None, incl
             ex: get_user_processes func, or get_similar_processes.
             if not specified, psutil.process_iter will be used. Defaults to None.
         include_zombie (bool, optional): Whether to include pid for zombie proccesses or not. Defaults to False.
+        full_cmd_line (bool, optional): The pattern is normally only matched against the process name.
+            When full_cmd_line is set to /true, the full command line is used. Defaults to False.
 
     Returns:
         list[int]: list of PID(s)
@@ -414,7 +416,10 @@ def get_pids(process_name, match_predicate=None, limit=0, _alt_source=None, incl
     # default match predicate
     def default_predicate(target, given):
         j.logger.debug(f"matching {target} with {given}")
-        return target.strip().lower() == given.lower()
+        if isinstance(given, list):
+            return target in given
+        else:
+            return target.strip().lower() == given.lower()
 
     match_predicate = match_predicate or default_predicate
 
@@ -428,7 +433,13 @@ def get_pids(process_name, match_predicate=None, limit=0, _alt_source=None, incl
             if (
                 (match_predicate(process_name, proc.info["name"]))
                 or (proc.info["exe"] and match_predicate(process_name, os.path.basename(proc.info["exe"])))
-                or (proc.info["cmdline"] and match_predicate(process_name, os.path.basename(proc.info["cmdline"][0])))
+                or (
+                    proc.info["cmdline"]
+                    and match_predicate(
+                        process_name,
+                        proc.info["cmdline"] if full_cmd_line else os.path.basename(proc.info["cmdline"][0]),
+                    )
+                )
             ):
                 pids.append(proc.pid)
                 # return early if no need to iterate over all running process
