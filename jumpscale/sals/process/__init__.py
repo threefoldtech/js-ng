@@ -429,7 +429,7 @@ def get_pids(process_name, match_predicate=None, limit=0, _alt_source=None, incl
     pids = []
     for proc in p_source:
         try:
-            if proc.status() == psutil.STATUS_ZOMBIE and not include_zombie:
+            if not include_zombie and proc.status() == psutil.STATUS_ZOMBIE:
                 j.logger.debug(f"ignoring : {proc.pid} zombie process.")
                 continue
             if (
