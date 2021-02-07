@@ -325,6 +325,8 @@ def check_start(cmd, filterstr, n_instances=1, retry=1):
                 j.logger.debug("executing the start command succeeded but exited immediately")
             else:
                 j.logger.debug("the start command exited with error")  # the process exited with error
+                output, error_output = proc.communicate()
+                j.logger.debug(f"err: {error_output}")
             j.logger.debug(f"return code is: {rc}")
         except psutil.TimeoutExpired:
             j.logger.debug("the start command still running after 1 sec")  # still running
@@ -372,6 +374,8 @@ def check_stop(cmd, filterstr, retry=1, n_instances=0):
             else:
                 # the process exited with error
                 j.logger.debug("the stop command exited with error")  # the process exited with error
+                output, error_output = proc.communicate()
+                j.logger.debug(f"err: {error_output}")
         except psutil.TimeoutExpired:
             j.logger.debug("the start command still running after 1 sec")  # still running
         found = get_pids(filterstr)
