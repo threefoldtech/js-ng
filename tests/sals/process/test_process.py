@@ -364,7 +364,7 @@ class ProcessTests(BaseTests):
         self.assertAlmostEqual(memory_usage["used"], used, delta=1)
         self.assertAlmostEqual(memory_usage["percent"], percent, delta=5)
 
-    @pytest.mark.skip("https://github.com/threefoldtech/js-ng/issues/467")
+    #  @pytest.mark.skip("https://github.com/threefoldtech/js-ng/issues/467")
     def test_12_get_processes_info(self):
         """Test case for getting processes info.
 
@@ -388,7 +388,7 @@ class ProcessTests(BaseTests):
         self.assertEqual(len(pids), 1)
 
         self.info("Get processes info using SALS process.")
-        processes_info = j.sals.process.get_processes_info()
+        processes_info = j.sals.process.get_processes_info(limit=-1)
 
         self.info("Check that the python server is in the processes info.")
         found = False
