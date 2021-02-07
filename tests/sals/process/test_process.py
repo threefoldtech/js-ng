@@ -242,7 +242,7 @@ class ProcessTests(BaseTests):
         """
         self.info("Start a process in tmux with check_start.")
         window_name = self.randstr()
-        start_cmd = f"tmux new-window -t {SESSION_NAME} -d -n {window_name} {TAIL_PROCESS_NAME} -f /dev/null"
+        start_cmd = f"tmux new-window -t {SESSION_NAME} -d -n {window_name} '{TAIL_PROCESS_NAME} -f /dev/null'"
         j.sals.process.check_start(cmd=start_cmd, filterstr=TAIL_PROCESS_NAME, n_instances=1)
 
         self.info("Check that the process has been started.")
