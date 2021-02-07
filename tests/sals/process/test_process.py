@@ -43,7 +43,7 @@ class ProcessTests(BaseTests):
         options = []
         if full:
             options.append("-f")
-        if exact:
+        if exact and not full:
             options.append("-x")
         if user:
             options.append(f"-u {user}")
