@@ -25,6 +25,7 @@ Example:
 import math
 import os
 import subprocess
+import shlex
 import re
 import signal
 from collections import defaultdict
@@ -48,7 +49,7 @@ def execute(
     Accepts command as a list too, with auto-escaping.
 
     Args:
-        cmd (str/list[str]): Command to be executed, e.g. "ls -la" or ["ls", "-la"]
+        cmd (str or list of str): Command to be executed, e.g. "ls -la" or ["ls", "-la"]
         showout (bool, optional): Whether to show stdout of the command or not. Defaults to False.
         cwd (str, optional): Path to `cd` into before running command. Defaults to None.
         shell (str, optional): Specify a working directory for the command. Defaults to "/bin/bash".
@@ -103,7 +104,7 @@ def kill(proc, sig=signal.SIGTERM, timeout=5, sure_kill=False):
     """Kill a process with a specified signal.
 
     Args:
-        proc (int/psutil.Process): Target process ID (PID) or psutil.Process object.
+        proc (int or psutil.Process): Target process ID (PID) or psutil.Process object.
         sig (signal, optional): See signal module constants. Defaults to signal.SIGTERM.
         timeout (int, optional): How long to wait for a process to terminate (seconds) before raise exception\
             or, if sure_kill=True, send a SIGKILL. Defaults to 5.
@@ -298,7 +299,7 @@ def check_start(cmd, filterstr, n_instances=1, retry=1):
     """Run command (possibly multiple times) and check if it is started based on filterstr
 
     Args:
-        cmd (str/list): Command to be executed.
+        cmd (str or list of str): Command to be executed.
         filterstr (str): Filter string. will match against against Process.name(),\
             Process.exe() and Process.cmdline()
         n_instances (int, optional): Number of needed instances. Defaults to 1.
@@ -309,8 +310,8 @@ def check_start(cmd, filterstr, n_instances=1, retry=1):
     """
     for i in range(retry):
         if isinstance(cmd, str):
-            cmd = cmd.split()
-        proc = psutil.Popen(cmd, close_fds=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+            args = shlex.split(cmd)
+        proc = psutil.Popen(args, close_fds=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
         j.logger.debug(f"attempt no: {i}")
         j.logger.debug(f"executed cmd: {cmd}")
         j.logger.debug(f"proc.cmdline: {proc.cmdline()}")
@@ -353,8 +354,8 @@ def check_stop(cmd, filterstr, retry=1, n_instances=0):
 
     for i in range(retry):
         if isinstance(cmd, str):
-            cmd = cmd.split()
-        proc = psutil.Popen(cmd, close_fds=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+            args = shlex.split(cmd)
+        proc = psutil.Popen(args, close_fds=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
         j.logger.debug(f"attempt no: {i}")
         j.logger.debug(f"executed cmd: {cmd}")
         j.logger.debug(f"proc.cmdline: {proc.cmdline()}")
@@ -510,7 +511,7 @@ def kill_user_processes(user, sure_kill=False):
         sure_kill (bool, optional): Whether to fallback to SIGKILL if the timeout exceeded for the terminate operation or not. Defaults to False.
 
     Returns:
-        (list[psutil.Process]/None): list of process objects that remain alive if any. None otherwise.
+        (list[psutil.Process] or None): list of process objects that remain alive if any. None otherwise.
     """
     failed_processes = []
     for proc in get_user_processes(user):
@@ -607,7 +608,7 @@ def get_pid_by_port(port, ipv6=False, udp=False):
         udp (bool, optional): Whether to search the connections for UDP port instead of TCP. Defaults to False.
 
     Returns:
-        (int/None): Process ID that listen on that port
+        (int or None): Process ID that listen on that port
     """
 
     process = get_process_by_port(port, ipv6=ipv6, udp=udp)
@@ -931,7 +932,7 @@ def kill_proc_tree(
     """Kill a process and its children (including grandchildren) with signal `sig`
 
     Args:
-        proc (int/psutil.Process): Target process ID (PID) or psutil.Process object.
+        proc (int or psutil.Process): Target process ID (PID) or psutil.Process object.
         sig (signal, optional): See signal module constants. Defaults to signal.SIGTERM.
         include_parent (): Whether to kill the process itself. Defaults to True.
         include_grand_children (): whether to kill recursively all grandchildren. Defaults to True.
@@ -940,7 +941,7 @@ def kill_proc_tree(
         sure_kill (bool, optional): Whether to fallback to SIGKILL if the timeout exceeded for the terminate operation or not. Defaults to False.
 
     Returns:
-        (list[psutil.Process]/None): list of process objects that remain alive if any. None otherwise.
+        (list[psutil.Process] or None): list of process objects that remain alive if any. None otherwise.
     """
     if isinstance(parent, int):
         try:
