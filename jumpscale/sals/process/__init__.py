@@ -416,7 +416,7 @@ def get_pids(process_name, match_predicate=None, limit=0, _alt_source=None, incl
     # default match predicate
     def default_predicate(target, given):
         if isinstance(given, list):
-            return target in " ".join(given)
+            return target in given
         else:
             return target.strip().lower() == given.lower()
 
