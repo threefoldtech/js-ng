@@ -24,6 +24,7 @@ Example:
 
 import math
 import os
+import time
 import subprocess
 import shlex
 import re
@@ -295,7 +296,7 @@ def get_pids_filtered_by_regex(regex_list):
     return res
 
 
-def check_start(cmd, filterstr, n_instances=1, retry=1):
+def check_start(cmd, filterstr, n_instances=1, retry=1, delay=0.5):
     """Run command (possibly multiple times) and check if it is started based on filterstr
 
     Args:
@@ -330,6 +331,8 @@ def check_start(cmd, filterstr, n_instances=1, retry=1):
             j.logger.debug(f"return code is: {rc}")
         except psutil.TimeoutExpired:
             j.logger.debug("the start command still running after 1 sec")  # still running
+        else:
+            time.sleep(delay)
         # TODO check based on command
         if check_running(filterstr, min=n_instances):
             j.logger.debug(f"found at least {n_instances} instances using the filter string: {filterstr}")
@@ -341,7 +344,7 @@ def check_start(cmd, filterstr, n_instances=1, retry=1):
     raise j.exceptions.Runtime("could not start the required number of instances.")
 
 
-def check_stop(cmd, filterstr, retry=1, n_instances=0):
+def check_stop(cmd, filterstr, retry=1, n_instances=0, delay=0.5):
     """Executes a stop command (possibly multiple times) and check if it is already stopped based on filterstr
 
     Args:
@@ -378,6 +381,8 @@ def check_stop(cmd, filterstr, retry=1, n_instances=0):
                 j.logger.debug(f"err: {error_output}")
         except psutil.TimeoutExpired:
             j.logger.debug("the start command still running after 1 sec")  # still running
+        else:
+            time.sleep(delay)
         found = get_pids(filterstr)
         if len(found) == n_instances:
             j.logger.debug(
