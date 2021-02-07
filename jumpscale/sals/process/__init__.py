@@ -415,7 +415,6 @@ def get_pids(process_name, match_predicate=None, limit=0, _alt_source=None, incl
     """
     # default match predicate
     def default_predicate(target, given):
-        j.logger.debug(f"matching {target} with {given}")
         if isinstance(given, list):
             return target in " ".join(given)
         else:
@@ -432,7 +431,6 @@ def get_pids(process_name, match_predicate=None, limit=0, _alt_source=None, incl
             if proc.status() == psutil.STATUS_ZOMBIE and not include_zombie:
                 j.logger.debug(f"ignoring : {proc.pid} zombie process.")
                 continue
-            j.logger.debug(f"process to check: {proc.info}")
             if (
                 (match_predicate(process_name, proc.info["name"]))
                 or (proc.info["exe"] and match_predicate(process_name, os.path.basename(proc.info["exe"])))
@@ -519,12 +517,8 @@ def kill_user_processes(user, sure_kill=False):
         try:
             kill(proc, sure_kill=sure_kill)
         except (j.exceptions.Runtime, j.exceptions.Permission) as e:
-            j.logger.exception("exception occurred while iterating over user processes", exception=e)
-            j.logger.debug("ignoring the exception..")
+            j.logger.exception("ignoring an exception that occurred while iterating over user processes", exception=e)
             failed_processes.append(proc)
-    j.logger.debug(
-        "killing all user processes succeeded" if not failed_processes else "couldn't kill all user processes!"
-    )
 
     # making sure
     if failed_processes:
@@ -803,7 +797,6 @@ def get_processes_info(user=None, sort="mem", filterstr=None, limit=25, desc=Tru
                 raise j.exceptions.Value(f"bad field name for sorting: {sort}")
 
     processes_list = []
-    j.logger.debug(f"Args used: user={user}, sort={sort}, filterstr={filterstr}, limit={limit}, desc={desc}")
     if not filterstr:
         p_source = get_processes() if not user else get_user_processes(user=user)
     else:
@@ -848,12 +841,11 @@ def get_processes_info(user=None, sort="mem", filterstr=None, limit=25, desc=Tru
             # Append dict to list
             processes_list.append(pinfo)
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess) as e:
-            j.logger.debug(
-                "ignoring and logging an exception that occurred while iterating over system processes, not root?"
+            j.logger.exception(
+                "ignoring and logging an exception that occurred while iterating over system processes, not root?",
+                exception=e,
             )
-            # j.logger.exception('an exception occurred while iterating over system processes', exception=e)
             pass
-    j.logger.debug(f"Processes found: {len(processes_list)}")
     # sort the processes list by sort_key
     sorted_processes = sorted(processes_list, key=_get_sort_key, reverse=desc)[:limit]
     return sorted_processes
