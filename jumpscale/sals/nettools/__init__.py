@@ -51,7 +51,7 @@ def tcp_connection_test(ipaddr: str, port: int, timeout: Optional[int] = None) -
         bool: True if the test succeeds, False otherwise
     """
     # conn = None
-    j.logger.info(f"Attempting to establish TCP connection to (IP: {ipaddr}, TCP: {port})")
+    j.logger.debug(f"Attempting to establish TCP connection to (IP: {ipaddr}, TCP: {port})")
     try:
         conn = socket.create_connection((ipaddr, port), timeout)
     except (socket.gaierror, socket.herror) as e:
@@ -66,12 +66,10 @@ def tcp_connection_test(ipaddr: str, port: int, timeout: Optional[int] = None) -
             reason = e.strerror
         else:
             reason = repr(e)
-        j.logger.warning(
-            f"TCP connection attempt to (IP: {ipaddr}, TCP: {port}) failed because of this error: {reason}"
-        )
+        j.logger.debug(f"TCP connection attempt to (IP: {ipaddr}, TCP: {port}) failed because of this error: {reason}")
         return False
     else:
-        j.logger.info(f"Successful TCP connection to (IP: {ipaddr}, TCP: {port})")
+        j.logger.debug(f"Successful TCP connection to (IP: {ipaddr}, TCP: {port})")
         conn.close()
         j.logger.debug("Connection closed")
         return True
@@ -114,7 +112,7 @@ def udp_connection_test(ipaddr: str, port: int, timeout: Optional[int] = 1, mess
         j.logger.debug("Expecting to receive at least one byte from the socket as indication to succeed connection")
         data, _ = sock.recvfrom(1)
     except socket.timeout:
-        j.logger.warning(f"Timeout of {timeout}s reached while waiting for server (IP: {ipaddr}, UDP: {port}) replay")
+        j.logger.debug(f"Timeout of {timeout}s reached while waiting for server (IP: {ipaddr}, UDP: {port}) replay")
         return False
     except OSError as e:
         j.logger.warning(f"UDP connection failed because of this error: {e.strerror or repr(e)}")
