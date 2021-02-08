@@ -337,7 +337,6 @@ def get_filtered_pids(filterstr, excludes=None):
         )
         return pids
     except (psutil.AccessDenied, psutil.NoSuchProcess) as e:
-        j.logger.debug("logging and bypassing the exception occurred while iterating over the system processes")
         j.logger.exception("exception occurred while iterating over the system processes", exception=e)
         pass
 
