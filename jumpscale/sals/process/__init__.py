@@ -1,9 +1,13 @@
 """This module execute process on system and manage them
 
-Example:
+below are some examples of the functions included in this moduke (not all inclusive.):
+
+Examples:
     ```
-    #to create a process
     >>> from jumpscale.loader import j
+    >>> import signal
+
+    #to create a process
     >>> rc, out, err = j.sals.process.execute("ls", cwd="/tmp", showout=True)
     # this executes ls command on dir "/tmp" showing output from stdout
     # rc -> contains exit status
@@ -13,11 +17,71 @@ Example:
     # checks if a process with this pid is exists in the current process list
     >>> j.sals.process.is_alive(10022)
 
+    # Checks if a specific command is available on the system
+    >>> j.sals.process.is_installed('top')
+
     # kill a process with pid 10022 with SIGTERM
     >>> j.sals.process.kill(10022)
 
-    # gets pid of the process listenning on port 8000
+    # kill a process with pid 10022 with SIGTERM, wait 3 seconds for it to disappear, then if still alive kill it with SIGKILL
+    >>> j.sals.process.kill(10022, timeout=3, sure_kill=True)
+
+    # Kill all processes that match the given name with a SIGTERM
+    >>> j.sals.process.kill_all('tail', sig=signal.SIGTERM)
+
+    # Check if there is any running process that match the given name.
+    >>> j.sals.process.ps_find('python3')
+
+    # gets pid of the process listenning on port TCP 8000 ipv4 localhost address
     >>> j.sals.process.get_pid_by_port(8000)
+
+    # gets pid of the process listenning on port UDP 8000 ipv6 localhost address
+    >>> j.sals.process.get_pid_by_port(8000, ipv6=True, udp=True)
+
+    # Returns the psutil.Process object that is listening on the given port
+    >>> j.sals.process.get_process_by_port(8000, ipv6=True, udp=True)
+
+    # Get pids of process by a filter string and sort by cpu utilization descendingly
+    >>> j.sals.process.get_pids_filtered_sorted('chrome', sort='%cpu', desc=True)
+
+    # Return a list of processes ID(s) matching the given name.
+    >>> j.sals.process.get_pids('code')
+
+    # Return a list of processes ID(s) matching the given name, including the result of matching againest the full command line.
+    >>> j.sals.process.get_pids('http.server', full_cmd_line=True)
+
+    # Return a list of processes ID(s) matching the given name, including any zombie processes
+    >>> j.sals.process.get_pids('python3', include_zombie=False)
+
+    # get processes info about top 3 processes which consumed the most memory
+    >>> j.sals.process.get_processes_info(limit=3)
+
+    # get processes info about top 3 processes which consumed the most cpu time
+    >>> j.sals.process.get_processes_info(sort='cpu_time', limit=3)
+
+    # get processes info about last process started
+    >>> j.sals.process.get_processes_info(sort='create_time', limit=1)
+
+    # get processes info sorted by pid ascending limited to 10 processes
+    >>> j.sals.process.get_processes_info(sort='pid', limit=10, desc=False)
+
+    # Kill a process and its children (including grandchildren) with SIGTERM and fallback to SIGKILL when needed
+    >>> j.sals.process.kill_proc_tree(20778, sure_kill=True)
+
+    # send SIGTERM to all processes spawned by a given process, but leave the process itself.
+    >>> j.sals.process.kill_proc_tree(20778, include_parent=False)
+
+    # Terminate a list of processes with a given list of pids, fallback to SIGKILL after 1 seconds.
+    >>> j.sals.process.kill_all_pids([3067, 7888, 10221], timeout=1, sure_kill=True)
+
+    # terminate a process that listen to a given tcp port on ipv4 address
+    >>> j.sals.process.kill_process_by_port(8000)
+
+    # terminate a process that listen to a given udp port on ipv6 address, fallback to SIGKILL after 3 sec
+    >>> j.sals.process.kill_process_by_port(8000, udp=True, ipv6=True, timeout=3, sure_kill=True)
+
+    # Terminate all processes owned by a given user name, fallback to SIGKILL when needed
+    >>> j.sals.process.kill_user_processes('sameh', sure_kill=True)
     ```
 """
 
