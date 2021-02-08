@@ -1,6 +1,4 @@
-"""Docs for nettools
-
-TODO
+"""This module contains a collection of functions which help in manage network connections and interfaceses.
 
 General Note on python socket operations:
     If you use a hostname in the host portion of IPv4/v6 socket address,the program may show a nondeterministic behavior,
