@@ -360,7 +360,7 @@ def get_pids_filtered_by_regex(regex_list):
     return res
 
 
-def check_start(cmd, filterstr, n_instances=1, retry=1, delay=0.5):
+def check_start(cmd, filterstr, n_instances=1, retry=1, timeout=2, delay=0.5):
     """Run command (possibly multiple times) and check if it is started based on filterstr
 
     Args:
@@ -368,6 +368,8 @@ def check_start(cmd, filterstr, n_instances=1, retry=1, delay=0.5):
         filterstr (str): Filter string. will match against against Process.name(), Process.exe() and Process.cmdline()
         n_instances (int, optional): Number of needed instances. Defaults to 1.
         retry (int, optional): Number of retries to execute the command and check. Defaults to 1.
+        timout (int, optional): how long the function should wait for process to finish (first or parnet process started with the command)
+        delay (int, optional): how long the function should delay the checking process after the process finished or timeout exceeded (in case the first process started another one).
 
     Raises:
         j.exceptions.Runtime: will be raised if we didn't reach number of required instances.
@@ -384,7 +386,7 @@ def check_start(cmd, filterstr, n_instances=1, retry=1, delay=0.5):
         j.logger.debug(f"name: {proc.name()}")
         j.logger.debug(f"exe: {proc.exe()}")
         try:
-            rc = proc.wait(timeout=1)  # makesure the process is stable
+            rc = proc.wait(timeout)  # makesure the process is stable
             if rc == 0:  # executing the command succeeded but exited immediately!
                 j.logger.debug("executing the start command succeeded but exited immediately")
             else:
@@ -393,9 +395,10 @@ def check_start(cmd, filterstr, n_instances=1, retry=1, delay=0.5):
                 j.logger.debug(f"err: {error_output}")
             j.logger.debug(f"return code is: {rc}")
         except psutil.TimeoutExpired:
-            j.logger.debug("the start command still running after 1 sec")  # still running
-        else:
-            time.sleep(delay)
+            j.logger.debug("the start command still running after 2 sec")  # still running
+        # wait extra delay to allow any subprocess spawned from the process we just started to finish
+        # this may not needed in many cases
+        time.sleep(delay)
         # TODO check based on command
         if check_running(filterstr, min=n_instances):
             j.logger.debug(f"found at least {n_instances} instances using the filter string: {filterstr}")
@@ -407,7 +410,7 @@ def check_start(cmd, filterstr, n_instances=1, retry=1, delay=0.5):
     raise j.exceptions.Runtime("could not start the required number of instances.")
 
 
-def check_stop(cmd, filterstr, retry=1, n_instances=0, delay=0.5):
+def check_stop(cmd, filterstr, retry=1, n_instances=0, timeout=2, delay=0.5):
     """Executes a stop command (possibly multiple times) and check if it is already stopped based on filterstr
 
     Args:
@@ -415,6 +418,8 @@ def check_stop(cmd, filterstr, retry=1, n_instances=0, delay=0.5):
         filterstr (str): Filter string.
         retry (int, optional): Number of retries. Defaults to 1.
         n_inst (int, optional): Number of instances after stop. Defaults to 0.
+        timout (int, optional): how long the function should wait for process to finish (first or parnet process started with the command)
+        delay (int, optional): how long the function should delay the checking process after the process finished or timeout exceeded (in case the first process started another one).
 
     Raises:
         j.exceptions.Runtime: if number of instances not matched
@@ -432,7 +437,7 @@ def check_stop(cmd, filterstr, retry=1, n_instances=0, delay=0.5):
         j.logger.debug(f"name: {proc.name()}")
         j.logger.debug(f"exe: {proc.exe()}")
         try:
-            rc = proc.wait(timeout=5)  # makesure the process is stable
+            rc = proc.wait(timeout)  # makesure the process is stable
             # print(f'rc: {rc}')
             if rc == 0:
                 # executing the process succeeded but exited immediately!
@@ -443,9 +448,10 @@ def check_stop(cmd, filterstr, retry=1, n_instances=0, delay=0.5):
                 output, error_output = proc.communicate()
                 j.logger.debug(f"err: {error_output}")
         except psutil.TimeoutExpired:
-            j.logger.debug("the start command still running after 1 sec")  # still running
-        else:
-            time.sleep(delay)
+            j.logger.debug("the start command still running after 2 sec")  # still running
+        # wait extra delay to allow any subprocess spawned from the process we just started to finish
+        # this may not needed in many cases
+        time.sleep(delay)
         found = get_pids(filterstr)
         if len(found) == n_instances:
             j.logger.debug(
