@@ -36,8 +36,10 @@ class MongoStoreTests(BaseTests):
     def setUpClass(cls):
         cls.cmd = None
         if not j.sals.nettools.tcp_connection_test("127.0.0.1", MONGO_PORT, 1):
+            j.sals.fs.mkdir("/tmp/mongodb/")
+            j.sals.fs.mkdir("/tmp/mongodata/")
             cls.cmd = j.tools.startupcmd.get("test_mongo_store")
-            cls.cmd.start_cmd = "mongod --unixSocketPrefix=/run/mongodb --config /etc/mongodb.conf"
+            cls.cmd.start_cmd = "mongod --unixSocketPrefix=/tmp/mongodb --dbpath=/tmp/mongodata"
             cls.cmd.ports = [MONGO_PORT]
             cls.cmd.start()
         cls.factory = MongoStoredFactory(Student)
@@ -47,6 +49,8 @@ class MongoStoreTests(BaseTests):
         if cls.cmd:
             cls.cmd.stop(wait_for_stop=False)
             j.tools.startupcmd.delete("test_mongo_store")
+            j.sals.fs.rmtree("/tmp/mongodb/")
+            j.sals.fs.rmtree("/tmp/mongodata/")
 
     def tearDown(self):
         for instance in self.factory.list_all():
