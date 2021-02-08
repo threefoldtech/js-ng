@@ -2,11 +2,11 @@ import string
 from random import randint, uniform
 
 from jumpscale.core.base import Base, StoredFactory, fields
-from jumpscale.core.base.store import mongo
+from jumpscale.core.base.store import etcd
 from jumpscale.loader import j
 from tests.base_tests import BaseTests
 
-MONGO_PORT = 27017
+ETCD_PORT = 2379
 
 
 class Address(Base):
@@ -24,33 +24,29 @@ class Student(Base):
     address = fields.Object(Address)
 
 
-class MongoStoredFactory(StoredFactory):
-    STORE = mongo.MongoStore
+class EtcdStoredFactory(StoredFactory):
+    STORE = etcd.EtcdStore
 
 
-class MongoStoreTests(BaseTests):
+class EtcdStoreTests(BaseTests):
     def randstr(self):
         return j.data.idgenerator.nfromchoices(10, string.ascii_letters)
 
     @classmethod
     def setUpClass(cls):
         cls.cmd = None
-        if not j.sals.nettools.tcp_connection_test("127.0.0.1", MONGO_PORT, 1):
-            j.sals.fs.mkdir("/tmp/mongodb/")
-            j.sals.fs.mkdir("/tmp/mongodata/")
-            cls.cmd = j.tools.startupcmd.get("test_mongo_store")
-            cls.cmd.start_cmd = "mongod --unixSocketPrefix=/tmp/mongodb --dbpath=/tmp/mongodata"
-            cls.cmd.ports = [MONGO_PORT]
+        if not j.sals.nettools.tcp_connection_test("127.0.0.1", ETCD_PORT, 1):
+            cls.cmd = j.tools.startupcmd.get("test_etcd_store")
+            cls.cmd.start_cmd = "etcd --data-dir /tmp/tests/etcd"
+            cls.cmd.ports = [ETCD_PORT]
             cls.cmd.start()
-        cls.factory = MongoStoredFactory(Student)
+        cls.factory = EtcdStoredFactory(Student)
 
     @classmethod
     def tearDownClass(cls):
         if cls.cmd:
             cls.cmd.stop(wait_for_stop=False)
-            j.tools.startupcmd.delete("test_mongo_store")
-            j.sals.fs.rmtree("/tmp/mongodb/")
-            j.sals.fs.rmtree("/tmp/mongodata/")
+            j.tools.startupcmd.delete("test_etcd_store")
 
     def tearDown(self):
         for instance in self.factory.list_all():
@@ -103,7 +99,7 @@ class MongoStoreTests(BaseTests):
         **Test Scenario**
 
         - Create three instances.
-        - Check that the instance are stored in mongo.
+        - Check that the instance are stored in etcd.
         - List all instances and check that three instance found.
         """
         self.info("Create three instances.")

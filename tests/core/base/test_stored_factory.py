@@ -14,6 +14,7 @@ from parameterized import parameterized_class
 from jumpscale.loader import j
 
 REDIS_PORT = 6379
+MONGO_PORT = 27017
 ETCD_PORT = 2379
 
 
@@ -131,10 +132,20 @@ class TestStoredFactory(unittest.TestCase):
         if issubclass(cls.factory_class, RedisFactory) and not j.sals.nettools.tcp_connection_test(
             "127.0.0.1", REDIS_PORT, 1
         ):
-            cls.cmd = j.tools.startupcmd.get("test_store_factory")
+            cls.cmd = j.tools.startupcmd.get("test_redis_store")
             cls.cmd.start_cmd = "redis-server"
             cls.cmd.ports = [REDIS_PORT]
             cls.cmd.start()
+        elif issubclass(cls.factory_class, MongoFactory) and not j.sals.nettools.tcp_connection_test(
+            "127.0.0.1", MONGO_PORT, 1
+        ):
+            j.sals.fs.mkdir("/tmp/mongodb/")
+            j.sals.fs.mkdir("/tmp/mongodata/")
+            cls.cmd = j.tools.startupcmd.get("test_mongo_store")
+            cls.cmd.start_cmd = "mongod --unixSocketPrefix=/tmp/mongodb --dbpath=/tmp/mongodata"
+            cls.cmd.ports = [MONGO_PORT]
+            cls.cmd.start()
+
         elif issubclass(cls.factory_class, EtcdFactory) and not j.sals.nettools.tcp_connection_test(
             "127.0.0.1", ETCD_PORT, 1
         ):
@@ -147,8 +158,14 @@ class TestStoredFactory(unittest.TestCase):
     def tearDownClass(cls):
         if cls.cmd:
             cls.cmd.stop(wait_for_stop=False)
-            j.tools.startupcmd.delete("test_store_factory")
-            j.tools.startupcmd.delete("test_etcd_store")
+            if issubclass(cls.factory_class, RedisFactory):
+                j.tools.startupcmd.delete("test_redis_store")
+            elif issubclass(cls.factory_class, MongoFactory):
+                j.tools.startupcmd.delete("test_mongo_store")
+                j.sals.fs.rmtree("/tmp/mongodb/")
+                j.sals.fs.rmtree("/tmp/mongodata/")
+            elif issubclass(cls.factory_class, EtcdFactory):
+                j.tools.startupcmd.delete("test_etcd_store")
 
     def setUp(self):
         self.factory = self.factory_class(Client)
