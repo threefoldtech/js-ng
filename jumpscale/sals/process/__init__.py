@@ -722,6 +722,29 @@ def kill_process_by_name(process_name, sig=signal.SIGTERM, match_predicate=None,
     return failed_processes or None  # return None if the failed list is empty
 
 
+def kill_all_pids(pids, sig=signal.SIGTERM, timeout=5, sure_kill=False):
+    """Kill all processes with given pids.
+
+    Args:
+        pids (list of int): The target processes IDs.
+        sig (signal, optional): See signal module constants. Defaults to signal.SIGKILL.
+        timeout (int, optional): How long to wait for a process to terminate (seconds) before raise exception\
+            or, if sure_kill=True, send a SIGKILL. Defaults to 5.
+        sure_kill (bool, optional): Whether to fallback to SIGKILL if the timeout exceeded for the terminate operation or not. Defaults to False.
+
+
+    Returns:
+        None or list of int: represents the IDs of the processes remaning alive.
+    """
+    failed_processes = []
+    for pid in pids:
+        try:
+            kill(pid, sig, timeout=timeout, sure_kill=sure_kill)
+        except (j.exceptions.Runtime, j.exceptions.Permission):
+            failed_processes.append(pid)
+    return failed_processes or None  # return None if the failed list is empty
+
+
 def kill_process_by_port(port, ipv6=False, udp=False, sig=signal.SIGTERM, timeout=5, sure_kill=False):
     """Kill process by port.
 
