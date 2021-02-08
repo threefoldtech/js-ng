@@ -171,7 +171,7 @@ def kill(proc, sig=signal.SIGTERM, timeout=5, sure_kill=False):
     Args:
         proc (int or psutil.Process): Target process ID (PID) or psutil.Process object.
         sig (signal, optional): See signal module constants. Defaults to signal.SIGTERM.
-        timeout (int, optional): How long to wait for a process to terminate (seconds) before raise exception\
+        timeout (int, optional): How long to wait for a process to terminate (seconds) before raise exception
             or, if sure_kill=True, send a SIGKILL. Defaults to 5.
         sure_kill (bool, optional): Whether to fallback to SIGKILL if the timeout exceeded for the terminate operation or not. Defaults to False.
 
@@ -232,8 +232,7 @@ def ps_find(process_name):
     """Check if there is any running process that match the given name.
 
     Args:
-        process_name (str): The target process name. will match against against Process.name(),\
-            Process.exe() and Process.cmdline()
+        process_name (str): The target process name. will match against against Process.name(), Process.exe() and Process.cmdline()
 
     Returns:
         bool: True if process is found, False otherwise.
@@ -244,12 +243,14 @@ def ps_find(process_name):
 def kill_all(process_name, sig=signal.SIGKILL):
     """Kill all processes that match 'process_name'.
 
+    use kill_process_by_name is preferred.
+
     Args:
         process_name (str): The target process name
         sig (signal, optional): See signal module constants. Defaults to signal.SIGKILL
 
     Returns:
-        None or list[int] represents the IDs of the processes remaning alive.
+        None or list of int: a list represents the IDs of the processes remaning alive, otherwise None.
     """
     # XXX kill default to SIGTERM while kill_all default to SIGKILL (inconsistency)?
     # XXX almost like kill_process_by_name
@@ -262,7 +263,7 @@ def get_pids_filtered_sorted(filterstr, sortkey=None, desc=False):
 
     Args:
         filterstr (str): filter string.
-        sortkey (str, optional): Defaults to None. (if no sortkey used it will sort by pid(s) ascending).
+        sortkey (str, optional): Defaults to None. (if no sortkey used it will sort by pid(s) in ascending order).
             sortkey can be one of the following:
             %cpu           cpu utilization of the process in
             %mem           ratio of the process's resident set size  to the physical memory on the machine, expressed as a percentage.
@@ -276,10 +277,10 @@ def get_pids_filtered_sorted(filterstr, sortkey=None, desc=False):
             ppid           parent process ID.
             psr            processor that process is currently assigned to.
             start_time     starting time or date of the process.
-        desc: (bool, optional): Defaults to False.
+        desc: (bool, optional): Whether to sort the processes in descending order or not(asc). Defaults to False (asc).
 
     Returns:
-        list(int): processes pids
+        list of int: list of the processes IDs
     """
     ps_to_psutil_map = {
         "%cpu": "cpu_percent",
@@ -302,14 +303,14 @@ def get_pids_filtered_sorted(filterstr, sortkey=None, desc=False):
 
 
 def get_filtered_pids(filterstr, excludes=None):
-    """Get pids filtered by filterstr and excludes
+    """Get pids filtered by filterstr and excludes, matching against the full command line used to start the process.
 
     Args:
         filterstr (str): the String to filter based on.
         excludes (list[str]): exclude list. Defaults to None.
 
     Returns:
-        list[int]: list of pids
+        list of int: list of the processes IDs
     """
     pids = []
     try:
@@ -342,13 +343,13 @@ def get_filtered_pids(filterstr, excludes=None):
 
 
 def get_pids_filtered_by_regex(regex_list):
-    """Get pids of a process filtered by Regex list
+    """Get pids of a process filtered by Regex list, matching against the full command line used to start the process.
 
     Args:
         regex_list (list[str]): List of regex expressions.
 
     Returns:
-        list(int): List of pids.
+        list of int: List of the processes IDs.
     """
     res = []
     for process in psutil.process_iter(attrs=["cmdline"]):
@@ -365,8 +366,7 @@ def check_start(cmd, filterstr, n_instances=1, retry=1, delay=0.5):
 
     Args:
         cmd (str or list of str): Command to be executed.
-        filterstr (str): Filter string. will match against against Process.name(),\
-            Process.exe() and Process.cmdline()
+        filterstr (str): Filter string. will match against against Process.name(), Process.exe() and Process.cmdline()
         n_instances (int, optional): Number of needed instances. Defaults to 1.
         retry (int, optional): Number of retries to execute the command and check. Defaults to 1.
 
@@ -465,27 +465,24 @@ def check_stop(cmd, filterstr, retry=1, n_instances=0, delay=0.5):
 
 
 def get_pids(process_name, match_predicate=None, limit=0, _alt_source=None, include_zombie=False, full_cmd_line=False):
-    """Return a list of processes ID(s) matching 'process_name'.
+    """Return a list of processes ID(s) matching a given process name.
 
     Function will check string against Process.name(), Process.exe() and Process.cmdline()
 
     Args:
         process_name (str): The target process name
-        match_predicate (callable, optional): Function that does matching between\
-            found processes and the targeted process, the function should accept\
-            two arguments and return a boolean. Defaults to None.
-        limit (int, optional): If not equal to 0, function will return as fast as the number\
-            of PID(s) found become equal to `limit` value.
-        _alt_source(callable or iterable, optional): Can be used to specify an alternative source\
-            of the psutil.Process objects to match against.
+        match_predicate (callable, optional): Function that does matching between found processes and the targeted process.
+            the function should accept two arguments and return a boolean. Defaults to None.
+        limit (int, optional): If not equal to 0, function will return as fast as the number of PID(s) found become equal to `limit` value.
+        _alt_source(callable or iterable, optional): Can be used to specify an alternative source of the psutil.Process objects to match against.
             ex: get_user_processes func, or get_similar_processes.
             if not specified, psutil.process_iter will be used. Defaults to None.
         include_zombie (bool, optional): Whether to include pid for zombie proccesses or not. Defaults to False.
         full_cmd_line (bool, optional): The pattern is normally only matched against the process name.
-            When full_cmd_line is set to True, the full command line is used. Defaults to False.
+            if full_cmd_line is set to True, the full command line is used. Defaults to False.
 
     Returns:
-        list[int]: list of PID(s)
+        list of int: list of PID(s)
     """
     # default match predicate
     def default_predicate(target, given):
@@ -585,7 +582,7 @@ def kill_user_processes(user, sure_kill=False):
         sure_kill (bool, optional): Whether to fallback to SIGKILL if the timeout exceeded for the terminate operation or not. Defaults to False.
 
     Returns:
-        (list[psutil.Process] or None): list of process objects that remain alive if any. None otherwise.
+        list of psutil.Process or None): list of process objects that remain alive if any. None otherwise.
     """
     failed_processes = []
     for proc in get_user_processes(user):
@@ -607,10 +604,11 @@ def get_similar_processes(target_proc=None):
     """Gets similar processes to current process, started with same command line and same options.
 
     Args:
-        target_proc (int or psutil.Process, optional): pid, or psutil.Process object,\
-             if None then pid for current process will be used. Defaults to None.
-    Returns:
-        list[psutil.Process] -- list of similar process
+        target_proc (int or psutil.Process, optional): pid, or psutil.Process object.
+            if None then pid for current process will be used. Defaults to None.
+
+    Yields:
+        psutil.Process: psutil.Process object for all processes similar to a given process.
     """
     try:
         if target_proc is None:
@@ -663,6 +661,7 @@ def set_env_var(var_names, var_values):
     Args:
         var_names list[str]: A list of the names of all the environment variables to set
         varvalues list[str]: A list of all values for the environment variables
+
     Raises:
         j.exceptions.RuntimeError: if error happened during setting the environment variables
     """
@@ -699,9 +698,12 @@ def kill_process_by_name(process_name, sig=signal.SIGTERM, match_predicate=None,
         match_predicate (callable, optional): Function that does matching between\
             found processes and the targeted process, the function should accept\
             two arguments and return a boolean. Defaults to None.
+        timeout (int, optional): How long to wait for a process to terminate (seconds) before raise exception\
+            or, if sure_kill=True, send a SIGKILL. Defaults to 5.
+        sure_kill (bool, optional): Whether to fallback to SIGKILL if the timeout exceeded for the terminate operation or not. Defaults to False.
 
     Returns:
-        None or list[int] represents the IDs of the processes remaning alive.
+        None or list of int: represents the IDs of the processes remaning alive.
     """
     pids = get_pids(process_name, match_predicate=match_predicate)
     failed_processes = []
@@ -742,7 +744,6 @@ def is_port_listening(port, ipv6=False):
     Returns:
         bool: True if port is used, False otherwise.
     """
-    # XXX only support ipv4, also it apparently used to pick a free port, any way using nettools is preferred
     from jumpscale.sals import nettools
 
     ip6 = "::"
@@ -788,7 +789,7 @@ def get_defunct_processes():
     """Gets defunct (zombie) processes.
 
     Returns:
-        list[int]: List of processes ID(s).
+        list of int: List of processes ID(s).
     """
     zombie_pids = []
     for proc in psutil.process_iter():
