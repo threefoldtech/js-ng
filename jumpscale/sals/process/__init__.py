@@ -579,11 +579,13 @@ def get_user_processes(user):
         pass
 
 
-def kill_user_processes(user, sure_kill=False):
+def kill_user_processes(user, sig=signal.SIGTERM, timeout=5, sure_kill=False):
     """Kill all processes for a specific user.
 
     Args:
         user (str): The user name to match against.
+        sig (signal, optional): See signal module constants. Defaults to signal.SIGTERM.
+        timeout (int, optional): How long to wait for a process to terminate (seconds) before raise exception or, if sure_kill=True, send a SIGKILL. Defaults to 5.
         sure_kill (bool, optional): Whether to fallback to SIGKILL if the timeout exceeded for the terminate operation or not. Defaults to False.
 
     Returns:
@@ -592,7 +594,7 @@ def kill_user_processes(user, sure_kill=False):
     failed_processes = []
     for proc in get_user_processes(user):
         try:
-            kill(proc, sure_kill=sure_kill)
+            kill(proc, sig=sig, timeout=timeout, sure_kill=sure_kill)
         except (j.exceptions.Runtime, j.exceptions.Permission) as e:
             j.logger.exception("ignoring an exception that occurred while iterating over user processes", exception=e)
             failed_processes.append(proc)
