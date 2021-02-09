@@ -310,32 +310,26 @@ def get_filtered_pids(filterstr, excludes=None):
         list of int: list of the processes IDs
     """
     pids = []
-    try:
-        for proc in psutil.process_iter(["name", "cmdline"]):
-            cmd_line = " ".join(proc.info["cmdline"])
-            if proc.info["cmdline"] and filterstr in cmd_line:
-                j.logger.debug(f"found filter string: {filterstr} in command line: {cmd_line}")
-                if excludes:
-                    for exclude in excludes:
-                        if exclude in cmd_line:
-                            j.logger.debug(
-                                f"but excluded because it contain exclude string: {exclude} in command line: {cmd_line}"
-                            )
-                            break
-                    else:  # intended `for/else` meaning for loop finished normally with no break
-                        pids.append(proc.pid)  # may yield proc instead
-                    continue
-                else:
+    for proc in psutil.process_iter(["name", "cmdline"]):
+        cmd_line = " ".join(proc.info["cmdline"])
+        if proc.info["cmdline"] and filterstr in cmd_line:
+            j.logger.debug(f"found filter string: {filterstr} in command line: {cmd_line}")
+            if excludes:
+                for exclude in excludes:
+                    if exclude in cmd_line:
+                        j.logger.debug(
+                            f"but excluded because it contain exclude string: {exclude} in command line: {cmd_line}"
+                        )
+                        break
+                else:  # intended `for/else` meaning for loop finished normally with no break
                     pids.append(proc.pid)  # may yield proc instead
-        j.logger.debug(
-            f"founded pids are: {pids}"
-            if pids
-            else f"filter string {filterstr} not found in any processes. root needed?"
-        )
-        return pids
-    except (psutil.AccessDenied, psutil.NoSuchProcess) as e:
-        j.logger.exception("exception occurred while iterating over the system processes", exception=e)
-        pass
+                continue
+            else:
+                pids.append(proc.pid)  # may yield proc instead
+    j.logger.debug(
+        f"founded pids are: {pids}" if pids else f"filter string {filterstr} not found in any processes. root needed?"
+    )
+    return pids
 
 
 def get_pids_filtered_by_regex(regex_list):
