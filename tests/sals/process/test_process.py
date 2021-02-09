@@ -501,8 +501,7 @@ class ProcessTests(BaseTests):
         self.assertTrue(j.sals.process.is_alive(pids[0]))
 
         self.info("Kill the process.")
-        killed = j.sals.process.kill(pids[0])
-        self.assertTrue(killed)
+        j.sals.process.kill(pids[0])
         sleep(1)
 
         self.info("Check that the process has been killed.")
