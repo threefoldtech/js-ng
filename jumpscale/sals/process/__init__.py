@@ -399,7 +399,7 @@ def check_start(cmd, filterstr, n_instances=1, retry=1, timeout=2, delay=0.5):
         # TODO check based on command
         if check_running(filterstr, min=n_instances):
             j.logger.debug(f"found at least {n_instances} instances using the filter string: {filterstr}")
-            return True  # XXX should remove? None
+            return
         else:
             j.logger.debug(f"the required number of instances using the filter string: {filterstr} not found yet!")
             continue
