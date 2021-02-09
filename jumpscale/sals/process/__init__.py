@@ -454,7 +454,7 @@ def check_stop(cmd, filterstr, retry=1, n_instances=0, timeout=2, delay=0.5):
             j.logger.debug(
                 f"the required {n_instances} matching the instances found using the filter string: {filterstr}"
             )
-            return True  # should remove? None
+            return
         else:
             j.logger.debug(
                 f"the required {n_instances} not matching the instances number found using the filter string: {filterstr} yet"
