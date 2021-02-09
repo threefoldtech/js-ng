@@ -178,22 +178,19 @@ def kill(proc, sig=signal.SIGTERM, timeout=5, sure_kill=False):
     Raises:
         j.exceptions.Runtime: In case killing the process failed.
         j.exceptions.Permission: In case the permission to perform this action is denied.
-
-    Returns:
-        None
     """
     try:
         if isinstance(proc, int):
             proc = get_process_object(proc)
         if proc.status() == psutil.STATUS_ZOMBIE:
-            return True
+            return
         proc.send_signal(sig)
         # Wait for a process to terminate
         # If PID no longer exists return None immediately
         # If timeout exceeded and the process is still alive raise TimeoutExpired exception
         proc.wait(timeout=timeout)
         j.logger.debug(f"the process with PID: {proc.pid} was terminated with sig: {sig}.")
-        return True  # XXX only to pass current tests
+        return
     except psutil.TimeoutExpired as e:
         # timeout expires and process is still alive.
         if sure_kill and sig != signal.SIGKILL and os.name != "nt":
@@ -209,12 +206,12 @@ def kill(proc, sig=signal.SIGTERM, timeout=5, sure_kill=False):
                     j.logger.debug(
                         f"the process with PID: {proc.pid} becomes a zombie and should be considered a dead."
                     )
-                    return True
+                    return
                 # the process may be in an uninterruptible sleep
                 j.logger.debug("the process may be in an uninterruptible sleep.")
                 j.logger.warning(f"Could not kill the process with pid: {proc.pid} with {sig}. Timeout: {timeout}")
                 raise j.exceptions.Runtime(f"Could not kill process with pid {proc.pid}, {proc.status()}") from e
-            return True  # XXX only to pass current tests
+            return
         else:
             j.logger.warning(f"Could not kill the process with pid: {proc.pid} with {sig}. Timeout: {timeout}")
             raise j.exceptions.Runtime(f"Could not kill process with pid {proc.pid}") from e
@@ -225,7 +222,7 @@ def kill(proc, sig=signal.SIGTERM, timeout=5, sure_kill=False):
     except (psutil.ZombieProcess, psutil.NoSuchProcess):
         # Process no longer exists or Zombie (already dead)
         j.logger.debug("Process is no longer exists or a Zombie (already dead)")
-        return True
+        return
 
 
 def ps_find(process_name):
