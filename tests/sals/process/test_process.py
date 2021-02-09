@@ -450,10 +450,9 @@ class ProcessTests(BaseTests):
         self.assertEqual(process.name(), "python3")
 
         self.info("Kill the server by port.")
-        killed = j.sals.process.kill_process_by_port(port)
+        j.sals.process.kill_process_by_port(port)
 
         self.info("Check that the server pid is not exist.")
-        self.assertTrue(killed)
         pids = self.get_process_pids(PYTHON_SERVER_NAME, full=True)
         self.assertFalse(pids)
         self.assertFalse(j.sals.process.is_port_listening(port))
