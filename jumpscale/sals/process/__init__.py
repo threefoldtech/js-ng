@@ -594,7 +594,6 @@ def kill_user_processes(user, sig=signal.SIGTERM, timeout=5, sure_kill=False):
     if failed_processes:
         gone, failed_processes = psutil.wait_procs(failed_processes, timeout=0)
 
-    j.logger.debug(f"stay alive: {len(failed_processes)}, pids -> {[p.pid for p in failed_processes]}")
     return failed_processes or None  # return None if the failed list is empty
 
 
