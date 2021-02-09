@@ -634,18 +634,21 @@ def check_process_for_pid(pid, process_name):
 def set_env_var(var_names, var_values):
     """Set the value of the environment variables {varnames}. Existing variable are overwritten
 
+    Such changes to the environment affect subprocesses started with os.system(), popen() or fork() and execv()
+
     Args:
-        var_names list[str]: A list of the names of all the environment variables to set
-        varvalues list[str]: A list of all values for the environment variables
+        var_names (list of str): A list of the names of all the environment variables to set
+        varvalues (list of str): A list of all values for the environment variables
 
     Raises:
         j.exceptions.RuntimeError: if error happened during setting the environment variables
     """
-    try:
-        for i in range(len(var_names)):
-            os.environ[var_names[i]] = str(var_values[i]).strip()
-    except Exception as e:
-        raise j.exceptions.RuntimeError(e)
+    # XXX Note:
+    # On some platforms, including FreeBSD and Mac OS X, setting environ may cause memory leaks.
+    # https://docs.python.org/3/library/os.html?highlight=os%20environ#os.environ
+    # Refer to the system documentation for putenv().
+    for i in range(len(var_names)):
+        os.environ[var_names[i]] = str(var_values[i]).strip()
 
 
 def get_pid_by_port(port, ipv6=False, udp=False):
