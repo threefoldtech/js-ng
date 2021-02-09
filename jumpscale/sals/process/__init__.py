@@ -286,7 +286,7 @@ def get_filtered_pids(filterstr, excludes=None):
         excludes (list[str]): exclude list. Defaults to None.
 
     Returns:
-        list of int: list of the processes IDs
+        list of int: List of the processes IDs
     """
     pids = []
     for proc in psutil.process_iter(["name", "cmdline"]):
@@ -457,7 +457,7 @@ def get_pids(process_name, match_predicate=None, limit=0, _alt_source=None, incl
             if full_cmd_line is set to True, the full command line is used. Defaults to False.
 
     Returns:
-        list of int: list of PID(s)
+        list of int: List of the processes IDs.
     """
     # default match predicate
     def default_predicate(target, given):
@@ -502,7 +502,7 @@ def get_my_process():
     """Get psutil.Process object of the current process.
 
     Returns:
-        (psutil.Process): psutil.Process object of the current process.
+        psutil.Process: Process object of the current process.
     """
     return get_process_object(os.getpid(), die=True)
 
@@ -520,7 +520,7 @@ def get_process_object(pid, die=False):
         psutil.AccessDenied: If permission denied.
 
     Returns:
-        psutil.Process or None: psutil.Process object if he given PID is found, None otherwise.
+        psutil.Process or None: The Process object of the given PID if found, otherwise None, if die set to False.
     """
     try:
         return psutil.Process(pid)
@@ -660,7 +660,7 @@ def get_pid_by_port(port, ipv6=False, udp=False):
         udp (bool, optional): Whether to search the connections for UDP port instead of TCP. Defaults to False.
 
     Returns:
-        (int or None): Process ID that listen on that port
+        int or None: PID for the proceses that listen on that port.
     """
 
     process = get_process_by_port(port, ipv6=ipv6, udp=udp)
@@ -682,7 +682,7 @@ def kill_process_by_name(process_name, sig=signal.SIGTERM, match_predicate=None,
         sure_kill (bool, optional): Whether to fallback to SIGKILL if the timeout exceeded for the terminate operation or not. Defaults to False.
 
     Returns:
-        None or list of int: represents the IDs of the processes remaning alive.
+        None or list of int: a list of PIDs that represents the processes remaning alive if any, otherwise None.
     """
     pids = get_pids(process_name, match_predicate=match_predicate)
     failed_processes = []
@@ -1022,7 +1022,7 @@ def kill_proc_tree(
         sure_kill (bool, optional): Whether to fallback to SIGKILL if the timeout exceeded for the terminate operation or not. Defaults to False.
 
     Returns:
-        (list[psutil.Process] or None): list of process objects that remain alive if any. None otherwise.
+        list of psutil.Process or None: list of process objects that remain alive if any. None otherwise.
     """
     if isinstance(parent, int):
         parent = get_process_object(parent)
