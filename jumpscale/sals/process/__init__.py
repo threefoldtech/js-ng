@@ -26,9 +26,6 @@ Examples:
     # kill a process with pid 10022 with SIGTERM, wait 3 seconds for it to disappear, then if still alive kill it with SIGKILL
     >>> j.sals.process.kill(10022, timeout=3, sure_kill=True)
 
-    # Kill all processes that match the given name with a SIGTERM
-    >>> j.sals.process.kill_all('tail', sig=signal.SIGTERM)
-
     # Check if there is any running process that match the given name.
     >>> j.sals.process.ps_find('python3')
 
@@ -235,24 +232,6 @@ def ps_find(process_name):
         bool: True if process is found, False otherwise.
     """
     return len(get_pids(process_name, limit=1)) == 1
-
-
-def kill_all(process_name, sig=signal.SIGKILL):
-    """Kill all processes that match 'process_name'.
-
-    use kill_process_by_name is preferred.
-
-    Args:
-        process_name (str): The target process name
-        sig (signal, optional): See signal module constants. Defaults to signal.SIGKILL
-
-    Returns:
-        None or list of int: a list represents the IDs of the processes remaning alive, otherwise None.
-    """
-    # XXX kill default to SIGTERM while kill_all default to SIGKILL (inconsistency)?
-    # XXX almost like kill_process_by_name
-    failed_processes = kill_process_by_name(process_name, sig)
-    return failed_processes
 
 
 def get_pids_filtered_sorted(filterstr, sortkey=None, desc=False):
