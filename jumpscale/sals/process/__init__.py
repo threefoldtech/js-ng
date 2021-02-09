@@ -902,14 +902,16 @@ def get_processes_info(user=None, sort="mem", filterstr=None, limit=25, desc=Tru
 
     processes_list = []
     if not filterstr:
-        p_source = get_processes() if not user else get_user_processes(user=user)
+        if user:
+            p_source = get_user_processes(user=user)
+        else:
+            p_source = get_processes()
     else:
         # XXX it makes sense that get_pids func should returns list of psutil.Process objects instead of list of pids
-        p_source = (
-            map(get_process_object, get_pids(process_name=filterstr))
-            if not user
-            else map(get_process_object, get_pids(process_name=filterstr, _alt_source=get_user_processes(user)))
-        )
+        if user:
+            p_source = map(get_process_object, get_pids(process_name=filterstr, _alt_source=get_user_processes(user)))
+        else:
+            p_source = map(get_process_object, get_pids(process_name=filterstr))
     for proc in p_source:
         try:
             # Fetch process details as dict
