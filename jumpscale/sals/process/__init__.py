@@ -178,7 +178,7 @@ def kill(proc, sig=signal.SIGTERM, timeout=5, sure_kill=False):
     """
     try:
         if isinstance(proc, int):
-            proc = get_process_object(proc)
+            proc = get_process_object(proc, die=True)
         if proc.status() == psutil.STATUS_ZOMBIE:
             return
         proc.send_signal(sig)
@@ -504,16 +504,16 @@ def get_my_process():
     Returns:
         (psutil.Process): psutil.Process object of the current process.
     """
-    return get_process_object(os.getpid())
+    return get_process_object(os.getpid(), die=True)
 
 
-def get_process_object(pid, die=True):
+def get_process_object(pid, die=False):
     """Get psutil.Process object of a given process ID (PID).
 
     Args:
         pid (int): Process ID (PID) to get
-        die (bool, optional): Whether to raise an exception if no process with the given PID is found in the \
-            current process list or not. Defaults to True.
+        die (bool, optional): Whether to raise an exception if no process with the given PID is found in the
+            current process list or not. Defaults to False.
 
     Raises:
         psutil.NoSuchProcess: If process with the given PID is not found and die set to True.
@@ -590,7 +590,7 @@ def get_similar_processes(target_proc=None):
         if target_proc is None:
             target_proc = get_my_process()
         elif isinstance(target_proc, int):
-            target_proc = get_process_object(target_proc)
+            target_proc = get_process_object(target_proc, die=True)
         for proc in psutil.process_iter(["name", "exe", "cmdline"]):
             if proc.info["cmdline"] and target_proc.cmdline() and proc.info["cmdline"] == target_proc.cmdline():
                 yield proc
@@ -885,45 +885,46 @@ def get_processes_info(user=None, sort="mem", filterstr=None, limit=25, desc=Tru
         else:
             p_source = map(get_process_object, get_pids(process_name=filterstr))
     for proc in p_source:
-        try:
-            # Fetch process details as dict
-            pinfo = proc.as_dict(
-                attrs=[
-                    "cpu_num",
-                    "cpu_percent",
-                    "cpu_times",
-                    "create_time",
-                    "gids",
-                    "memory_percent",
-                    "name",
-                    "pid",
-                    "ppid",
-                    "status",
-                    "uids",
-                    "username",
-                ]
-            )
-            pinfo["rss"] = proc.memory_info().rss / (
-                1024 * 1024
-            )  # the non-swapped physical memory a process has used in Mb
-            pinfo["cpu_time"] = sum(pinfo["cpu_times"][:2])  # cumulative, excluding children and iowait
-            pinfo["ports"] = []
+        if proc:  # in case a race condition happened, and get_process_object returned None
             try:
-                connections = proc.connections()  # need root
-            except (psutil.AccessDenied):
+                # Fetch process details as dict
+                pinfo = proc.as_dict(
+                    attrs=[
+                        "cpu_num",
+                        "cpu_percent",
+                        "cpu_times",
+                        "create_time",
+                        "gids",
+                        "memory_percent",
+                        "name",
+                        "pid",
+                        "ppid",
+                        "status",
+                        "uids",
+                        "username",
+                    ]
+                )
+                pinfo["rss"] = proc.memory_info().rss / (
+                    1024 * 1024
+                )  # the non-swapped physical memory a process has used in Mb
+                pinfo["cpu_time"] = sum(pinfo["cpu_times"][:2])  # cumulative, excluding children and iowait
+                pinfo["ports"] = []
+                try:
+                    connections = proc.connections()  # need root
+                except (psutil.AccessDenied):
+                    pass
+                else:
+                    if connections:
+                        for conn in connections:
+                            pinfo["ports"].append({"port": conn.laddr.port, "status": conn.status})
+                # Append dict to list
+                processes_list.append(pinfo)
+            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess) as e:
+                j.logger.exception(
+                    "ignoring and logging an exception that occurred while iterating over system processes, not root?",
+                    exception=e,
+                )
                 pass
-            else:
-                if connections:
-                    for conn in connections:
-                        pinfo["ports"].append({"port": conn.laddr.port, "status": conn.status})
-            # Append dict to list
-            processes_list.append(pinfo)
-        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess) as e:
-            j.logger.exception(
-                "ignoring and logging an exception that occurred while iterating over system processes, not root?",
-                exception=e,
-            )
-            pass
     # sort the processes list by sort_key
     sorted_processes = sorted(processes_list, key=_get_sort_key, reverse=desc)[:limit]
     return sorted_processes
@@ -996,7 +997,7 @@ def get_environ(pid):
     Returns:
         dict: dict of env variables
     """
-    proc = get_process_object(pid)
+    proc = get_process_object(pid, die=True)
     try:
         return proc.environ()
     except (psutil.AccessDenied, psutil.NoSuchProcess) as e:
@@ -1021,11 +1022,13 @@ def kill_proc_tree(
         (list[psutil.Process] or None): list of process objects that remain alive if any. None otherwise.
     """
     if isinstance(parent, int):
-        try:
-            parent = get_process_object(parent)
-        except (psutil.AccessDenied, psutil.NoSuchProcess):
-            return
+        parent = get_process_object(parent)
+        if parent is None:
+            return  # already die
 
+    # XXX should be checked on any killing function
+    # XXX here we first need to make sure taht `include_parent` is True
+    # XXX and/or better check inside the below for loop
     assert parent.pid != os.getpid(), "won't kill myself"
 
     processes = parent.children(recursive=include_grand_children)[::-1]
