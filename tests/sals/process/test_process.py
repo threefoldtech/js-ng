@@ -23,7 +23,7 @@ class ProcessTests(BaseTests):
     def tearDown(self):
         j.core.executors.tmux.kill_session(SESSION_NAME)
         if self.get_process_pids(TAIL_PROCESS_NAME):
-            j.sals.process.kill_all(TAIL_PROCESS_NAME)
+            j.sals.process.kill_process_by_name(TAIL_PROCESS_NAME)
 
         for user in self.user_to_clear:
             cmd = f"""sudo userdel  {user};
@@ -508,7 +508,7 @@ class ProcessTests(BaseTests):
         pids = j.sals.process.get_pids(TAIL_PROCESS_NAME)
         self.assertFalse(pids)
 
-    @parameterized.expand(["kill_all", "kill_user_processes", "kill_process_by_name"])
+    @parameterized.expand(["kill_user_processes", "kill_process_by_name"])
     @pytest.mark.admin
     def test_16_get_kill_user_process(self, kill_method):
         """Test case for getting and killing user process/ killall processes.
