@@ -8,6 +8,8 @@ import pytest
 from jumpscale.loader import j
 from parameterized import parameterized
 from tests.base_tests import BaseTests
+import subprocess
+import os
 
 SESSION_NAME = "testing"
 TAIL_PROCESS_NAME = "tail"
@@ -27,7 +29,8 @@ class ProcessTests(BaseTests):
 
         for user in self.user_to_clear:
             cmd = f"""sudo userdel  {user};
-            sudo rm -rf /home/{user}"""
+            sudo rm -rf /home/{user};
+            ps -o pid= -u {user}| xargs sudo kill"""
             j.sals.process.execute(cmd)
 
     def randstr(self):
@@ -510,6 +513,7 @@ class ProcessTests(BaseTests):
 
     @parameterized.expand(["kill_user_processes", "kill_process_by_name"])
     @pytest.mark.admin
+    @pytest.mark.skipif(os.getuid != 0, reason="requires root")
     def test_16_get_kill_user_process(self, kill_method):
         """Test case for getting and killing user process/ killall processes.
 
@@ -540,7 +544,7 @@ class ProcessTests(BaseTests):
 
         self.info("Start another tail process in tmux with new user.")
         cmd = f"sudo -u {username} {TAIL_PROCESS_NAME} -f {file_path}"
-        self.start_in_tmux(cmd)
+        subprocess.Popen(cmd.split(), stdout=subprocess.DEVNULL)
 
         self.info("Check that the process has been started.")
         cmd = f"ps -u {username} | grep tail | awk '{{ print $1 }}'"
