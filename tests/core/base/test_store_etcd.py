@@ -6,6 +6,7 @@ from jumpscale.core.base.store import etcd
 from jumpscale.loader import j
 from tests.base_tests import BaseTests
 
+HOST = "127.0.0.1"
 ETCD_PORT = 2379
 
 
@@ -35,11 +36,12 @@ class EtcdStoreTests(BaseTests):
     @classmethod
     def setUpClass(cls):
         cls.cmd = None
-        if not j.sals.nettools.tcp_connection_test("127.0.0.1", ETCD_PORT, 1):
+        if not j.sals.nettools.tcp_connection_test(HOST, ETCD_PORT, 1):
             cls.cmd = j.tools.startupcmd.get("test_etcd_store")
             cls.cmd.start_cmd = "etcd --data-dir /tmp/tests/etcd"
             cls.cmd.ports = [ETCD_PORT]
             cls.cmd.start()
+            assert j.sals.nettools.wait_connection_test(HOST, ETCD_PORT, 2) == True, "ETCD didn't start"
         cls.factory = EtcdStoredFactory(Student)
 
     @classmethod

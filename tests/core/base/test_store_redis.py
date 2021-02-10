@@ -6,6 +6,7 @@ from jumpscale.core.base.store import redis
 from jumpscale.loader import j
 from tests.base_tests import BaseTests
 
+HOST = "127.0.0.1"
 REDIS_PORT = 6379
 
 
@@ -35,11 +36,12 @@ class RedisStoreTests(BaseTests):
     @classmethod
     def setUpClass(cls):
         cls.cmd = None
-        if not j.sals.nettools.tcp_connection_test("127.0.0.1", REDIS_PORT, 1):
+        if not j.sals.nettools.tcp_connection_test(HOST, REDIS_PORT, 1):
             cls.cmd = j.tools.startupcmd.get("test_redis_store")
             cls.cmd.start_cmd = "redis-server"
             cls.cmd.ports = [REDIS_PORT]
             cls.cmd.start()
+            assert j.sals.nettools.wait_connection_test(HOST, REDIS_PORT, 2) == True, "Redis didn't start"
         cls.factory = RedisStore(Student)
 
     @classmethod

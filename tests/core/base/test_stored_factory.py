@@ -6,13 +6,16 @@ which makes sure every field is serialized correctly
 import unittest
 from enum import Enum
 
+from gevent import sleep
+from jumpscale.core.base import Base, DuplicateError, Factory, StoredFactory, fields
+from jumpscale.core.base.store import etcd, filesystem, mongo, redis, whooshfts
+from jumpscale.loader import j
+from parameterized import parameterized_class
+
 # TODO: move fields to fields or types module
 
-from jumpscale.core.base import Base, DuplicateError, Factory, StoredFactory, fields
-from jumpscale.core.base.store import filesystem, redis, whooshfts, mongo, etcd
-from parameterized import parameterized_class
-from jumpscale.loader import j
 
+HOST = "127.0.0.1"
 REDIS_PORT = 6379
 MONGO_PORT = 27017
 ETCD_PORT = 2379
@@ -129,15 +132,15 @@ class TestStoredFactory(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.cmd = None
-        if issubclass(cls.factory_class, RedisFactory) and not j.sals.nettools.tcp_connection_test(
-            "127.0.0.1", REDIS_PORT, 1
-        ):
+        if issubclass(cls.factory_class, RedisFactory) and not j.sals.nettools.tcp_connection_test(HOST, REDIS_PORT, 1):
             cls.cmd = j.tools.startupcmd.get("test_redis_store")
             cls.cmd.start_cmd = "redis-server"
             cls.cmd.ports = [REDIS_PORT]
             cls.cmd.start()
+            assert j.sals.nettools.wait_connection_test(HOST, REDIS_PORT, 2) == True, "Redis didn't start"
+
         elif issubclass(cls.factory_class, MongoFactory) and not j.sals.nettools.tcp_connection_test(
-            "127.0.0.1", MONGO_PORT, 1
+            HOST, MONGO_PORT, 1
         ):
             j.sals.fs.mkdir("/tmp/mongodb/")
             j.sals.fs.mkdir("/tmp/mongodata/")
@@ -145,14 +148,15 @@ class TestStoredFactory(unittest.TestCase):
             cls.cmd.start_cmd = "mongod --unixSocketPrefix=/tmp/mongodb --dbpath=/tmp/mongodata"
             cls.cmd.ports = [MONGO_PORT]
             cls.cmd.start()
+            assert j.sals.nettools.wait_connection_test(HOST, MONGO_PORT, 2) == True, "Mongodb didn't start"
 
-        elif issubclass(cls.factory_class, EtcdFactory) and not j.sals.nettools.tcp_connection_test(
-            "127.0.0.1", ETCD_PORT, 1
-        ):
+        elif issubclass(cls.factory_class, EtcdFactory) and not j.sals.nettools.tcp_connection_test(HOST, ETCD_PORT, 1):
             cls.cmd = j.tools.startupcmd.get("test_etcd_store")
             cls.cmd.start_cmd = "etcd --data-dir /tmp/tests/etcd"
             cls.cmd.ports = [ETCD_PORT]
             cls.cmd.start()
+            assert j.sals.nettools.wait_connection_test(HOST, ETCD_PORT, 2) == True, "ETCD didn't start"
+        sleep(1)
 
     @classmethod
     def tearDownClass(cls):
