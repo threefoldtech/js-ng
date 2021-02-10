@@ -536,10 +536,10 @@ def get_user_processes(user):
     """Get all process for a specific user.
 
     Args:
-        user (str): Te user name to match against.
+        user (str): The user name to match against.
 
     Yields:
-        psutil.Process: psutil.Process object for all processes owned by `user`.
+        psutil.Process: process object for all processes owned by `user`.
     """
     try:
         for process in psutil.process_iter(["name", "exe", "cmdline"]):
