@@ -6,6 +6,7 @@ from jumpscale.core.base.store import mongo
 from jumpscale.loader import j
 from tests.base_tests import BaseTests
 
+HOST = "127.0.0.1"
 MONGO_PORT = 27017
 
 
@@ -35,13 +36,14 @@ class MongoStoreTests(BaseTests):
     @classmethod
     def setUpClass(cls):
         cls.cmd = None
-        if not j.sals.nettools.tcp_connection_test("127.0.0.1", MONGO_PORT, 1):
+        if not j.sals.nettools.tcp_connection_test(HOST, MONGO_PORT, 1):
             j.sals.fs.mkdir("/tmp/mongodb/")
             j.sals.fs.mkdir("/tmp/mongodata/")
             cls.cmd = j.tools.startupcmd.get("test_mongo_store")
             cls.cmd.start_cmd = "mongod --unixSocketPrefix=/tmp/mongodb --dbpath=/tmp/mongodata"
             cls.cmd.ports = [MONGO_PORT]
             cls.cmd.start()
+            assert j.sals.nettools.wait_connection_test(HOST, MONGO_PORT, 2) == True, "Mongodb didn't start"
         cls.factory = MongoStoredFactory(Student)
 
     @classmethod
