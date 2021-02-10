@@ -216,7 +216,7 @@ def kill(proc, sig=signal.SIGTERM, timeout=5, sure_kill=False):
         # permission to perform an action is denied
         j.logger.warning("the permission is denied")
         raise j.exceptions.Permission("Permission to perform this action is denied!") from e
-    except (psutil.ZombieProcess, psutil.NoSuchProcess):
+    except psutil.NoSuchProcess:
         # Process no longer exists or Zombie (already dead)
         j.logger.debug("Process is no longer exists or a Zombie (already dead)")
         return
@@ -493,7 +493,7 @@ def get_pids(process_name, match_predicate=None, limit=0, _alt_source=None, incl
                 # return early if no need to iterate over all running process
                 if limit and len(pids) == limit:
                     return pids
-        except (psutil.ZombieProcess, psutil.AccessDenied, psutil.NoSuchProcess):
+        except psutil.Error:
             pass
     return pids
 
@@ -524,7 +524,7 @@ def get_process_object(pid, die=False):
     """
     try:
         return psutil.Process(pid)
-    except (psutil.ZombieProcess, psutil.AccessDenied, psutil.NoSuchProcess) as e:
+    except (psutil.AccessDenied, psutil.NoSuchProcess) as e:
         # when you query processess owned by another user, especially on macOS and Windows you may get AccessDenied exception
         if die:
             raise e
@@ -763,7 +763,9 @@ def get_process_by_port(port, ipv6=False, udp=False):
         udp (bool, optional): Whether to search the connections for UDP port instead of TCP. Defaults to False.
 
     Raises:
-        j.exceptions.Runtime: if the process is not accessible by the user, or no longer exists
+        j.exceptions.Runtime: pid is not retrievable.
+        j.exceptions.NotFound: if the process is no longer exists.
+        j.exceptions.Permission: if the process is not accessible by the user.
 
     Returns:
         psutil.Process: process object if found, otherwise None
@@ -781,11 +783,11 @@ def get_process_by_port(port, ipv6=False, udp=False):
                 if conn.pid:
                     return psutil.Process(conn.pid)
                 else:
-                    raise j.exceptions.Runtime("pid is not retrievable, root is needed?")
+                    raise j.exceptions.Runtime("pid is not retrievable, not root?")
         except psutil.NoSuchProcess:
-            raise j.exceptions.Runtime("Process is no longer exists")
+            raise j.exceptions.NotFound("Process is no longer exists")
         except psutil.AccessDenied:
-            raise j.exceptions.Runtime("Permission denied")
+            raise j.exceptions.Permission("Permission denied")
 
 
 def get_defunct_processes():
@@ -994,17 +996,19 @@ def get_environ(pid):
         pid (int): process pid
 
     Raises:
-        psutil.NoSuchProcess: if process with the given PID is not found and die set to True
-        psutil.AccessDenied: if permission denied
+        j.exceptions.NotFound: if the process is no longer exists.
+        j.exceptions.Permission: if the process is not accessible by the user.
 
     Returns:
         dict: dict of env variables
     """
-    proc = get_process_object(pid, die=True)
     try:
+        proc = get_process_object(pid, die=True)
         return proc.environ()
-    except (psutil.AccessDenied, psutil.NoSuchProcess) as e:
-        raise e
+    except psutil.NoSuchProcess:
+        raise j.exceptions.NotFound("Process is no longer exists")
+    except psutil.AccessDenied:
+        raise j.exceptions.Permission("Permission denied")
 
 
 def kill_proc_tree(
