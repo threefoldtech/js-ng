@@ -5,6 +5,7 @@ which makes sure every field is serialized correctly
 """
 import unittest
 from enum import Enum
+from gevent import sleep
 
 # TODO: move fields to fields or types module
 
@@ -13,6 +14,7 @@ from jumpscale.core.base.store import filesystem, redis, whooshfts, etcd
 from parameterized import parameterized_class
 from jumpscale.loader import j
 
+HOST = "127.0.0.1"
 REDIS_PORT = 6379
 ETCD_PORT = 2379
 
@@ -137,6 +139,8 @@ class TestStoredFactory(unittest.TestCase):
             cls.cmd.start_cmd = "etcd --data-dir /tmp/tests/etcd"
             cls.cmd.ports = [ETCD_PORT]
             cls.cmd.start()
+            assert j.sals.nettools.wait_connection_test(HOST, ETCD_PORT, 2) == True, "ETCD didn't start"
+        sleep(1)
 
     @classmethod
     def tearDownClass(cls):
