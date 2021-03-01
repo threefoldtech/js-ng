@@ -7,7 +7,7 @@ authors = ["xmonader <xmonader@gmail.com>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.6"
 pdoc3 = "^0.6.3"
 pytoml = "^0.1.21"
 secretconf = "^0.1.2"
