@@ -25,10 +25,10 @@ jobs:
             python-version: 3.8
             experimental: true
             name: Experimental build - latest Ubuntu
-          - python-version: 3.9
-            os: ubuntu-18.04
-            experimental: true
-            name: Experimental build - latest Python
+          #- python-version: 3.9
+          #  os: ubuntu-18.04
+          #  experimental: true
+          #  name: Experimental build - latest Python
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
@@ -39,6 +39,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y git python3-setuptools tmux redis net-tools
+          python -m pip install --upgrade pip
           python -m pip install poetry
       - name: Install
         run: |
