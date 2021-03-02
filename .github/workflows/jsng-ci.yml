@@ -39,7 +39,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y git python3-setuptools tmux redis net-tools
-          python -m pip --upgrade pip
+          python -m pip install --upgrade pip
           python -m pip install poetry
       - name: Install
         run: |
