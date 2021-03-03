@@ -38,11 +38,11 @@ jobs:
       - name: Gathering deps
         run: |
           sudo apt-get update
-          sudo apt-get install -y python${{ matrix.python-version }} git tmux redis net-tools
+          sudo apt-get install -y python${{ matrix.python-version }}
           sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python${{ matrix.python-version }} 1
+          sudo apt-get install -y python3-setuptools python3-pip git tmux redis net-tools
           sudo which python3
-          sudo python3 -m pip install --upgrade pip
-          sudo python3 -m pip install setuptools poetry
+          sudo python3 -m pip install poetry
       - name: Install
         run: |
           sudo poetry install
