@@ -39,14 +39,13 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y git python3-setuptools tmux redis net-tools
-          curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
+          curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | sudo python3 -
       - name: Install
         run: |
-          $HOME/.poetry/bin/poetry install
+          sudo poetry install
       - name: Generate coverage report and run tests
         run: |
-          sudo $HOME/.poetry/bin/poetry env use /home/runner/.cache/pypoetry/virtualenvs/*-py${{ matrix.python-version }}
-          sudo $HOME/.poetry/bin/poetry run python3 -m pytest tests -sv --cov=jumpscale --cov-report=xml
+          sudo run python3 -m pytest tests -sv --cov=jumpscale --cov-report=xml
       - name: Upload coverage to Codecov
         if: success()
         uses: codecov/codecov-action@v1
