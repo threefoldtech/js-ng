@@ -39,10 +39,10 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y git python3-setuptools tmux redis net-tools
-          curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | sudo python3 -
+          curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
       - name: Install
         run: |
-          sudo $HOME/.poetry/bin/poetry install
+          $HOME/.poetry/bin/poetry install
       - name: Generate coverage report and run tests
         run: |
           sudo $HOME/.poetry/bin/poetry run python3 -m pytest tests -sv --cov=jumpscale --cov-report=xml
