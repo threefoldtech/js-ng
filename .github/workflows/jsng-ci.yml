@@ -17,9 +17,14 @@ jobs:
       fail-fast: false
       # max-parallel: 9
       matrix:
-        os: [ubuntu-20.04]
+        os: [ubuntu-18.04]
         python-version: [3.6, 3.7, 3.8]
         experimental: [false]
+        include:
+          - os: ubuntu-20.04
+            python-version: 3.8
+            experimental: true
+            name: Experimental build - latest Ubuntu
           #- python-version: 3.9
           #  os: ubuntu-18.04
           #  experimental: true
@@ -34,13 +39,14 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y git python3-setuptools tmux redis net-tools
-          sudo pip3 install poetry
+          python -m pip install --upgrade pip
+          python -m pip install poetry
       - name: Install
         run: |
-          sudo poetry install
+          poetry install
       - name: Generate coverage report and run tests
         run: |
-          sudo poetry run python3 -m pytest tests -sv --cov=jumpscale --cov-report=xml
+          poetry run python3 -m pytest tests -sv --cov=jumpscale --cov-report=xml
       - name: Upload coverage to Codecov
         if: success()
         uses: codecov/codecov-action@v1
