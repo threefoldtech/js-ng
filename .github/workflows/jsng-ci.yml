@@ -37,12 +37,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Gathering deps
         run: |
-          sudo su
           sudo apt-get update
-          alias python3=$pythonLocation
           sudo apt-get install -y git python3-setuptools tmux redis net-tools
-          python3 -m pip install --upgrade pip
-          python3 -m pip install poetry
+          curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | sudo python3 -
       - name: Install
         run: |
           sudo poetry install
