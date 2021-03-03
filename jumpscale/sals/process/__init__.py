@@ -559,7 +559,7 @@ def kill_user_processes(user, sig=signal.SIGTERM, timeout=5, sure_kill=False):
         sure_kill (bool, optional): Whether to fallback to SIGKILL if the timeout exceeded for the terminate operation or not. Defaults to False.
 
     Returns:
-        list of psutil.Process or None): list of process objects that remain alive if any. None otherwise.
+        list of psutil.Process): list of process objects that remain alive if any.
     """
     failed_processes = []
     for proc in get_user_processes(user):
@@ -573,7 +573,7 @@ def kill_user_processes(user, sig=signal.SIGTERM, timeout=5, sure_kill=False):
     if failed_processes:
         gone, failed_processes = psutil.wait_procs(failed_processes, timeout=0)
 
-    return failed_processes or None  # return None if the failed list is empty
+    return failed_processes
 
 
 def get_similar_processes(target_proc=None):
@@ -682,7 +682,7 @@ def kill_process_by_name(process_name, sig=signal.SIGTERM, match_predicate=None,
         sure_kill (bool, optional): Whether to fallback to SIGKILL if the timeout exceeded for the terminate operation or not. Defaults to False.
 
     Returns:
-        None or list of int: a list of PIDs that represents the processes remaning alive if any, otherwise None.
+        list of int: represents the IDs of the processes remaning alive if any.
     """
     pids = get_pids(process_name, match_predicate=match_predicate)
     failed_processes = []
@@ -691,7 +691,7 @@ def kill_process_by_name(process_name, sig=signal.SIGTERM, match_predicate=None,
             kill(pid, sig, timeout=timeout, sure_kill=sure_kill)
         except (j.exceptions.Runtime, j.exceptions.Permission):
             failed_processes.append(pid)
-    return failed_processes or None  # return None if the failed list is empty
+    return failed_processes
 
 
 def kill_all_pids(pids, sig=signal.SIGTERM, timeout=5, sure_kill=False):
@@ -706,7 +706,7 @@ def kill_all_pids(pids, sig=signal.SIGTERM, timeout=5, sure_kill=False):
 
 
     Returns:
-        None or list of int: represents the IDs of the processes remaning alive.
+        list of int: represents the IDs of the processes remaning alive if any.
     """
     failed_processes = []
     for pid in pids:
@@ -714,7 +714,7 @@ def kill_all_pids(pids, sig=signal.SIGTERM, timeout=5, sure_kill=False):
             kill(pid, sig, timeout=timeout, sure_kill=sure_kill)
         except (j.exceptions.Runtime, j.exceptions.Permission):
             failed_processes.append(pid)
-    return failed_processes or None  # return None if the failed list is empty
+    return failed_processes
 
 
 def kill_process_by_port(port, ipv6=False, udp=False, sig=signal.SIGTERM, timeout=5, sure_kill=False):
@@ -1026,7 +1026,7 @@ def kill_proc_tree(
         sure_kill (bool, optional): Whether to fallback to SIGKILL if the timeout exceeded for the terminate operation or not. Defaults to False.
 
     Returns:
-        list of psutil.Process or None: list of process objects that remain alive if any. None otherwise.
+        list of psutil.Process: represents the objects of the processes remaning alive if any.
     """
     if isinstance(parent, int):
         parent = get_process_object(parent)
@@ -1052,7 +1052,7 @@ def kill_proc_tree(
     # making sure
     if failed:
         gone, failed = psutil.wait_procs(failed, timeout=0)
-    return failed or None
+    return failed
 
 
 def in_docker():
