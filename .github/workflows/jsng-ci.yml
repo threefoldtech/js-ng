@@ -47,8 +47,8 @@ jobs:
           PYTHON=$(which python)
           echo $PYTHON
           sudo update-alternatives --install /usr/bin/python3 python3 $PYTHON 1
-          sudo $POETRY install
-          sudo $POETRY run python3 -m pytest tests -sv --cov=jumpscale --cov-report=xml
+          sudo -H $POETRY install
+          sudo -H $POETRY run python3 -m pytest tests -sv --cov=jumpscale --cov-report=xml
       - name: Upload coverage to Codecov
         if: success()
         uses: codecov/codecov-action@v1
