@@ -44,6 +44,7 @@ jobs:
         run: |
           poetry install
       - name: Set python version for poetry
+        run: |
           POETRY=$(which poetry)
           echo $POETRY
           PYTHON=$(which python)
