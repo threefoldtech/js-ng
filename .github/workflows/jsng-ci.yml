@@ -44,20 +44,14 @@ jobs:
         run: |
           poetry config virtualenvs.in-project true
           poetry install
-      - name: Set python version for poetry
+      - name: Set default python version for root
         run: |
-          POETRY=$(which poetry)
-          echo $POETRY
           PYTHON=$(which python)
-          echo $PYTHON
           sudo update-alternatives --install /usr/bin/python3 python3 $PYTHON 1
       - name: Generate coverage report and run tests
         run: |
           POETRY=$(which poetry)
           echo $POETRY
-          PYTHON=$(which python)
-          echo $PYTHON
-          sudo update-alternatives --install /usr/bin/python3 python3 $PYTHON 1
           sudo $POETRY run python3 -m pytest tests -sv --cov=jumpscale --cov-report=xml
       - name: Upload coverage to Codecov
         if: success()
