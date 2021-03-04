@@ -42,7 +42,7 @@ jobs:
           python -m pip install poetry
       - name: Install
         run: |
-          poerty config virtualenvs.in-project true
+          poetry config virtualenvs.in-project true
           poetry install
       - name: Set python version for poetry
         run: |
