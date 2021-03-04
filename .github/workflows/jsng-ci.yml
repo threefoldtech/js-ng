@@ -47,7 +47,6 @@ jobs:
       - name: Generate coverage report and run tests
         run: |
           POETRY=$(which poetry)
-          echo $POETRY
           sudo $POETRY run python3 -m pytest tests -sv --cov=jumpscale --cov-report=xml
       - name: Upload coverage to Codecov
         if: success()
