@@ -475,19 +475,18 @@ def get_pids(process_name, match_predicate=None, limit=0, _alt_source=None, incl
             if not include_zombie and proc.status() == psutil.STATUS_ZOMBIE:
                 j.logger.debug(f"ignoring : {proc.pid} zombie process.")
                 continue
-            if (
-                (match_predicate(process_name, proc.info["name"]))
-                or (proc.info["exe"] and match_predicate(process_name, os.path.basename(proc.info["exe"])))
-                or (
-                    proc.info["cmdline"]
-                    and match_predicate(
-                        process_name,
-                        proc.info["cmdline"] if full_cmd_line else os.path.basename(proc.info["cmdline"][0]),
-                    )
-                )
-            ):
+
+            candidates = [proc.info["name"]]
+            if proc.info["exe"]:
+                candidates.append(os.path.basename(proc.info["exe"]))
+            if proc.info["cmdline"]:
+                if full_cmd_line:
+                    candidates.append(proc.info["cmdline"])
+                else:
+                    candidates.append(os.path.basename(proc.info["cmdline"][0]))
+
+            if any([match_predicate(process_name, candidate) for candidate in candidates]):
                 pids.append(proc.pid)
-                j.logger.debug(f"process {len(pids) }found: {proc.info}")
                 # return early if no need to iterate over all running process
                 if limit and len(pids) == limit:
                     return pids
@@ -1025,11 +1024,14 @@ def kill_proc_tree(
 
     Returns:
         list of psutil.Process: represents the objects of the processes remaning alive if any.
+
+    Raises:
+        AssertionError: in case the given `parent` is the current process
     """
     if isinstance(parent, int):
         parent = get_process_object(parent)
         if parent is None:
-            return  # already die
+            return  # already dead
 
     # should be checked on any killing function
     # here we first need to make sure taht `include_parent` is True
