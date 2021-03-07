@@ -1,6 +1,6 @@
 """This module execute process on system and manage them
 
-below are some examples of the functions included in this moduke (not all inclusive.):
+below are some examples of the functions included in this module (not all inclusive.):
 
 Examples:
     ```
@@ -85,12 +85,13 @@ Examples:
 
 import math
 import os
-import time
-import subprocess
-import shlex
 import re
+import shlex
 import signal
+import subprocess
+import time
 from collections import defaultdict
+
 import psutil
 from jumpscale.loader import j
 
@@ -187,7 +188,6 @@ def kill(proc, sig=signal.SIGTERM, timeout=5, sure_kill=False):
         # If timeout exceeded and the process is still alive raise TimeoutExpired exception
         proc.wait(timeout=timeout)
         j.logger.debug(f"the process with PID: {proc.pid} was terminated with sig: {sig}.")
-        return
     except psutil.TimeoutExpired as e:
         # timeout expires and process is still alive.
         if sure_kill and sig != signal.SIGKILL and os.name != "nt":
@@ -208,7 +208,6 @@ def kill(proc, sig=signal.SIGTERM, timeout=5, sure_kill=False):
                 j.logger.debug("the process may be in an uninterruptible sleep.")
                 j.logger.warning(f"Could not kill the process with pid: {proc.pid} with {sig}. Timeout: {timeout}")
                 raise j.exceptions.Runtime(f"Could not kill process with pid {proc.pid}, {proc.status()}") from e
-            return
         else:
             j.logger.warning(f"Could not kill the process with pid: {proc.pid} with {sig}. Timeout: {timeout}")
             raise j.exceptions.Runtime(f"Could not kill process with pid {proc.pid}") from e
@@ -219,7 +218,6 @@ def kill(proc, sig=signal.SIGTERM, timeout=5, sure_kill=False):
     except psutil.NoSuchProcess:
         # Process no longer exists or Zombie (already dead)
         j.logger.debug("Process is no longer exists or a Zombie (already dead)")
-        return
 
 
 def ps_find(process_name):
@@ -643,7 +641,7 @@ def set_env_var(var_names, var_values):
     Raises:
         j.exceptions.RuntimeError: if error happened during setting the environment variables
     """
-    # XXX Note:
+    # Note:
     # On some platforms, including FreeBSD and Mac OS X, setting environ may cause memory leaks.
     # https://docs.python.org/3/library/os.html?highlight=os%20environ#os.environ
     # Refer to the system documentation for putenv().
@@ -772,7 +770,7 @@ def get_process_by_port(port, ipv6=False, udp=False):
     """
     for conn in psutil.net_connections():  # TODO use kind parameter
         try:
-            # XXX should we check against ESTABLISHED status?
+            # should we check against ESTABLISHED status?
             # connection.status For UDP and UNIX sockets this is always going to be psutil.CONN_NONE
             if (
                 conn.laddr.port == port
@@ -884,7 +882,7 @@ def get_processes_info(user=None, sort="mem", filterstr=None, limit=25, desc=Tru
         else:
             p_source = get_processes()
     else:
-        # XXX it makes sense that get_pids func should returns list of psutil.Process objects instead of list of pids
+        # it makes sense that get_pids func should returns list of psutil.Process objects instead of list of pids
         if user:
             p_source = map(get_process_object, get_pids(process_name=filterstr, _alt_source=get_user_processes(user)))
         else:
@@ -1033,9 +1031,9 @@ def kill_proc_tree(
         if parent is None:
             return  # already die
 
-    # XXX should be checked on any killing function
-    # XXX here we first need to make sure taht `include_parent` is True
-    # XXX and/or better check inside the below for loop
+    # should be checked on any killing function
+    # here we first need to make sure taht `include_parent` is True
+    # and/or better check inside the below for loop
     assert parent.pid != os.getpid(), "won't kill myself"
 
     processes = parent.children(recursive=include_grand_children)[::-1]
