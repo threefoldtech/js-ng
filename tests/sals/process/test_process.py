@@ -1,4 +1,5 @@
 import string
+import getpass
 from math import ceil
 from random import randint
 from gevent import sleep
@@ -7,8 +8,10 @@ import pytest
 from jumpscale.loader import j
 from parameterized import parameterized
 from tests.base_tests import BaseTests
+import subprocess
+import os
 
-SESSION_NAME = "testing_process"
+SESSION_NAME = "testing"
 TAIL_PROCESS_NAME = "tail"
 PYTHON_SERVER_NAME = "http.server"
 HOST = "127.0.0.1"
@@ -22,11 +25,12 @@ class ProcessTests(BaseTests):
     def tearDown(self):
         j.core.executors.tmux.kill_session(SESSION_NAME)
         if self.get_process_pids(TAIL_PROCESS_NAME):
-            j.sals.process.kill_all(TAIL_PROCESS_NAME)
+            j.sals.process.kill_process_by_name(TAIL_PROCESS_NAME)
 
         for user in self.user_to_clear:
             cmd = f"""sudo userdel  {user};
-            sudo rm -rf /home/{user}"""
+            sudo rm -rf /home/{user};
+            ps -o pid= -u {user}| xargs sudo kill"""
             j.sals.process.execute(cmd)
 
     def randstr(self):
@@ -37,11 +41,28 @@ class ProcessTests(BaseTests):
         j.core.executors.tmux.execute_in_window(cmd, window_name, SESSION_NAME)
         sleep(1)
 
-    def get_process_pids(self, process_name):
-        cmd = f"ps -aux | grep '{process_name}' | grep -v grep | awk '{{ print $2 }}'"
+    def get_process_pids(self, process_name, full=False, user=None, exact=True):
+        self.info(f"user name: {process_name}")
+        options = []
+        if full:
+            options.append("-f")
+        if exact and not full:
+            options.append("-x")
+        if user:
+            options.append(f"-u {user}")
+        cmd = f"pgrep {' '.join(options)} '{process_name}'"
         rc, output, error = j.sals.process.execute(cmd)
-        self.assertFalse(rc, error)
-        pids = list(map(int, output.splitlines()))
+        self.info(f"output: {output}, error: {error}, rc: {rc}")
+        self.assertFalse(error)
+        if not output:
+            return []
+        z_pids_str = " ".join(['"' + pid + '"' for pid in output.split()])  # excluding Dead processes
+        cmd = f"ps -o s= -o pid= {z_pids_str} | sed -n 's/^[^ZT][[:space:]]\\+//p'"
+        rc, output, error = j.sals.process.execute(cmd)
+        self.info(f"output: {output}, error: {error}, rc: {rc}")
+        self.assertFalse(error)
+        self.info(f"output: {output}")
+        pids = list(map(int, output.split()))
         return pids
 
     def create_user(self, username, file_path):
@@ -226,8 +247,8 @@ class ProcessTests(BaseTests):
         """
         self.info("Start a process in tmux with check_start.")
         window_name = self.randstr()
-        start_cmd = f"tmux new-window -d -t {SESSION_NAME} -n {window_name} '{TAIL_PROCESS_NAME} -f /dev/null'"
-        j.sals.process.check_start(cmd=start_cmd, filterstr=TAIL_PROCESS_NAME, nrinstances=1)
+        start_cmd = f"tmux new-window -t {SESSION_NAME} -d -n {window_name} '{TAIL_PROCESS_NAME} -f /dev/null'"
+        j.sals.process.check_start(cmd=start_cmd, filterstr=TAIL_PROCESS_NAME, n_instances=1)
 
         self.info("Check that the process has been started.")
         pids = self.get_process_pids(TAIL_PROCESS_NAME)
@@ -243,7 +264,7 @@ class ProcessTests(BaseTests):
 
         self.info("Start a process again in tmux with nrinstances=2, should fail.")
         with self.assertRaises(Exception):
-            j.sals.process.check_start(cmd=start_cmd, filterstr=TAIL_PROCESS_NAME, nrinstances=2)
+            j.sals.process.check_start(cmd=start_cmd, filterstr=TAIL_PROCESS_NAME, n_instances=2)
 
     def test_09_get_process_environ(self):
         """Test case for getting process environment variables.
@@ -297,7 +318,7 @@ class ProcessTests(BaseTests):
         self.assertTrue(j.sals.nettools.wait_connection_test(HOST, port_2, 2))
 
         self.info("Check that the process has been started and get its pid.")
-        pids = self.get_process_pids(PYTHON_SERVER_NAME)
+        pids = self.get_process_pids(PYTHON_SERVER_NAME, full=True)
         self.assertEqual(len(pids), 2)
 
         self.info("Get this process pid with its name.")
@@ -348,7 +369,7 @@ class ProcessTests(BaseTests):
         self.assertAlmostEqual(memory_usage["used"], used, delta=1)
         self.assertAlmostEqual(memory_usage["percent"], percent, delta=5)
 
-    @pytest.mark.skip("https://github.com/threefoldtech/js-ng/issues/467")
+    #  @pytest.mark.skip("https://github.com/threefoldtech/js-ng/issues/467")
     def test_12_get_processes_info(self):
         """Test case for getting processes info.
 
@@ -368,11 +389,11 @@ class ProcessTests(BaseTests):
         self.assertTrue(j.sals.nettools.wait_connection_test(HOST, port, 2))
 
         self.info("Check that the server has been started.")
-        pids = self.get_process_pids(PYTHON_SERVER_NAME)
+        pids = self.get_process_pids(PYTHON_SERVER_NAME, full=True)
         self.assertEqual(len(pids), 1)
 
         self.info("Get processes info using SALS process.")
-        processes_info = j.sals.process.get_processes_info()
+        processes_info = j.sals.process.get_processes_info(limit=-1)
 
         self.info("Check that the python server is in the processes info.")
         found = False
@@ -416,7 +437,7 @@ class ProcessTests(BaseTests):
         self.assertTrue(j.sals.nettools.wait_connection_test(HOST, port, 2))
 
         self.info("Check that the server has been started.")
-        pids = self.get_process_pids(PYTHON_SERVER_NAME)
+        pids = self.get_process_pids(PYTHON_SERVER_NAME, full=True)
         self.assertEqual(len(pids), 1)
         self.assertTrue(j.sals.process.is_port_listening(port))
 
@@ -432,11 +453,10 @@ class ProcessTests(BaseTests):
         self.assertEqual(process.name(), "python3")
 
         self.info("Kill the server by port.")
-        killed = j.sals.process.kill_process_by_port(port)
+        j.sals.process.kill_process_by_port(port)
 
         self.info("Check that the server pid is not exist.")
-        self.assertTrue(killed)
-        pids = self.get_process_pids(PYTHON_SERVER_NAME)
+        pids = self.get_process_pids(PYTHON_SERVER_NAME, full=True)
         self.assertFalse(pids)
         self.assertFalse(j.sals.process.is_port_listening(port))
 
@@ -483,8 +503,7 @@ class ProcessTests(BaseTests):
         self.assertTrue(j.sals.process.is_alive(pids[0]))
 
         self.info("Kill the process.")
-        killed = j.sals.process.kill(pids[0])
-        self.assertTrue(killed)
+        j.sals.process.kill(pids[0])
         sleep(1)
 
         self.info("Check that the process has been killed.")
@@ -492,8 +511,9 @@ class ProcessTests(BaseTests):
         pids = j.sals.process.get_pids(TAIL_PROCESS_NAME)
         self.assertFalse(pids)
 
-    @parameterized.expand(["kill_all", "kill_user_processes", "kill_process_by_name"])
+    @parameterized.expand(["kill_user_processes", "kill_process_by_name"])
     @pytest.mark.admin
+    @pytest.mark.skipif(os.getuid != 0, reason="requires root")
     def test_16_get_kill_user_process(self, kill_method):
         """Test case for getting and killing user process/ killall processes.
 
@@ -524,7 +544,7 @@ class ProcessTests(BaseTests):
 
         self.info("Start another tail process in tmux with new user.")
         cmd = f"sudo -u {username} {TAIL_PROCESS_NAME} -f {file_path}"
-        self.start_in_tmux(cmd)
+        subprocess.Popen(cmd.split(), stdout=subprocess.DEVNULL)
 
         self.info("Check that the process has been started.")
         cmd = f"ps -u {username} | grep tail | awk '{{ print $1 }}'"
@@ -534,7 +554,7 @@ class ProcessTests(BaseTests):
         user_pid = int(output.strip())
 
         self.info("Get the user process.")
-        user_pids = j.sals.process.get_user_processes(username)
+        user_pids = [p.pid for p in j.sals.process.get_user_processes(username)]
         self.assertEqual(len(user_pids), 1)
 
         self.info("Check that the process is the new user process.")
@@ -643,7 +663,7 @@ class ProcessTests(BaseTests):
         self.assertTrue(j.sals.nettools.wait_connection_test(HOST, python_port, 2))
 
         self.info("Check that the server has been started.")
-        python_server_pids = self.get_process_pids(PYTHON_SERVER_NAME)
+        python_server_pids = self.get_process_pids(PYTHON_SERVER_NAME, full=True)
         self.assertEqual(len(python_server_pids), 1)
 
         self.info("Start redis server.")
@@ -715,7 +735,7 @@ class ProcessTests(BaseTests):
         """
         self.info("Start a tail process from the currnet user.")
         user_pids = {}
-        current_user = j.sals.fs.expanduser("~").strip("/").strip("/home/")
+        current_user = getpass.getuser()
         cmd = f"{TAIL_PROCESS_NAME} -f /dev/null"
         self.start_in_tmux(cmd)
 
@@ -735,22 +755,11 @@ class ProcessTests(BaseTests):
         self.start_in_tmux(cmd)
 
         self.info("Get each user pids.")
-        cmd = f"ps -u {user_1} | grep {TAIL_PROCESS_NAME} | awk '{{ print $1 }}'"
-        rc, output, error = j.sals.process.execute(cmd)
-        self.assertFalse(rc, error)
-        self.assertTrue(output)
-        user_pids[user_1] = int(output.strip())
+        user_pids[user_1] = self.get_process_pids(TAIL_PROCESS_NAME, user=user_1)
 
-        cmd = f"ps -u {user_2} | grep {TAIL_PROCESS_NAME} | awk '{{ print $1 }}'"
-        rc, output, error = j.sals.process.execute(cmd)
-        self.assertFalse(rc, error)
-        self.assertTrue(output)
-        user_pids[user_2] = int(output.strip())
+        user_pids[user_2] = self.get_process_pids(TAIL_PROCESS_NAME, user=user_2)
 
-        pids = self.get_process_pids(TAIL_PROCESS_NAME)
-        pids.remove(user_pids[user_1])
-        pids.remove(user_pids[user_2])
-        user_pids[current_user] = pids
+        user_pids[current_user] = self.get_process_pids(TAIL_PROCESS_NAME, user=current_user)
 
         if type_ == "sorted":
             self.info("Get pids sorted with username.")
@@ -762,12 +771,12 @@ class ProcessTests(BaseTests):
         users = sorted([current_user, user_1, user_2])
         sorted_pids = []
         for user in users:
-            if user == current_user and type_ == "sorted":
-                sorted_pids.extend(user_pids[user])
-            elif user == current_user and type_ == "regex":
-                sorted_pids.append(user_pids[user][0])
-            else:
-                sorted_pids.append(user_pids[user])
+            # if user == current_user and type_ == "sorted":
+            #     sorted_pids.extend(user_pids[user])
+            # if user == current_user and type_ == "regex":
+            #     sorted_pids.append(user_pids[user][0])
+            # else:
+            sorted_pids.extend(user_pids[user])
         if type_ == "sorted":
             self.info("Check that the pids are sorted.")
             self.assertEqual(pids, sorted_pids)

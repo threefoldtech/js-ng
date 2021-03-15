@@ -623,7 +623,7 @@ def read_bytes(path: str) -> bytes:
 read_binary = read_file_binary = read_bytes
 
 
-def write_text(path: str, data: str, encoding=None):
+def write_text(path: str, data: str, encoding=None, append=False):
     """write text `data` to path `path` with encoding
     e.g
         j.sals.fs.write_text(path="/home/rafy/testing_text.txt",data="hello world")  -> 11
@@ -632,30 +632,40 @@ def write_text(path: str, data: str, encoding=None):
         path (str): path to write to
         data (str): ascii content
         encoding ([type], optional): encoding. Defaults to None.
+        append (bool, optional): indicate whether to open the file in append mode or not.
 
     Returns:
-        int: Return the decoded contents of the pointed-to file as a string
+        int: returning the number of characters written.
 
     """
-    return pathlib.Path(path).write_text(data, encoding)
+    p = pathlib.Path(path)
+    mode = "at" if append else "wt"
+    with p.open(mode=mode, encoding=encoding) as f:
+        return f.write(data)
 
 
 write_ascii = write_file = write_text
 
 
-def write_bytes(path: str, data: bytes):
+def write_bytes(path: str, data: bytes, append=False):
     """write binary `data` to path `path`
+
+    If file does not exist, it creates a new file. If file exists it truncates the file unless append arg is True
     e.g
         j.sals.fs.write_bytes(path="/home/rafy/testing_text.txt",data=b"hello world")  -> 11
 
     Args:
         path (str): path to write to
         data (bytes): binary content
+        append (bool, optional): indicate whether to open the file in append mode or not.
 
     Returns:
-        int: Return the binary contents of the pointed-to file as a bytes object
+        int:  returning the number of characters written.
     """
-    return pathlib.Path(path).write_bytes(data)
+    p = pathlib.Path(path)
+    mode = "ab" if append else "wb"
+    with p.open(mode=mode) as f:
+        return f.write(data)
 
 
 write_binary = write_file_binary = write_bytes

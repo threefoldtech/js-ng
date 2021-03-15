@@ -1,5 +1,5 @@
 """
-Executor remote allows executing commands within specific env on the local machine. using the executor framework you can retrieve the stdout, stderr, and the return code as well.
+Remote executor allows executing commands within specific env on any machine. using the executor framework you can retrieve the stdout, stderr, and the return code as well.
 
 ```
 JS-NG> with j.core.executors.RemoteExecutor(host="localhost", connect_kwargs={"key_filename":
@@ -35,6 +35,18 @@ def execute(cmd, command_ctx, connection_ctx):
 
 
 class RemoteExecutor:
+    """Remote executor allows executing commands within specific env on the any machine. using the executor framework you can retrieve the stdout, stderr, and the return code as well.
+    e.g
+        with j.core.executors.RemoteExecutor(host="localhost", connect_kwargs={"key_filename":"/home/xmonader/.ssh/id_rsa",}) as c:c.run("hostname")
+
+    Args:
+        connection_ctx(dict): context passed to fabric e.g. fabric.Connection(host, user=None, port=None, config=None, gateway=None, forward_agent=None, connect_timeout=None, connect_kwargs=None, inline_ssh_env=None)
+                              connect_kwargs is currently the right place to hand in paramiko connection parameters such as pkey or key_filename. e.g connect_kwargs={"key_filename": "/home/myuser/.ssh/private.key"}
+    Returns:
+        str: return the result of the executed command
+
+    """
+
     def __init__(self, **connection_ctx):
         self._connection_ctx = connection_ctx
 

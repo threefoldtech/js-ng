@@ -65,9 +65,13 @@ python3 -m pip install setuptools -U
 
 - `poetry build`
 
-## publishing
+## releasing & publishing
+- make sure the version is bumped in `pyproject.toml` file
+- generate docs using `make docs`
+- make sure to call `poetry build`
+- then publish to pypi using `poetry publish` (note that this requires to be on the publisher account)
+- now a [release can be added](https://github.com/threefoldtech/js-ng/releases/new) with a tag on master branch.
 
-- `poetry publish`
 
 ## API Docs
 
