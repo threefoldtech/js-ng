@@ -1041,7 +1041,7 @@ class Bytes(Typed):
 
 
 class Json(String):
-    def __init__(self, default="{}", encoding="utf-8", **kwargs):
+    def __init__(self, default="{}", **kwargs):
         """
         Json field, will check if the value is a valid json string.
 
@@ -1049,10 +1049,8 @@ class Json(String):
 
         Args:
             default (str, optional): default value. Defaults to "{}"
-            encoding: encoding to be used when serializing the value. Defaults to "utf-8"
             kwargs: other keyword arguments supported by `String`
         """
-        self.encoding = encoding
         super().__init__(default=default, **kwargs)
 
     def validate(self, value):
@@ -1072,7 +1070,7 @@ class Json(String):
 
         # if it's a string, try to load it
         try:
-            json.loads(value, encoding=self.encoding)
+            json.loads(value)
         except Exception as e:
             raise ValidationError(f"'{value}' isn't a valid json, {e}") from e
 
