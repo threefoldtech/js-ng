@@ -46,7 +46,7 @@ class Logger:
 
         takes the same parameters of loguru.logger.add
         """
-        self._logger.add(*args, **kwargs)
+        return self._logger.add(*args, **kwargs)
 
     def add_custom_handler(self, name: str, handler: LogHandler, *args, **kwargs):
         """
@@ -56,7 +56,18 @@ class Logger:
             handler (LogHandler): handler function
         """
         setattr(self, name, handler)
-        self._logger.add(handler._handle, **kwargs)
+        return self._logger.add(handler._handle, **kwargs)
+
+    def remove_handler(self, handler_id: int):
+        """
+        Remove loguru handler by id
+
+        The pre-configured handler has the id of `0`
+
+        Args:
+            handler_id (int): handler id that was returned by `add_handler` method
+        """
+        self._logger.remove(handler_id)
 
     def _log(self, level, message, *args, category, data, exception=None):
         self._logger.opt(depth=2, exception=exception).bind(category=category, data=data).log(level, message, *args)
