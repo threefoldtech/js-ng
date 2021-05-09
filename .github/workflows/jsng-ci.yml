@@ -25,10 +25,10 @@ jobs:
             python-version: 3.8
             experimental: true
             name: Experimental build - latest Ubuntu
-          #- python-version: 3.9
-          #  os: ubuntu-18.04
-          #  experimental: true
-          #  name: Experimental build - latest Python
+          - os: ubuntu-20.04
+            python-version: 3.9
+            experimental: true
+            name: Experimental build - latest Python
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
