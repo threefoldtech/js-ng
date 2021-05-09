@@ -1,3 +1,6 @@
+import sys
+
+
 def export_module_as():
 
     from jumpscale.loader import j
@@ -7,6 +10,11 @@ def export_module_as():
     config = j.core.config.config.get_config().get("logging")
 
     if config:
+        # remove the default stderr handler
+        logger.remove_handler(0)
+        if config["default"]["enabled"]:
+            logger.add_handler(sys.stderr, level=config["default"]["level"])
+
         # configure redis handler if enabled
         if config["redis"]["enabled"] and j.core.db:
             redis_config = config["redis"]

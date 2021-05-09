@@ -114,6 +114,7 @@ def get_default_config():
         "debug": True,
         "shell": "ptpython",
         "logging": {
+            "default": {"enabled": True, "level": 10,},
             "redis": {
                 "enabled": True,
                 "level": 15,
