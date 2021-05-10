@@ -70,7 +70,7 @@ class Logger:
 
         takes the same parameters of loguru.logger.add
         &#34;&#34;&#34;
-        self._logger.add(*args, **kwargs)
+        return self._logger.add(*args, **kwargs)
 
     def add_custom_handler(self, name: str, handler: LogHandler, *args, **kwargs):
         &#34;&#34;&#34;
@@ -80,7 +80,18 @@ class Logger:
             handler (LogHandler): handler function
         &#34;&#34;&#34;
         setattr(self, name, handler)
-        self._logger.add(handler._handle, **kwargs)
+        return self._logger.add(handler._handle, **kwargs)
+
+    def remove_handler(self, handler_id: int):
+        &#34;&#34;&#34;
+        Remove loguru handler by id
+
+        The pre-configured handler has the id of `0`
+
+        Args:
+            handler_id (int): handler id that was returned by `add_handler` method
+        &#34;&#34;&#34;
+        self._logger.remove(handler_id)
 
     def _log(self, level, message, *args, category, data, exception=None):
         self._logger.opt(depth=2, exception=exception).bind(category=category, data=data).log(level, message, *args)
@@ -454,7 +465,7 @@ class RedisLogHandler(LogHandler):
 
         takes the same parameters of loguru.logger.add
         &#34;&#34;&#34;
-        self._logger.add(*args, **kwargs)
+        return self._logger.add(*args, **kwargs)
 
     def add_custom_handler(self, name: str, handler: LogHandler, *args, **kwargs):
         &#34;&#34;&#34;
@@ -464,7 +475,18 @@ class RedisLogHandler(LogHandler):
             handler (LogHandler): handler function
         &#34;&#34;&#34;
         setattr(self, name, handler)
-        self._logger.add(handler._handle, **kwargs)
+        return self._logger.add(handler._handle, **kwargs)
+
+    def remove_handler(self, handler_id: int):
+        &#34;&#34;&#34;
+        Remove loguru handler by id
+
+        The pre-configured handler has the id of `0`
+
+        Args:
+            handler_id (int): handler id that was returned by `add_handler` method
+        &#34;&#34;&#34;
+        self._logger.remove(handler_id)
 
     def _log(self, level, message, *args, category, data, exception=None):
         self._logger.opt(depth=2, exception=exception).bind(category=category, data=data).log(level, message, *args)
@@ -534,7 +556,7 @@ def default_app_name(self):
         handler (LogHandler): handler function
     &#34;&#34;&#34;
     setattr(self, name, handler)
-    self._logger.add(handler._handle, **kwargs)</code></pre>
+    return self._logger.add(handler._handle, **kwargs)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.core.logging.logging.Logger.add_handler"><code class="name flex">
@@ -551,7 +573,7 @@ def default_app_name(self):
 
     takes the same parameters of loguru.logger.add
     &#34;&#34;&#34;
-    self._logger.add(*args, **kwargs)</code></pre>
+    return self._logger.add(*args, **kwargs)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.core.logging.logging.Logger.critical"><code class="name flex">
@@ -614,6 +636,31 @@ def default_app_name(self):
 <pre><code class="python">def info(self, message, *args, category: str = &#34;&#34;, data: dict = None):
     &#34;&#34;&#34;Log info message&#34;&#34;&#34;
     self._log(&#34;INFO&#34;, message, *args, category=category, data=data)</code></pre>
+</details>
+</dd>
+<dt id="jumpscale.core.logging.logging.Logger.remove_handler"><code class="name flex">
+<span>def <span class="ident">remove_handler</span></span>(<span>self, handler_id)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Remove loguru handler by id</p>
+<p>The pre-configured handler has the id of <code>0</code></p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>handler_id</code></strong> :&ensp;<code>int</code></dt>
+<dd>handler id that was returned by <code>add_handler</code> method</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def remove_handler(self, handler_id: int):
+    &#34;&#34;&#34;
+    Remove loguru handler by id
+
+    The pre-configured handler has the id of `0`
+
+    Args:
+        handler_id (int): handler id that was returned by `add_handler` method
+    &#34;&#34;&#34;
+    self._logger.remove(handler_id)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.core.logging.logging.Logger.warning"><code class="name flex">
@@ -891,6 +938,7 @@ def default_app_name(self):
 <li><code><a title="jumpscale.core.logging.logging.Logger.error" href="#jumpscale.core.logging.logging.Logger.error">error</a></code></li>
 <li><code><a title="jumpscale.core.logging.logging.Logger.exception" href="#jumpscale.core.logging.logging.Logger.exception">exception</a></code></li>
 <li><code><a title="jumpscale.core.logging.logging.Logger.info" href="#jumpscale.core.logging.logging.Logger.info">info</a></code></li>
+<li><code><a title="jumpscale.core.logging.logging.Logger.remove_handler" href="#jumpscale.core.logging.logging.Logger.remove_handler">remove_handler</a></code></li>
 <li><code><a title="jumpscale.core.logging.logging.Logger.warning" href="#jumpscale.core.logging.logging.Logger.warning">warning</a></code></li>
 </ul>
 </li>
@@ -1265,6 +1313,7 @@ limit (int, optional): max number of record to be returned per page (default: ma
 <li><code><a title="jumpscale.core.logging.logging.Logger.error" href="#jumpscale.core.logging.logging.Logger.error">error</a></code></li>
 <li><code><a title="jumpscale.core.logging.logging.Logger.exception" href="#jumpscale.core.logging.logging.Logger.exception">exception</a></code></li>
 <li><code><a title="jumpscale.core.logging.logging.Logger.info" href="#jumpscale.core.logging.logging.Logger.info">info</a></code></li>
+<li><code><a title="jumpscale.core.logging.logging.Logger.remove_handler" href="#jumpscale.core.logging.logging.Logger.remove_handler">remove_handler</a></code></li>
 <li><code><a title="jumpscale.core.logging.logging.Logger.warning" href="#jumpscale.core.logging.logging.Logger.warning">warning</a></code></li>
 </ul>
 </li>
