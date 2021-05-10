@@ -21,11 +21,19 @@
 </header>
 <section id="section-intro">
 <p>This module execute process on system and manage them</p>
-<h2 id="example">Example</h2>
+<p>below are some examples of the functions included in this module (not all inclusive.):</p>
+<h2 id="examples">Examples</h2>
 <p>```</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>from jumpscale.loader import j
+import signal</p>
+</blockquote>
+</blockquote>
+</blockquote>
 <h1 id="to-create-a-process">to create a process</h1>
-<pre><code>&gt;&gt;&gt; from jumpscale.loader import j
-&gt;&gt;&gt; rc, out, err = j.sals.process.execute("ls", cwd="/tmp", showout=True)
+<pre><code>&gt;&gt;&gt; rc, out, err = j.sals.process.execute("ls", cwd="/tmp", showout=True)
 # this executes ls command on dir "/tmp" showing output from stdout
 </code></pre>
 <h1 id="rc-contains-exit-status">rc -&gt; contains exit status</h1>
@@ -34,21 +42,82 @@
 <h1 id="checks-if-a-process-with-this-pid-is-exists-in-the-current-process-list">checks if a process with this pid is exists in the current process list</h1>
 <pre><code>&gt;&gt;&gt; j.sals.process.is_alive(10022)
 </code></pre>
+<h1 id="checks-if-a-specific-command-is-available-on-the-system">Checks if a specific command is available on the system</h1>
+<pre><code>&gt;&gt;&gt; j.sals.process.is_installed('top')
+</code></pre>
 <h1 id="kill-a-process-with-pid-10022-with-sigterm">kill a process with pid 10022 with SIGTERM</h1>
 <pre><code>&gt;&gt;&gt; j.sals.process.kill(10022)
 </code></pre>
-<h1 id="gets-pid-of-the-process-listenning-on-port-8000">gets pid of the process listenning on port 8000</h1>
+<h1 id="kill-a-process-with-pid-10022-with-sigterm-wait-3-seconds-for-it-to-disappear-then-if-still-alive-kill-it-with-sigkill">kill a process with pid 10022 with SIGTERM, wait 3 seconds for it to disappear, then if still alive kill it with SIGKILL</h1>
+<pre><code>&gt;&gt;&gt; j.sals.process.kill(10022, timeout=3, sure_kill=True)
+</code></pre>
+<h1 id="check-if-there-is-any-running-process-that-match-the-given-name">Check if there is any running process that match the given name.</h1>
+<pre><code>&gt;&gt;&gt; j.sals.process.ps_find('python3')
+</code></pre>
+<h1 id="gets-pid-of-the-process-listenning-on-port-tcp-8000-ipv4-localhost-address">gets pid of the process listenning on port TCP 8000 ipv4 localhost address</h1>
 <pre><code>&gt;&gt;&gt; j.sals.process.get_pid_by_port(8000)
+</code></pre>
+<h1 id="gets-pid-of-the-process-listenning-on-port-udp-8000-ipv6-localhost-address">gets pid of the process listenning on port UDP 8000 ipv6 localhost address</h1>
+<pre><code>&gt;&gt;&gt; j.sals.process.get_pid_by_port(8000, ipv6=True, udp=True)
+</code></pre>
+<h1 id="returns-the-psutilprocess-object-that-is-listening-on-the-given-port">Returns the psutil.Process object that is listening on the given port</h1>
+<pre><code>&gt;&gt;&gt; j.sals.process.get_process_by_port(8000, ipv6=True, udp=True)
+</code></pre>
+<h1 id="get-pids-of-process-by-a-filter-string-and-sort-by-cpu-utilization-descendingly">Get pids of process by a filter string and sort by cpu utilization descendingly</h1>
+<pre><code>&gt;&gt;&gt; j.sals.process.get_pids_filtered_sorted('chrome', sort='%cpu', desc=True)
+</code></pre>
+<h1 id="return-a-list-of-processes-ids-matching-the-given-name">Return a list of processes ID(s) matching the given name.</h1>
+<pre><code>&gt;&gt;&gt; j.sals.process.get_pids('code')
+</code></pre>
+<h1 id="return-a-list-of-processes-ids-matching-the-given-name-including-the-result-of-matching-againest-the-full-command-line">Return a list of processes ID(s) matching the given name, including the result of matching againest the full command line.</h1>
+<pre><code>&gt;&gt;&gt; j.sals.process.get_pids('http.server', full_cmd_line=True)
+</code></pre>
+<h1 id="return-a-list-of-processes-ids-matching-the-given-name-including-any-zombie-processes">Return a list of processes ID(s) matching the given name, including any zombie processes</h1>
+<pre><code>&gt;&gt;&gt; j.sals.process.get_pids('python3', include_zombie=False)
+</code></pre>
+<h1 id="get-processes-info-about-top-3-processes-which-consumed-the-most-memory">get processes info about top 3 processes which consumed the most memory</h1>
+<pre><code>&gt;&gt;&gt; j.sals.process.get_processes_info(limit=3)
+</code></pre>
+<h1 id="get-processes-info-about-top-3-processes-which-consumed-the-most-cpu-time">get processes info about top 3 processes which consumed the most cpu time</h1>
+<pre><code>&gt;&gt;&gt; j.sals.process.get_processes_info(sort='cpu_time', limit=3)
+</code></pre>
+<h1 id="get-processes-info-about-last-process-started">get processes info about last process started</h1>
+<pre><code>&gt;&gt;&gt; j.sals.process.get_processes_info(sort='create_time', limit=1)
+</code></pre>
+<h1 id="get-processes-info-sorted-by-pid-ascending-limited-to-10-processes">get processes info sorted by pid ascending limited to 10 processes</h1>
+<pre><code>&gt;&gt;&gt; j.sals.process.get_processes_info(sort='pid', limit=10, desc=False)
+</code></pre>
+<h1 id="kill-a-process-and-its-children-including-grandchildren-with-sigterm-and-fallback-to-sigkill-when-needed">Kill a process and its children (including grandchildren) with SIGTERM and fallback to SIGKILL when needed</h1>
+<pre><code>&gt;&gt;&gt; j.sals.process.kill_proc_tree(20778, sure_kill=True)
+</code></pre>
+<h1 id="send-sigterm-to-all-processes-spawned-by-a-given-process-but-leave-the-process-itself">send SIGTERM to all processes spawned by a given process, but leave the process itself.</h1>
+<pre><code>&gt;&gt;&gt; j.sals.process.kill_proc_tree(20778, include_parent=False)
+</code></pre>
+<h1 id="terminate-a-list-of-processes-with-a-given-list-of-pids-fallback-to-sigkill-after-1-seconds">Terminate a list of processes with a given list of pids, fallback to SIGKILL after 1 seconds.</h1>
+<pre><code>&gt;&gt;&gt; j.sals.process.kill_all_pids([3067, 7888, 10221], timeout=1, sure_kill=True)
+</code></pre>
+<h1 id="terminate-a-process-that-listen-to-a-given-tcp-port-on-ipv4-address">terminate a process that listen to a given tcp port on ipv4 address</h1>
+<pre><code>&gt;&gt;&gt; j.sals.process.kill_process_by_port(8000)
+</code></pre>
+<h1 id="terminate-a-process-that-listen-to-a-given-udp-port-on-ipv6-address-fallback-to-sigkill-after-3-sec">terminate a process that listen to a given udp port on ipv6 address, fallback to SIGKILL after 3 sec</h1>
+<pre><code>&gt;&gt;&gt; j.sals.process.kill_process_by_port(8000, udp=True, ipv6=True, timeout=3, sure_kill=True)
+</code></pre>
+<h1 id="terminate-all-processes-owned-by-a-given-user-name-fallback-to-sigkill-when-needed">Terminate all processes owned by a given user name, fallback to SIGKILL when needed</h1>
+<pre><code>&gt;&gt;&gt; j.sals.process.kill_user_processes('sameh', sure_kill=True)
 ```
 </code></pre>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">&#34;&#34;&#34;This module execute process on system and manage them
 
-Example:
+below are some examples of the functions included in this module (not all inclusive.):
+
+Examples:
     ```
-    #to create a process
     &gt;&gt;&gt; from jumpscale.loader import j
+    &gt;&gt;&gt; import signal
+
+    #to create a process
     &gt;&gt;&gt; rc, out, err = j.sals.process.execute(&#34;ls&#34;, cwd=&#34;/tmp&#34;, showout=True)
     # this executes ls command on dir &#34;/tmp&#34; showing output from stdout
     # rc -&gt; contains exit status
@@ -58,21 +127,81 @@ Example:
     # checks if a process with this pid is exists in the current process list
     &gt;&gt;&gt; j.sals.process.is_alive(10022)
 
+    # Checks if a specific command is available on the system
+    &gt;&gt;&gt; j.sals.process.is_installed(&#39;top&#39;)
+
     # kill a process with pid 10022 with SIGTERM
     &gt;&gt;&gt; j.sals.process.kill(10022)
 
-    # gets pid of the process listenning on port 8000
+    # kill a process with pid 10022 with SIGTERM, wait 3 seconds for it to disappear, then if still alive kill it with SIGKILL
+    &gt;&gt;&gt; j.sals.process.kill(10022, timeout=3, sure_kill=True)
+
+    # Check if there is any running process that match the given name.
+    &gt;&gt;&gt; j.sals.process.ps_find(&#39;python3&#39;)
+
+    # gets pid of the process listenning on port TCP 8000 ipv4 localhost address
     &gt;&gt;&gt; j.sals.process.get_pid_by_port(8000)
+
+    # gets pid of the process listenning on port UDP 8000 ipv6 localhost address
+    &gt;&gt;&gt; j.sals.process.get_pid_by_port(8000, ipv6=True, udp=True)
+
+    # Returns the psutil.Process object that is listening on the given port
+    &gt;&gt;&gt; j.sals.process.get_process_by_port(8000, ipv6=True, udp=True)
+
+    # Get pids of process by a filter string and sort by cpu utilization descendingly
+    &gt;&gt;&gt; j.sals.process.get_pids_filtered_sorted(&#39;chrome&#39;, sort=&#39;%cpu&#39;, desc=True)
+
+    # Return a list of processes ID(s) matching the given name.
+    &gt;&gt;&gt; j.sals.process.get_pids(&#39;code&#39;)
+
+    # Return a list of processes ID(s) matching the given name, including the result of matching againest the full command line.
+    &gt;&gt;&gt; j.sals.process.get_pids(&#39;http.server&#39;, full_cmd_line=True)
+
+    # Return a list of processes ID(s) matching the given name, including any zombie processes
+    &gt;&gt;&gt; j.sals.process.get_pids(&#39;python3&#39;, include_zombie=False)
+
+    # get processes info about top 3 processes which consumed the most memory
+    &gt;&gt;&gt; j.sals.process.get_processes_info(limit=3)
+
+    # get processes info about top 3 processes which consumed the most cpu time
+    &gt;&gt;&gt; j.sals.process.get_processes_info(sort=&#39;cpu_time&#39;, limit=3)
+
+    # get processes info about last process started
+    &gt;&gt;&gt; j.sals.process.get_processes_info(sort=&#39;create_time&#39;, limit=1)
+
+    # get processes info sorted by pid ascending limited to 10 processes
+    &gt;&gt;&gt; j.sals.process.get_processes_info(sort=&#39;pid&#39;, limit=10, desc=False)
+
+    # Kill a process and its children (including grandchildren) with SIGTERM and fallback to SIGKILL when needed
+    &gt;&gt;&gt; j.sals.process.kill_proc_tree(20778, sure_kill=True)
+
+    # send SIGTERM to all processes spawned by a given process, but leave the process itself.
+    &gt;&gt;&gt; j.sals.process.kill_proc_tree(20778, include_parent=False)
+
+    # Terminate a list of processes with a given list of pids, fallback to SIGKILL after 1 seconds.
+    &gt;&gt;&gt; j.sals.process.kill_all_pids([3067, 7888, 10221], timeout=1, sure_kill=True)
+
+    # terminate a process that listen to a given tcp port on ipv4 address
+    &gt;&gt;&gt; j.sals.process.kill_process_by_port(8000)
+
+    # terminate a process that listen to a given udp port on ipv6 address, fallback to SIGKILL after 3 sec
+    &gt;&gt;&gt; j.sals.process.kill_process_by_port(8000, udp=True, ipv6=True, timeout=3, sure_kill=True)
+
+    # Terminate all processes owned by a given user name, fallback to SIGKILL when needed
+    &gt;&gt;&gt; j.sals.process.kill_user_processes(&#39;sameh&#39;, sure_kill=True)
     ```
 &#34;&#34;&#34;
 
 
 import math
 import os
-import subprocess
 import re
+import shlex
 import signal
+import subprocess
+import time
 from collections import defaultdict
+
 import psutil
 from jumpscale.loader import j
 
@@ -93,7 +222,7 @@ def execute(
     Accepts command as a list too, with auto-escaping.
 
     Args:
-        cmd (str/list[str]): Command to be executed, e.g. &#34;ls -la&#34; or [&#34;ls&#34;, &#34;-la&#34;]
+        cmd (str or list of str): Command to be executed, e.g. &#34;ls -la&#34; or [&#34;ls&#34;, &#34;-la&#34;]
         showout (bool, optional): Whether to show stdout of the command or not. Defaults to False.
         cwd (str, optional): Path to `cd` into before running command. Defaults to None.
         shell (str, optional): Specify a working directory for the command. Defaults to &#34;/bin/bash&#34;.
@@ -148,31 +277,27 @@ def kill(proc, sig=signal.SIGTERM, timeout=5, sure_kill=False):
     &#34;&#34;&#34;Kill a process with a specified signal.
 
     Args:
-        proc (int/psutil.Process): Target process ID (PID) or psutil.Process object.
+        proc (int or psutil.Process): Target process ID (PID) or psutil.Process object.
         sig (signal, optional): See signal module constants. Defaults to signal.SIGTERM.
-        timeout (int, optional): How long to wait for a process to terminate (seconds) before raise exception\
+        timeout (int, optional): How long to wait for a process to terminate (seconds) before raise exception
             or, if sure_kill=True, send a SIGKILL. Defaults to 5.
         sure_kill (bool, optional): Whether to fallback to SIGKILL if the timeout exceeded for the terminate operation or not. Defaults to False.
 
     Raises:
         j.exceptions.Runtime: In case killing the process failed.
         j.exceptions.Permission: In case the permission to perform this action is denied.
-
-    Returns:
-        None
     &#34;&#34;&#34;
     try:
         if isinstance(proc, int):
-            proc = get_process_object(proc)
+            proc = get_process_object(proc, die=True)
         if proc.status() == psutil.STATUS_ZOMBIE:
-            return True
+            return
         proc.send_signal(sig)
         # Wait for a process to terminate
         # If PID no longer exists return None immediately
         # If timeout exceeded and the process is still alive raise TimeoutExpired exception
         proc.wait(timeout=timeout)
         j.logger.debug(f&#34;the process with PID: {proc.pid} was terminated with sig: {sig}.&#34;)
-        return True  # XXX only to pass current tests
     except psutil.TimeoutExpired as e:
         # timeout expires and process is still alive.
         if sure_kill and sig != signal.SIGKILL and os.name != &#34;nt&#34;:
@@ -188,12 +313,11 @@ def kill(proc, sig=signal.SIGTERM, timeout=5, sure_kill=False):
                     j.logger.debug(
                         f&#34;the process with PID: {proc.pid} becomes a zombie and should be considered a dead.&#34;
                     )
-                    return True
+                    return
                 # the process may be in an uninterruptible sleep
                 j.logger.debug(&#34;the process may be in an uninterruptible sleep.&#34;)
                 j.logger.warning(f&#34;Could not kill the process with pid: {proc.pid} with {sig}. Timeout: {timeout}&#34;)
                 raise j.exceptions.Runtime(f&#34;Could not kill process with pid {proc.pid}, {proc.status()}&#34;) from e
-            return True  # XXX only to pass current tests
         else:
             j.logger.warning(f&#34;Could not kill the process with pid: {proc.pid} with {sig}. Timeout: {timeout}&#34;)
             raise j.exceptions.Runtime(f&#34;Could not kill process with pid {proc.pid}&#34;) from e
@@ -201,18 +325,16 @@ def kill(proc, sig=signal.SIGTERM, timeout=5, sure_kill=False):
         # permission to perform an action is denied
         j.logger.warning(&#34;the permission is denied&#34;)
         raise j.exceptions.Permission(&#34;Permission to perform this action is denied!&#34;) from e
-    except (psutil.ZombieProcess, psutil.NoSuchProcess):
+    except psutil.NoSuchProcess:
         # Process no longer exists or Zombie (already dead)
         j.logger.debug(&#34;Process is no longer exists or a Zombie (already dead)&#34;)
-        return True
 
 
 def ps_find(process_name):
     &#34;&#34;&#34;Check if there is any running process that match the given name.
 
     Args:
-        process_name (str): The target process name. will match against against Process.name(),\
-            Process.exe() and Process.cmdline()
+        process_name (str): The target process name. will match against against Process.name(), Process.exe() and Process.cmdline()
 
     Returns:
         bool: True if process is found, False otherwise.
@@ -220,28 +342,12 @@ def ps_find(process_name):
     return len(get_pids(process_name, limit=1)) == 1
 
 
-def kill_all(process_name, sig=signal.SIGKILL):
-    &#34;&#34;&#34;Kill all processes that match &#39;process_name&#39;.
-
-    Args:
-        process_name (str): The target process name
-        sig (signal, optional): See signal module constants. Defaults to signal.SIGKILL
-
-    Returns:
-        None or list[int] represents the IDs of the processes remaning alive.
-    &#34;&#34;&#34;
-    # XXX kill default to SIGTERM while kill_all default to SIGKILL (inconsistency)?
-    # XXX almost like kill_process_by_name
-    failed_processes = kill_process_by_name(process_name, sig)
-    return failed_processes
-
-
-def get_pids_filtered_sorted(filterstr, sortkey=None):
+def get_pids_filtered_sorted(filterstr, sortkey=None, desc=False):
     &#34;&#34;&#34;Get pids of process by a filter string and optionally sort by sortkey
 
     Args:
         filterstr (str): filter string.
-        sortkey (str, optional): Defaults to None. (if no sortkey used it will sort by pid(s) ascending).
+        sortkey (str, optional): Defaults to None. (if no sortkey used it will sort by pid(s) in ascending order).
             sortkey can be one of the following:
             %cpu           cpu utilization of the process in
             %mem           ratio of the process&#39;s resident set size  to the physical memory on the machine, expressed as a percentage.
@@ -255,9 +361,10 @@ def get_pids_filtered_sorted(filterstr, sortkey=None):
             ppid           parent process ID.
             psr            processor that process is currently assigned to.
             start_time     starting time or date of the process.
+        desc: (bool, optional): Whether to sort the processes in descending order or not(asc). Defaults to False (asc).
 
     Returns:
-        list(int): processes pids
+        list of int: list of the processes IDs
     &#34;&#34;&#34;
     ps_to_psutil_map = {
         &#34;%cpu&#34;: &#34;cpu_percent&#34;,
@@ -275,61 +382,51 @@ def get_pids_filtered_sorted(filterstr, sortkey=None):
     }
     if sortkey is None:  # mimic default ps commnad sorting behavior
         sortkey = &#34;pid&#34;
-        desc = False
-    else:
-        desc = True
     # return pids from process objects
     return [p[&#34;pid&#34;] for p in get_processes_info(sort=ps_to_psutil_map[sortkey], filterstr=filterstr, desc=desc)]
 
 
 def get_filtered_pids(filterstr, excludes=None):
-    &#34;&#34;&#34;Get pids filtered by filterstr and excludes
+    &#34;&#34;&#34;Get pids filtered by filterstr and excludes, matching against the full command line used to start the process.
 
     Args:
         filterstr (str): the String to filter based on.
         excludes (list[str]): exclude list. Defaults to None.
 
     Returns:
-        list[int]: list of pids
+        list of int: List of the processes IDs
     &#34;&#34;&#34;
     pids = []
-    try:
-        for proc in psutil.process_iter([&#34;name&#34;, &#34;cmdline&#34;]):
-            cmd_line = &#34; &#34;.join(proc.info[&#34;cmdline&#34;])
-            if proc.info[&#34;cmdline&#34;] and filterstr in cmd_line:
-                j.logger.debug(f&#34;found filter string: {filterstr} in command line: {cmd_line}&#34;)
-                if excludes:
-                    for exclude in excludes:
-                        if exclude in cmd_line:
-                            j.logger.debug(
-                                f&#34;but excluded because it contain exclude string: {exclude} in command line: {cmd_line}&#34;
-                            )
-                            break
-                    else:  # intended `for/else` meaning for loop finished normally with no break
-                        pids.append(proc.pid)  # may yield proc instead
-                    continue
-                else:
+    for proc in psutil.process_iter([&#34;name&#34;, &#34;cmdline&#34;]):
+        cmd_line = &#34; &#34;.join(proc.info[&#34;cmdline&#34;])
+        if proc.info[&#34;cmdline&#34;] and filterstr in cmd_line:
+            j.logger.debug(f&#34;found filter string: {filterstr} in command line: {cmd_line}&#34;)
+            if excludes:
+                for exclude in excludes:
+                    if exclude in cmd_line:
+                        j.logger.debug(
+                            f&#34;but excluded because it contain exclude string: {exclude} in command line: {cmd_line}&#34;
+                        )
+                        break
+                else:  # intended `for/else` meaning for loop finished normally with no break
                     pids.append(proc.pid)  # may yield proc instead
-        j.logger.debug(
-            f&#34;founded pids are: {pids}&#34;
-            if pids
-            else f&#34;filter string {filterstr} not found in any processes. root needed?&#34;
-        )
-        return pids
-    except (psutil.AccessDenied, psutil.NoSuchProcess) as e:
-        j.logger.debug(&#34;logging and bypassing the exception occurred while iterating over the system processes&#34;)
-        j.logger.exception(&#34;exception occurred while iterating over the system processes&#34;, exception=e)
-        pass
+                continue
+            else:
+                pids.append(proc.pid)  # may yield proc instead
+    j.logger.debug(
+        f&#34;founded pids are: {pids}&#34; if pids else f&#34;filter string {filterstr} not found in any processes. root needed?&#34;
+    )
+    return pids
 
 
 def get_pids_filtered_by_regex(regex_list):
-    &#34;&#34;&#34;Get pids of a process filtered by Regex list
+    &#34;&#34;&#34;Get pids of a process filtered by Regex list, matching against the full command line used to start the process.
 
     Args:
         regex_list (list[str]): List of regex expressions.
 
     Returns:
-        list(int): List of pids.
+        list of int: List of the processes IDs.
     &#34;&#34;&#34;
     res = []
     for process in psutil.process_iter(attrs=[&#34;cmdline&#34;]):
@@ -341,45 +438,49 @@ def get_pids_filtered_by_regex(regex_list):
     return res
 
 
-def check_start(cmd, filterstr, n_instances=1, retry=1):
+def check_start(cmd, filterstr, n_instances=1, retry=1, timeout=2, delay=0.5):
     &#34;&#34;&#34;Run command (possibly multiple times) and check if it is started based on filterstr
 
     Args:
-        cmd (str/list): Command to be executed.
-        filterstr (str): Filter string. will match against against Process.name(),\
-            Process.exe() and Process.cmdline()
+        cmd (str or list of str): Command to be executed.
+        filterstr (str): Filter string. will match against against Process.name(), Process.exe() and Process.cmdline()
         n_instances (int, optional): Number of needed instances. Defaults to 1.
         retry (int, optional): Number of retries to execute the command and check. Defaults to 1.
+        timout (int, optional): how long the function should wait for process to finish (first or parnet process started with the command)
+        delay (int, optional): how long the function should delay the checking process after the process finished or timeout exceeded (in case the first process started another one).
 
     Raises:
         j.exceptions.Runtime: will be raised if we didn&#39;t reach number of required instances.
     &#34;&#34;&#34;
     for i in range(retry):
         if isinstance(cmd, str):
-            cmd = cmd.split()
-        proc = psutil.Popen(cmd, close_fds=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+            args = shlex.split(cmd)
+        proc = psutil.Popen(args, close_fds=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
         j.logger.debug(f&#34;attempt no: {i}&#34;)
         j.logger.debug(f&#34;executed cmd: {cmd}&#34;)
         j.logger.debug(f&#34;proc.cmdline: {proc.cmdline()}&#34;)
-        j.logger.debug(f&#34;pid: {proc.pid}&#34;)
+        j.logger.debug(f&#34;direct process id spawn by this command : {proc.pid}&#34;)
         j.logger.debug(f&#34;status: {proc.status()}&#34;)
         j.logger.debug(f&#34;name: {proc.name()}&#34;)
         j.logger.debug(f&#34;exe: {proc.exe()}&#34;)
-        j.logger.debug(f&#34;children: {proc.children(recursive=True)}&#34;)
-        j.logger.debug(f&#34;parents: {proc.parents()}&#34;)
         try:
-            rc = proc.wait(timeout=1)  # makesure the process is stable
+            rc = proc.wait(timeout)  # makesure the process is stable
             if rc == 0:  # executing the command succeeded but exited immediately!
                 j.logger.debug(&#34;executing the start command succeeded but exited immediately&#34;)
             else:
                 j.logger.debug(&#34;the start command exited with error&#34;)  # the process exited with error
+                output, error_output = proc.communicate()
+                j.logger.debug(f&#34;err: {error_output}&#34;)
             j.logger.debug(f&#34;return code is: {rc}&#34;)
         except psutil.TimeoutExpired:
-            j.logger.debug(&#34;the start command still running after 1 sec&#34;)  # still running
+            j.logger.debug(&#34;the start command still running after 2 sec&#34;)  # still running
+        # wait extra delay to allow any subprocess spawned from the process we just started to finish
+        # this may not needed in many cases
+        time.sleep(delay)
         # TODO check based on command
         if check_running(filterstr, min=n_instances):
             j.logger.debug(f&#34;found at least {n_instances} instances using the filter string: {filterstr}&#34;)
-            return True  # XXX should remove? None
+            return
         else:
             j.logger.debug(f&#34;the required number of instances using the filter string: {filterstr} not found yet!&#34;)
             continue
@@ -387,7 +488,7 @@ def check_start(cmd, filterstr, n_instances=1, retry=1):
     raise j.exceptions.Runtime(&#34;could not start the required number of instances.&#34;)
 
 
-def check_stop(cmd, filterstr, retry=1, n_instances=0):
+def check_stop(cmd, filterstr, retry=1, n_instances=0, timeout=2, delay=0.5):
     &#34;&#34;&#34;Executes a stop command (possibly multiple times) and check if it is already stopped based on filterstr
 
     Args:
@@ -395,6 +496,8 @@ def check_stop(cmd, filterstr, retry=1, n_instances=0):
         filterstr (str): Filter string.
         retry (int, optional): Number of retries. Defaults to 1.
         n_inst (int, optional): Number of instances after stop. Defaults to 0.
+        timout (int, optional): how long the function should wait for process to finish (first or parnet process started with the command)
+        delay (int, optional): how long the function should delay the checking process after the process finished or timeout exceeded (in case the first process started another one).
 
     Raises:
         j.exceptions.Runtime: if number of instances not matched
@@ -402,19 +505,17 @@ def check_stop(cmd, filterstr, retry=1, n_instances=0):
 
     for i in range(retry):
         if isinstance(cmd, str):
-            cmd = cmd.split()
-        proc = psutil.Popen(cmd, close_fds=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+            args = shlex.split(cmd)
+        proc = psutil.Popen(args, close_fds=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
         j.logger.debug(f&#34;attempt no: {i}&#34;)
         j.logger.debug(f&#34;executed cmd: {cmd}&#34;)
         j.logger.debug(f&#34;proc.cmdline: {proc.cmdline()}&#34;)
-        j.logger.debug(f&#34;pid: {proc.pid}&#34;)
+        j.logger.debug(f&#34;direct process id spawn by this command : {proc.pid}&#34;)
         j.logger.debug(f&#34;status: {proc.status()}&#34;)
         j.logger.debug(f&#34;name: {proc.name()}&#34;)
         j.logger.debug(f&#34;exe: {proc.exe()}&#34;)
-        j.logger.debug(f&#34;children: {proc.children(recursive=True)}&#34;)
-        j.logger.debug(f&#34;parents: {proc.parents()}&#34;)
         try:
-            rc = proc.wait(timeout=5)  # makesure the process is stable
+            rc = proc.wait(timeout)  # makesure the process is stable
             # print(f&#39;rc: {rc}&#39;)
             if rc == 0:
                 # executing the process succeeded but exited immediately!
@@ -422,14 +523,19 @@ def check_stop(cmd, filterstr, retry=1, n_instances=0):
             else:
                 # the process exited with error
                 j.logger.debug(&#34;the stop command exited with error&#34;)  # the process exited with error
+                output, error_output = proc.communicate()
+                j.logger.debug(f&#34;err: {error_output}&#34;)
         except psutil.TimeoutExpired:
-            j.logger.debug(&#34;the start command still running after 1 sec&#34;)  # still running
+            j.logger.debug(&#34;the start command still running after 2 sec&#34;)  # still running
+        # wait extra delay to allow any subprocess spawned from the process we just started to finish
+        # this may not needed in many cases
+        time.sleep(delay)
         found = get_pids(filterstr)
         if len(found) == n_instances:
             j.logger.debug(
                 f&#34;the required {n_instances} matching the instances found using the filter string: {filterstr}&#34;
             )
-            return True  # should remove? None
+            return
         else:
             j.logger.debug(
                 f&#34;the required {n_instances} not matching the instances number found using the filter string: {filterstr} yet&#34;
@@ -441,49 +547,60 @@ def check_stop(cmd, filterstr, retry=1, n_instances=0):
     raise j.exceptions.Runtime(f&#34;could not stop {cmd}, found {len(found)} of instances instead of {n_instances}&#34;)
 
 
-def get_pids(process_name, match_predicate=None, limit=0, _alt_source=None):
-    &#34;&#34;&#34;Return a list of processes ID(s) matching &#39;process_name&#39;.
+def get_pids(process_name, match_predicate=None, limit=0, _alt_source=None, include_zombie=False, full_cmd_line=False):
+    &#34;&#34;&#34;Return a list of processes ID(s) matching a given process name.
 
     Function will check string against Process.name(), Process.exe() and Process.cmdline()
 
     Args:
         process_name (str): The target process name
-        match_predicate (callable, optional): Function that does matching between\
-            found processes and the targeted process, the function should accept\
-            two arguments and return a boolean. Defaults to None.
-        limit (int, optional): If not equal to 0, function will return as fast as the number\
-            of PID(s) found become equal to `limit` value.
-        _alt_source(callable or iterable, optional): Can be used to specify an alternative source\
-            of the psutil.Process objects to match against.
+        match_predicate (callable, optional): Function that does matching between found processes and the targeted process.
+            the function should accept two arguments and return a boolean. Defaults to None.
+        limit (int, optional): If not equal to 0, function will return as fast as the number of PID(s) found become equal to `limit` value.
+        _alt_source(callable or iterable, optional): Can be used to specify an alternative source of the psutil.Process objects to match against.
             ex: get_user_processes func, or get_similar_processes.
             if not specified, psutil.process_iter will be used. Defaults to None.
+        include_zombie (bool, optional): Whether to include pid for zombie proccesses or not. Defaults to False.
+        full_cmd_line (bool, optional): The pattern is normally only matched against the process name.
+            if full_cmd_line is set to True, the full command line is used. Defaults to False.
 
     Returns:
-        list[int]: list of PID(s)
+        list of int: List of the processes IDs.
     &#34;&#34;&#34;
     # default match predicate
     def default_predicate(target, given):
-        j.logger.debug(f&#34;matching {target} with {given}&#34;)
         if isinstance(given, list):
-            return target.strip().lower() in given
-        return target.strip().lower() == given.lower()
+            return target in given
+        else:
+            return target.strip().lower() == given.lower()
+
+    default_processes_source = psutil.process_iter([&#34;name&#34;, &#34;exe&#34;, &#34;cmdline&#34;])
 
     match_predicate = match_predicate or default_predicate
+    p_source = _alt_source or default_processes_source
 
     pids = []
-    for proc in psutil.process_iter([&#34;name&#34;, &#34;exe&#34;, &#34;cmdline&#34;]):
+    for proc in p_source:
         try:
-            j.logger.debug(f&#34;process to check: {proc.info}&#34;)
-            if (
-                (match_predicate(process_name, proc.info[&#34;name&#34;]))
-                or (proc.info[&#34;exe&#34;] and match_predicate(process_name, os.path.basename(proc.info[&#34;exe&#34;])))
-                or (proc.info[&#34;cmdline&#34;] and match_predicate(process_name, proc.info[&#34;cmdline&#34;]))
-            ):
+            if not include_zombie and proc.status() == psutil.STATUS_ZOMBIE:
+                j.logger.debug(f&#34;ignoring : {proc.pid} zombie process.&#34;)
+                continue
+
+            candidates = [proc.info[&#34;name&#34;]]
+            if proc.info[&#34;exe&#34;]:
+                candidates.append(os.path.basename(proc.info[&#34;exe&#34;]))
+            if proc.info[&#34;cmdline&#34;]:
+                if full_cmd_line:
+                    candidates.append(proc.info[&#34;cmdline&#34;])
+                else:
+                    candidates.append(os.path.basename(proc.info[&#34;cmdline&#34;][0]))
+
+            if any([match_predicate(process_name, candidate) for candidate in candidates]):
                 pids.append(proc.pid)
                 # return early if no need to iterate over all running process
                 if limit and len(pids) == limit:
                     return pids
-        except (psutil.ZombieProcess, psutil.AccessDenied, psutil.NoSuchProcess):
+        except psutil.Error:
             pass
     return pids
 
@@ -492,29 +609,29 @@ def get_my_process():
     &#34;&#34;&#34;Get psutil.Process object of the current process.
 
     Returns:
-        (psutil.Process): psutil.Process object of the current process.
+        psutil.Process: Process object of the current process.
     &#34;&#34;&#34;
-    return get_process_object(os.getpid())
+    return get_process_object(os.getpid(), die=True)
 
 
-def get_process_object(pid, die=True):
+def get_process_object(pid, die=False):
     &#34;&#34;&#34;Get psutil.Process object of a given process ID (PID).
 
     Args:
         pid (int): Process ID (PID) to get
-        die (bool, optional): Whether to raise an exception if no process with the given PID is found in the \
-            current process list or not. Defaults to True.
+        die (bool, optional): Whether to raise an exception if no process with the given PID is found in the
+            current process list or not. Defaults to False.
 
     Raises:
         psutil.NoSuchProcess: If process with the given PID is not found and die set to True.
         psutil.AccessDenied: If permission denied.
 
     Returns:
-        psutil.Process or None: psutil.Process object if he given PID is found, None otherwise.
+        psutil.Process or None: The Process object of the given PID if found, otherwise None, if die set to False.
     &#34;&#34;&#34;
     try:
         return psutil.Process(pid)
-    except (psutil.ZombieProcess, psutil.AccessDenied, psutil.NoSuchProcess) as e:
+    except (psutil.AccessDenied, psutil.NoSuchProcess) as e:
         # when you query processess owned by another user, especially on macOS and Windows you may get AccessDenied exception
         if die:
             raise e
@@ -526,64 +643,62 @@ def get_user_processes(user):
     &#34;&#34;&#34;Get all process for a specific user.
 
     Args:
-        user (str): Te user name to match against.
+        user (str): The user name to match against.
 
     Yields:
-        psutil.Process: psutil.Process object for all processes owned by `user`.
+        psutil.Process: process object for all processes owned by `user`.
     &#34;&#34;&#34;
     try:
-        for process in psutil.process_iter():
+        for process in psutil.process_iter([&#34;name&#34;, &#34;exe&#34;, &#34;cmdline&#34;]):
             if process.username() == user:
                 yield process
     except (psutil.AccessDenied, psutil.NoSuchProcess):
         pass
 
 
-def kill_user_processes(user, sure_kill=False):
+def kill_user_processes(user, sig=signal.SIGTERM, timeout=5, sure_kill=False):
     &#34;&#34;&#34;Kill all processes for a specific user.
 
     Args:
         user (str): The user name to match against.
+        sig (signal, optional): See signal module constants. Defaults to signal.SIGTERM.
+        timeout (int, optional): How long to wait for a process to terminate (seconds) before raise exception or, if sure_kill=True, send a SIGKILL. Defaults to 5.
         sure_kill (bool, optional): Whether to fallback to SIGKILL if the timeout exceeded for the terminate operation or not. Defaults to False.
 
     Returns:
-        (list[psutil.Process]/None): list of process objects that remain alive if any. None otherwise.
+        list of psutil.Process): list of process objects that remain alive if any.
     &#34;&#34;&#34;
     failed_processes = []
     for proc in get_user_processes(user):
         try:
-            kill(proc, sure_kill=sure_kill)
+            kill(proc, sig=sig, timeout=timeout, sure_kill=sure_kill)
         except (j.exceptions.Runtime, j.exceptions.Permission) as e:
-            j.logger.exception(&#34;exception occurred while iterating over user processes&#34;, exception=e)
-            j.logger.debug(&#34;ignoring the exception..&#34;)
+            j.logger.exception(&#34;ignoring an exception that occurred while iterating over user processes&#34;, exception=e)
             failed_processes.append(proc)
-    j.logger.debug(
-        &#34;killing all user processes succeeded&#34; if not failed_processes else &#34;couldn&#39;t kill all user processes!&#34;
-    )
 
     # making sure
     if failed_processes:
         gone, failed_processes = psutil.wait_procs(failed_processes, timeout=0)
 
-    j.logger.debug(f&#34;stay alive: {len(failed_processes)}, pids -&gt; {[p.pid for p in failed_processes]}&#34;)
-    return failed_processes or None  # return None if the failed list is empty
+    return failed_processes
 
 
 def get_similar_processes(target_proc=None):
     &#34;&#34;&#34;Gets similar processes to current process, started with same command line and same options.
 
     Args:
-        target_proc (int or psutil.Process, optional): pid, or psutil.Process object,\
-             if None then pid for current process will be used. Defaults to None.
-    Returns:
-        list[psutil.Process] -- list of similar process
+        target_proc (int or psutil.Process, optional): pid, or psutil.Process object.
+            if None then pid for current process will be used. Defaults to None.
+
+    Yields:
+        psutil.Process: psutil.Process object for all processes similar to a given process.
     &#34;&#34;&#34;
     try:
         if target_proc is None:
             target_proc = get_my_process()
         elif isinstance(target_proc, int):
-            target_proc = get_process_object(target_proc)
-        for proc in psutil.process_iter([&#34;name&#34;, &#34;cmdline&#34;]):
+            target_proc = get_process_object(target_proc, die=True)
+        for proc in psutil.process_iter([&#34;name&#34;, &#34;exe&#34;, &#34;cmdline&#34;]):
             if proc.info[&#34;cmdline&#34;] and target_proc.cmdline() and proc.info[&#34;cmdline&#34;] == target_proc.cmdline():
                 yield proc
     except (psutil.AccessDenied, psutil.NoSuchProcess):
@@ -626,17 +741,21 @@ def check_process_for_pid(pid, process_name):
 def set_env_var(var_names, var_values):
     &#34;&#34;&#34;Set the value of the environment variables {varnames}. Existing variable are overwritten
 
+    Such changes to the environment affect subprocesses started with os.system(), popen() or fork() and execv()
+
     Args:
-        var_names list[str]: A list of the names of all the environment variables to set
-        varvalues list[str]: A list of all values for the environment variables
+        var_names (list of str): A list of the names of all the environment variables to set
+        varvalues (list of str): A list of all values for the environment variables
+
     Raises:
         j.exceptions.RuntimeError: if error happened during setting the environment variables
     &#34;&#34;&#34;
-    try:
-        for i in range(len(var_names)):
-            os.environ[var_names[i]] = str(var_values[i]).strip()
-    except Exception as e:
-        raise j.exceptions.RuntimeError(e)
+    # Note:
+    # On some platforms, including FreeBSD and Mac OS X, setting environ may cause memory leaks.
+    # https://docs.python.org/3/library/os.html?highlight=os%20environ#os.environ
+    # Refer to the system documentation for putenv().
+    for i in range(len(var_names)):
+        os.environ[var_names[i]] = str(var_values[i]).strip()
 
 
 def get_pid_by_port(port, ipv6=False, udp=False):
@@ -648,7 +767,7 @@ def get_pid_by_port(port, ipv6=False, udp=False):
         udp (bool, optional): Whether to search the connections for UDP port instead of TCP. Defaults to False.
 
     Returns:
-        (int/None): Process ID that listen on that port
+        int or None: PID for the proceses that listen on that port.
     &#34;&#34;&#34;
 
     process = get_process_by_port(port, ipv6=ipv6, udp=udp)
@@ -665,18 +784,44 @@ def kill_process_by_name(process_name, sig=signal.SIGTERM, match_predicate=None,
         match_predicate (callable, optional): Function that does matching between\
             found processes and the targeted process, the function should accept\
             two arguments and return a boolean. Defaults to None.
+        timeout (int, optional): How long to wait for a process to terminate (seconds) before raise exception\
+            or, if sure_kill=True, send a SIGKILL. Defaults to 5.
+        sure_kill (bool, optional): Whether to fallback to SIGKILL if the timeout exceeded for the terminate operation or not. Defaults to False.
 
     Returns:
-        None or list[int] represents the IDs of the processes remaning alive.
+        list of int: represents the IDs of the processes remaning alive if any.
     &#34;&#34;&#34;
     pids = get_pids(process_name, match_predicate=match_predicate)
     failed_processes = []
     for pid in pids:
         try:
             kill(pid, sig, timeout=timeout, sure_kill=sure_kill)
-        except (j.exceptions.Runtime, j.exceptions.Permission) as e:
+        except (j.exceptions.Runtime, j.exceptions.Permission):
             failed_processes.append(pid)
-    return failed_processes or None  # return None if the failed list is empty
+    return failed_processes
+
+
+def kill_all_pids(pids, sig=signal.SIGTERM, timeout=5, sure_kill=False):
+    &#34;&#34;&#34;Kill all processes with given pids.
+
+    Args:
+        pids (list of int): The target processes IDs.
+        sig (signal, optional): See signal module constants. Defaults to signal.SIGKILL.
+        timeout (int, optional): How long to wait for a process to terminate (seconds) before raise exception\
+            or, if sure_kill=True, send a SIGKILL. Defaults to 5.
+        sure_kill (bool, optional): Whether to fallback to SIGKILL if the timeout exceeded for the terminate operation or not. Defaults to False.
+
+
+    Returns:
+        list of int: represents the IDs of the processes remaning alive if any.
+    &#34;&#34;&#34;
+    failed_processes = []
+    for pid in pids:
+        try:
+            kill(pid, sig, timeout=timeout, sure_kill=sure_kill)
+        except (j.exceptions.Runtime, j.exceptions.Permission):
+            failed_processes.append(pid)
+    return failed_processes
 
 
 def kill_process_by_port(port, ipv6=False, udp=False, sig=signal.SIGTERM, timeout=5, sure_kill=False):
@@ -687,15 +832,16 @@ def kill_process_by_port(port, ipv6=False, udp=False, sig=signal.SIGTERM, timeou
         ipv6 (bool, optional): Whether to search the connections that using ipv6 instead of ipv4. Defaults to False.
         udp (bool, optional): Whether to search the connections for UDP port instead of TCP. Defaults to False.
         sig (signal, optional): See signal module constants. Defaults to signal.SIGTERM.
-        timeout (int, optional): How long to wait for a process to terminate (seconds) before raise exception\
+        timeout (int, optional): How long to wait for a process to terminate (seconds) before raise exception
             or, if sure_kill=True, send a SIGKILL. Defaults to 5.
         sure_kill (bool, optional): Whether to fallback to SIGKILL if the timeout exceeded for the terminate operation or not. Defaults to False.
 
-    Returns:
-        None
+    Raises:
+        j.exceptions.Runtime: In case killing the process failed.
+        j.exceptions.Permission: In case the permission to perform this action is denied.
     &#34;&#34;&#34;
     proc = get_process_by_port(port, ipv6=ipv6, udp=udp)
-    return kill(proc, sig=sig, timeout=timeout, sure_kill=sure_kill)
+    kill(proc, sig=sig, timeout=timeout, sure_kill=sure_kill)
 
 
 def is_port_listening(port, ipv6=False):
@@ -708,7 +854,6 @@ def is_port_listening(port, ipv6=False):
     Returns:
         bool: True if port is used, False otherwise.
     &#34;&#34;&#34;
-    # XXX only support ipv4, also it apparently used to pick a free port, any way using nettools is preferred
     from jumpscale.sals import nettools
 
     ip6 = &#34;::&#34;
@@ -725,14 +870,16 @@ def get_process_by_port(port, ipv6=False, udp=False):
         udp (bool, optional): Whether to search the connections for UDP port instead of TCP. Defaults to False.
 
     Raises:
-        j.exceptions.Runtime: if the process is not accessible by the user, or no longer exists
+        j.exceptions.Runtime: pid is not retrievable.
+        j.exceptions.NotFound: if the process is no longer exists.
+        j.exceptions.Permission: if the process is not accessible by the user.
 
     Returns:
         psutil.Process: process object if found, otherwise None
     &#34;&#34;&#34;
     for conn in psutil.net_connections():  # TODO use kind parameter
         try:
-            # XXX should we check against ESTABLISHED status?
+            # should we check against ESTABLISHED status?
             # connection.status For UDP and UNIX sockets this is always going to be psutil.CONN_NONE
             if (
                 conn.laddr.port == port
@@ -743,18 +890,18 @@ def get_process_by_port(port, ipv6=False, udp=False):
                 if conn.pid:
                     return psutil.Process(conn.pid)
                 else:
-                    raise j.exceptions.Runtime(&#34;pid is not retrievable, root is needed?&#34;)
+                    raise j.exceptions.Runtime(&#34;pid is not retrievable, not root?&#34;)
         except psutil.NoSuchProcess:
-            raise j.exceptions.Runtime(&#34;Process is no longer exists&#34;)
+            raise j.exceptions.NotFound(&#34;Process is no longer exists&#34;)
         except psutil.AccessDenied:
-            raise j.exceptions.Runtime(&#34;Permission denied&#34;)
+            raise j.exceptions.Permission(&#34;Permission denied&#34;)
 
 
 def get_defunct_processes():
     &#34;&#34;&#34;Gets defunct (zombie) processes.
 
     Returns:
-        list[int]: List of processes ID(s).
+        list of int: List of processes ID(s).
     &#34;&#34;&#34;
     zombie_pids = []
     for proc in psutil.process_iter():
@@ -833,58 +980,63 @@ def get_processes_info(user=None, sort=&#34;mem&#34;, filterstr=None, limit=25, 
         else:
             try:
                 return procObj[sort]
-            except KeyError as e:
+            except KeyError:
                 j.logger.error(f&#34;bad field name for sorting: {sort}&#34;)
                 raise j.exceptions.Value(f&#34;bad field name for sorting: {sort}&#34;)
 
     processes_list = []
-    j.logger.debug(f&#34;Args used: user={user}, sort={sort}, filterstr={filterstr}, limit={limit}, desc={desc}&#34;)
     if not filterstr:
-        p_source = get_processes() if not user else get_user_processes(user=user)
+        if user:
+            p_source = get_user_processes(user=user)
+        else:
+            p_source = get_processes()
     else:
-        # XXX it makes sense that get_pids func should returns list of psutil.Process objects instead of list of pids
-        p_source = (
-            map(get_process_object, get_pids(process_name=filterstr))
-            if not user
-            else map(get_process_object, get_pids(process_name=filterstr, _alt_source=get_user_processes(user)))
-        )
+        # it makes sense that get_pids func should returns list of psutil.Process objects instead of list of pids
+        if user:
+            p_source = map(get_process_object, get_pids(process_name=filterstr, _alt_source=get_user_processes(user)))
+        else:
+            p_source = map(get_process_object, get_pids(process_name=filterstr))
     for proc in p_source:
-        try:
-            # Fetch process details as dict
-            pinfo = proc.as_dict(
-                attrs=[
-                    &#34;cpu_num&#34;,
-                    &#34;cpu_percent&#34;,
-                    &#34;cpu_times&#34;,
-                    &#34;create_time&#34;,
-                    &#34;gids&#34;,
-                    &#34;memory_percent&#34;,
-                    &#34;name&#34;,
-                    &#34;pid&#34;,
-                    &#34;ppid&#34;,
-                    &#34;status&#34;,
-                    &#34;uids&#34;,
-                    &#34;username&#34;,
-                ]
-            )
-            pinfo[&#34;rss&#34;] = proc.memory_info().rss / (
-                1024 * 1024
-            )  # the non-swapped physical memory a process has used in Mb
-            pinfo[&#34;cpu_time&#34;] = sum(pinfo[&#34;cpu_times&#34;][:2])  # cumulative, excluding children and iowait
-            pinfo[&#34;ports&#34;] = []
-            connections = proc.connections()  # need root
-            if connections:
-                for conn in connections:
-                    pinfo[&#34;ports&#34;].append({&#34;port&#34;: conn.laddr.port, &#34;status&#34;: conn.status})
-            # Append dict to list
-            processes_list.append(pinfo)
-        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess) as e:
-            j.logger.debug(
-                &#34;ignoring and logging an exception that occurred while iterating over system processes, not root?&#34;
-            )
-            # j.logger.exception(&#39;an exception occurred while iterating over system processes&#39;, exception=e)
-            pass
-    j.logger.debug(f&#34;Processes found: {len(processes_list)}&#34;)
+        if proc:  # in case a race condition happened, and get_process_object returned None
+            try:
+                # Fetch process details as dict
+                pinfo = proc.as_dict(
+                    attrs=[
+                        &#34;cpu_num&#34;,
+                        &#34;cpu_percent&#34;,
+                        &#34;cpu_times&#34;,
+                        &#34;create_time&#34;,
+                        &#34;gids&#34;,
+                        &#34;memory_percent&#34;,
+                        &#34;name&#34;,
+                        &#34;pid&#34;,
+                        &#34;ppid&#34;,
+                        &#34;status&#34;,
+                        &#34;uids&#34;,
+                        &#34;username&#34;,
+                    ]
+                )
+                pinfo[&#34;rss&#34;] = proc.memory_info().rss / (
+                    1024 * 1024
+                )  # the non-swapped physical memory a process has used in Mb
+                pinfo[&#34;cpu_time&#34;] = sum(pinfo[&#34;cpu_times&#34;][:2])  # cumulative, excluding children and iowait
+                pinfo[&#34;ports&#34;] = []
+                try:
+                    connections = proc.connections()  # need root
+                except (psutil.AccessDenied):
+                    pass
+                else:
+                    if connections:
+                        for conn in connections:
+                            pinfo[&#34;ports&#34;].append({&#34;port&#34;: conn.laddr.port, &#34;status&#34;: conn.status})
+                # Append dict to list
+                processes_list.append(pinfo)
+            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess) as e:
+                j.logger.exception(
+                    &#34;ignoring and logging an exception that occurred while iterating over system processes, not root?&#34;,
+                    exception=e,
+                )
+                pass
     # sort the processes list by sort_key
     sorted_processes = sorted(processes_list, key=_get_sort_key, reverse=desc)[:limit]
     return sorted_processes
@@ -951,17 +1103,19 @@ def get_environ(pid):
         pid (int): process pid
 
     Raises:
-        psutil.NoSuchProcess: if process with the given PID is not found and die set to True
-        psutil.AccessDenied: if permission denied
+        j.exceptions.NotFound: if the process is no longer exists.
+        j.exceptions.Permission: if the process is not accessible by the user.
 
     Returns:
         dict: dict of env variables
     &#34;&#34;&#34;
-    proc = get_process_object(pid)
     try:
+        proc = get_process_object(pid, die=True)
         return proc.environ()
-    except (psutil.AccessDenied, psutil.NoSuchProcess) as e:
-        raise e
+    except psutil.NoSuchProcess:
+        raise j.exceptions.NotFound(&#34;Process is no longer exists&#34;)
+    except psutil.AccessDenied:
+        raise j.exceptions.Permission(&#34;Permission denied&#34;)
 
 
 def kill_proc_tree(
@@ -970,7 +1124,7 @@ def kill_proc_tree(
     &#34;&#34;&#34;Kill a process and its children (including grandchildren) with signal `sig`
 
     Args:
-        proc (int/psutil.Process): Target process ID (PID) or psutil.Process object.
+        proc (int or psutil.Process): Target process ID (PID) or psutil.Process object.
         sig (signal, optional): See signal module constants. Defaults to signal.SIGTERM.
         include_parent (): Whether to kill the process itself. Defaults to True.
         include_grand_children (): whether to kill recursively all grandchildren. Defaults to True.
@@ -979,14 +1133,19 @@ def kill_proc_tree(
         sure_kill (bool, optional): Whether to fallback to SIGKILL if the timeout exceeded for the terminate operation or not. Defaults to False.
 
     Returns:
-        (list[psutil.Process]/None): list of process objects that remain alive if any. None otherwise.
+        list of psutil.Process: represents the objects of the processes remaning alive if any.
+
+    Raises:
+        AssertionError: in case the given `parent` is the current process
     &#34;&#34;&#34;
     if isinstance(parent, int):
-        try:
-            parent = get_process_object(parent)
-        except (psutil.AccessDenied, psutil.NoSuchProcess):
-            return
+        parent = get_process_object(parent)
+        if parent is None:
+            return  # already dead
 
+    # should be checked on any killing function
+    # here we first need to make sure taht `include_parent` is True
+    # and/or better check inside the below for loop
     assert parent.pid != os.getpid(), &#34;won&#39;t kill myself&#34;
 
     processes = parent.children(recursive=include_grand_children)[::-1]
@@ -1003,7 +1162,7 @@ def kill_proc_tree(
     # making sure
     if failed:
         gone, failed = psutil.wait_procs(failed, timeout=0)
-    return failed or None
+    return failed
 
 
 def in_docker():
@@ -1105,64 +1264,72 @@ def in_host():
 </details>
 </dd>
 <dt id="jumpscale.sals.process.check_start"><code class="name flex">
-<span>def <span class="ident">check_start</span></span>(<span>cmd, filterstr, n_instances=1, retry=1)</span>
+<span>def <span class="ident">check_start</span></span>(<span>cmd, filterstr, n_instances=1, retry=1, timeout=2, delay=0.5)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Run command (possibly multiple times) and check if it is started based on filterstr</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt>cmd (str/list): Command to be executed.</dt>
+<dt><strong><code>cmd</code></strong> :&ensp;<code>str</code> or <code>list</code> of <code>str</code></dt>
+<dd>Command to be executed.</dd>
 <dt><strong><code>filterstr</code></strong> :&ensp;<code>str</code></dt>
-<dd>Filter string. will match against against Process.name(),
-Process.exe() and Process.cmdline()</dd>
+<dd>Filter string. will match against against Process.name(), Process.exe() and Process.cmdline()</dd>
 <dt><strong><code>n_instances</code></strong> :&ensp;<code>int</code>, optional</dt>
 <dd>Number of needed instances. Defaults to 1.</dd>
 <dt><strong><code>retry</code></strong> :&ensp;<code>int</code>, optional</dt>
 <dd>Number of retries to execute the command and check. Defaults to 1.</dd>
+<dt><strong><code>timout</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>how long the function should wait for process to finish (first or parnet process started with the command)</dd>
+<dt><strong><code>delay</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>how long the function should delay the checking process after the process finished or timeout exceeded (in case the first process started another one).</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <p>j.exceptions.Runtime: will be raised if we didn't reach number of required instances.</p></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def check_start(cmd, filterstr, n_instances=1, retry=1):
+<pre><code class="python">def check_start(cmd, filterstr, n_instances=1, retry=1, timeout=2, delay=0.5):
     &#34;&#34;&#34;Run command (possibly multiple times) and check if it is started based on filterstr
 
     Args:
-        cmd (str/list): Command to be executed.
-        filterstr (str): Filter string. will match against against Process.name(),\
-            Process.exe() and Process.cmdline()
+        cmd (str or list of str): Command to be executed.
+        filterstr (str): Filter string. will match against against Process.name(), Process.exe() and Process.cmdline()
         n_instances (int, optional): Number of needed instances. Defaults to 1.
         retry (int, optional): Number of retries to execute the command and check. Defaults to 1.
+        timout (int, optional): how long the function should wait for process to finish (first or parnet process started with the command)
+        delay (int, optional): how long the function should delay the checking process after the process finished or timeout exceeded (in case the first process started another one).
 
     Raises:
         j.exceptions.Runtime: will be raised if we didn&#39;t reach number of required instances.
     &#34;&#34;&#34;
     for i in range(retry):
         if isinstance(cmd, str):
-            cmd = cmd.split()
-        proc = psutil.Popen(cmd, close_fds=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+            args = shlex.split(cmd)
+        proc = psutil.Popen(args, close_fds=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
         j.logger.debug(f&#34;attempt no: {i}&#34;)
         j.logger.debug(f&#34;executed cmd: {cmd}&#34;)
         j.logger.debug(f&#34;proc.cmdline: {proc.cmdline()}&#34;)
-        j.logger.debug(f&#34;pid: {proc.pid}&#34;)
+        j.logger.debug(f&#34;direct process id spawn by this command : {proc.pid}&#34;)
         j.logger.debug(f&#34;status: {proc.status()}&#34;)
         j.logger.debug(f&#34;name: {proc.name()}&#34;)
         j.logger.debug(f&#34;exe: {proc.exe()}&#34;)
-        j.logger.debug(f&#34;children: {proc.children(recursive=True)}&#34;)
-        j.logger.debug(f&#34;parents: {proc.parents()}&#34;)
         try:
-            rc = proc.wait(timeout=1)  # makesure the process is stable
+            rc = proc.wait(timeout)  # makesure the process is stable
             if rc == 0:  # executing the command succeeded but exited immediately!
                 j.logger.debug(&#34;executing the start command succeeded but exited immediately&#34;)
             else:
                 j.logger.debug(&#34;the start command exited with error&#34;)  # the process exited with error
+                output, error_output = proc.communicate()
+                j.logger.debug(f&#34;err: {error_output}&#34;)
             j.logger.debug(f&#34;return code is: {rc}&#34;)
         except psutil.TimeoutExpired:
-            j.logger.debug(&#34;the start command still running after 1 sec&#34;)  # still running
+            j.logger.debug(&#34;the start command still running after 2 sec&#34;)  # still running
+        # wait extra delay to allow any subprocess spawned from the process we just started to finish
+        # this may not needed in many cases
+        time.sleep(delay)
         # TODO check based on command
         if check_running(filterstr, min=n_instances):
             j.logger.debug(f&#34;found at least {n_instances} instances using the filter string: {filterstr}&#34;)
-            return True  # XXX should remove? None
+            return
         else:
             j.logger.debug(f&#34;the required number of instances using the filter string: {filterstr} not found yet!&#34;)
             continue
@@ -1171,7 +1338,7 @@ Process.exe() and Process.cmdline()</dd>
 </details>
 </dd>
 <dt id="jumpscale.sals.process.check_stop"><code class="name flex">
-<span>def <span class="ident">check_stop</span></span>(<span>cmd, filterstr, retry=1, n_instances=0)</span>
+<span>def <span class="ident">check_stop</span></span>(<span>cmd, filterstr, retry=1, n_instances=0, timeout=2, delay=0.5)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Executes a stop command (possibly multiple times) and check if it is already stopped based on filterstr</p>
@@ -1185,6 +1352,10 @@ Process.exe() and Process.cmdline()</dd>
 <dd>Number of retries. Defaults to 1.</dd>
 <dt><strong><code>n_inst</code></strong> :&ensp;<code>int</code>, optional</dt>
 <dd>Number of instances after stop. Defaults to 0.</dd>
+<dt><strong><code>timout</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>how long the function should wait for process to finish (first or parnet process started with the command)</dd>
+<dt><strong><code>delay</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>how long the function should delay the checking process after the process finished or timeout exceeded (in case the first process started another one).</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
@@ -1193,7 +1364,7 @@ Process.exe() and Process.cmdline()</dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def check_stop(cmd, filterstr, retry=1, n_instances=0):
+<pre><code class="python">def check_stop(cmd, filterstr, retry=1, n_instances=0, timeout=2, delay=0.5):
     &#34;&#34;&#34;Executes a stop command (possibly multiple times) and check if it is already stopped based on filterstr
 
     Args:
@@ -1201,6 +1372,8 @@ Process.exe() and Process.cmdline()</dd>
         filterstr (str): Filter string.
         retry (int, optional): Number of retries. Defaults to 1.
         n_inst (int, optional): Number of instances after stop. Defaults to 0.
+        timout (int, optional): how long the function should wait for process to finish (first or parnet process started with the command)
+        delay (int, optional): how long the function should delay the checking process after the process finished or timeout exceeded (in case the first process started another one).
 
     Raises:
         j.exceptions.Runtime: if number of instances not matched
@@ -1208,19 +1381,17 @@ Process.exe() and Process.cmdline()</dd>
 
     for i in range(retry):
         if isinstance(cmd, str):
-            cmd = cmd.split()
-        proc = psutil.Popen(cmd, close_fds=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+            args = shlex.split(cmd)
+        proc = psutil.Popen(args, close_fds=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
         j.logger.debug(f&#34;attempt no: {i}&#34;)
         j.logger.debug(f&#34;executed cmd: {cmd}&#34;)
         j.logger.debug(f&#34;proc.cmdline: {proc.cmdline()}&#34;)
-        j.logger.debug(f&#34;pid: {proc.pid}&#34;)
+        j.logger.debug(f&#34;direct process id spawn by this command : {proc.pid}&#34;)
         j.logger.debug(f&#34;status: {proc.status()}&#34;)
         j.logger.debug(f&#34;name: {proc.name()}&#34;)
         j.logger.debug(f&#34;exe: {proc.exe()}&#34;)
-        j.logger.debug(f&#34;children: {proc.children(recursive=True)}&#34;)
-        j.logger.debug(f&#34;parents: {proc.parents()}&#34;)
         try:
-            rc = proc.wait(timeout=5)  # makesure the process is stable
+            rc = proc.wait(timeout)  # makesure the process is stable
             # print(f&#39;rc: {rc}&#39;)
             if rc == 0:
                 # executing the process succeeded but exited immediately!
@@ -1228,14 +1399,19 @@ Process.exe() and Process.cmdline()</dd>
             else:
                 # the process exited with error
                 j.logger.debug(&#34;the stop command exited with error&#34;)  # the process exited with error
+                output, error_output = proc.communicate()
+                j.logger.debug(f&#34;err: {error_output}&#34;)
         except psutil.TimeoutExpired:
-            j.logger.debug(&#34;the start command still running after 1 sec&#34;)  # still running
+            j.logger.debug(&#34;the start command still running after 2 sec&#34;)  # still running
+        # wait extra delay to allow any subprocess spawned from the process we just started to finish
+        # this may not needed in many cases
+        time.sleep(delay)
         found = get_pids(filterstr)
         if len(found) == n_instances:
             j.logger.debug(
                 f&#34;the required {n_instances} matching the instances found using the filter string: {filterstr}&#34;
             )
-            return True  # should remove? None
+            return
         else:
             j.logger.debug(
                 f&#34;the required {n_instances} not matching the instances number found using the filter string: {filterstr} yet&#34;
@@ -1255,7 +1431,8 @@ Process.exe() and Process.cmdline()</dd>
 <p>Accepts command as a list too, with auto-escaping.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt>cmd (str/list[str]): Command to be executed, e.g. "ls -la" or ["ls", "-la"]</dt>
+<dt><strong><code>cmd</code></strong> :&ensp;<code>str</code> or <code>list</code> of <code>str</code></dt>
+<dd>Command to be executed, e.g. "ls -la" or ["ls", "-la"]</dd>
 <dt><strong><code>showout</code></strong> :&ensp;<code>bool</code>, optional</dt>
 <dd>Whether to show stdout of the command or not. Defaults to False.</dd>
 <dt><strong><code>cwd</code></strong> :&ensp;<code>str</code>, optional</dt>
@@ -1296,7 +1473,7 @@ Process.exe() and Process.cmdline()</dd>
     Accepts command as a list too, with auto-escaping.
 
     Args:
-        cmd (str/list[str]): Command to be executed, e.g. &#34;ls -la&#34; or [&#34;ls&#34;, &#34;-la&#34;]
+        cmd (str or list of str): Command to be executed, e.g. &#34;ls -la&#34; or [&#34;ls&#34;, &#34;-la&#34;]
         showout (bool, optional): Whether to show stdout of the command or not. Defaults to False.
         cwd (str, optional): Path to `cd` into before running command. Defaults to None.
         shell (str, optional): Specify a working directory for the command. Defaults to &#34;/bin/bash&#34;.
@@ -1328,14 +1505,14 @@ Process.exe() and Process.cmdline()</dd>
 <dd>
 <section class="desc"><p>Gets defunct (zombie) processes.</p>
 <h2 id="returns">Returns</h2>
-<p>list[int]: List of processes ID(s).</p></section>
+<p>list of int: List of processes ID(s).</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def get_defunct_processes():
     &#34;&#34;&#34;Gets defunct (zombie) processes.
 
     Returns:
-        list[int]: List of processes ID(s).
+        list of int: List of processes ID(s).
     &#34;&#34;&#34;
     zombie_pids = []
     for proc in psutil.process_iter():
@@ -1358,12 +1535,8 @@ Process.exe() and Process.cmdline()</dd>
 <dd>process pid</dd>
 </dl>
 <h2 id="raises">Raises</h2>
-<dl>
-<dt><code>psutil.NoSuchProcess</code>: <code>if</code> <code>process</code> <code>with</code> <code>the</code> <code>given</code> <code>PID</code> <code>is</code> <code>not</code> <code>found</code> <code>and</code> <code>die</code> <code>set</code> <code>to</code> <code>True</code></dt>
-<dd>&nbsp;</dd>
-<dt><code>psutil.AccessDenied</code>: <code>if</code> <code>permission</code> <code>denied</code></dt>
-<dd>&nbsp;</dd>
-</dl>
+<p>j.exceptions.NotFound: if the process is no longer exists.
+j.exceptions.Permission: if the process is not accessible by the user.</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>dict</code></strong></dt>
@@ -1378,24 +1551,26 @@ Process.exe() and Process.cmdline()</dd>
         pid (int): process pid
 
     Raises:
-        psutil.NoSuchProcess: if process with the given PID is not found and die set to True
-        psutil.AccessDenied: if permission denied
+        j.exceptions.NotFound: if the process is no longer exists.
+        j.exceptions.Permission: if the process is not accessible by the user.
 
     Returns:
         dict: dict of env variables
     &#34;&#34;&#34;
-    proc = get_process_object(pid)
     try:
+        proc = get_process_object(pid, die=True)
         return proc.environ()
-    except (psutil.AccessDenied, psutil.NoSuchProcess) as e:
-        raise e</code></pre>
+    except psutil.NoSuchProcess:
+        raise j.exceptions.NotFound(&#34;Process is no longer exists&#34;)
+    except psutil.AccessDenied:
+        raise j.exceptions.Permission(&#34;Permission denied&#34;)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.sals.process.get_filtered_pids"><code class="name flex">
 <span>def <span class="ident">get_filtered_pids</span></span>(<span>filterstr, excludes=None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Get pids filtered by filterstr and excludes</p>
+<section class="desc"><p>Get pids filtered by filterstr and excludes, matching against the full command line used to start the process.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>filterstr</code></strong> :&ensp;<code>str</code></dt>
@@ -1405,49 +1580,42 @@ Process.exe() and Process.cmdline()</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>list</code>[<code>int</code>]: <code>list</code> of <code>pids</code></dt>
+<dt><code>list</code> of <code>int</code>: <code>List</code> of <code>the</code> <code>processes</code> <code>IDs</code></dt>
 <dd>&nbsp;</dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def get_filtered_pids(filterstr, excludes=None):
-    &#34;&#34;&#34;Get pids filtered by filterstr and excludes
+    &#34;&#34;&#34;Get pids filtered by filterstr and excludes, matching against the full command line used to start the process.
 
     Args:
         filterstr (str): the String to filter based on.
         excludes (list[str]): exclude list. Defaults to None.
 
     Returns:
-        list[int]: list of pids
+        list of int: List of the processes IDs
     &#34;&#34;&#34;
     pids = []
-    try:
-        for proc in psutil.process_iter([&#34;name&#34;, &#34;cmdline&#34;]):
-            cmd_line = &#34; &#34;.join(proc.info[&#34;cmdline&#34;])
-            if proc.info[&#34;cmdline&#34;] and filterstr in cmd_line:
-                j.logger.debug(f&#34;found filter string: {filterstr} in command line: {cmd_line}&#34;)
-                if excludes:
-                    for exclude in excludes:
-                        if exclude in cmd_line:
-                            j.logger.debug(
-                                f&#34;but excluded because it contain exclude string: {exclude} in command line: {cmd_line}&#34;
-                            )
-                            break
-                    else:  # intended `for/else` meaning for loop finished normally with no break
-                        pids.append(proc.pid)  # may yield proc instead
-                    continue
-                else:
+    for proc in psutil.process_iter([&#34;name&#34;, &#34;cmdline&#34;]):
+        cmd_line = &#34; &#34;.join(proc.info[&#34;cmdline&#34;])
+        if proc.info[&#34;cmdline&#34;] and filterstr in cmd_line:
+            j.logger.debug(f&#34;found filter string: {filterstr} in command line: {cmd_line}&#34;)
+            if excludes:
+                for exclude in excludes:
+                    if exclude in cmd_line:
+                        j.logger.debug(
+                            f&#34;but excluded because it contain exclude string: {exclude} in command line: {cmd_line}&#34;
+                        )
+                        break
+                else:  # intended `for/else` meaning for loop finished normally with no break
                     pids.append(proc.pid)  # may yield proc instead
-        j.logger.debug(
-            f&#34;founded pids are: {pids}&#34;
-            if pids
-            else f&#34;filter string {filterstr} not found in any processes. root needed?&#34;
-        )
-        return pids
-    except (psutil.AccessDenied, psutil.NoSuchProcess) as e:
-        j.logger.debug(&#34;logging and bypassing the exception occurred while iterating over the system processes&#34;)
-        j.logger.exception(&#34;exception occurred while iterating over the system processes&#34;, exception=e)
-        pass</code></pre>
+                continue
+            else:
+                pids.append(proc.pid)  # may yield proc instead
+    j.logger.debug(
+        f&#34;founded pids are: {pids}&#34; if pids else f&#34;filter string {filterstr} not found in any processes. root needed?&#34;
+    )
+    return pids</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.sals.process.get_memory_usage"><code class="name flex">
@@ -1492,16 +1660,16 @@ total - free does not necessarily match used.
 <dd>
 <section class="desc"><p>Get psutil.Process object of the current process.</p>
 <h2 id="returns">Returns</h2>
-<p>(psutil.Process): psutil.Process object of the current process.</p></section>
+<p>psutil.Process: Process object of the current process.</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def get_my_process():
     &#34;&#34;&#34;Get psutil.Process object of the current process.
 
     Returns:
-        (psutil.Process): psutil.Process object of the current process.
+        psutil.Process: Process object of the current process.
     &#34;&#34;&#34;
-    return get_process_object(os.getpid())</code></pre>
+    return get_process_object(os.getpid(), die=True)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.sals.process.get_pid_by_port"><code class="name flex">
@@ -1519,7 +1687,7 @@ total - free does not necessarily match used.
 <dd>Whether to search the connections for UDP port instead of TCP. Defaults to False.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
-<p>(int/None): Process ID that listen on that port</p></section>
+<p>int or None: PID for the proceses that listen on that port.</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def get_pid_by_port(port, ipv6=False, udp=False):
@@ -1531,7 +1699,7 @@ total - free does not necessarily match used.
         udp (bool, optional): Whether to search the connections for UDP port instead of TCP. Defaults to False.
 
     Returns:
-        (int/None): Process ID that listen on that port
+        int or None: PID for the proceses that listen on that port.
     &#34;&#34;&#34;
 
     process = get_process_by_port(port, ipv6=ipv6, udp=udp)
@@ -1540,77 +1708,87 @@ total - free does not necessarily match used.
 </details>
 </dd>
 <dt id="jumpscale.sals.process.get_pids"><code class="name flex">
-<span>def <span class="ident">get_pids</span></span>(<span>process_name, match_predicate=None, limit=0)</span>
+<span>def <span class="ident">get_pids</span></span>(<span>process_name, match_predicate=None, limit=0, include_zombie=False, full_cmd_line=False)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Return a list of processes ID(s) matching 'process_name'.</p>
+<section class="desc"><p>Return a list of processes ID(s) matching a given process name.</p>
 <p>Function will check string against Process.name(), Process.exe() and Process.cmdline()</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>process_name</code></strong> :&ensp;<code>str</code></dt>
 <dd>The target process name</dd>
 <dt><strong><code>match_predicate</code></strong> :&ensp;<code>callable</code>, optional</dt>
-<dd>Function that does matching between
-found processes and the targeted process, the function should accept
-two arguments and return a boolean. Defaults to None.</dd>
+<dd>Function that does matching between found processes and the targeted process.
+the function should accept two arguments and return a boolean. Defaults to None.</dd>
 <dt><strong><code>limit</code></strong> :&ensp;<code>int</code>, optional</dt>
-<dd>If not equal to 0, function will return as fast as the number
-of PID(s) found become equal to <code>limit</code> value.</dd>
+<dd>If not equal to 0, function will return as fast as the number of PID(s) found become equal to <code>limit</code> value.</dd>
+<dt>_alt_source(callable or iterable, optional): Can be used to specify an alternative source of the psutil.Process objects to match against.</dt>
+<dt>ex: get_user_processes func, or get_similar_processes.</dt>
+<dt>if not specified, psutil.process_iter will be used. Defaults to None.</dt>
+<dt><strong><code>include_zombie</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>Whether to include pid for zombie proccesses or not. Defaults to False.</dd>
+<dt><strong><code>full_cmd_line</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>The pattern is normally only matched against the process name.
+if full_cmd_line is set to True, the full command line is used. Defaults to False.</dd>
 </dl>
-<p>_alt_source(callable or iterable, optional): Can be used to specify an alternative source
-of the psutil.Process objects to match against.
-ex: get_user_processes func, or get_similar_processes.
-if not specified, psutil.process_iter will be used. Defaults to None.</p>
 <h2 id="returns">Returns</h2>
-<dl>
-<dt><code>list</code>[<code>int</code>]: <code>list</code> of <code>PID</code>(<code>s</code>)</dt>
-<dd>&nbsp;</dd>
-</dl></section>
+<p>list of int: List of the processes IDs.</p></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def get_pids(process_name, match_predicate=None, limit=0, _alt_source=None):
-    &#34;&#34;&#34;Return a list of processes ID(s) matching &#39;process_name&#39;.
+<pre><code class="python">def get_pids(process_name, match_predicate=None, limit=0, _alt_source=None, include_zombie=False, full_cmd_line=False):
+    &#34;&#34;&#34;Return a list of processes ID(s) matching a given process name.
 
     Function will check string against Process.name(), Process.exe() and Process.cmdline()
 
     Args:
         process_name (str): The target process name
-        match_predicate (callable, optional): Function that does matching between\
-            found processes and the targeted process, the function should accept\
-            two arguments and return a boolean. Defaults to None.
-        limit (int, optional): If not equal to 0, function will return as fast as the number\
-            of PID(s) found become equal to `limit` value.
-        _alt_source(callable or iterable, optional): Can be used to specify an alternative source\
-            of the psutil.Process objects to match against.
+        match_predicate (callable, optional): Function that does matching between found processes and the targeted process.
+            the function should accept two arguments and return a boolean. Defaults to None.
+        limit (int, optional): If not equal to 0, function will return as fast as the number of PID(s) found become equal to `limit` value.
+        _alt_source(callable or iterable, optional): Can be used to specify an alternative source of the psutil.Process objects to match against.
             ex: get_user_processes func, or get_similar_processes.
             if not specified, psutil.process_iter will be used. Defaults to None.
+        include_zombie (bool, optional): Whether to include pid for zombie proccesses or not. Defaults to False.
+        full_cmd_line (bool, optional): The pattern is normally only matched against the process name.
+            if full_cmd_line is set to True, the full command line is used. Defaults to False.
 
     Returns:
-        list[int]: list of PID(s)
+        list of int: List of the processes IDs.
     &#34;&#34;&#34;
     # default match predicate
     def default_predicate(target, given):
-        j.logger.debug(f&#34;matching {target} with {given}&#34;)
         if isinstance(given, list):
-            return target.strip().lower() in given
-        return target.strip().lower() == given.lower()
+            return target in given
+        else:
+            return target.strip().lower() == given.lower()
+
+    default_processes_source = psutil.process_iter([&#34;name&#34;, &#34;exe&#34;, &#34;cmdline&#34;])
 
     match_predicate = match_predicate or default_predicate
+    p_source = _alt_source or default_processes_source
 
     pids = []
-    for proc in psutil.process_iter([&#34;name&#34;, &#34;exe&#34;, &#34;cmdline&#34;]):
+    for proc in p_source:
         try:
-            j.logger.debug(f&#34;process to check: {proc.info}&#34;)
-            if (
-                (match_predicate(process_name, proc.info[&#34;name&#34;]))
-                or (proc.info[&#34;exe&#34;] and match_predicate(process_name, os.path.basename(proc.info[&#34;exe&#34;])))
-                or (proc.info[&#34;cmdline&#34;] and match_predicate(process_name, proc.info[&#34;cmdline&#34;]))
-            ):
+            if not include_zombie and proc.status() == psutil.STATUS_ZOMBIE:
+                j.logger.debug(f&#34;ignoring : {proc.pid} zombie process.&#34;)
+                continue
+
+            candidates = [proc.info[&#34;name&#34;]]
+            if proc.info[&#34;exe&#34;]:
+                candidates.append(os.path.basename(proc.info[&#34;exe&#34;]))
+            if proc.info[&#34;cmdline&#34;]:
+                if full_cmd_line:
+                    candidates.append(proc.info[&#34;cmdline&#34;])
+                else:
+                    candidates.append(os.path.basename(proc.info[&#34;cmdline&#34;][0]))
+
+            if any([match_predicate(process_name, candidate) for candidate in candidates]):
                 pids.append(proc.pid)
                 # return early if no need to iterate over all running process
                 if limit and len(pids) == limit:
                     return pids
-        except (psutil.ZombieProcess, psutil.AccessDenied, psutil.NoSuchProcess):
+        except psutil.Error:
             pass
     return pids</code></pre>
 </details>
@@ -1619,24 +1797,24 @@ if not specified, psutil.process_iter will be used. Defaults to None.</p>
 <span>def <span class="ident">get_pids_filtered_by_regex</span></span>(<span>regex_list)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Get pids of a process filtered by Regex list</p>
+<section class="desc"><p>Get pids of a process filtered by Regex list, matching against the full command line used to start the process.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>regex_list</code></strong> :&ensp;<code>list</code>[<code>str</code>]</dt>
 <dd>List of regex expressions.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
-<p>list(int): List of pids.</p></section>
+<p>list of int: List of the processes IDs.</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def get_pids_filtered_by_regex(regex_list):
-    &#34;&#34;&#34;Get pids of a process filtered by Regex list
+    &#34;&#34;&#34;Get pids of a process filtered by Regex list, matching against the full command line used to start the process.
 
     Args:
         regex_list (list[str]): List of regex expressions.
 
     Returns:
-        list(int): List of pids.
+        list of int: List of the processes IDs.
     &#34;&#34;&#34;
     res = []
     for process in psutil.process_iter(attrs=[&#34;cmdline&#34;]):
@@ -1649,7 +1827,7 @@ if not specified, psutil.process_iter will be used. Defaults to None.</p>
 </details>
 </dd>
 <dt id="jumpscale.sals.process.get_pids_filtered_sorted"><code class="name flex">
-<span>def <span class="ident">get_pids_filtered_sorted</span></span>(<span>filterstr, sortkey=None)</span>
+<span>def <span class="ident">get_pids_filtered_sorted</span></span>(<span>filterstr, sortkey=None, desc=False)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Get pids of process by a filter string and optionally sort by sortkey</p>
@@ -1658,7 +1836,7 @@ if not specified, psutil.process_iter will be used. Defaults to None.</p>
 <dt><strong><code>filterstr</code></strong> :&ensp;<code>str</code></dt>
 <dd>filter string.</dd>
 <dt><strong><code>sortkey</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>Defaults to None. (if no sortkey used it will sort by pid(s) ascending).
+<dd>Defaults to None. (if no sortkey used it will sort by pid(s) in ascending order).
 sortkey can be one of the following:
 %cpu
 cpu utilization of the process in
@@ -1688,20 +1866,22 @@ psr
 processor that process is currently assigned to.
 start_time
 starting time or date of the process.</dd>
+<dt><strong><code>desc</code></strong></dt>
+<dd>(bool, optional): Whether to sort the processes in descending order or not(asc). Defaults to False (asc).</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>list</code>(<code>int</code>): <code>processes</code> <code>pids</code></dt>
+<dt><code>list</code> of <code>int</code>: <code>list</code> of <code>the</code> <code>processes</code> <code>IDs</code></dt>
 <dd>&nbsp;</dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def get_pids_filtered_sorted(filterstr, sortkey=None):
+<pre><code class="python">def get_pids_filtered_sorted(filterstr, sortkey=None, desc=False):
     &#34;&#34;&#34;Get pids of process by a filter string and optionally sort by sortkey
 
     Args:
         filterstr (str): filter string.
-        sortkey (str, optional): Defaults to None. (if no sortkey used it will sort by pid(s) ascending).
+        sortkey (str, optional): Defaults to None. (if no sortkey used it will sort by pid(s) in ascending order).
             sortkey can be one of the following:
             %cpu           cpu utilization of the process in
             %mem           ratio of the process&#39;s resident set size  to the physical memory on the machine, expressed as a percentage.
@@ -1715,9 +1895,10 @@ starting time or date of the process.</dd>
             ppid           parent process ID.
             psr            processor that process is currently assigned to.
             start_time     starting time or date of the process.
+        desc: (bool, optional): Whether to sort the processes in descending order or not(asc). Defaults to False (asc).
 
     Returns:
-        list(int): processes pids
+        list of int: list of the processes IDs
     &#34;&#34;&#34;
     ps_to_psutil_map = {
         &#34;%cpu&#34;: &#34;cpu_percent&#34;,
@@ -1735,9 +1916,6 @@ starting time or date of the process.</dd>
     }
     if sortkey is None:  # mimic default ps commnad sorting behavior
         sortkey = &#34;pid&#34;
-        desc = False
-    else:
-        desc = True
     # return pids from process objects
     return [p[&#34;pid&#34;] for p in get_processes_info(sort=ps_to_psutil_map[sortkey], filterstr=filterstr, desc=desc)]</code></pre>
 </details>
@@ -1816,10 +1994,9 @@ starting time or date of the process.</dd>
 <dd>Whether to search the connections for UDP port instead of TCP. Defaults to False.</dd>
 </dl>
 <h2 id="raises">Raises</h2>
-<dl>
-<dt><code>j.exceptions.Runtime</code>: <code>if</code> <code>the</code> <code>process</code> <code>is</code> <code>not</code> <code>accessible</code> <code>by</code> <code>the</code> <code>user</code>, or <code>no</code> <code>longer</code> <code>exists</code></dt>
-<dd>&nbsp;</dd>
-</dl>
+<p>j.exceptions.Runtime: pid is not retrievable.
+j.exceptions.NotFound: if the process is no longer exists.
+j.exceptions.Permission: if the process is not accessible by the user.</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code>psutil.Process</code>: <code>process</code> <code>object</code> <code>if</code> <code>found</code>, <code>otherwise</code> <code>None</code></dt>
@@ -1836,14 +2013,16 @@ starting time or date of the process.</dd>
         udp (bool, optional): Whether to search the connections for UDP port instead of TCP. Defaults to False.
 
     Raises:
-        j.exceptions.Runtime: if the process is not accessible by the user, or no longer exists
+        j.exceptions.Runtime: pid is not retrievable.
+        j.exceptions.NotFound: if the process is no longer exists.
+        j.exceptions.Permission: if the process is not accessible by the user.
 
     Returns:
         psutil.Process: process object if found, otherwise None
     &#34;&#34;&#34;
     for conn in psutil.net_connections():  # TODO use kind parameter
         try:
-            # XXX should we check against ESTABLISHED status?
+            # should we check against ESTABLISHED status?
             # connection.status For UDP and UNIX sockets this is always going to be psutil.CONN_NONE
             if (
                 conn.laddr.port == port
@@ -1854,15 +2033,15 @@ starting time or date of the process.</dd>
                 if conn.pid:
                     return psutil.Process(conn.pid)
                 else:
-                    raise j.exceptions.Runtime(&#34;pid is not retrievable, root is needed?&#34;)
+                    raise j.exceptions.Runtime(&#34;pid is not retrievable, not root?&#34;)
         except psutil.NoSuchProcess:
-            raise j.exceptions.Runtime(&#34;Process is no longer exists&#34;)
+            raise j.exceptions.NotFound(&#34;Process is no longer exists&#34;)
         except psutil.AccessDenied:
-            raise j.exceptions.Runtime(&#34;Permission denied&#34;)</code></pre>
+            raise j.exceptions.Permission(&#34;Permission denied&#34;)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.sals.process.get_process_object"><code class="name flex">
-<span>def <span class="ident">get_process_object</span></span>(<span>pid, die=True)</span>
+<span>def <span class="ident">get_process_object</span></span>(<span>pid, die=False)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Get psutil.Process object of a given process ID (PID).</p>
@@ -1872,33 +2051,33 @@ starting time or date of the process.</dd>
 <dd>Process ID (PID) to get</dd>
 <dt><strong><code>die</code></strong> :&ensp;<code>bool</code>, optional</dt>
 <dd>Whether to raise an exception if no process with the given PID is found in the
-current process list or not. Defaults to True.</dd>
+current process list or not. Defaults to False.</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <p>psutil.NoSuchProcess: If process with the given PID is not found and die set to True.
 psutil.AccessDenied: If permission denied.</p>
 <h2 id="returns">Returns</h2>
-<p>psutil.Process or None: psutil.Process object if he given PID is found, None otherwise.</p></section>
+<p>psutil.Process or None: The Process object of the given PID if found, otherwise None, if die set to False.</p></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def get_process_object(pid, die=True):
+<pre><code class="python">def get_process_object(pid, die=False):
     &#34;&#34;&#34;Get psutil.Process object of a given process ID (PID).
 
     Args:
         pid (int): Process ID (PID) to get
-        die (bool, optional): Whether to raise an exception if no process with the given PID is found in the \
-            current process list or not. Defaults to True.
+        die (bool, optional): Whether to raise an exception if no process with the given PID is found in the
+            current process list or not. Defaults to False.
 
     Raises:
         psutil.NoSuchProcess: If process with the given PID is not found and die set to True.
         psutil.AccessDenied: If permission denied.
 
     Returns:
-        psutil.Process or None: psutil.Process object if he given PID is found, None otherwise.
+        psutil.Process or None: The Process object of the given PID if found, otherwise None, if die set to False.
     &#34;&#34;&#34;
     try:
         return psutil.Process(pid)
-    except (psutil.ZombieProcess, psutil.AccessDenied, psutil.NoSuchProcess) as e:
+    except (psutil.AccessDenied, psutil.NoSuchProcess) as e:
         # when you query processess owned by another user, especially on macOS and Windows you may get AccessDenied exception
         if die:
             raise e
@@ -2042,58 +2221,63 @@ available keys [
         else:
             try:
                 return procObj[sort]
-            except KeyError as e:
+            except KeyError:
                 j.logger.error(f&#34;bad field name for sorting: {sort}&#34;)
                 raise j.exceptions.Value(f&#34;bad field name for sorting: {sort}&#34;)
 
     processes_list = []
-    j.logger.debug(f&#34;Args used: user={user}, sort={sort}, filterstr={filterstr}, limit={limit}, desc={desc}&#34;)
     if not filterstr:
-        p_source = get_processes() if not user else get_user_processes(user=user)
+        if user:
+            p_source = get_user_processes(user=user)
+        else:
+            p_source = get_processes()
     else:
-        # XXX it makes sense that get_pids func should returns list of psutil.Process objects instead of list of pids
-        p_source = (
-            map(get_process_object, get_pids(process_name=filterstr))
-            if not user
-            else map(get_process_object, get_pids(process_name=filterstr, _alt_source=get_user_processes(user)))
-        )
+        # it makes sense that get_pids func should returns list of psutil.Process objects instead of list of pids
+        if user:
+            p_source = map(get_process_object, get_pids(process_name=filterstr, _alt_source=get_user_processes(user)))
+        else:
+            p_source = map(get_process_object, get_pids(process_name=filterstr))
     for proc in p_source:
-        try:
-            # Fetch process details as dict
-            pinfo = proc.as_dict(
-                attrs=[
-                    &#34;cpu_num&#34;,
-                    &#34;cpu_percent&#34;,
-                    &#34;cpu_times&#34;,
-                    &#34;create_time&#34;,
-                    &#34;gids&#34;,
-                    &#34;memory_percent&#34;,
-                    &#34;name&#34;,
-                    &#34;pid&#34;,
-                    &#34;ppid&#34;,
-                    &#34;status&#34;,
-                    &#34;uids&#34;,
-                    &#34;username&#34;,
-                ]
-            )
-            pinfo[&#34;rss&#34;] = proc.memory_info().rss / (
-                1024 * 1024
-            )  # the non-swapped physical memory a process has used in Mb
-            pinfo[&#34;cpu_time&#34;] = sum(pinfo[&#34;cpu_times&#34;][:2])  # cumulative, excluding children and iowait
-            pinfo[&#34;ports&#34;] = []
-            connections = proc.connections()  # need root
-            if connections:
-                for conn in connections:
-                    pinfo[&#34;ports&#34;].append({&#34;port&#34;: conn.laddr.port, &#34;status&#34;: conn.status})
-            # Append dict to list
-            processes_list.append(pinfo)
-        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess) as e:
-            j.logger.debug(
-                &#34;ignoring and logging an exception that occurred while iterating over system processes, not root?&#34;
-            )
-            # j.logger.exception(&#39;an exception occurred while iterating over system processes&#39;, exception=e)
-            pass
-    j.logger.debug(f&#34;Processes found: {len(processes_list)}&#34;)
+        if proc:  # in case a race condition happened, and get_process_object returned None
+            try:
+                # Fetch process details as dict
+                pinfo = proc.as_dict(
+                    attrs=[
+                        &#34;cpu_num&#34;,
+                        &#34;cpu_percent&#34;,
+                        &#34;cpu_times&#34;,
+                        &#34;create_time&#34;,
+                        &#34;gids&#34;,
+                        &#34;memory_percent&#34;,
+                        &#34;name&#34;,
+                        &#34;pid&#34;,
+                        &#34;ppid&#34;,
+                        &#34;status&#34;,
+                        &#34;uids&#34;,
+                        &#34;username&#34;,
+                    ]
+                )
+                pinfo[&#34;rss&#34;] = proc.memory_info().rss / (
+                    1024 * 1024
+                )  # the non-swapped physical memory a process has used in Mb
+                pinfo[&#34;cpu_time&#34;] = sum(pinfo[&#34;cpu_times&#34;][:2])  # cumulative, excluding children and iowait
+                pinfo[&#34;ports&#34;] = []
+                try:
+                    connections = proc.connections()  # need root
+                except (psutil.AccessDenied):
+                    pass
+                else:
+                    if connections:
+                        for conn in connections:
+                            pinfo[&#34;ports&#34;].append({&#34;port&#34;: conn.laddr.port, &#34;status&#34;: conn.status})
+                # Append dict to list
+                processes_list.append(pinfo)
+            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess) as e:
+                j.logger.exception(
+                    &#34;ignoring and logging an exception that occurred while iterating over system processes, not root?&#34;,
+                    exception=e,
+                )
+                pass
     # sort the processes list by sort_key
     sorted_processes = sorted(processes_list, key=_get_sort_key, reverse=desc)[:limit]
     return sorted_processes</code></pre>
@@ -2107,31 +2291,29 @@ available keys [
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>target_proc</code></strong> :&ensp;<code>int</code> or <code>psutil.Process</code>, optional</dt>
-<dd>pid, or psutil.Process object,
+<dd>pid, or psutil.Process object.
 if None then pid for current process will be used. Defaults to None.</dd>
 </dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>list</code>[<code>psutil.Process</code>] &ndash; <code>list</code> of <code>similar</code> <code>process</code></dt>
-<dd>&nbsp;</dd>
-</dl></section>
+<h2 id="yields">Yields</h2>
+<p>psutil.Process: psutil.Process object for all processes similar to a given process.</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def get_similar_processes(target_proc=None):
     &#34;&#34;&#34;Gets similar processes to current process, started with same command line and same options.
 
     Args:
-        target_proc (int or psutil.Process, optional): pid, or psutil.Process object,\
-             if None then pid for current process will be used. Defaults to None.
-    Returns:
-        list[psutil.Process] -- list of similar process
+        target_proc (int or psutil.Process, optional): pid, or psutil.Process object.
+            if None then pid for current process will be used. Defaults to None.
+
+    Yields:
+        psutil.Process: psutil.Process object for all processes similar to a given process.
     &#34;&#34;&#34;
     try:
         if target_proc is None:
             target_proc = get_my_process()
         elif isinstance(target_proc, int):
-            target_proc = get_process_object(target_proc)
-        for proc in psutil.process_iter([&#34;name&#34;, &#34;cmdline&#34;]):
+            target_proc = get_process_object(target_proc, die=True)
+        for proc in psutil.process_iter([&#34;name&#34;, &#34;exe&#34;, &#34;cmdline&#34;]):
             if proc.info[&#34;cmdline&#34;] and target_proc.cmdline() and proc.info[&#34;cmdline&#34;] == target_proc.cmdline():
                 yield proc
     except (psutil.AccessDenied, psutil.NoSuchProcess):
@@ -2146,23 +2328,23 @@ if None then pid for current process will be used. Defaults to None.</dd>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>user</code></strong> :&ensp;<code>str</code></dt>
-<dd>Te user name to match against.</dd>
+<dd>The user name to match against.</dd>
 </dl>
 <h2 id="yields">Yields</h2>
-<p>psutil.Process: psutil.Process object for all processes owned by <code>user</code>.</p></section>
+<p>psutil.Process: process object for all processes owned by <code>user</code>.</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def get_user_processes(user):
     &#34;&#34;&#34;Get all process for a specific user.
 
     Args:
-        user (str): Te user name to match against.
+        user (str): The user name to match against.
 
     Yields:
-        psutil.Process: psutil.Process object for all processes owned by `user`.
+        psutil.Process: process object for all processes owned by `user`.
     &#34;&#34;&#34;
     try:
-        for process in psutil.process_iter():
+        for process in psutil.process_iter([&#34;name&#34;, &#34;exe&#34;, &#34;cmdline&#34;]):
             if process.username() == user:
                 yield process
     except (psutil.AccessDenied, psutil.NoSuchProcess):
@@ -2300,7 +2482,6 @@ if None then pid for current process will be used. Defaults to None.</dd>
     Returns:
         bool: True if port is used, False otherwise.
     &#34;&#34;&#34;
-    # XXX only support ipv4, also it apparently used to pick a free port, any way using nettools is preferred
     from jumpscale.sals import nettools
 
     ip6 = &#34;::&#34;
@@ -2315,7 +2496,8 @@ if None then pid for current process will be used. Defaults to None.</dd>
 <section class="desc"><p>Kill a process with a specified signal.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt>proc (int/psutil.Process): Target process ID (PID) or psutil.Process object.</dt>
+<dt><strong><code>proc</code></strong> :&ensp;<code>int</code> or <code>psutil.Process</code></dt>
+<dd>Target process ID (PID) or psutil.Process object.</dd>
 <dt><strong><code>sig</code></strong> :&ensp;<code>signal</code>, optional</dt>
 <dd>See signal module constants. Defaults to signal.SIGTERM.</dd>
 <dt><strong><code>timeout</code></strong> :&ensp;<code>int</code>, optional</dt>
@@ -2326,43 +2508,34 @@ or, if sure_kill=True, send a SIGKILL. Defaults to 5.</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <p>j.exceptions.Runtime: In case killing the process failed.
-j.exceptions.Permission: In case the permission to perform this action is denied.</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>None</code></dt>
-<dd>&nbsp;</dd>
-</dl></section>
+j.exceptions.Permission: In case the permission to perform this action is denied.</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def kill(proc, sig=signal.SIGTERM, timeout=5, sure_kill=False):
     &#34;&#34;&#34;Kill a process with a specified signal.
 
     Args:
-        proc (int/psutil.Process): Target process ID (PID) or psutil.Process object.
+        proc (int or psutil.Process): Target process ID (PID) or psutil.Process object.
         sig (signal, optional): See signal module constants. Defaults to signal.SIGTERM.
-        timeout (int, optional): How long to wait for a process to terminate (seconds) before raise exception\
+        timeout (int, optional): How long to wait for a process to terminate (seconds) before raise exception
             or, if sure_kill=True, send a SIGKILL. Defaults to 5.
         sure_kill (bool, optional): Whether to fallback to SIGKILL if the timeout exceeded for the terminate operation or not. Defaults to False.
 
     Raises:
         j.exceptions.Runtime: In case killing the process failed.
         j.exceptions.Permission: In case the permission to perform this action is denied.
-
-    Returns:
-        None
     &#34;&#34;&#34;
     try:
         if isinstance(proc, int):
-            proc = get_process_object(proc)
+            proc = get_process_object(proc, die=True)
         if proc.status() == psutil.STATUS_ZOMBIE:
-            return True
+            return
         proc.send_signal(sig)
         # Wait for a process to terminate
         # If PID no longer exists return None immediately
         # If timeout exceeded and the process is still alive raise TimeoutExpired exception
         proc.wait(timeout=timeout)
         j.logger.debug(f&#34;the process with PID: {proc.pid} was terminated with sig: {sig}.&#34;)
-        return True  # XXX only to pass current tests
     except psutil.TimeoutExpired as e:
         # timeout expires and process is still alive.
         if sure_kill and sig != signal.SIGKILL and os.name != &#34;nt&#34;:
@@ -2378,12 +2551,11 @@ j.exceptions.Permission: In case the permission to perform this action is denied
                     j.logger.debug(
                         f&#34;the process with PID: {proc.pid} becomes a zombie and should be considered a dead.&#34;
                     )
-                    return True
+                    return
                 # the process may be in an uninterruptible sleep
                 j.logger.debug(&#34;the process may be in an uninterruptible sleep.&#34;)
                 j.logger.warning(f&#34;Could not kill the process with pid: {proc.pid} with {sig}. Timeout: {timeout}&#34;)
                 raise j.exceptions.Runtime(f&#34;Could not kill process with pid {proc.pid}, {proc.status()}&#34;) from e
-            return True  # XXX only to pass current tests
         else:
             j.logger.warning(f&#34;Could not kill the process with pid: {proc.pid} with {sig}. Timeout: {timeout}&#34;)
             raise j.exceptions.Runtime(f&#34;Could not kill process with pid {proc.pid}&#34;) from e
@@ -2391,41 +2563,52 @@ j.exceptions.Permission: In case the permission to perform this action is denied
         # permission to perform an action is denied
         j.logger.warning(&#34;the permission is denied&#34;)
         raise j.exceptions.Permission(&#34;Permission to perform this action is denied!&#34;) from e
-    except (psutil.ZombieProcess, psutil.NoSuchProcess):
+    except psutil.NoSuchProcess:
         # Process no longer exists or Zombie (already dead)
-        j.logger.debug(&#34;Process is no longer exists or a Zombie (already dead)&#34;)
-        return True</code></pre>
+        j.logger.debug(&#34;Process is no longer exists or a Zombie (already dead)&#34;)</code></pre>
 </details>
 </dd>
-<dt id="jumpscale.sals.process.kill_all"><code class="name flex">
-<span>def <span class="ident">kill_all</span></span>(<span>process_name, sig=&lt;Signals.SIGKILL: 9&gt;)</span>
+<dt id="jumpscale.sals.process.kill_all_pids"><code class="name flex">
+<span>def <span class="ident">kill_all_pids</span></span>(<span>pids, sig=&lt;Signals.SIGTERM: 15&gt;, timeout=5, sure_kill=False)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Kill all processes that match 'process_name'.</p>
+<section class="desc"><p>Kill all processes with given pids.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>process_name</code></strong> :&ensp;<code>str</code></dt>
-<dd>The target process name</dd>
+<dt><strong><code>pids</code></strong> :&ensp;<code>list</code> of <code>int</code></dt>
+<dd>The target processes IDs.</dd>
 <dt><strong><code>sig</code></strong> :&ensp;<code>signal</code>, optional</dt>
-<dd>See signal module constants. Defaults to signal.SIGKILL</dd>
+<dd>See signal module constants. Defaults to signal.SIGKILL.</dd>
+<dt><strong><code>timeout</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>How long to wait for a process to terminate (seconds) before raise exception
+or, if sure_kill=True, send a SIGKILL. Defaults to 5.</dd>
+<dt><strong><code>sure_kill</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>Whether to fallback to SIGKILL if the timeout exceeded for the terminate operation or not. Defaults to False.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
-<p>None or list[int] represents the IDs of the processes remaning alive.</p></section>
+<p>list of int: represents the IDs of the processes remaning alive if any.</p></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def kill_all(process_name, sig=signal.SIGKILL):
-    &#34;&#34;&#34;Kill all processes that match &#39;process_name&#39;.
+<pre><code class="python">def kill_all_pids(pids, sig=signal.SIGTERM, timeout=5, sure_kill=False):
+    &#34;&#34;&#34;Kill all processes with given pids.
 
     Args:
-        process_name (str): The target process name
-        sig (signal, optional): See signal module constants. Defaults to signal.SIGKILL
+        pids (list of int): The target processes IDs.
+        sig (signal, optional): See signal module constants. Defaults to signal.SIGKILL.
+        timeout (int, optional): How long to wait for a process to terminate (seconds) before raise exception\
+            or, if sure_kill=True, send a SIGKILL. Defaults to 5.
+        sure_kill (bool, optional): Whether to fallback to SIGKILL if the timeout exceeded for the terminate operation or not. Defaults to False.
+
 
     Returns:
-        None or list[int] represents the IDs of the processes remaning alive.
+        list of int: represents the IDs of the processes remaning alive if any.
     &#34;&#34;&#34;
-    # XXX kill default to SIGTERM while kill_all default to SIGKILL (inconsistency)?
-    # XXX almost like kill_process_by_name
-    failed_processes = kill_process_by_name(process_name, sig)
+    failed_processes = []
+    for pid in pids:
+        try:
+            kill(pid, sig, timeout=timeout, sure_kill=sure_kill)
+        except (j.exceptions.Runtime, j.exceptions.Permission):
+            failed_processes.append(pid)
     return failed_processes</code></pre>
 </details>
 </dd>
@@ -2436,7 +2619,8 @@ j.exceptions.Permission: In case the permission to perform this action is denied
 <section class="desc"><p>Kill a process and its children (including grandchildren) with signal <code>sig</code></p>
 <h2 id="args">Args</h2>
 <dl>
-<dt>proc (int/psutil.Process): Target process ID (PID) or psutil.Process object.</dt>
+<dt><strong><code>proc</code></strong> :&ensp;<code>int</code> or <code>psutil.Process</code></dt>
+<dd>Target process ID (PID) or psutil.Process object.</dd>
 <dt><strong><code>sig</code></strong> :&ensp;<code>signal</code>, optional</dt>
 <dd>See signal module constants. Defaults to signal.SIGTERM.</dd>
 <dt>include_parent (): Whether to kill the process itself. Defaults to True.</dt>
@@ -2448,7 +2632,12 @@ or, if sure_kill=True, send a SIGKILL. Defaults to 5.</dd>
 <dd>Whether to fallback to SIGKILL if the timeout exceeded for the terminate operation or not. Defaults to False.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
-<p>(list[psutil.Process]/None): list of process objects that remain alive if any. None otherwise.</p></section>
+<p>list of psutil.Process: represents the objects of the processes remaning alive if any.</p>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><strong><code>AssertionError</code></strong></dt>
+<dd>in case the given <code>parent</code> is the current process</dd>
+</dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def kill_proc_tree(
@@ -2457,7 +2646,7 @@ or, if sure_kill=True, send a SIGKILL. Defaults to 5.</dd>
     &#34;&#34;&#34;Kill a process and its children (including grandchildren) with signal `sig`
 
     Args:
-        proc (int/psutil.Process): Target process ID (PID) or psutil.Process object.
+        proc (int or psutil.Process): Target process ID (PID) or psutil.Process object.
         sig (signal, optional): See signal module constants. Defaults to signal.SIGTERM.
         include_parent (): Whether to kill the process itself. Defaults to True.
         include_grand_children (): whether to kill recursively all grandchildren. Defaults to True.
@@ -2466,14 +2655,19 @@ or, if sure_kill=True, send a SIGKILL. Defaults to 5.</dd>
         sure_kill (bool, optional): Whether to fallback to SIGKILL if the timeout exceeded for the terminate operation or not. Defaults to False.
 
     Returns:
-        (list[psutil.Process]/None): list of process objects that remain alive if any. None otherwise.
+        list of psutil.Process: represents the objects of the processes remaning alive if any.
+
+    Raises:
+        AssertionError: in case the given `parent` is the current process
     &#34;&#34;&#34;
     if isinstance(parent, int):
-        try:
-            parent = get_process_object(parent)
-        except (psutil.AccessDenied, psutil.NoSuchProcess):
-            return
+        parent = get_process_object(parent)
+        if parent is None:
+            return  # already dead
 
+    # should be checked on any killing function
+    # here we first need to make sure taht `include_parent` is True
+    # and/or better check inside the below for loop
     assert parent.pid != os.getpid(), &#34;won&#39;t kill myself&#34;
 
     processes = parent.children(recursive=include_grand_children)[::-1]
@@ -2490,7 +2684,7 @@ or, if sure_kill=True, send a SIGKILL. Defaults to 5.</dd>
     # making sure
     if failed:
         gone, failed = psutil.wait_procs(failed, timeout=0)
-    return failed or None</code></pre>
+    return failed</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.sals.process.kill_process_by_name"><code class="name flex">
@@ -2508,9 +2702,14 @@ or, if sure_kill=True, send a SIGKILL. Defaults to 5.</dd>
 <dd>Function that does matching between
 found processes and the targeted process, the function should accept
 two arguments and return a boolean. Defaults to None.</dd>
+<dt><strong><code>timeout</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>How long to wait for a process to terminate (seconds) before raise exception
+or, if sure_kill=True, send a SIGKILL. Defaults to 5.</dd>
+<dt><strong><code>sure_kill</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>Whether to fallback to SIGKILL if the timeout exceeded for the terminate operation or not. Defaults to False.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
-<p>None or list[int] represents the IDs of the processes remaning alive.</p></section>
+<p>list of int: represents the IDs of the processes remaning alive if any.</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def kill_process_by_name(process_name, sig=signal.SIGTERM, match_predicate=None, timeout=5, sure_kill=False):
@@ -2522,18 +2721,21 @@ two arguments and return a boolean. Defaults to None.</dd>
         match_predicate (callable, optional): Function that does matching between\
             found processes and the targeted process, the function should accept\
             two arguments and return a boolean. Defaults to None.
+        timeout (int, optional): How long to wait for a process to terminate (seconds) before raise exception\
+            or, if sure_kill=True, send a SIGKILL. Defaults to 5.
+        sure_kill (bool, optional): Whether to fallback to SIGKILL if the timeout exceeded for the terminate operation or not. Defaults to False.
 
     Returns:
-        None or list[int] represents the IDs of the processes remaning alive.
+        list of int: represents the IDs of the processes remaning alive if any.
     &#34;&#34;&#34;
     pids = get_pids(process_name, match_predicate=match_predicate)
     failed_processes = []
     for pid in pids:
         try:
             kill(pid, sig, timeout=timeout, sure_kill=sure_kill)
-        except (j.exceptions.Runtime, j.exceptions.Permission) as e:
+        except (j.exceptions.Runtime, j.exceptions.Permission):
             failed_processes.append(pid)
-    return failed_processes or None  # return None if the failed list is empty</code></pre>
+    return failed_processes</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.sals.process.kill_process_by_port"><code class="name flex">
@@ -2557,11 +2759,9 @@ or, if sure_kill=True, send a SIGKILL. Defaults to 5.</dd>
 <dt><strong><code>sure_kill</code></strong> :&ensp;<code>bool</code>, optional</dt>
 <dd>Whether to fallback to SIGKILL if the timeout exceeded for the terminate operation or not. Defaults to False.</dd>
 </dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>None</code></dt>
-<dd>&nbsp;</dd>
-</dl></section>
+<h2 id="raises">Raises</h2>
+<p>j.exceptions.Runtime: In case killing the process failed.
+j.exceptions.Permission: In case the permission to perform this action is denied.</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def kill_process_by_port(port, ipv6=False, udp=False, sig=signal.SIGTERM, timeout=5, sure_kill=False):
@@ -2572,19 +2772,20 @@ or, if sure_kill=True, send a SIGKILL. Defaults to 5.</dd>
         ipv6 (bool, optional): Whether to search the connections that using ipv6 instead of ipv4. Defaults to False.
         udp (bool, optional): Whether to search the connections for UDP port instead of TCP. Defaults to False.
         sig (signal, optional): See signal module constants. Defaults to signal.SIGTERM.
-        timeout (int, optional): How long to wait for a process to terminate (seconds) before raise exception\
+        timeout (int, optional): How long to wait for a process to terminate (seconds) before raise exception
             or, if sure_kill=True, send a SIGKILL. Defaults to 5.
         sure_kill (bool, optional): Whether to fallback to SIGKILL if the timeout exceeded for the terminate operation or not. Defaults to False.
 
-    Returns:
-        None
+    Raises:
+        j.exceptions.Runtime: In case killing the process failed.
+        j.exceptions.Permission: In case the permission to perform this action is denied.
     &#34;&#34;&#34;
     proc = get_process_by_port(port, ipv6=ipv6, udp=udp)
-    return kill(proc, sig=sig, timeout=timeout, sure_kill=sure_kill)</code></pre>
+    kill(proc, sig=sig, timeout=timeout, sure_kill=sure_kill)</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.sals.process.kill_user_processes"><code class="name flex">
-<span>def <span class="ident">kill_user_processes</span></span>(<span>user, sure_kill=False)</span>
+<span>def <span class="ident">kill_user_processes</span></span>(<span>user, sig=&lt;Signals.SIGTERM: 15&gt;, timeout=5, sure_kill=False)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Kill all processes for a specific user.</p>
@@ -2592,41 +2793,42 @@ or, if sure_kill=True, send a SIGKILL. Defaults to 5.</dd>
 <dl>
 <dt><strong><code>user</code></strong> :&ensp;<code>str</code></dt>
 <dd>The user name to match against.</dd>
+<dt><strong><code>sig</code></strong> :&ensp;<code>signal</code>, optional</dt>
+<dd>See signal module constants. Defaults to signal.SIGTERM.</dd>
+<dt><strong><code>timeout</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>How long to wait for a process to terminate (seconds) before raise exception or, if sure_kill=True, send a SIGKILL. Defaults to 5.</dd>
 <dt><strong><code>sure_kill</code></strong> :&ensp;<code>bool</code>, optional</dt>
 <dd>Whether to fallback to SIGKILL if the timeout exceeded for the terminate operation or not. Defaults to False.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
-<p>(list[psutil.Process]/None): list of process objects that remain alive if any. None otherwise.</p></section>
+<p>list of psutil.Process): list of process objects that remain alive if any.</p></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def kill_user_processes(user, sure_kill=False):
+<pre><code class="python">def kill_user_processes(user, sig=signal.SIGTERM, timeout=5, sure_kill=False):
     &#34;&#34;&#34;Kill all processes for a specific user.
 
     Args:
         user (str): The user name to match against.
+        sig (signal, optional): See signal module constants. Defaults to signal.SIGTERM.
+        timeout (int, optional): How long to wait for a process to terminate (seconds) before raise exception or, if sure_kill=True, send a SIGKILL. Defaults to 5.
         sure_kill (bool, optional): Whether to fallback to SIGKILL if the timeout exceeded for the terminate operation or not. Defaults to False.
 
     Returns:
-        (list[psutil.Process]/None): list of process objects that remain alive if any. None otherwise.
+        list of psutil.Process): list of process objects that remain alive if any.
     &#34;&#34;&#34;
     failed_processes = []
     for proc in get_user_processes(user):
         try:
-            kill(proc, sure_kill=sure_kill)
+            kill(proc, sig=sig, timeout=timeout, sure_kill=sure_kill)
         except (j.exceptions.Runtime, j.exceptions.Permission) as e:
-            j.logger.exception(&#34;exception occurred while iterating over user processes&#34;, exception=e)
-            j.logger.debug(&#34;ignoring the exception..&#34;)
+            j.logger.exception(&#34;ignoring an exception that occurred while iterating over user processes&#34;, exception=e)
             failed_processes.append(proc)
-    j.logger.debug(
-        &#34;killing all user processes succeeded&#34; if not failed_processes else &#34;couldn&#39;t kill all user processes!&#34;
-    )
 
     # making sure
     if failed_processes:
         gone, failed_processes = psutil.wait_procs(failed_processes, timeout=0)
 
-    j.logger.debug(f&#34;stay alive: {len(failed_processes)}, pids -&gt; {[p.pid for p in failed_processes]}&#34;)
-    return failed_processes or None  # return None if the failed list is empty</code></pre>
+    return failed_processes</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.sals.process.ps_find"><code class="name flex">
@@ -2637,8 +2839,7 @@ or, if sure_kill=True, send a SIGKILL. Defaults to 5.</dd>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>process_name</code></strong> :&ensp;<code>str</code></dt>
-<dd>The target process name. will match against against Process.name(),
-Process.exe() and Process.cmdline()</dd>
+<dd>The target process name. will match against against Process.name(), Process.exe() and Process.cmdline()</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -2651,8 +2852,7 @@ Process.exe() and Process.cmdline()</dd>
     &#34;&#34;&#34;Check if there is any running process that match the given name.
 
     Args:
-        process_name (str): The target process name. will match against against Process.name(),\
-            Process.exe() and Process.cmdline()
+        process_name (str): The target process name. will match against against Process.name(), Process.exe() and Process.cmdline()
 
     Returns:
         bool: True if process is found, False otherwise.
@@ -2665,9 +2865,14 @@ Process.exe() and Process.cmdline()</dd>
 </code></dt>
 <dd>
 <section class="desc"><p>Set the value of the environment variables {varnames}. Existing variable are overwritten</p>
+<p>Such changes to the environment affect subprocesses started with os.system(), popen() or fork() and execv()</p>
 <h2 id="args">Args</h2>
-<p>var_names list[str]: A list of the names of all the environment variables to set
-varvalues list[str]: A list of all values for the environment variables</p>
+<dl>
+<dt><strong><code>var_names</code></strong> :&ensp;<code>list</code> of <code>str</code></dt>
+<dd>A list of the names of all the environment variables to set</dd>
+<dt><strong><code>varvalues</code></strong> :&ensp;<code>list</code> of <code>str</code></dt>
+<dd>A list of all values for the environment variables</dd>
+</dl>
 <h2 id="raises">Raises</h2>
 <dl>
 <dt><code>j.exceptions.RuntimeError</code>: <code>if</code> <code>error</code> <code>happened</code> <code>during</code> <code>setting</code> <code>the</code> <code>environment</code> <code>variables</code></dt>
@@ -2678,17 +2883,21 @@ varvalues list[str]: A list of all values for the environment variables</p>
 <pre><code class="python">def set_env_var(var_names, var_values):
     &#34;&#34;&#34;Set the value of the environment variables {varnames}. Existing variable are overwritten
 
+    Such changes to the environment affect subprocesses started with os.system(), popen() or fork() and execv()
+
     Args:
-        var_names list[str]: A list of the names of all the environment variables to set
-        varvalues list[str]: A list of all values for the environment variables
+        var_names (list of str): A list of the names of all the environment variables to set
+        varvalues (list of str): A list of all values for the environment variables
+
     Raises:
         j.exceptions.RuntimeError: if error happened during setting the environment variables
     &#34;&#34;&#34;
-    try:
-        for i in range(len(var_names)):
-            os.environ[var_names[i]] = str(var_values[i]).strip()
-    except Exception as e:
-        raise j.exceptions.RuntimeError(e)</code></pre>
+    # Note:
+    # On some platforms, including FreeBSD and Mac OS X, setting environ may cause memory leaks.
+    # https://docs.python.org/3/library/os.html?highlight=os%20environ#os.environ
+    # Refer to the system documentation for putenv().
+    for i in range(len(var_names)):
+        os.environ[var_names[i]] = str(var_values[i]).strip()</code></pre>
 </details>
 </dd>
 </dl>
@@ -2736,7 +2945,7 @@ varvalues list[str]: A list of all values for the environment variables</p>
 <li><code><a title="jumpscale.sals.process.is_installed" href="#jumpscale.sals.process.is_installed">is_installed</a></code></li>
 <li><code><a title="jumpscale.sals.process.is_port_listening" href="#jumpscale.sals.process.is_port_listening">is_port_listening</a></code></li>
 <li><code><a title="jumpscale.sals.process.kill" href="#jumpscale.sals.process.kill">kill</a></code></li>
-<li><code><a title="jumpscale.sals.process.kill_all" href="#jumpscale.sals.process.kill_all">kill_all</a></code></li>
+<li><code><a title="jumpscale.sals.process.kill_all_pids" href="#jumpscale.sals.process.kill_all_pids">kill_all_pids</a></code></li>
 <li><code><a title="jumpscale.sals.process.kill_proc_tree" href="#jumpscale.sals.process.kill_proc_tree">kill_proc_tree</a></code></li>
 <li><code><a title="jumpscale.sals.process.kill_process_by_name" href="#jumpscale.sals.process.kill_process_by_name">kill_process_by_name</a></code></li>
 <li><code><a title="jumpscale.sals.process.kill_process_by_port" href="#jumpscale.sals.process.kill_process_by_port">kill_process_by_port</a></code></li>

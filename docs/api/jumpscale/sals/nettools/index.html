@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.4" />
 <title>jumpscale.sals.nettools API documentation</title>
-<meta name="description" content="Docs for nettools …" />
+<meta name="description" content="This module contains a collection of functions which help in manage network connections and interfaces …" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -20,8 +20,7 @@
 <h1 class="title">Module <code>jumpscale.sals.nettools</code></h1>
 </header>
 <section id="section-intro">
-<p>Docs for nettools</p>
-<p>TODO</p>
+<p>This module contains a collection of functions which help in manage network connections and interfaces.</p>
 <p>General Note on python socket operations:
 If you use a hostname in the host portion of IPv4/v6 socket address,the program may show a nondeterministic behavior,
 as Python uses the first address returned from the DNS resolution. The socket address will be resolved differently
@@ -30,9 +29,7 @@ For deterministic behavior use a numeric address in host portion.
 <a href="https://docs.python.org/3/library/socket.html">https://docs.python.org/3/library/socket.html</a></p>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">&#34;&#34;&#34;Docs for nettools
-
-TODO
+<pre><code class="python">&#34;&#34;&#34;This module contains a collection of functions which help in manage network connections and interfaces.
 
 General Note on python socket operations:
     If you use a hostname in the host portion of IPv4/v6 socket address,the program may show a nondeterministic behavior,
@@ -45,27 +42,24 @@ import time
 import socket
 import ipaddress
 import re
+import ssl
+import json
+import subprocess
+import shutil
+from os.path import basename
 from typing import Optional
+from urllib.request import Request, urlopen
+from urllib.error import URLError, HTTPError
+from urllib.parse import urlparse
+from urllib.request import build_opener, HTTPPasswordMgrWithDefaultRealm, HTTPBasicAuthHandler, install_opener
+from pathlib import Path
+from collections import namedtuple
+from jumpscale.loader import j
 from jumpscale.core.exceptions import Value, Runtime
 import jumpscale.tools.http
 import jumpscale.data.platform
 import jumpscale.sals.fs
 import jumpscale.core.executors
-from urllib.request import Request, urlopen
-from urllib.error import URLError, HTTPError
-import ssl
-import json
-import subprocess
-from urllib.parse import urlparse
-from pathlib import Path
-import shutil
-from urllib.request import build_opener, HTTPPasswordMgrWithDefaultRealm, HTTPBasicAuthHandler, install_opener
-from collections import namedtuple
-from os.path import basename
-from jumpscale.loader import j
-from itertools import count
-
-# going to remove j.data.types . use insted jumpscale.core.base.fields.IPAddress
 
 
 def tcp_connection_test(ipaddr: str, port: int, timeout: Optional[int] = None) -&gt; bool:
@@ -84,31 +78,11 @@ def tcp_connection_test(ipaddr: str, port: int, timeout: Optional[int] = None) -
     Returns:
         bool: True if the test succeeds, False otherwise
     &#34;&#34;&#34;
-    # conn = None
-    j.logger.info(f&#34;Attempting to establish TCP connection to (IP: {ipaddr}, TCP: {port})&#34;)
     try:
-        conn = socket.create_connection((ipaddr, port), timeout)
-    except (socket.gaierror, socket.herror) as e:
-        j.logger.exception(e.strerror, exception=e)
-        # raised for address-related errors
-        raise
-    except OSError as e:
-        # (ConnectionRefusedError, socket.timeout, OSError)
-        if hasattr(e, &#34;message&#34;):
-            reason = e.message
-        elif hasattr(e, &#34;strerror&#34;) and e.strerror:
-            reason = e.strerror
-        else:
-            reason = repr(e)
-        j.logger.warning(
-            f&#34;TCP connection attempt to (IP: {ipaddr}, TCP: {port}) failed because of this error: {reason}&#34;
-        )
+        with socket.create_connection((ipaddr, port), timeout) as conn:
+            return True
+    except (ConnectionRefusedError, socket.timeout, OSError):
         return False
-    else:
-        j.logger.info(f&#34;Successful TCP connection to (IP: {ipaddr}, TCP: {port})&#34;)
-        conn.close()
-        j.logger.debug(&#34;Connection closed&#34;)
-        return True
 
 
 def udp_connection_test(ipaddr: str, port: int, timeout: Optional[int] = 1, message: Optional[bytes] = b&#34;&#34;) -&gt; bool:
@@ -127,42 +101,27 @@ def udp_connection_test(ipaddr: str, port: int, timeout: Optional[int] = 1, mess
     Returns:
         bool: True if the test succeeds, False otherwise
     &#34;&#34;&#34;
-    try:
-        ip = ipaddress.ip_address(ipaddr)
-    except ValueError as e:
-        # raised if address does not represent a valid IPv4 or IPv6 address
-        j.logger.exception(repr(e), exception=e)
-        raise
+    ip = ipaddress.ip_address(ipaddr)
     if ip.version == 4:
-        j.logger.debug(&#34;Creating a new socket using AF_INET address family&#34;)
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    else:  # create IPv6 socket when we connect to IPv6 address
-        j.logger.debug(&#34;Creating a new socket using AF_INET6 address family&#34;)
-        sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
-    if timeout:
-        sock.settimeout(timeout)
-    j.logger.info(f&#34;Attempting to send the a message to a remote socket at address (IP: {ipaddr}, UDP: {port})&#34;)
-    try:
-        sock.sendto(message, (ipaddr, port))
-        # expecting to receive at least one byte from the socket as indication to succeed connection
-        j.logger.debug(&#34;Expecting to receive at least one byte from the socket as indication to succeed connection&#34;)
-        data, _ = sock.recvfrom(1)
-    except socket.timeout:
-        j.logger.warning(f&#34;Timeout of {timeout}s reached while waiting for server (IP: {ipaddr}, UDP: {port}) replay&#34;)
-        return False
-    except OSError as e:
-        j.logger.warning(f&#34;UDP connection failed because of this error: {e.strerror or repr(e)}&#34;)
-        return False
+        family = socket.AF_INET
     else:
-        j.logger.info(&#34;UDP test connection succeeded&#34;)
-        return True
-    finally:
-        sock.close()
-        j.logger.debug(&#34;Socket closed&#34;)
+        family = socket.AF_INET6
+
+    with socket.socket(family, socket.SOCK_DGRAM) as sock:
+        if timeout:
+            sock.settimeout(timeout)
+
+        try:
+            sock.sendto(message, (ipaddr, port))
+            # expecting to receive at least one byte from the socket as indication to succeed connection
+            data, _ = sock.recvfrom(1)
+            return True
+        except (socket.timeout, OSError):
+            return False
 
 
 def wait_connection_test(ipaddr: str, port: int, timeout: Optional[int] = 6) -&gt; bool:
-    &#34;&#34;&#34;Will wait until port listens on the specified address or {timeout} sec elapsed
+    &#34;&#34;&#34;Will wait until port listens on the specified address or `timeout` sec elapsed
 
     under the hood the function will try to connect every `interval` sec, if waiting time `timeout` set
     to value &lt;= 2, `interval` is 1 sec, otherwise 2.
@@ -177,21 +136,16 @@ def wait_connection_test(ipaddr: str, port: int, timeout: Optional[int] = 6) -&g
         bool: True if the test succeeds, False otherwise
     &#34;&#34;&#34;
     # port = int(port)
-    j.logger.info(f&#34;Will wait until TCP port { port } listens on {ipaddr} or {timeout}s elapsed&#34;)
     interval = 1 if timeout &lt;= 2 else 2
     init_start = time.time()
     deadline = init_start + timeout
-    attempts = count()
     while time.time() &lt; deadline:
-        j.logger.info(f&#34;Attempt #{next(attempts)}&#34;)
         start = time.time()
         if tcp_connection_test(ipaddr, port, timeout=interval):
-            j.logger.info(f&#34;TCP test connection succeeded after waiting {time.time() - init_start:.3f}s&#34;)
             return True
         # if return immediately (err111) take a break before retry
         if time.time() - start &lt; interval:
             time.sleep(1)
-    j.logger.warning(f&#34;TCP test connection failed after waiting for {time.time() - init_start:.3f}s&#34;)
     return False
 
 
@@ -212,21 +166,15 @@ def wait_http_test(
     Returns:
         bool: true if the test succeeds
     &#34;&#34;&#34;
-    j.logger.info(f&#34;Will wait until URL { url } become reachable or {timeout}s elapsed&#34;)
-    j.logger.debug(f&#34;verify: {verify}, interval_time: {interval_time}&#34;)
     init_start = time.time()
-    deadline = time.time() + timeout
-    attempts = count()
+    deadline = init_start + timeout
     while time.time() &lt; deadline:
-        j.logger.info(f&#34;Attempt #{next(attempts)}&#34;)
         start = time.time()
         if check_url_reachable(url, interval_time, verify):
-            j.logger.info(f&#34;URL becomes reachable after waiting for {time.time() - init_start:.3f}s&#34;)
             return True
         # be gentle on system resource in case the above call to check_url_reachable() returned immediately (edge cases)
         if time.time() - start &lt; interval_time:
             time.sleep(1)
-    j.logger.warning(f&#34;URL still unreachable after waiting for {time.time() - init_start:.3f}s&#34;)
     return False
 
 
@@ -257,52 +205,20 @@ def check_url_reachable(
     }
     METHOD = &#34;GET&#34;
 
-    j.logger.info(f&#34;Will try to access {url}&#34;)
-    j.logger.debug(f&#34;timeout: {timeout}, verify: {verify}, fake_user_agent: {fake_user_agent}&#34;)
-
     if timeout:
-        j.logger.debug(f&#34;Setting a default timeout of {timeout}s for new sockets&#34;)
         socket.setdefaulttimeout(timeout)
 
     context = None
     if not verify:
         # opt out of certificate verification on a single connection
-        j.logger.debug(&#34;opt out of certificate verification on a single connection&#34;)
         context = ssl._create_unverified_context()
 
     req = Request(url, headers=HEADERS if fake_user_agent else {}, method=METHOD)
     try:
-        j.logger.debug(f&#34;sending {METHOD} request to {url}&#34;)
-        response = urlopen(req, timeout=timeout, context=context)
-    except HTTPError as e:
-        # The server couldn&#39;t fulfill the request.
-        # codes in the 400–599 range.
-        # status = msg.code
-        j.logger.warning(f&#34;The server couldn&#39;t fulfill the request because of this error: {e.reason}. code: {e.code}&#34;)
-        j.logger.debug(f&#34;HTTP headers:\n{e.headers}&#34;)
+        with urlopen(req, timeout=timeout, context=context):
+            return True
+    except (HTTPError, URLError, socket.timeout):
         return False
-    except URLError as e:
-        # We failed to reach a server.
-        j.logger.warning(f&#34;We failed to reach a server because of this error: {e.reason}.&#34;)
-        return False
-    except socket.timeout:
-        j.logger.warning(f&#34;Timeout of {timeout}s reached while waiting for an HTTP response&#34;)
-        return False
-    except ValueError as e:
-        # invalid url
-        j.logger.exception(repr(e), exception=e)
-        raise
-    else:
-        # the default handlers handle redirects (codes in the 300 range)
-        # and codes in the 400-599 range will raise HTTPError
-        # only in cases where codes in the 100–299 range (success) will reach this `else` branch
-        j.logger.info(&#34;URL is reachable&#34;)
-        j.logger.debug(
-            f&#34;HTTP response code: {response.code if hasattr(response, &#39;code&#39;) else response.status}&#34;
-        )  # support py3.9
-        response.close()
-        j.logger.debug(&#34;Connection closed&#34;)
-        return True
 
 
 def get_nic_names() -&gt; list:
@@ -390,34 +306,25 @@ def get_reachable_ip_address(ip: str, port: Optional[int] = 0) -&gt; str:
     Returns:
         str: ip that can connect to the specified ip
     &#34;&#34;&#34;
-    j.logger.debug(f&#34;IP: {ip}, PORT: {port}&#34;)
-    try:
-        ipaddr = ipaddress.ip_address(ip)
-    except ValueError as e:
-        # raised if address does not represent a valid IPv4 or IPv6 address
-        j.logger.exception(repr(e), exception=e)
-        raise
+    ipaddr = ipaddress.ip_address(ip)
+
     if ipaddr.version == 4:
-        j.logger.debug(&#34;Creating a new socket using AF_INET address family&#34;)
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    else:  # create IPv6 socket when we connect to IPv6 address
-        j.logger.debug(&#34;Creating a new socket using AF_INET6 address family&#34;)
-        s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
-    try:
-        j.logger.info(f&#34;Attempting to connect to a remote socket at address: {ip}:{port}&#34;)
-        s.connect((ip, port))
-    except OSError as e:
-        # (ConnectionRefusedError, socket.timeout, socket.herror, socket.gaierror)
-        reason = e.error if hasattr(e, &#34;error&#34;) else repr(e)
-        j.logger.exception(reason, exception=e)
-        raise RuntimeError(f&#34;Cannot connect to {ip}:{port} because of this error: {reason}&#34;)
-    except (ValueError, TypeError, OverflowError) as e:
-        # incorrect port numper or type
-        j.logger.exception(repr(e), exception=e)
-        raise ValueError(repr(e))
-    source_address = s.getsockname()[0]
-    j.logger.debug(f&#34;Source address {source_address} would be used to communicate with {ip}&#34;)
-    return s.getsockname()[0]
+        family = socket.AF_INET
+    else:
+        family = socket.AF_INET6
+
+    with socket.socket(family, socket.SOCK_DGRAM) as sock:
+        try:
+            sock.connect((ip, port))
+        except OSError as e:
+            # (ConnectionRefusedError, socket.timeout, socket.herror, socket.gaierror)
+            reason = e.error if hasattr(e, &#34;error&#34;) else repr(e)
+            raise RuntimeError(f&#34;Cannot connect to {ip}:{port} because of this error: {reason}&#34;)
+        except (ValueError, TypeError, OverflowError) as e:
+            # incorrect port numper or type
+            raise ValueError(repr(e))
+
+        return sock.getsockname()[0]
 
 
 def get_default_ip_config(ip: Optional[str] = &#34;8.8.8.8&#34;) -&gt; tuple:
@@ -433,12 +340,7 @@ def get_default_ip_config(ip: Optional[str] = &#34;8.8.8.8&#34;) -&gt; tuple:
     Returns:
         tuple: default nic name and its ip address
     &#34;&#34;&#34;
-    try:
-        ipaddr = ipaddress.ip_address(ip)
-    except ValueError as e:
-        # raised if address does not represent a valid IPv4 or IPv6 address
-        j.logger.exception(repr(e), exception=e)
-        raise
+    ipaddr = ipaddress.ip_address(ip)
     address_family = &#34;ip&#34; if ipaddr.version == 4 else &#34;ip6&#34;
     source_addr = get_reachable_ip_address(ip)
     default_nic = None
@@ -449,12 +351,6 @@ def get_default_ip_config(ip: Optional[str] = &#34;8.8.8.8&#34;) -&gt; tuple:
                 break
         if default_nic is not None:
             break
-    else:
-        # The loop did not encounter a break statement.
-        # This should never happen. however, this part of code exists for debuging any unexpected error
-        j.logger.error(f&#34;Didn&#39;t find the interface associated with ip {source_addr}. Check the debug messages&#34;)
-        j.logger.debug(f&#34;Source address: {source_addr} -&gt; Remote address: {ipaddr}&#34;)
-    j.logger.info(f&#34;The interface associated with ip {source_addr} is {default_nic[0]}&#34;)
     return default_nic
 
 
@@ -484,7 +380,6 @@ def get_network_info(device: Optional[str] = None) -&gt; list:
             &#34;mac&#34;: nic_info[&#34;address&#34;],
             &#34;name&#34;: nic_info[&#34;ifname&#34;],
         }
-        j.logger.debug(result)
         return result
 
     def _get_info():
@@ -561,7 +456,6 @@ def is_nic_connected(interface: str) -&gt; bool:
         carrierfile = f&#34;/sys/class/net/{interface}/carrier&#34;
         try:
             is_up = int(jumpscale.sals.fs.read_file(carrierfile)) != 0
-            j.logger.info(f&#34;Interface {interface} is up&#34;)
             return is_up
         except IOError as e:
             j.logger.exception(e.strerror or repr(e), exception=e)
@@ -607,22 +501,13 @@ def ping_machine(ip: str, timeout: Optional[int] = 60, allowhostname: Optional[b
         bool: True if machine is pingable, False otherwise
     &#34;&#34;&#34;
     if not allowhostname:
-        try:
-            ipaddress.ip_address(ip)
-        except ValueError as e:
-            # raised if address does not represent a valid IPv4 or IPv6 address and allowhostname is False
-            j.logger.debug(f&#34;Optional arg `allowhostname` is set to: {allowhostname}&#34;)
-            j.logger.exception(repr(e), exception=e)
-            raise
+        ipaddress.ip_address(ip)
 
     if jumpscale.data.platform.is_linux():
         try:
             _ = subprocess.check_output(f&#34;ping -c 1 -w {timeout} {ip}&#34;, shell=True)
-            j.logger.info(f&#34;{ip} is pingable&#34;)
             exitcode = 0
         except subprocess.CalledProcessError as e:
-            j.logger.debug(f&#34;cmd: {e.cmd} returns ({e.returncode}) exit code.&#34;)
-            j.logger.debug(f&#34;Ping stdout output:\n{e.output}&#34;)
             exitcode = e.returncode
         # exitcode, output, err = jumpscale.core.executors.run_local(f&#34;ping -c 1 -w {timeout} {ip}&#34;, warn=True, hide=True)
     elif jumpscale.data.platform.is_osx():
@@ -630,8 +515,6 @@ def ping_machine(ip: str, timeout: Optional[int] = 60, allowhostname: Optional[b
             _ = subprocess.check_output(f&#34;ping -o -t {timeout} {ip}&#34;, shell=True)
             exitcode = 0
         except subprocess.CalledProcessError as e:
-            j.logger.debug(f&#34;cmd: {e.cmd} returns ({e.returncode}) exit code.&#34;)
-            j.logger.debug(f&#34;Ping stdout output:\n{e.output}&#34;)
             exitcode = e.returncode
         # exitcode, _, _ = jumpscale.core.executors.run_local(f&#34;ping -o -t {timeout} {ip}&#34;, warn=True, hide=True)
     else:  # unsupported platform
@@ -689,7 +572,6 @@ def download(
     &#34;&#34;&#34;
     DownloadResult = namedtuple(&#34;DownloadResult&#34;, [&#34;localpath&#34;, &#34;content&#34;, &#34;content_length&#34;])
     file_name = &#34;&#34;
-    j.logger.info(f&#34;Will download a resource from {url}&#34;)
 
     try:
         parsed_url = urlparse(url)
@@ -699,7 +581,6 @@ def download(
 
     if name_from_url:
         file_name = basename(parsed_url.path)  # TODO: insure safe file name and fall back if can&#39;t get the file name
-        j.logger.debug(f&#34;File name parsed from the url: {file_name}&#34;)
     elif localpath == &#34;&#34;:
         j.logger.error(f&#34;Improper args used.\nname_from_url: {name_from_url}\nlocalpath: {localpath}&#34;)
         raise ValueError(&#34;localpath can&#39;t be empty when name_from_url is False&#34;)
@@ -710,16 +591,12 @@ def download(
         elif parsed_url.scheme in (&#34;http&#34;, &#34;https&#34;):
             # create a password manager
             password_mgr = HTTPPasswordMgrWithDefaultRealm()
-
             # Add the username and password.
             # If we knew the realm, we could use it instead of None.
             password_mgr.add_password(None, parsed_url.netloc, username, passwd)
-
             handler = HTTPBasicAuthHandler(password_mgr)
-
             # create &#34;opener&#34; (OpenerDirector instance)
             opener = build_opener(handler)
-
             install_opener(opener)
 
     req = Request(url)
@@ -727,11 +604,10 @@ def download(
         &#34;User-agent&#34;,
         &#34;Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36&#34;,
     )
+
     try:
         response = urlopen(req)
         content_length = response.headers.get(&#34;Content-Length&#34;)
-        j.logger.debug(response.headers)
-        j.logger.debug(response.code)
     except URLError as e:
         if hasattr(e, &#34;reason&#34;):
             msg = &#34;We failed to reach a server.&#34;
@@ -741,45 +617,33 @@ def download(
             msg += &#34; Error code: &#34; + e.code
         j.logger.exception(msg, exception=e)
         raise
-    if localpath is not None:
-        file_path = Path(localpath) / file_name
-        if not file_path.is_absolute() and append_to_home:
-            file_path = Path.home() / file_path
 
-        dir_path = file_path.parent
-        j.logger.debug(f&#34;Will write the resource to: {file_path}&#34;)
-
-        try:
-            dir_path.mkdir(parents=True, exist_ok=True)
-        except (PermissionError, FileNotFoundError) as e:
-            j.logger.exception(e.strerror or repr(e), exception=e)
-            raise
-
-        if overwrite:
-            j.logger.debug(&#34;Overwrite mode enabled: if the file exists, it will truncated&#34;)
-            file_mode = &#34;wb&#34;  # if exists will truncated
-        else:
-            j.logger.debug(&#34;Overwrite mode disabled: if the file exists, it will raise an exception&#34;)
-            file_mode = &#34;xb&#34;  # if exists will raise exception
-
-        try:
-            f_handler = file_path.open(file_mode)
-            j.logger.info(&#34;File is open for writing&#34;)
-        except (PermissionError, FileNotFoundError, FileExistsError) as e:
-            j.logger.exception(e.strerror or repr(e), exception=e)
-            raise
-    else:
+    if localpath is None:
         return DownloadResult(localpath=None, content=response.read(), content_length=content_length)
+
+    file_path = Path(localpath) / file_name
+    if not file_path.is_absolute() and append_to_home:
+        file_path = Path.home() / file_path
+
+    dir_path = file_path.parent
+
     try:
-        j.logger.debug(&#34;Streaming the data to a file object...&#34;)
-        shutil.copyfileobj(response, f_handler, length=8 * 1024 * 1024)
-        j.logger.info(&#34;Download complete.&#34;)
-        return DownloadResult(localpath=file_path.resolve(), content=None, content_length=content_length)
+        dir_path.mkdir(parents=True, exist_ok=True)
+    except (PermissionError, FileNotFoundError) as e:
+        j.logger.exception(e.strerror or repr(e), exception=e)
+        raise
+
+    if overwrite:
+        file_mode = &#34;wb&#34;  # if exists will truncated
+    else:
+        file_mode = &#34;xb&#34;  # if exists will raise exception
+
+    try:
+        with file_path.open(file_mode) as f_handler:
+            shutil.copyfileobj(response, f_handler, length=8 * 1024 * 1024)
+            return DownloadResult(localpath=file_path.resolve(), content=None, content_length=content_length)
     finally:
-        f_handler.close()
-        j.logger.debug(&#34;File closed.&#34;)
         response.close()
-        j.logger.debug(&#34;connection closed.&#34;)
 
 
 def _netobject_get(device: str) -&gt; ipaddress.IPv4Network:
@@ -843,9 +707,9 @@ def get_free_port(ipv6: Optional[bool] = False, udp: Optional[bool] = False, ret
     else:
         sock = socket.socket(socket.AF_INET, socket_type)
         sock.bind((&#34;127.0.0.1&#34;, 0))
+
     # retrieve the selected port with getsockname() right after bind()
     port = sock.getsockname()[1]
-    j.logger.debug(f&#34;The OS picked this {&#39;UDP&#39; if udp else &#39;TCP&#39;} port: {port}&#34;)
     # returns port or (port, socket) depend on the bool value of return_socket
     return (port, sock) if return_socket else port</code></pre>
 </details>
@@ -912,52 +776,20 @@ def get_free_port(ipv6: Optional[bool] = False, udp: Optional[bool] = False, ret
     }
     METHOD = &#34;GET&#34;
 
-    j.logger.info(f&#34;Will try to access {url}&#34;)
-    j.logger.debug(f&#34;timeout: {timeout}, verify: {verify}, fake_user_agent: {fake_user_agent}&#34;)
-
     if timeout:
-        j.logger.debug(f&#34;Setting a default timeout of {timeout}s for new sockets&#34;)
         socket.setdefaulttimeout(timeout)
 
     context = None
     if not verify:
         # opt out of certificate verification on a single connection
-        j.logger.debug(&#34;opt out of certificate verification on a single connection&#34;)
         context = ssl._create_unverified_context()
 
     req = Request(url, headers=HEADERS if fake_user_agent else {}, method=METHOD)
     try:
-        j.logger.debug(f&#34;sending {METHOD} request to {url}&#34;)
-        response = urlopen(req, timeout=timeout, context=context)
-    except HTTPError as e:
-        # The server couldn&#39;t fulfill the request.
-        # codes in the 400–599 range.
-        # status = msg.code
-        j.logger.warning(f&#34;The server couldn&#39;t fulfill the request because of this error: {e.reason}. code: {e.code}&#34;)
-        j.logger.debug(f&#34;HTTP headers:\n{e.headers}&#34;)
-        return False
-    except URLError as e:
-        # We failed to reach a server.
-        j.logger.warning(f&#34;We failed to reach a server because of this error: {e.reason}.&#34;)
-        return False
-    except socket.timeout:
-        j.logger.warning(f&#34;Timeout of {timeout}s reached while waiting for an HTTP response&#34;)
-        return False
-    except ValueError as e:
-        # invalid url
-        j.logger.exception(repr(e), exception=e)
-        raise
-    else:
-        # the default handlers handle redirects (codes in the 300 range)
-        # and codes in the 400-599 range will raise HTTPError
-        # only in cases where codes in the 100–299 range (success) will reach this `else` branch
-        j.logger.info(&#34;URL is reachable&#34;)
-        j.logger.debug(
-            f&#34;HTTP response code: {response.code if hasattr(response, &#39;code&#39;) else response.status}&#34;
-        )  # support py3.9
-        response.close()
-        j.logger.debug(&#34;Connection closed&#34;)
-        return True</code></pre>
+        with urlopen(req, timeout=timeout, context=context):
+            return True
+    except (HTTPError, URLError, socket.timeout):
+        return False</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.sals.nettools.download"><code class="name flex">
@@ -1070,7 +902,6 @@ DownloadResult(localpath=PosixPath('/home/sameh/projects/js-ng/7z1900-extra.7z')
     &#34;&#34;&#34;
     DownloadResult = namedtuple(&#34;DownloadResult&#34;, [&#34;localpath&#34;, &#34;content&#34;, &#34;content_length&#34;])
     file_name = &#34;&#34;
-    j.logger.info(f&#34;Will download a resource from {url}&#34;)
 
     try:
         parsed_url = urlparse(url)
@@ -1080,7 +911,6 @@ DownloadResult(localpath=PosixPath('/home/sameh/projects/js-ng/7z1900-extra.7z')
 
     if name_from_url:
         file_name = basename(parsed_url.path)  # TODO: insure safe file name and fall back if can&#39;t get the file name
-        j.logger.debug(f&#34;File name parsed from the url: {file_name}&#34;)
     elif localpath == &#34;&#34;:
         j.logger.error(f&#34;Improper args used.\nname_from_url: {name_from_url}\nlocalpath: {localpath}&#34;)
         raise ValueError(&#34;localpath can&#39;t be empty when name_from_url is False&#34;)
@@ -1091,16 +921,12 @@ DownloadResult(localpath=PosixPath('/home/sameh/projects/js-ng/7z1900-extra.7z')
         elif parsed_url.scheme in (&#34;http&#34;, &#34;https&#34;):
             # create a password manager
             password_mgr = HTTPPasswordMgrWithDefaultRealm()
-
             # Add the username and password.
             # If we knew the realm, we could use it instead of None.
             password_mgr.add_password(None, parsed_url.netloc, username, passwd)
-
             handler = HTTPBasicAuthHandler(password_mgr)
-
             # create &#34;opener&#34; (OpenerDirector instance)
             opener = build_opener(handler)
-
             install_opener(opener)
 
     req = Request(url)
@@ -1108,11 +934,10 @@ DownloadResult(localpath=PosixPath('/home/sameh/projects/js-ng/7z1900-extra.7z')
         &#34;User-agent&#34;,
         &#34;Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36&#34;,
     )
+
     try:
         response = urlopen(req)
         content_length = response.headers.get(&#34;Content-Length&#34;)
-        j.logger.debug(response.headers)
-        j.logger.debug(response.code)
     except URLError as e:
         if hasattr(e, &#34;reason&#34;):
             msg = &#34;We failed to reach a server.&#34;
@@ -1122,45 +947,33 @@ DownloadResult(localpath=PosixPath('/home/sameh/projects/js-ng/7z1900-extra.7z')
             msg += &#34; Error code: &#34; + e.code
         j.logger.exception(msg, exception=e)
         raise
-    if localpath is not None:
-        file_path = Path(localpath) / file_name
-        if not file_path.is_absolute() and append_to_home:
-            file_path = Path.home() / file_path
 
-        dir_path = file_path.parent
-        j.logger.debug(f&#34;Will write the resource to: {file_path}&#34;)
-
-        try:
-            dir_path.mkdir(parents=True, exist_ok=True)
-        except (PermissionError, FileNotFoundError) as e:
-            j.logger.exception(e.strerror or repr(e), exception=e)
-            raise
-
-        if overwrite:
-            j.logger.debug(&#34;Overwrite mode enabled: if the file exists, it will truncated&#34;)
-            file_mode = &#34;wb&#34;  # if exists will truncated
-        else:
-            j.logger.debug(&#34;Overwrite mode disabled: if the file exists, it will raise an exception&#34;)
-            file_mode = &#34;xb&#34;  # if exists will raise exception
-
-        try:
-            f_handler = file_path.open(file_mode)
-            j.logger.info(&#34;File is open for writing&#34;)
-        except (PermissionError, FileNotFoundError, FileExistsError) as e:
-            j.logger.exception(e.strerror or repr(e), exception=e)
-            raise
-    else:
+    if localpath is None:
         return DownloadResult(localpath=None, content=response.read(), content_length=content_length)
+
+    file_path = Path(localpath) / file_name
+    if not file_path.is_absolute() and append_to_home:
+        file_path = Path.home() / file_path
+
+    dir_path = file_path.parent
+
     try:
-        j.logger.debug(&#34;Streaming the data to a file object...&#34;)
-        shutil.copyfileobj(response, f_handler, length=8 * 1024 * 1024)
-        j.logger.info(&#34;Download complete.&#34;)
-        return DownloadResult(localpath=file_path.resolve(), content=None, content_length=content_length)
+        dir_path.mkdir(parents=True, exist_ok=True)
+    except (PermissionError, FileNotFoundError) as e:
+        j.logger.exception(e.strerror or repr(e), exception=e)
+        raise
+
+    if overwrite:
+        file_mode = &#34;wb&#34;  # if exists will truncated
+    else:
+        file_mode = &#34;xb&#34;  # if exists will raise exception
+
+    try:
+        with file_path.open(file_mode) as f_handler:
+            shutil.copyfileobj(response, f_handler, length=8 * 1024 * 1024)
+            return DownloadResult(localpath=file_path.resolve(), content=None, content_length=content_length)
     finally:
-        f_handler.close()
-        j.logger.debug(&#34;File closed.&#34;)
-        response.close()
-        j.logger.debug(&#34;connection closed.&#34;)</code></pre>
+        response.close()</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.sals.nettools.get_default_ip_config"><code class="name flex">
@@ -1200,12 +1013,7 @@ DownloadResult(localpath=PosixPath('/home/sameh/projects/js-ng/7z1900-extra.7z')
     Returns:
         tuple: default nic name and its ip address
     &#34;&#34;&#34;
-    try:
-        ipaddr = ipaddress.ip_address(ip)
-    except ValueError as e:
-        # raised if address does not represent a valid IPv4 or IPv6 address
-        j.logger.exception(repr(e), exception=e)
-        raise
+    ipaddr = ipaddress.ip_address(ip)
     address_family = &#34;ip&#34; if ipaddr.version == 4 else &#34;ip6&#34;
     source_addr = get_reachable_ip_address(ip)
     default_nic = None
@@ -1216,12 +1024,6 @@ DownloadResult(localpath=PosixPath('/home/sameh/projects/js-ng/7z1900-extra.7z')
                 break
         if default_nic is not None:
             break
-    else:
-        # The loop did not encounter a break statement.
-        # This should never happen. however, this part of code exists for debuging any unexpected error
-        j.logger.error(f&#34;Didn&#39;t find the interface associated with ip {source_addr}. Check the debug messages&#34;)
-        j.logger.debug(f&#34;Source address: {source_addr} -&gt; Remote address: {ipaddr}&#34;)
-    j.logger.info(f&#34;The interface associated with ip {source_addr} is {default_nic[0]}&#34;)
     return default_nic</code></pre>
 </details>
 </dd>
@@ -1307,9 +1109,9 @@ by default you got tcp port, but setting udp to True will set socket type to UDP
     else:
         sock = socket.socket(socket.AF_INET, socket_type)
         sock.bind((&#34;127.0.0.1&#34;, 0))
+
     # retrieve the selected port with getsockname() right after bind()
     port = sock.getsockname()[1]
-    j.logger.debug(f&#34;The OS picked this {&#39;UDP&#39; if udp else &#39;TCP&#39;} port: {port}&#34;)
     # returns port or (port, socket) depend on the bool value of return_socket
     return (port, sock) if return_socket else port</code></pre>
 </details>
@@ -1448,7 +1250,6 @@ by default you got tcp port, but setting udp to True will set socket type to UDP
             &#34;mac&#34;: nic_info[&#34;address&#34;],
             &#34;name&#34;: nic_info[&#34;ifname&#34;],
         }
-        j.logger.debug(result)
         return result
 
     def _get_info():
@@ -1639,34 +1440,25 @@ compatible with both IPv4 and IPv6.</p>
     Returns:
         str: ip that can connect to the specified ip
     &#34;&#34;&#34;
-    j.logger.debug(f&#34;IP: {ip}, PORT: {port}&#34;)
-    try:
-        ipaddr = ipaddress.ip_address(ip)
-    except ValueError as e:
-        # raised if address does not represent a valid IPv4 or IPv6 address
-        j.logger.exception(repr(e), exception=e)
-        raise
+    ipaddr = ipaddress.ip_address(ip)
+
     if ipaddr.version == 4:
-        j.logger.debug(&#34;Creating a new socket using AF_INET address family&#34;)
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    else:  # create IPv6 socket when we connect to IPv6 address
-        j.logger.debug(&#34;Creating a new socket using AF_INET6 address family&#34;)
-        s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
-    try:
-        j.logger.info(f&#34;Attempting to connect to a remote socket at address: {ip}:{port}&#34;)
-        s.connect((ip, port))
-    except OSError as e:
-        # (ConnectionRefusedError, socket.timeout, socket.herror, socket.gaierror)
-        reason = e.error if hasattr(e, &#34;error&#34;) else repr(e)
-        j.logger.exception(reason, exception=e)
-        raise RuntimeError(f&#34;Cannot connect to {ip}:{port} because of this error: {reason}&#34;)
-    except (ValueError, TypeError, OverflowError) as e:
-        # incorrect port numper or type
-        j.logger.exception(repr(e), exception=e)
-        raise ValueError(repr(e))
-    source_address = s.getsockname()[0]
-    j.logger.debug(f&#34;Source address {source_address} would be used to communicate with {ip}&#34;)
-    return s.getsockname()[0]</code></pre>
+        family = socket.AF_INET
+    else:
+        family = socket.AF_INET6
+
+    with socket.socket(family, socket.SOCK_DGRAM) as sock:
+        try:
+            sock.connect((ip, port))
+        except OSError as e:
+            # (ConnectionRefusedError, socket.timeout, socket.herror, socket.gaierror)
+            reason = e.error if hasattr(e, &#34;error&#34;) else repr(e)
+            raise RuntimeError(f&#34;Cannot connect to {ip}:{port} because of this error: {reason}&#34;)
+        except (ValueError, TypeError, OverflowError) as e:
+            # incorrect port numper or type
+            raise ValueError(repr(e))
+
+        return sock.getsockname()[0]</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.sals.nettools.is_nic_connected"><code class="name flex">
@@ -1699,7 +1491,6 @@ compatible with both IPv4 and IPv6.</p>
         carrierfile = f&#34;/sys/class/net/{interface}/carrier&#34;
         try:
             is_up = int(jumpscale.sals.fs.read_file(carrierfile)) != 0
-            j.logger.info(f&#34;Interface {interface} is up&#34;)
             return is_up
         except IOError as e:
             j.logger.exception(e.strerror or repr(e), exception=e)
@@ -1799,22 +1590,13 @@ so PINGs, port scans, and the like are all unreliable.</p>
         bool: True if machine is pingable, False otherwise
     &#34;&#34;&#34;
     if not allowhostname:
-        try:
-            ipaddress.ip_address(ip)
-        except ValueError as e:
-            # raised if address does not represent a valid IPv4 or IPv6 address and allowhostname is False
-            j.logger.debug(f&#34;Optional arg `allowhostname` is set to: {allowhostname}&#34;)
-            j.logger.exception(repr(e), exception=e)
-            raise
+        ipaddress.ip_address(ip)
 
     if jumpscale.data.platform.is_linux():
         try:
             _ = subprocess.check_output(f&#34;ping -c 1 -w {timeout} {ip}&#34;, shell=True)
-            j.logger.info(f&#34;{ip} is pingable&#34;)
             exitcode = 0
         except subprocess.CalledProcessError as e:
-            j.logger.debug(f&#34;cmd: {e.cmd} returns ({e.returncode}) exit code.&#34;)
-            j.logger.debug(f&#34;Ping stdout output:\n{e.output}&#34;)
             exitcode = e.returncode
         # exitcode, output, err = jumpscale.core.executors.run_local(f&#34;ping -c 1 -w {timeout} {ip}&#34;, warn=True, hide=True)
     elif jumpscale.data.platform.is_osx():
@@ -1822,8 +1604,6 @@ so PINGs, port scans, and the like are all unreliable.</p>
             _ = subprocess.check_output(f&#34;ping -o -t {timeout} {ip}&#34;, shell=True)
             exitcode = 0
         except subprocess.CalledProcessError as e:
-            j.logger.debug(f&#34;cmd: {e.cmd} returns ({e.returncode}) exit code.&#34;)
-            j.logger.debug(f&#34;Ping stdout output:\n{e.output}&#34;)
             exitcode = e.returncode
         # exitcode, _, _ = jumpscale.core.executors.run_local(f&#34;ping -o -t {timeout} {ip}&#34;, warn=True, hide=True)
     else:  # unsupported platform
@@ -1872,31 +1652,11 @@ socket.herror: raised for address-related errors.</p>
     Returns:
         bool: True if the test succeeds, False otherwise
     &#34;&#34;&#34;
-    # conn = None
-    j.logger.info(f&#34;Attempting to establish TCP connection to (IP: {ipaddr}, TCP: {port})&#34;)
     try:
-        conn = socket.create_connection((ipaddr, port), timeout)
-    except (socket.gaierror, socket.herror) as e:
-        j.logger.exception(e.strerror, exception=e)
-        # raised for address-related errors
-        raise
-    except OSError as e:
-        # (ConnectionRefusedError, socket.timeout, OSError)
-        if hasattr(e, &#34;message&#34;):
-            reason = e.message
-        elif hasattr(e, &#34;strerror&#34;) and e.strerror:
-            reason = e.strerror
-        else:
-            reason = repr(e)
-        j.logger.warning(
-            f&#34;TCP connection attempt to (IP: {ipaddr}, TCP: {port}) failed because of this error: {reason}&#34;
-        )
-        return False
-    else:
-        j.logger.info(f&#34;Successful TCP connection to (IP: {ipaddr}, TCP: {port})&#34;)
-        conn.close()
-        j.logger.debug(&#34;Connection closed&#34;)
-        return True</code></pre>
+        with socket.create_connection((ipaddr, port), timeout) as conn:
+            return True
+    except (ConnectionRefusedError, socket.timeout, OSError):
+        return False</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.sals.nettools.udp_connection_test"><code class="name flex">
@@ -1944,45 +1704,30 @@ to receive at least one byte from the socket as an indicator of connection succe
     Returns:
         bool: True if the test succeeds, False otherwise
     &#34;&#34;&#34;
-    try:
-        ip = ipaddress.ip_address(ipaddr)
-    except ValueError as e:
-        # raised if address does not represent a valid IPv4 or IPv6 address
-        j.logger.exception(repr(e), exception=e)
-        raise
+    ip = ipaddress.ip_address(ipaddr)
     if ip.version == 4:
-        j.logger.debug(&#34;Creating a new socket using AF_INET address family&#34;)
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    else:  # create IPv6 socket when we connect to IPv6 address
-        j.logger.debug(&#34;Creating a new socket using AF_INET6 address family&#34;)
-        sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
-    if timeout:
-        sock.settimeout(timeout)
-    j.logger.info(f&#34;Attempting to send the a message to a remote socket at address (IP: {ipaddr}, UDP: {port})&#34;)
-    try:
-        sock.sendto(message, (ipaddr, port))
-        # expecting to receive at least one byte from the socket as indication to succeed connection
-        j.logger.debug(&#34;Expecting to receive at least one byte from the socket as indication to succeed connection&#34;)
-        data, _ = sock.recvfrom(1)
-    except socket.timeout:
-        j.logger.warning(f&#34;Timeout of {timeout}s reached while waiting for server (IP: {ipaddr}, UDP: {port}) replay&#34;)
-        return False
-    except OSError as e:
-        j.logger.warning(f&#34;UDP connection failed because of this error: {e.strerror or repr(e)}&#34;)
-        return False
+        family = socket.AF_INET
     else:
-        j.logger.info(&#34;UDP test connection succeeded&#34;)
-        return True
-    finally:
-        sock.close()
-        j.logger.debug(&#34;Socket closed&#34;)</code></pre>
+        family = socket.AF_INET6
+
+    with socket.socket(family, socket.SOCK_DGRAM) as sock:
+        if timeout:
+            sock.settimeout(timeout)
+
+        try:
+            sock.sendto(message, (ipaddr, port))
+            # expecting to receive at least one byte from the socket as indication to succeed connection
+            data, _ = sock.recvfrom(1)
+            return True
+        except (socket.timeout, OSError):
+            return False</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.sals.nettools.wait_connection_test"><code class="name flex">
 <span>def <span class="ident">wait_connection_test</span></span>(<span>ipaddr, port, timeout=6)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Will wait until port listens on the specified address or {timeout} sec elapsed</p>
+<section class="desc"><p>Will wait until port listens on the specified address or <code>timeout</code> sec elapsed</p>
 <p>under the hood the function will try to connect every <code>interval</code> sec, if waiting time <code>timeout</code> set
 to value &lt;= 2, <code>interval</code> is 1 sec, otherwise 2.</p>
 <h2 id="args">Args</h2>
@@ -2003,7 +1748,7 @@ due to the way the function works, it makes sense to choose an even number. Defa
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def wait_connection_test(ipaddr: str, port: int, timeout: Optional[int] = 6) -&gt; bool:
-    &#34;&#34;&#34;Will wait until port listens on the specified address or {timeout} sec elapsed
+    &#34;&#34;&#34;Will wait until port listens on the specified address or `timeout` sec elapsed
 
     under the hood the function will try to connect every `interval` sec, if waiting time `timeout` set
     to value &lt;= 2, `interval` is 1 sec, otherwise 2.
@@ -2018,21 +1763,16 @@ due to the way the function works, it makes sense to choose an even number. Defa
         bool: True if the test succeeds, False otherwise
     &#34;&#34;&#34;
     # port = int(port)
-    j.logger.info(f&#34;Will wait until TCP port { port } listens on {ipaddr} or {timeout}s elapsed&#34;)
     interval = 1 if timeout &lt;= 2 else 2
     init_start = time.time()
     deadline = init_start + timeout
-    attempts = count()
     while time.time() &lt; deadline:
-        j.logger.info(f&#34;Attempt #{next(attempts)}&#34;)
         start = time.time()
         if tcp_connection_test(ipaddr, port, timeout=interval):
-            j.logger.info(f&#34;TCP test connection succeeded after waiting {time.time() - init_start:.3f}s&#34;)
             return True
         # if return immediately (err111) take a break before retry
         if time.time() - start &lt; interval:
             time.sleep(1)
-    j.logger.warning(f&#34;TCP test connection failed after waiting for {time.time() - init_start:.3f}s&#34;)
     return False</code></pre>
 </details>
 </dd>
@@ -2081,21 +1821,15 @@ due to the way the function works, it makes sense to choose an even number. Defa
     Returns:
         bool: true if the test succeeds
     &#34;&#34;&#34;
-    j.logger.info(f&#34;Will wait until URL { url } become reachable or {timeout}s elapsed&#34;)
-    j.logger.debug(f&#34;verify: {verify}, interval_time: {interval_time}&#34;)
     init_start = time.time()
-    deadline = time.time() + timeout
-    attempts = count()
+    deadline = init_start + timeout
     while time.time() &lt; deadline:
-        j.logger.info(f&#34;Attempt #{next(attempts)}&#34;)
         start = time.time()
         if check_url_reachable(url, interval_time, verify):
-            j.logger.info(f&#34;URL becomes reachable after waiting for {time.time() - init_start:.3f}s&#34;)
             return True
         # be gentle on system resource in case the above call to check_url_reachable() returned immediately (edge cases)
         if time.time() - start &lt; interval_time:
             time.sleep(1)
-    j.logger.warning(f&#34;URL still unreachable after waiting for {time.time() - init_start:.3f}s&#34;)
     return False</code></pre>
 </details>
 </dd>
