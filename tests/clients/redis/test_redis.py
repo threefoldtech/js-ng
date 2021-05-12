@@ -11,7 +11,7 @@ HOST = "127.0.0.1"
 class RedisTests(BaseTests):
     def setUp(self):
         self.redis_instance_name = self.randstr()
-        self.port = randint(20000, 21000)
+        self.port = j.sals.nettools.get_free_port()
 
     def tearDown(self):
         self.redis_client.flushall()
