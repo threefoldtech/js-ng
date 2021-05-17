@@ -1,5 +1,4 @@
 import string
-from random import randint
 
 from jumpscale.loader import j
 from parameterized import parameterized
