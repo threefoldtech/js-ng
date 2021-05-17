@@ -342,7 +342,7 @@ def check_start(cmd, filterstr, n_instances=1, retry=1, timeout=2, delay=0.5):
             rc = proc.wait(timeout)  # makesure the process is stable
             if rc != 0:  # executing the command succeeded but exited immediately!
                 output, error_output = proc.communicate()
-                j.logger.error(f"the start command exited with error: {error_output}") # the process exited with error
+                j.logger.error(f"the start command exited with error: {error_output}")  # the process exited with error
         except psutil.TimeoutExpired:
             pass  # still running
         # wait extra delay to allow any subprocess spawned from the process we just started to finish
