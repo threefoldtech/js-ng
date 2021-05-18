@@ -187,7 +187,7 @@ def kill(proc, sig=signal.SIGTERM, timeout=5, sure_kill=False):
         # If PID no longer exists return None immediately
         # If timeout exceeded and the process is still alive raise TimeoutExpired exception
         proc.wait(timeout=timeout)
-        j.logger.info(f"the process with PID: {proc.pid} was terminated with sig: {sig}.")
+        # the process with PID {proc.pid} was terminated with sig {sig}
     except psutil.TimeoutExpired as e:
         # timeout expires and process is still alive.
         if sure_kill and sig != signal.SIGKILL and os.name != "nt":
@@ -197,7 +197,7 @@ def kill(proc, sig=signal.SIGTERM, timeout=5, sure_kill=False):
             # SIGKILL signal sent
             try:
                 proc.wait(1)
-                j.logger.info(f"the process with PID: {proc.pid} was terminated with sig: {signal.SIGKILL}.")
+                # the process with PID {proc.pid} was terminated with sig {signal.SIGKILL}
             except psutil.TimeoutExpired as e:
                 if proc.status() == psutil.STATUS_ZOMBIE:
                     # the process with PID: {proc.pid} becomes a zombie and should be considered a dead.
@@ -206,14 +206,13 @@ def kill(proc, sig=signal.SIGTERM, timeout=5, sure_kill=False):
                 j.logger.warning(f"Could not kill the process with pid: {proc.pid} with {sig}. Timeout: {timeout}")
                 raise j.exceptions.Runtime(f"Could not kill process with pid {proc.pid}, {proc.status()}") from e
         else:
-            j.logger.warning(f"Could not kill the process with pid: {proc.pid} with {sig}. Timeout: {timeout}")
             raise j.exceptions.Runtime(f"Could not kill process with pid {proc.pid}") from e
     except psutil.AccessDenied as e:
         # permission to perform an action is denied
         raise j.exceptions.Permission("Permission to perform this action is denied!") from e
     except psutil.NoSuchProcess:
         # Process no longer exists or Zombie (already dead)
-        j.logger.warning(f"Process is no longer exists or a Zombie (already dead)")
+        pass
 
 
 def ps_find(process_name):
