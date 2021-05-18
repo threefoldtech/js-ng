@@ -1,7 +1,6 @@
 import string
 import getpass
 from math import ceil
-from random import randint
 from gevent import sleep
 
 import pytest
@@ -308,10 +307,10 @@ class ProcessTests(BaseTests):
         - Check that only one server is found.
         """
         self.info("Start a tmux session with two python server process.")
-        port_1 = randint(20000, 21000)
-        port_2 = randint(22000, 23000)
+        port_1 = j.sals.nettools.get_free_port()
         cmd = f"python3 -m {PYTHON_SERVER_NAME} {port_1}"
         self.start_in_tmux(cmd)
+        port_2 = j.sals.nettools.get_free_port()
         cmd = f"python3 -m {PYTHON_SERVER_NAME} {port_2}"
         self.start_in_tmux(cmd)
         self.assertTrue(j.sals.nettools.wait_connection_test(HOST, port_1, 2))
@@ -383,7 +382,7 @@ class ProcessTests(BaseTests):
         - Check that this process in processes self.info.
         """
         self.info("Start python server in tmux.")
-        port = randint(10000, 20000)
+        port = j.sals.nettools.get_free_port()
         cmd = f"python3 -m {PYTHON_SERVER_NAME} {port}"
         self.start_in_tmux(cmd)
         self.assertTrue(j.sals.nettools.wait_connection_test(HOST, port, 2))
@@ -431,7 +430,7 @@ class ProcessTests(BaseTests):
         - Check that the server pid is not exist.
         """
         self.info("Start python server in tmux.")
-        port = randint(10000, 20000)
+        port = j.sals.nettools.get_free_port()
         cmd = f"python3 -m {PYTHON_SERVER_NAME} {port}"
         self.start_in_tmux(cmd)
         self.assertTrue(j.sals.nettools.wait_connection_test(HOST, port, 2))
@@ -657,7 +656,7 @@ class ProcessTests(BaseTests):
         - Check that the result from both ways are the same.
         """
         self.info("Start python server.")
-        python_port = randint(10000, 20000)
+        python_port = j.sals.nettools.get_free_port()
         cmd = f"python3 -m {PYTHON_SERVER_NAME} {python_port}"
         self.start_in_tmux(cmd)
         self.assertTrue(j.sals.nettools.wait_connection_test(HOST, python_port, 2))
@@ -668,7 +667,7 @@ class ProcessTests(BaseTests):
 
         self.info("Start redis server.")
         process_name = "redis-server"
-        redis_port = randint(2001, 3000)
+        redis_port = j.sals.nettools.get_free_port()
         cmd = f"{process_name} --port {redis_port}"
         self.start_in_tmux(cmd)
         self.assertTrue(j.sals.nettools.wait_connection_test(HOST, redis_port, 2))
