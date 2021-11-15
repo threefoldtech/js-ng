@@ -201,3 +201,23 @@ def find_git_path(path, die=True):
         path = j.sals.fs.parent(path)
     if die:
         raise j.exceptions.Input("Cannot find git path in:%s" % path)
+
+
+def get_latest_remote_tag(repo_path):
+    """
+    Get the latest tag of a remote repository
+
+    Args:
+        repo_path (str): path to the local git repository
+
+    Returns:
+        str: the latest tag of the remote repository
+    """
+    try:
+        _, out, _ = j.sals.process.execute(
+            "git ls-remote --tags --refs --sort='v:refname' | tail -n1 | sed 's/.*\///'", cwd=repo_path
+        )
+        latest_remote_tag = out.rstrip("\n")
+    except Exception as e:
+        raise j.exceptions.Runtime(f"Failed to fetch remote releases. {str(e)}")
+    return latest_remote_tag
