@@ -213,7 +213,9 @@ def get_latest_remote_tag(repo_path):
     Returns:
         str: the latest tag of the remote repository
     """
-    rc, out, err = j.sals.process.execute("git ls-remote --tags --refs | sort -t '/' -k 3 -V | tail -n1 | sed 's/.*\///'", cwd=repo_path)
+    rc, out, err = j.sals.process.execute(
+        "git ls-remote --tags --refs | sort -t '/' -k 3 -V | tail -n1 | sed 's/.*\///'", cwd=repo_path
+    )
     if rc != 0:
         raise j.exceptions.Runtime(f"Failed to fetch latest remote release. {err}")
     latest_remote_tag = out.rstrip("\n")
