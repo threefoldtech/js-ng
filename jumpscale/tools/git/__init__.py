@@ -205,7 +205,7 @@ def find_git_path(path, die=True):
 
 def get_latest_remote_tag(repo_path):
     """
-    Get the latest tag of a remote repository
+    retrive the latest tag of a remote upstream repository
 
     Args:
         repo_path (str): path to the local git repository
@@ -213,11 +213,10 @@ def get_latest_remote_tag(repo_path):
     Returns:
         str: the latest tag of the remote repository
     """
-    try:
-        _, out, _ = j.sals.process.execute(
-            "git ls-remote --tags --refs --sort='v:refname' | tail -n1 | sed 's/.*\///'", cwd=repo_path
-        )
-        latest_remote_tag = out.rstrip("\n")
-    except Exception as e:
-        raise j.exceptions.Runtime(f"Failed to fetch remote releases. {str(e)}")
+    rc, out, err = j.sals.process.execute(
+        "git ls-remote --tags --refs | sort -t '/' -k 3 -V | tail -n1 | sed 's/.*\///'", cwd=repo_path
+    )
+    if rc != 0:
+        raise j.exceptions.Runtime(f"Failed to fetch latest remote release. {err}")
+    latest_remote_tag = out.rstrip("\n")
     return latest_remote_tag
