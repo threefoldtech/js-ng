@@ -297,37 +297,32 @@ def kill(proc, sig=signal.SIGTERM, timeout=5, sure_kill=False):
         # If PID no longer exists return None immediately
         # If timeout exceeded and the process is still alive raise TimeoutExpired exception
         proc.wait(timeout=timeout)
-        j.logger.debug(f&#34;the process with PID: {proc.pid} was terminated with sig: {sig}.&#34;)
+        # the process with PID {proc.pid} was terminated with sig {sig}
     except psutil.TimeoutExpired as e:
         # timeout expires and process is still alive.
         if sure_kill and sig != signal.SIGKILL and os.name != &#34;nt&#34;:
             # SIGKILL not supported in windows
             # If a process gets this signal it must quit immediately and will not perform any clean-up operations
             proc.kill()
-            j.logger.debug(&#34;SIGKILL signal sent.&#34;)
+            # SIGKILL signal sent
             try:
                 proc.wait(1)
-                j.logger.debug(f&#34;the process with PID: {proc.pid} was terminated with sig: {signal.SIGKILL}.&#34;)
+                # the process with PID {proc.pid} was terminated with sig {signal.SIGKILL}
             except psutil.TimeoutExpired as e:
                 if proc.status() == psutil.STATUS_ZOMBIE:
-                    j.logger.debug(
-                        f&#34;the process with PID: {proc.pid} becomes a zombie and should be considered a dead.&#34;
-                    )
+                    # the process with PID: {proc.pid} becomes a zombie and should be considered a dead.
                     return
                 # the process may be in an uninterruptible sleep
-                j.logger.debug(&#34;the process may be in an uninterruptible sleep.&#34;)
                 j.logger.warning(f&#34;Could not kill the process with pid: {proc.pid} with {sig}. Timeout: {timeout}&#34;)
                 raise j.exceptions.Runtime(f&#34;Could not kill process with pid {proc.pid}, {proc.status()}&#34;) from e
         else:
-            j.logger.warning(f&#34;Could not kill the process with pid: {proc.pid} with {sig}. Timeout: {timeout}&#34;)
             raise j.exceptions.Runtime(f&#34;Could not kill process with pid {proc.pid}&#34;) from e
     except psutil.AccessDenied as e:
         # permission to perform an action is denied
-        j.logger.warning(&#34;the permission is denied&#34;)
         raise j.exceptions.Permission(&#34;Permission to perform this action is denied!&#34;) from e
     except psutil.NoSuchProcess:
         # Process no longer exists or Zombie (already dead)
-        j.logger.debug(&#34;Process is no longer exists or a Zombie (already dead)&#34;)
+        pass
 
 
 def ps_find(process_name):
@@ -400,22 +395,18 @@ def get_filtered_pids(filterstr, excludes=None):
     for proc in psutil.process_iter([&#34;name&#34;, &#34;cmdline&#34;]):
         cmd_line = &#34; &#34;.join(proc.info[&#34;cmdline&#34;])
         if proc.info[&#34;cmdline&#34;] and filterstr in cmd_line:
-            j.logger.debug(f&#34;found filter string: {filterstr} in command line: {cmd_line}&#34;)
+            # found filter string: {filterstr} in command line: {cmd_line}
             if excludes:
                 for exclude in excludes:
                     if exclude in cmd_line:
-                        j.logger.debug(
-                            f&#34;but excluded because it contain exclude string: {exclude} in command line: {cmd_line}&#34;
-                        )
+                        # we excluded this because it contain exclude string
                         break
                 else:  # intended `for/else` meaning for loop finished normally with no break
                     pids.append(proc.pid)  # may yield proc instead
                 continue
             else:
                 pids.append(proc.pid)  # may yield proc instead
-    j.logger.debug(
-        f&#34;founded pids are: {pids}&#34; if pids else f&#34;filter string {filterstr} not found in any processes. root needed?&#34;
-    )
+    # if pids is empty root could be needed
     return pids
 
 
@@ -456,33 +447,22 @@ def check_start(cmd, filterstr, n_instances=1, retry=1, timeout=2, delay=0.5):
         if isinstance(cmd, str):
             args = shlex.split(cmd)
         proc = psutil.Popen(args, close_fds=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
-        j.logger.debug(f&#34;attempt no: {i}&#34;)
-        j.logger.debug(f&#34;executed cmd: {cmd}&#34;)
-        j.logger.debug(f&#34;proc.cmdline: {proc.cmdline()}&#34;)
-        j.logger.debug(f&#34;direct process id spawn by this command : {proc.pid}&#34;)
-        j.logger.debug(f&#34;status: {proc.status()}&#34;)
-        j.logger.debug(f&#34;name: {proc.name()}&#34;)
-        j.logger.debug(f&#34;exe: {proc.exe()}&#34;)
         try:
             rc = proc.wait(timeout)  # makesure the process is stable
-            if rc == 0:  # executing the command succeeded but exited immediately!
-                j.logger.debug(&#34;executing the start command succeeded but exited immediately&#34;)
-            else:
-                j.logger.debug(&#34;the start command exited with error&#34;)  # the process exited with error
+            if rc != 0:  # executing the command succeeded but exited immediately!
                 output, error_output = proc.communicate()
-                j.logger.debug(f&#34;err: {error_output}&#34;)
-            j.logger.debug(f&#34;return code is: {rc}&#34;)
+                j.logger.error(f&#34;the start command exited with error: {error_output}&#34;)  # the process exited with error
         except psutil.TimeoutExpired:
-            j.logger.debug(&#34;the start command still running after 2 sec&#34;)  # still running
+            pass  # still running
         # wait extra delay to allow any subprocess spawned from the process we just started to finish
         # this may not needed in many cases
         time.sleep(delay)
         # TODO check based on command
         if check_running(filterstr, min=n_instances):
-            j.logger.debug(f&#34;found at least {n_instances} instances using the filter string: {filterstr}&#34;)
+            # found at least {n_instances} instances using the filter string {filterstr}
             return
         else:
-            j.logger.debug(f&#34;the required number of instances using the filter string: {filterstr} not found yet!&#34;)
+            # the required number of instances using the filter string {filterstr} not found yet!
             continue
     j.logger.error(f&#34;could not start the required number of instances ({n_instances}) after {i} attempts.&#34;)
     raise j.exceptions.Runtime(&#34;could not start the required number of instances.&#34;)
@@ -507,43 +487,27 @@ def check_stop(cmd, filterstr, retry=1, n_instances=0, timeout=2, delay=0.5):
         if isinstance(cmd, str):
             args = shlex.split(cmd)
         proc = psutil.Popen(args, close_fds=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
-        j.logger.debug(f&#34;attempt no: {i}&#34;)
-        j.logger.debug(f&#34;executed cmd: {cmd}&#34;)
-        j.logger.debug(f&#34;proc.cmdline: {proc.cmdline()}&#34;)
-        j.logger.debug(f&#34;direct process id spawn by this command : {proc.pid}&#34;)
-        j.logger.debug(f&#34;status: {proc.status()}&#34;)
-        j.logger.debug(f&#34;name: {proc.name()}&#34;)
-        j.logger.debug(f&#34;exe: {proc.exe()}&#34;)
         try:
             rc = proc.wait(timeout)  # makesure the process is stable
             # print(f&#39;rc: {rc}&#39;)
-            if rc == 0:
-                # executing the process succeeded but exited immediately!
-                j.logger.debug(&#34;executing the stop command succeeded but exited immediately&#34;)
-            else:
+            if rc != 0:
                 # the process exited with error
-                j.logger.debug(&#34;the stop command exited with error&#34;)  # the process exited with error
                 output, error_output = proc.communicate()
-                j.logger.debug(f&#34;err: {error_output}&#34;)
+                j.logger.warnnig(f&#34;the stop command exited with error: {error_output}&#34;)
         except psutil.TimeoutExpired:
-            j.logger.debug(&#34;the start command still running after 2 sec&#34;)  # still running
+            # still running
+            pass
         # wait extra delay to allow any subprocess spawned from the process we just started to finish
         # this may not needed in many cases
         time.sleep(delay)
         found = get_pids(filterstr)
         if len(found) == n_instances:
-            j.logger.debug(
-                f&#34;the required {n_instances} matching the instances found using the filter string: {filterstr}&#34;
-            )
+            # the required {n_instances} matching the instances found using the filter string: {filterstr}
             return
         else:
-            j.logger.debug(
-                f&#34;the required {n_instances} not matching the instances number found using the filter string: {filterstr} yet&#34;
-            )
+            # the required {n_instances} not matching the instances number found using the filter string: {filterstr} yet
             continue
-    j.logger.error(f&#34;could not match the required number of instances ({n_instances}) after {i} attempts.&#34;)
-    j.logger.debug(f&#34;alive: {found}&#34;)
-    j.logger.debug(f&#34;{len(found)}&#34;)
+    # could not match the required number of instances {n_instances} after {i} attempts.
     raise j.exceptions.Runtime(f&#34;could not stop {cmd}, found {len(found)} of instances instead of {n_instances}&#34;)
 
 
@@ -583,7 +547,7 @@ def get_pids(process_name, match_predicate=None, limit=0, _alt_source=None, incl
     for proc in p_source:
         try:
             if not include_zombie and proc.status() == psutil.STATUS_ZOMBIE:
-                j.logger.debug(f&#34;ignoring : {proc.pid} zombie process.&#34;)
+                # {proc.pid} is a zombie process, ignoring it
                 continue
 
             candidates = [proc.info[&#34;name&#34;]]
@@ -1305,33 +1269,22 @@ def in_host():
         if isinstance(cmd, str):
             args = shlex.split(cmd)
         proc = psutil.Popen(args, close_fds=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
-        j.logger.debug(f&#34;attempt no: {i}&#34;)
-        j.logger.debug(f&#34;executed cmd: {cmd}&#34;)
-        j.logger.debug(f&#34;proc.cmdline: {proc.cmdline()}&#34;)
-        j.logger.debug(f&#34;direct process id spawn by this command : {proc.pid}&#34;)
-        j.logger.debug(f&#34;status: {proc.status()}&#34;)
-        j.logger.debug(f&#34;name: {proc.name()}&#34;)
-        j.logger.debug(f&#34;exe: {proc.exe()}&#34;)
         try:
             rc = proc.wait(timeout)  # makesure the process is stable
-            if rc == 0:  # executing the command succeeded but exited immediately!
-                j.logger.debug(&#34;executing the start command succeeded but exited immediately&#34;)
-            else:
-                j.logger.debug(&#34;the start command exited with error&#34;)  # the process exited with error
+            if rc != 0:  # executing the command succeeded but exited immediately!
                 output, error_output = proc.communicate()
-                j.logger.debug(f&#34;err: {error_output}&#34;)
-            j.logger.debug(f&#34;return code is: {rc}&#34;)
+                j.logger.error(f&#34;the start command exited with error: {error_output}&#34;)  # the process exited with error
         except psutil.TimeoutExpired:
-            j.logger.debug(&#34;the start command still running after 2 sec&#34;)  # still running
+            pass  # still running
         # wait extra delay to allow any subprocess spawned from the process we just started to finish
         # this may not needed in many cases
         time.sleep(delay)
         # TODO check based on command
         if check_running(filterstr, min=n_instances):
-            j.logger.debug(f&#34;found at least {n_instances} instances using the filter string: {filterstr}&#34;)
+            # found at least {n_instances} instances using the filter string {filterstr}
             return
         else:
-            j.logger.debug(f&#34;the required number of instances using the filter string: {filterstr} not found yet!&#34;)
+            # the required number of instances using the filter string {filterstr} not found yet!
             continue
     j.logger.error(f&#34;could not start the required number of instances ({n_instances}) after {i} attempts.&#34;)
     raise j.exceptions.Runtime(&#34;could not start the required number of instances.&#34;)</code></pre>
@@ -1383,43 +1336,27 @@ def in_host():
         if isinstance(cmd, str):
             args = shlex.split(cmd)
         proc = psutil.Popen(args, close_fds=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
-        j.logger.debug(f&#34;attempt no: {i}&#34;)
-        j.logger.debug(f&#34;executed cmd: {cmd}&#34;)
-        j.logger.debug(f&#34;proc.cmdline: {proc.cmdline()}&#34;)
-        j.logger.debug(f&#34;direct process id spawn by this command : {proc.pid}&#34;)
-        j.logger.debug(f&#34;status: {proc.status()}&#34;)
-        j.logger.debug(f&#34;name: {proc.name()}&#34;)
-        j.logger.debug(f&#34;exe: {proc.exe()}&#34;)
         try:
             rc = proc.wait(timeout)  # makesure the process is stable
             # print(f&#39;rc: {rc}&#39;)
-            if rc == 0:
-                # executing the process succeeded but exited immediately!
-                j.logger.debug(&#34;executing the stop command succeeded but exited immediately&#34;)
-            else:
+            if rc != 0:
                 # the process exited with error
-                j.logger.debug(&#34;the stop command exited with error&#34;)  # the process exited with error
                 output, error_output = proc.communicate()
-                j.logger.debug(f&#34;err: {error_output}&#34;)
+                j.logger.warnnig(f&#34;the stop command exited with error: {error_output}&#34;)
         except psutil.TimeoutExpired:
-            j.logger.debug(&#34;the start command still running after 2 sec&#34;)  # still running
+            # still running
+            pass
         # wait extra delay to allow any subprocess spawned from the process we just started to finish
         # this may not needed in many cases
         time.sleep(delay)
         found = get_pids(filterstr)
         if len(found) == n_instances:
-            j.logger.debug(
-                f&#34;the required {n_instances} matching the instances found using the filter string: {filterstr}&#34;
-            )
+            # the required {n_instances} matching the instances found using the filter string: {filterstr}
             return
         else:
-            j.logger.debug(
-                f&#34;the required {n_instances} not matching the instances number found using the filter string: {filterstr} yet&#34;
-            )
+            # the required {n_instances} not matching the instances number found using the filter string: {filterstr} yet
             continue
-    j.logger.error(f&#34;could not match the required number of instances ({n_instances}) after {i} attempts.&#34;)
-    j.logger.debug(f&#34;alive: {found}&#34;)
-    j.logger.debug(f&#34;{len(found)}&#34;)
+    # could not match the required number of instances {n_instances} after {i} attempts.
     raise j.exceptions.Runtime(f&#34;could not stop {cmd}, found {len(found)} of instances instead of {n_instances}&#34;)</code></pre>
 </details>
 </dd>
@@ -1599,22 +1536,18 @@ j.exceptions.Permission: if the process is not accessible by the user.</p>
     for proc in psutil.process_iter([&#34;name&#34;, &#34;cmdline&#34;]):
         cmd_line = &#34; &#34;.join(proc.info[&#34;cmdline&#34;])
         if proc.info[&#34;cmdline&#34;] and filterstr in cmd_line:
-            j.logger.debug(f&#34;found filter string: {filterstr} in command line: {cmd_line}&#34;)
+            # found filter string: {filterstr} in command line: {cmd_line}
             if excludes:
                 for exclude in excludes:
                     if exclude in cmd_line:
-                        j.logger.debug(
-                            f&#34;but excluded because it contain exclude string: {exclude} in command line: {cmd_line}&#34;
-                        )
+                        # we excluded this because it contain exclude string
                         break
                 else:  # intended `for/else` meaning for loop finished normally with no break
                     pids.append(proc.pid)  # may yield proc instead
                 continue
             else:
                 pids.append(proc.pid)  # may yield proc instead
-    j.logger.debug(
-        f&#34;founded pids are: {pids}&#34; if pids else f&#34;filter string {filterstr} not found in any processes. root needed?&#34;
-    )
+    # if pids is empty root could be needed
     return pids</code></pre>
 </details>
 </dd>
@@ -1771,7 +1704,7 @@ if full_cmd_line is set to True, the full command line is used. Defaults to Fals
     for proc in p_source:
         try:
             if not include_zombie and proc.status() == psutil.STATUS_ZOMBIE:
-                j.logger.debug(f&#34;ignoring : {proc.pid} zombie process.&#34;)
+                # {proc.pid} is a zombie process, ignoring it
                 continue
 
             candidates = [proc.info[&#34;name&#34;]]
@@ -2535,37 +2468,32 @@ j.exceptions.Permission: In case the permission to perform this action is denied
         # If PID no longer exists return None immediately
         # If timeout exceeded and the process is still alive raise TimeoutExpired exception
         proc.wait(timeout=timeout)
-        j.logger.debug(f&#34;the process with PID: {proc.pid} was terminated with sig: {sig}.&#34;)
+        # the process with PID {proc.pid} was terminated with sig {sig}
     except psutil.TimeoutExpired as e:
         # timeout expires and process is still alive.
         if sure_kill and sig != signal.SIGKILL and os.name != &#34;nt&#34;:
             # SIGKILL not supported in windows
             # If a process gets this signal it must quit immediately and will not perform any clean-up operations
             proc.kill()
-            j.logger.debug(&#34;SIGKILL signal sent.&#34;)
+            # SIGKILL signal sent
             try:
                 proc.wait(1)
-                j.logger.debug(f&#34;the process with PID: {proc.pid} was terminated with sig: {signal.SIGKILL}.&#34;)
+                # the process with PID {proc.pid} was terminated with sig {signal.SIGKILL}
             except psutil.TimeoutExpired as e:
                 if proc.status() == psutil.STATUS_ZOMBIE:
-                    j.logger.debug(
-                        f&#34;the process with PID: {proc.pid} becomes a zombie and should be considered a dead.&#34;
-                    )
+                    # the process with PID: {proc.pid} becomes a zombie and should be considered a dead.
                     return
                 # the process may be in an uninterruptible sleep
-                j.logger.debug(&#34;the process may be in an uninterruptible sleep.&#34;)
                 j.logger.warning(f&#34;Could not kill the process with pid: {proc.pid} with {sig}. Timeout: {timeout}&#34;)
                 raise j.exceptions.Runtime(f&#34;Could not kill process with pid {proc.pid}, {proc.status()}&#34;) from e
         else:
-            j.logger.warning(f&#34;Could not kill the process with pid: {proc.pid} with {sig}. Timeout: {timeout}&#34;)
             raise j.exceptions.Runtime(f&#34;Could not kill process with pid {proc.pid}&#34;) from e
     except psutil.AccessDenied as e:
         # permission to perform an action is denied
-        j.logger.warning(&#34;the permission is denied&#34;)
         raise j.exceptions.Permission(&#34;Permission to perform this action is denied!&#34;) from e
     except psutil.NoSuchProcess:
         # Process no longer exists or Zombie (already dead)
-        j.logger.debug(&#34;Process is no longer exists or a Zombie (already dead)&#34;)</code></pre>
+        pass</code></pre>
 </details>
 </dd>
 <dt id="jumpscale.sals.process.kill_all_pids"><code class="name flex">
