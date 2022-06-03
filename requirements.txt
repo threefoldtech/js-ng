@@ -15,9 +15,9 @@ bcrypt==3.2.0; python_version >= "3.6" \
 better-exceptions==0.2.2 \
     --hash=sha256:bf79c87659bc849989d726bf0e4a2100edefe7eded112d201f54fe08467fdf63 \
     --hash=sha256:c196cad849de615abb9f6eb67ca1b83f33b938818f0e2fe8fa157b22aeb7b992
-bottle==0.12.18 \
-    --hash=sha256:43157254e88f32c6be16f8d9eb1f1d1472396a4e174ebd2bf62544854ecf37e7 \
-    --hash=sha256:0819b74b145a7def225c0e83b16a4d5711fde751cd92bae467a69efce720f69e
+bottle==0.12.20 \
+    --hash=sha256:3c97e1e955c11e4ad2d73a60cdf83c4f4cf7b8b73c8344fc4b72f985432605cb \
+    --hash=sha256:544023cd2cd6d382ebf9675fa0544d4d20e19d3a13b6932a812d099fb2f6cb84
 certifi==2019.11.28; python_version >= "2.7" and python_full_version < "3.0.0" or python_full_version >= "3.5.0" \
     --hash=sha256:017c25db2a153ce562900032d5bc68e9f191e44e9a0f762f373977de9df1fbb3 \
     --hash=sha256:25b64c7da4cd7479594d035c08c2d809eb4aab3a26e5a990ea98cc450c320f1f
