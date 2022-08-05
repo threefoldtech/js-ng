@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "js-ng"
 packages = [{ include = "jumpscale" }]
-version = "11.0b14"
+version = "11.0b15"
 description = "system automation, configuration management and RPC framework"
 authors = ["xmonader <xmonader@gmail.com>"]
 license = "MIT"
@@ -23,8 +23,7 @@ pylzma = "^0.5.0"
 PyYAML = "^5.1"
 arrow = "^0.15.7"
 colorama = "^0.4.1"
-gevent = "21.1.2"
-greenlet = "1.0.0"
+gevent = "^21.1.2"
 faker = "^2.0"
 terminaltables = "^3.1"
 distro = "^1.4"
