@@ -10,7 +10,7 @@ config management/automation framework
 ## Principles
 
 - pip installable
-- facilities exposed under `god object`: `j`
+- facilities exposed under `loader object`: `j`
 - pluggable
 - docs and tests are as important as code
 

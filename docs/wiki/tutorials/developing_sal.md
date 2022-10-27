@@ -26,6 +26,4 @@ You can put all of your code directly in the `__init__.py` of your SAL package.
 
 
 ## Accessing code
-Code will be auto registered in the god object `j` like that `j.sal.YOUR_NEW_SAL`
-
-
+Code will be auto registered in the loader object `j` like that `j.sal.YOUR_NEW_SAL`
