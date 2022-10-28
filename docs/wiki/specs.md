@@ -1,5 +1,5 @@
 * [Poetry](poetry.md)
-* [God object and namespaces](god_object_namespaces_concepts.md)
+* [Loader object and namespaces](loader_object_namespaces_concepts.md)
 * [Loader](loader.md)
 * [JS-NG shell](jsng_shell.md)
 * [Base Classes and Hierarchical Configurations](baseclasses.md)
