@@ -66,7 +66,7 @@ Example structure
 
 ├── projectmain
 │   └── jumpscale
-│       ├── god.py
+│       ├── loader.py
 │       ├── __init__.py
 ├── projectsals
 │   └── jumpscale
@@ -104,7 +104,7 @@ Solved by design using python modules
 
 # Problem 4: jslocation
 
-If we open `god.py`
+If we do like the following
 
 ```python
 import jumpscale.sal
@@ -113,9 +113,10 @@ import jumpscale.clients
 
 j = jumpscale
 ```
+
 we have handcrafted imports for sal, tools, clients so their subpackages can be autoloaded, but how should it work with packages like `digitalme`
 
-## How to register digitalme in the god object
+## How to register digitalme in the global object "j"
 Do we generate `import jumpscale.digitalme`? is there a standard python way to do it? a reliable plugin system?
 
 ## where would its module be registered?

@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "js-ng"
 packages = [{ include = "jumpscale" }]
-version = "11.0b16"
+version = "11.0b17"
 description = "system automation, configuration management and RPC framework"
 authors = ["xmonader <xmonader@gmail.com>"]
 license = "MIT"
@@ -57,7 +57,6 @@ objgraph = "^3.4.1"
 
 [tool.poetry.scripts]
 jsng = "jumpscale.entry_points.jsng:run"
-usershell = "jumpscale.entry_points.usershell:run"
 jsctl = "jumpscale.entry_points.jsctl:cli"
 jsync = "jumpscale.entry_points.jsync:cli"
 

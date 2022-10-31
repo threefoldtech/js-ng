@@ -114,7 +114,10 @@ def get_default_config():
         "debug": True,
         "shell": "ptpython",
         "logging": {
-            "default": {"enabled": True, "level": 10,},
+            "default": {
+                "enabled": True,
+                "level": 10,
+            },
             "redis": {
                 "enabled": True,
                 "level": 15,
@@ -139,8 +142,9 @@ def get_default_config():
         },
         "factory": {"always_reload": False},
         "store": "filesystem",
-        "threebot": {"default": "",},
-        "explorer": {"default_url": "https://explorer.testnet.grid.tf/explorer",},
+        "threebot": {
+            "default": "",
+        },
     }
 
 
@@ -165,7 +169,7 @@ def update_config(data):
 
 
 def get(key, default=None):
-    """ Retrives value from jumpscale config
+    """Retrives value from jumpscale config
 
     Arguments:
         key (str): the key you wish to retrieve
@@ -176,7 +180,7 @@ def get(key, default=None):
 
 
 def set(key, val):
-    """ Sets value in jumpscale config
+    """Sets value in jumpscale config
 
     Arguments:
         key (str): the key you wish to update
@@ -188,7 +192,7 @@ def set(key, val):
 
 
 def set_default(key, val):
-    """ Sets key to value in jumpscale config and returns
+    """Sets key to value in jumpscale config and returns
 
     Arguments:
         key (str): the key you wish to update

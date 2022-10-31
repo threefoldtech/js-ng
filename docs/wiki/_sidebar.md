@@ -33,7 +33,7 @@
     * [Extending Jumpscale](./extend_j.md)
     * [Adding a new command](./distributing_cmds.md)
     * [Executors](./executors.md)
-    * [Registering new extensions on God object](./extend_j.md)
+    * [Registering new extensions on loader object](./extend_j.md)
     * [Logging](./logging.md)
     * [Exceptions](./exceptions.md)
     * [Errors](./errorhandling.md)
@@ -48,7 +48,7 @@
 
 * [Specs](specs.md)
     * [Poetry](poetry.md)
-    * [God object and namespaces](god_object_namespaces_concepts.md)
+    * [Loader object and namespaces](loader_object_namespaces_concepts.md)
     * [Loader](loader.md)
     * [JS-NG shell](jsng_shell.md)
     * [Base Classes and Hierarchical Configurations](baseclasses.md)
