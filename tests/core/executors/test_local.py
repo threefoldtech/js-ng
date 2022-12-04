@@ -33,7 +33,9 @@ class TestLocal(BaseTests):
 
     @parameterized.expand([(CMD_STR, True), (CMD_LIST, False)])
     def test004_execute_local_command_with_hide(self, cmd, hide):
-        self.info(f"Execute command `{cmd}` with hide {hide} and assert that sout is okay")
+        self.info(
+            f"Execute command `{cmd}` with hide {hide} and assert that sout is okay"
+        )
         capture = io.StringIO()
         sys.stdout = capture
         _, stdout, _ = j.core.executors.run_local(cmd, hide=hide)
@@ -47,7 +49,9 @@ class TestLocal(BaseTests):
 
     @parameterized.expand([(CMD_STR, True), (CMD_LIST, False)])
     def test005_execute_local_command_with_echo(self, cmd, echo):
-        self.info(f"Execute command `{cmd}`with echo {echo} and assert that sout is okay")
+        self.info(
+            f"Execute command `{cmd}`with echo {echo} and assert that sout is okay"
+        )
         capture = io.StringIO()
         sys.stdout = capture
         j.core.executors.run_local(cmd, echo=echo)
@@ -61,7 +65,9 @@ class TestLocal(BaseTests):
 
     @parameterized.expand([(CMD_STR,), (CMD_LIST,)])
     def test006_execute_local_command_hide_overwrite_echo(self, cmd):
-        self.info(f"Execute command `{cmd}` and assert that hide overwrites echo")
+        self.info(
+            f"Execute command `{cmd}` and assert that hide overwrites echo"
+        )
         capture = io.StringIO()
         sys.stdout = capture
         j.core.executors.run_local(cmd, echo=True, hide=True)
@@ -72,5 +78,7 @@ class TestLocal(BaseTests):
 
     def test007_execute_local_command_with_env(self):
         self.info("Execute command and export env variable")
-        _, stdout, _ = j.core.executors.run_local("echo $PATH", env={"PATH": ""})
+        _, stdout, _ = j.core.executors.run_local(
+            "echo $PATH", env={"PATH": ""}
+        )
         self.assertEqual("\n", stdout)

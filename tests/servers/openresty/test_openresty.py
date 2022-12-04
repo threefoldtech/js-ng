@@ -34,7 +34,10 @@ class TestOpenResty(unittest.TestCase):
         website_config = j.sals.fs.read_file(website.path_cfg)
         self.assertIn(f"?{website.domain}$;", website_config)
         self.assertIn(f"listen {website.port};", website_config)
-        self.assertIn(f"include {website.path_cfg_dir}/{website.instance_name}_locations/*.conf;", website_config)
+        self.assertIn(
+            f"include {website.path_cfg_dir}/{website.instance_name}_locations/*.conf;",
+            website_config,
+        )
 
         loc_config = j.sals.fs.read_file(location.path_cfg)
 

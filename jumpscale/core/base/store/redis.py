@@ -22,7 +22,9 @@ class RedisStore(EncryptedConfigStore):
         """
         super().__init__(location, JsonSerializer())
         redis_config = self.config_env.get_store_config("redis")
-        self.redis_client = redis.Redis(redis_config["hostname"], redis_config["port"])
+        self.redis_client = redis.Redis(
+            redis_config["hostname"], redis_config["port"]
+        )
 
     def get_key(self, instance_name):
         """
@@ -50,7 +52,9 @@ class RedisStore(EncryptedConfigStore):
         """
         key = self.get_key(instance_name)
         if not self.redis_client.exists(key):
-            raise ConfigNotFound(f"cannot find config for {instance_name} at {key}")
+            raise ConfigNotFound(
+                f"cannot find config for {instance_name} at {key}"
+            )
         return self.redis_client.get(key)
 
     def _full_scan(self, pattern):

@@ -1,7 +1,12 @@
 from redis import Redis
 import json
 from jumpscale.data.bcdb import models as models
-from .clients import RedisStorageClient, RedisIndexClient, SonicIndexTextClient, SQLiteIndexSetClient
+from .clients import (
+    RedisStorageClient,
+    RedisIndexClient,
+    SonicIndexTextClient,
+    SQLiteIndexSetClient,
+)
 
 
 class BCDB:
@@ -38,7 +43,9 @@ class BCDB:
             index_prop = getattr(obj, prop.name)
             old_index = getattr(old_obj, prop.name) if old_obj else None
             if prop.index:
-                self.indexer.set(model, prop_name, index_prop, obj.id, old_index)
+                self.indexer.set(
+                    model, prop_name, index_prop, obj.id, old_index
+                )
         self.storage.set(model, obj.id, obj)
 
     def model_id_incr(self, model):
@@ -168,7 +175,10 @@ class BCDB:
             raise RuntimeError(f"{key} is not a part of {model.name}'s schema")
         if not model.schema.props[key].index_key:
             raise RuntimeError(f"{key} is not indexed.")
-        return [self.get_item_by_id(model, x[0]) for x in self.indexer_set.get(model, key, min, max)]
+        return [
+            self.get_item_by_id(model, x[0])
+            for x in self.indexer_set.get(model, key, min, max)
+        ]
 
     def get_item_from_index_text(self, model, key, pattern):
         """Searches for objects whose key matches the given pattern inside model.
@@ -193,7 +203,10 @@ class BCDB:
             raise RuntimeError(f"{key} is not a part of {model.name}'s schema")
         if not model.schema.props[key].index_text:
             raise RuntimeError(f"{key} is not indexed for search.")
-        return [self.get_item_by_id(model, int(x)) for x in self.indexer_text.get(model, key, pattern)]
+        return [
+            self.get_item_by_id(model, int(x))
+            for x in self.indexer_text.get(model, key, pattern)
+        ]
 
     def get_model_by_name(self, model_name):
         """Returns a Model object given its name.

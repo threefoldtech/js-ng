@@ -188,7 +188,10 @@ except Exception:
     RLIMIT_FDS_SOFT, RLIMIT_FDS_HARD = 0, 0
 
 
-START_TIME_INFO = {"time_utc": str(datetime.datetime.utcnow()), "time_utc_offset": -time.timezone / 3600.0}
+START_TIME_INFO = {
+    "time_utc": str(datetime.datetime.utcnow()),
+    "time_utc_offset": -time.timezone / 3600.0,
+}
 
 
 def get_python_info():

@@ -21,7 +21,9 @@ class Location(Base):
 
     @property
     def path_cfg_dir(self):
-        return f"{self.parent.path_cfg_dir}/{self.parent.instance_name}_locations"
+        return (
+            f"{self.parent.path_cfg_dir}/{self.parent.instance_name}_locations"
+        )
 
     @property
     def path_cfg(self):
@@ -33,7 +35,9 @@ class Location(Base):
 
     def write_config(self, content=""):
         if not content:
-            content = render_config_template(f"location_{self.location_type}", obj=self)
+            content = render_config_template(
+                f"location_{self.location_type}", obj=self
+            )
         j.sals.fs.write_file(self.path_cfg, content)
 
     def configure(self):

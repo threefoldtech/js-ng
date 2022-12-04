@@ -40,7 +40,13 @@ e.g
 """
 
 from jumpscale.loader import j
-from jinja2 import Environment, FileSystemLoader, select_autoescape, StrictUndefined, Template
+from jinja2 import (
+    Environment,
+    FileSystemLoader,
+    select_autoescape,
+    StrictUndefined,
+    Template,
+)
 
 
 def get_env(templates_path):
@@ -52,7 +58,10 @@ def get_env(templates_path):
     Returns:
         jinja2.Environment: Jinja2 env
     """
-    return Environment(loader=FileSystemLoader(templates_path), autoescape=select_autoescape(["html", "xml"]))
+    return Environment(
+        loader=FileSystemLoader(templates_path),
+        autoescape=select_autoescape(["html", "xml"]),
+    )
 
 
 def get_template(template_path=None, template_text=None):
@@ -71,9 +80,13 @@ def get_template(template_path=None, template_text=None):
     """
 
     if template_path and template_text:
-        raise j.exceptions.Input("Can only specify template_path or template_text")
+        raise j.exceptions.Input(
+            "Can only specify template_path or template_text"
+        )
     if not template_path and not template_text:
-        raise j.exceptions.Input("Need to specify either template_path or template_text")
+        raise j.exceptions.Input(
+            "Need to specify either template_path or template_text"
+        )
 
     if template_path:
         template_text = j.sals.fs.read_file(template_path)
@@ -81,7 +94,9 @@ def get_template(template_path=None, template_text=None):
     return Template(template_text, undefined=StrictUndefined)
 
 
-def render_template(template_path=None, template_text=None, dest=None, **kwargs):
+def render_template(
+    template_path=None, template_text=None, dest=None, **kwargs
+):
     """load the template if dest is specified will write in specified path, renders with specified kwargs
 
     Args:
@@ -95,7 +110,9 @@ def render_template(template_path=None, template_text=None, dest=None, **kwargs)
     Returns:
         str: Rendered template
     """
-    template = get_template(template_path=template_path, template_text=template_text)
+    template = get_template(
+        template_path=template_path, template_text=template_text
+    )
 
     try:
         template_string = template.render(**kwargs)
@@ -109,7 +126,13 @@ def render_template(template_path=None, template_text=None, dest=None, **kwargs)
 
 
 def render_code_python(
-    obj_key=None, template_path=None, template_text=None, dest=None, objForHash=None, name=None, **kwargs
+    obj_key=None,
+    template_path=None,
+    template_text=None,
+    dest=None,
+    objForHash=None,
+    name=None,
+    **kwargs,
 ):
     # TODO
     pass

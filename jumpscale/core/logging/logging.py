@@ -42,7 +42,9 @@ class Logger:
         """
         return self._logger.add(*args, **kwargs)
 
-    def add_custom_handler(self, name: str, handler: LogHandler, *args, **kwargs):
+    def add_custom_handler(
+        self, name: str, handler: LogHandler, *args, **kwargs
+    ):
         """
         Add custom log handler
 
@@ -64,7 +66,9 @@ class Logger:
         self._logger.remove(handler_id)
 
     def _log(self, level, message, *args, category, data, exception=None):
-        self._logger.opt(depth=2, exception=exception).bind(category=category, data=data).log(level, message, *args)
+        self._logger.opt(depth=2, exception=exception).bind(
+            category=category, data=data
+        ).log(level, message, *args)
 
     def debug(self, message, *args, category: str = "", data: dict = None):
         """Log debug message"""
@@ -87,10 +91,23 @@ class Logger:
         self._log("CRITICAL", message, *args, category=category, data=data)
 
     def exception(
-        self, message, *args, category: str = "", data: dict = None, level: int = 40, exception: Exception = None
+        self,
+        message,
+        *args,
+        category: str = "",
+        data: dict = None,
+        level: int = 40,
+        exception: Exception = None,
     ):
         """Log exception message"""
-        self._log(LEVELS.get(level, 40), message, *args, category=category, data=data, exception=exception)
+        self._log(
+            LEVELS.get(level, 40),
+            message,
+            *args,
+            category=category,
+            data=data,
+            exception=exception,
+        )
 
 
 class MainLogger(Logger):
@@ -143,7 +160,9 @@ class MainLogger(Logger):
         self._module_apps[module_name] = app_name
         self._add_app(app_name)
 
-        self.info(f"Logging from '{module_name}' is now bound to '{app_name}' app")
+        self.info(
+            f"Logging from '{module_name}' is now bound to '{app_name}' app"
+        )
 
     def unregister(self, module_name=None):
         """
@@ -163,7 +182,9 @@ class MainLogger(Logger):
             app_name = self._module_apps[module_name]
             del self._module_apps[module_name]
             self._remove_app(app_name)
-            self.info(f"Logging from '{module_name}' is now unbound to '{app_name}' app")
+            self.info(
+                f"Logging from '{module_name}' is now unbound to '{app_name}' app"
+            )
 
     def get_app_names(self):
         """
@@ -179,7 +200,9 @@ class MainLogger(Logger):
         if not j.core.db.is_running():
             apps.update(self._module_apps.values())
         else:
-            apps.update([app.decode() for app in j.core.db.smembers("applications")])
+            apps.update(
+                [app.decode() for app in j.core.db.smembers("applications")]
+            )
 
         return apps
 
@@ -224,7 +247,9 @@ class MainLogger(Logger):
 
 
 class RedisLogHandler(LogHandler):
-    def __init__(self, max_size: int = 1000, dump: bool = True, dump_dir: str = None):
+    def __init__(
+        self, max_size: int = 1000, dump: bool = True, dump_dir: str = None
+    ):
         self._max_size = max_size
         self._dump = dump
         self._dump_dir = dump_dir or "/tmp"
@@ -304,7 +329,9 @@ class RedisLogHandler(LogHandler):
         if self._db.llen(rkey) > self.max_size:
             if self.dump:
                 part, _ = self._map_identifier(record["id"] - 1)
-                path = j.sals.fs.join_paths(self.dump_dir, app_name, "%s.msgpack" % part)
+                path = j.sals.fs.join_paths(
+                    self.dump_dir, app_name, "%s.msgpack" % part
+                )
                 self._dump_records(app_name, path)
 
             self._clean_up(app_name)
@@ -323,7 +350,9 @@ class RedisLogHandler(LogHandler):
             return int(count)
         return 0
 
-    def record_get(self, identifier: int, app_name: str = DEFAULT_APP_NAME) -> dict:
+    def record_get(
+        self, identifier: int, app_name: str = DEFAULT_APP_NAME
+    ) -> dict:
         """Get app log record by its identifier
 
         Arguments:
@@ -344,7 +373,9 @@ class RedisLogHandler(LogHandler):
             return json.loads(record)
 
         if self.dump:
-            path = j.sals.fs.join_paths(self.dump_dir, app_name, "%s.msgpack" % part)
+            path = j.sals.fs.join_paths(
+                self.dump_dir, app_name, "%s.msgpack" % part
+            )
             if j.sals.fs.exists(path):
                 records = msgpack.loads(j.sals.fs.read_bytes(path))
                 if records and len(records) > index:

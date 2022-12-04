@@ -18,7 +18,9 @@ def rewrite_git_https_url_to_ssh(url):
     parsed_url = urllib.parse.urlparse(url)
     if parsed_url.scheme != "https":
         raise j.exceptions.Input("not a https url: {}".format(url))
-    return "git@{}:{}.git".format(parsed_url.netloc, parsed_url.path.lstrip("/"))
+    return "git@{}:{}.git".format(
+        parsed_url.netloc, parsed_url.path.lstrip("/")
+    )
 
 
 def rewrite_git_ssh_url_to_https(url, login=None, passwd=None):
@@ -33,15 +35,26 @@ def rewrite_git_ssh_url_to_https(url, login=None, passwd=None):
     if not match:
         raise j.exceptions.Input("not a ssh url: {}".format(url))
     if (login or passwd) and not (login and passwd):
-        raise j.exceptions.Input("Need to specify both login and passwd if either one is specified")
+        raise j.exceptions.Input(
+            "Need to specify both login and passwd if either one is specified"
+        )
     elif login and passwd:
-        rewrite_url = "https://{login}:{passwd}@{netloc}/{path}".format(**match.groupdict(), login=login, passwd=passwd)
+        rewrite_url = "https://{login}:{passwd}@{netloc}/{path}".format(
+            **match.groupdict(), login=login, passwd=passwd
+        )
     else:
         rewrite_url = "https://{netloc}/{path}".format(**url_data)
     return rewrite_url
 
 
-def ensure_repo(url: str, dest="", branch_or_tag="", commit_id="", discard_changes=False, depth=0):
+def ensure_repo(
+    url: str,
+    dest="",
+    branch_or_tag="",
+    commit_id="",
+    discard_changes=False,
+    depth=0,
+):
     """Makes sure that repo exists in specified dest with correct branch
 
     Args:
@@ -88,7 +101,9 @@ def clone_repo(url: str, dest: str, branch_or_tag="", depth=0, commit_id=""):
         checkout_cmd = prefix + f"git checkout {commit_id}"
         rc, _, err = j.core.executors.run_local(checkout_cmd, warn=True)
         if rc > 0:
-            raise j.exceptions.Runtime(f"Error in execute {checkout_cmd}\n{err}")
+            raise j.exceptions.Runtime(
+                f"Error in execute {checkout_cmd}\n{err}"
+            )
     return repo_name
 
 
@@ -184,7 +199,10 @@ def find(account="", name=""):
             return False
 
     return [
-        j.sals.fs.parent(path) for path in j.sals.fs.walk(j.core.dirs.CODEDIR, pat="*.git", filter_fun=_filter_paths)
+        j.sals.fs.parent(path)
+        for path in j.sals.fs.walk(
+            j.core.dirs.CODEDIR, pat="*.git", filter_fun=_filter_paths
+        )
     ]
 
 
@@ -214,9 +232,12 @@ def get_latest_remote_tag(repo_path):
         str: the latest tag of the remote repository
     """
     rc, out, err = j.sals.process.execute(
-        "git ls-remote --tags --refs | sort -t '/' -k 3 -V | tail -n1 | sed 's/.*\///'", cwd=repo_path
+        "git ls-remote --tags --refs | sort -t '/' -k 3 -V | tail -n1 | sed 's/.*\///'",
+        cwd=repo_path,
     )
     if rc != 0:
-        raise j.exceptions.Runtime(f"Failed to fetch latest remote release. {err}")
+        raise j.exceptions.Runtime(
+            f"Failed to fetch latest remote release. {err}"
+        )
     latest_remote_tag = out.rstrip("\n")
     return latest_remote_tag

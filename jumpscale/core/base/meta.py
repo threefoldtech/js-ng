@@ -226,7 +226,9 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
         # now we create factories
         for name, field in self._get_fields().items():
             if isinstance(field, fields.Factory):
-                value = field.factory_type(field.type, name_=name, parent_instance_=self)
+                value = field.factory_type(
+                    field.type, name_=name, parent_instance_=self
+                )
                 self._factories[name] = value
                 setattr(self, f"__{name}", value)
                 # if provided in values, remove it, as it's not needed
@@ -252,7 +254,11 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
         Returns:
             dict: fields dict as {name: field object}
         """
-        return {name: field for name, field in self._fields.items() if field.computed}
+        return {
+            name: field
+            for name, field in self._fields.items()
+            if field.computed
+        }
 
     def _get_factories(self):
         """
@@ -270,7 +276,11 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
         Returns:
             list: list of `Base` objects
         """
-        return [getattr(self, name) for name, field in self._get_fields().items() if isinstance(field, fields.Object)]
+        return [
+            getattr(self, name)
+            for name, field in self._get_fields().items()
+            if isinstance(field, fields.Object)
+        ]
 
     def _get_value(self, name, field):
         """
@@ -504,12 +514,16 @@ class Base(SimpleNamespace, metaclass=BaseMeta):
 
         if self.parent and self.parent.instance_name:
             parent_instance_name = self.parent.instance_name.__repr__()
-            data["parent"] = f"{self.parent.__class__.__name__}(instance_name_={parent_instance_name})"
+            data[
+                "parent"
+            ] = f"{self.parent.__class__.__name__}(instance_name_={parent_instance_name})"
 
         for name, field in self._get_fields().items():
             data[name] = self._get_value(name, field).__repr__()
 
-        values = ",\n".join([f"  {name}={value}" for name, value in data.items()])
+        values = ",\n".join(
+            [f"  {name}={value}" for name, value in data.items()]
+        )
         return f"{self.__class__.__name__}(\n{values}\n)"
 
     __repr__ = __str__

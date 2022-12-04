@@ -4,7 +4,9 @@ import importlib
 
 
 def add_model(file_name):
-    m = importlib.import_module("." + file_name[:-3], "jumpscale.data.bcdb.models")
+    m = importlib.import_module(
+        "." + file_name[:-3], "jumpscale.data.bcdb.models"
+    )
     for attr in dir(m):
         pyattr = getattr(m, attr)
         if isinstance(pyattr, type) and issubclass(pyattr, ModelBase):

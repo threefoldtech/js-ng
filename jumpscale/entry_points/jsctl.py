@@ -79,7 +79,9 @@ def get(name):
         value = obj[prop]
         click.echo(format_config_parameter(name, value))
     except KeyError:
-        click.echo('Key doens\'t exist. Type "jsctl config list-all" to see all valid configurations.')
+        click.echo(
+            'Key doens\'t exist. Type "jsctl config list-all" to see all valid configurations.'
+        )
 
 
 @config.command()
@@ -96,7 +98,9 @@ def update(name, value):
         obj[prop] = value
         update_config(config)
     except KeyError:
-        click.echo('Key doens\'t exist. Type "jsctl config list-all" to see all valid configurations.')
+        click.echo(
+            'Key doens\'t exist. Type "jsctl config list-all" to see all valid configurations.'
+        )
     except TypeError as e:
         click.echo(str(e))
     else:

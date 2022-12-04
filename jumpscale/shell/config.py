@@ -84,7 +84,9 @@ def get_completions(self, document, complete_event):
     and check their type, because `prompt-toolkit.completion.Completion` does not contain type information
     """
     try:
-        script = get_jedi_script_from_document(document, self.get_globals(), self.get_locals())
+        script = get_jedi_script_from_document(
+            document, self.get_globals(), self.get_locals()
+        )
     except:
         return
 
@@ -207,7 +209,11 @@ def ptconfig(repl):
         if statements:
             _globals = repl.get_globals()
             _globals["_MODULE_SOURCE_CODE"] = statements
-            app.exit(pudb.runstatement(statements, globals=_globals, locals=repl.get_locals()))
+            app.exit(
+                pudb.runstatement(
+                    statements, globals=_globals, locals=repl.get_locals()
+                )
+            )
             app.pre_run_callables.append(b.reset)
         else:
             pudb.pm()
@@ -256,7 +262,9 @@ def ptconfig(repl):
             completions = list(get_completions(self, document, complete_event))
 
             if not completions:
-                completions = old_get_completions(self, document, complete_event)
+                completions = old_get_completions(
+                    self, document, complete_event
+                )
         except Exception:
             pass
 

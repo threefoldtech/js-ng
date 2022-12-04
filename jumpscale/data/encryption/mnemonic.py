@@ -55,9 +55,15 @@ def mnemonic_to_key(mnemonic, wordlist=wordlist):
     use_binary_search = True
     for word in words:
         # Find the words index in the wordlist
-        ndx = binary_search(wordlist, word) if use_binary_search else wordlist.index(word)
+        ndx = (
+            binary_search(wordlist, word)
+            if use_binary_search
+            else wordlist.index(word)
+        )
         if ndx < 0:
-            raise exceptions.NotFound('Unable to find "%s" in word list.' % word)
+            raise exceptions.NotFound(
+                'Unable to find "%s" in word list.' % word
+            )
         # Set the next 11 bits to the value of the index.
         for ii in range(11):
             concatBits[(wordindex * 11) + ii] = (ndx & (1 << (10 - ii))) != 0
@@ -72,7 +78,11 @@ def mnemonic_to_key(mnemonic, wordlist=wordlist):
                 entropy[ii] |= 1 << (7 - jj)
     # Take the digest of the entropy.
     hashBytes = hashlib.sha256(entropy).digest()
-    hashBits = list(itertools.chain.from_iterable(([c & (1 << (7 - i)) != 0 for i in range(8)] for c in hashBytes)))
+    hashBits = list(
+        itertools.chain.from_iterable(
+            ([c & (1 << (7 - i)) != 0 for i in range(8)] for c in hashBytes)
+        )
+    )
     # Check all the checksum bits.
     for i in range(checksumLengthBits):
         if concatBits[entropyLengthBits + i] != hashBits[i]:

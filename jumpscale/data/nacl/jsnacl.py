@@ -17,11 +17,17 @@ class NACL:
             private_key (bytes, optional): The private key used to sign and encrypt the data. Generated randomly if not given.
             symmetric_key (bytes, optional): The key used for symmetric encryption. Generated randomly if not given.
         """
-        self.signing_key = SigningKey(private_key) if private_key else SigningKey.generate()
+        self.signing_key = (
+            SigningKey(private_key) if private_key else SigningKey.generate()
+        )
         self.verify_key = self.signing_key.verify_key
         self.private_key = self.signing_key.to_curve25519_private_key()
         self.public_key = self.private_key.public_key
-        self.symmetric_key = nacl.utils.random(NACL.KEY_SIZE) if symmetric_key is None else symmetric_key
+        self.symmetric_key = (
+            nacl.utils.random(NACL.KEY_SIZE)
+            if symmetric_key is None
+            else symmetric_key
+        )
         self.symmetric_box = SecretBox(self.symmetric_key)
 
     def encrypt(self, message, reciever_public_key):
@@ -34,7 +40,9 @@ class NACL:
         Returns:
             bytes: The encrypted message
         """
-        return Box(self.private_key, PublicKey(reciever_public_key)).encrypt(message)
+        return Box(self.private_key, PublicKey(reciever_public_key)).encrypt(
+            message
+        )
 
     def decrypt(self, message, sender_public_key):
         """Decrypt a received message. (public key encryption)
@@ -46,7 +54,9 @@ class NACL:
         Returns:
             bytes: The decrypted message
         """
-        return Box(self.private_key, PublicKey(sender_public_key)).decrypt(message)
+        return Box(self.private_key, PublicKey(sender_public_key)).decrypt(
+            message
+        )
 
     def encrypt_symmetric(self, message):
         """Encrypt the message to send to a receiver. (secret key encryption)

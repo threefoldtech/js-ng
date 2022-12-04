@@ -35,7 +35,9 @@ class Website(Base):
         """
 
         j.sals.fs.mkdir(self.path_cfg_dir)
-        config = render_config_template("website", base_dir=j.core.dirs.BASEDIR, website=self)
+        config = render_config_template(
+            "website", base_dir=j.core.dirs.BASEDIR, website=self
+        )
         j.sals.fs.write_file(self.path_cfg, config)
 
         for location_name in self.locations.list_all():
@@ -59,14 +61,18 @@ class OpenRestyServer(Base):
     @property
     def path_web(self):
         if not self._path_web:
-            self._path_web = j.sals.fs.join_paths(j.core.dirs.VARDIR, "web", self.instance_name)
+            self._path_web = j.sals.fs.join_paths(
+                j.core.dirs.VARDIR, "web", self.instance_name
+            )
             j.sals.fs.mkdirs(j.sals.fs.join_paths(self._path_web, "static"))
         return self._path_web
 
     @property
     def path_cfg_dir(self):
         if not self._path_cfg_dir:
-            self._path_cfg_dir = j.sals.fs.join_paths(j.core.dirs.CFGDIR, "nginx", self.instance_name)
+            self._path_cfg_dir = j.sals.fs.join_paths(
+                j.core.dirs.CFGDIR, "nginx", self.instance_name
+            )
             j.sals.fs.mkdirs(self._path_cfg_dir)
         return self._path_cfg_dir
 
@@ -77,7 +83,9 @@ class OpenRestyServer(Base):
     @property
     def logs_dir(self):
         if not self._logs_dir:
-            self._logs_dir = j.sals.fs.join_paths(j.core.dirs.LOGDIR, "openresty", self.instance_name)
+            self._logs_dir = j.sals.fs.join_paths(
+                j.core.dirs.LOGDIR, "openresty", self.instance_name
+            )
             j.sals.fs.mkdirs(self._logs_dir)
         return self._logs_dir
 
@@ -86,10 +94,13 @@ class OpenRestyServer(Base):
         """
         # clean old websites config
         self.cleanup()
-        
+
         # self.install() This is commented for now until the repo and necessary deps are handled
         configtext = j.tools.jinja2.render_template(
-            template_path=j.sals.fs.join_paths(DIR_PATH, "templates", "nginx.conf"), logs_dir=self.logs_dir
+            template_path=j.sals.fs.join_paths(
+                DIR_PATH, "templates", "nginx.conf"
+            ),
+            logs_dir=self.logs_dir,
         )
         j.sals.fs.write_file(self.path_cfg, configtext)
 
@@ -111,7 +122,9 @@ class OpenRestyServer(Base):
             return website
 
         website = self.websites.get(website_name)
-        ssl = ssl or port == 443  # Use ssl if port is 443 if ssl in not specified
+        ssl = (
+            ssl or port == 443
+        )  # Use ssl if port is 443 if ssl in not specified
 
         website.domain = domain
         website.port = port
@@ -134,7 +147,11 @@ class OpenRestyServer(Base):
             # copy the templates to the right location
             j.sals.fs.copy_tree(f"{DIR_PATH}/web_resources/", self.path_cfg_dir)
 
-            j.sals.fs.symlink(f"{weblibs_path}/static", f"{self.path_web}/static/weblibs", overwrite=True)
+            j.sals.fs.symlink(
+                f"{weblibs_path}/static",
+                f"{self.path_web}/static/weblibs",
+                overwrite=True,
+            )
             self.status = Status.INSTALLED
 
             self.save()

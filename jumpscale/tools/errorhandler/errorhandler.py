@@ -69,14 +69,32 @@ class ErrorHandler:
             ttype, tvalue, tb = sys.exc_info()
 
         stacktrace = self._construct_stacktrace(tb)
-        traceback_text = self._format_lines(traceback.format_exception(ttype, tvalue, tb))
+        traceback_text = self._format_lines(
+            traceback.format_exception(ttype, tvalue, tb)
+        )
 
-        return {"raw": traceback_text, "stacktrace": stacktrace, "process_id": j.application.process_id}
+        return {
+            "raw": traceback_text,
+            "stacktrace": stacktrace,
+            "process_id": j.application.process_id,
+        }
 
-    def _handle_exception(self, ttype, tvalue, tb, level=40, die=False, log=True, category="", data=None):
+    def _handle_exception(
+        self,
+        ttype,
+        tvalue,
+        tb,
+        level=40,
+        die=False,
+        log=True,
+        category="",
+        data=None,
+    ):
         exc_info = (ttype, tvalue, tb)
         timestamp = j.data.time.now().timestamp
-        message = self._format_lines(traceback.format_exception_only(ttype, tvalue))
+        message = self._format_lines(
+            traceback.format_exception_only(ttype, tvalue)
+        )
 
         err_dict = {
             "app_name": j.logger.default_app_name,
@@ -90,7 +108,13 @@ class ErrorHandler:
 
         if log:
             exception = exc_info
-            j.logger.exception(message=message, category=category, data=data, level=level, exception=exception)
+            j.logger.exception(
+                message=message,
+                category=category,
+                data=data,
+                level=level,
+                exception=exception,
+            )
 
         for handler_func, handler_level in self.handlers:
             if level >= handler_level:
@@ -120,7 +144,9 @@ class ErrorHandler:
             category {str} -- category (default: {""})
         """
         ttype, _, tb = sys.exc_info()
-        self._handle_exception(ttype, exception, tb, die=die, log=log, category=category, data=data)
+        self._handle_exception(
+            ttype, exception, tb, die=die, log=log, category=category, data=data
+        )
 
     def register_handler(self, handler: callable, level: int = 40):
         """Register new error handler

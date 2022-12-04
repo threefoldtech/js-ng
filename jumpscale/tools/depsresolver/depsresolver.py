@@ -80,7 +80,9 @@ class DepsResolver:
             elif isinstance(t.action, str):
                 print("executing ", t.action)
 
-    def _run_task_helper(self, task_name: str, deps: List[str], seen: List[str]):
+    def _run_task_helper(
+        self, task_name: str, deps: List[str], seen: List[str]
+    ):
         if task_name in seen:
             print(f"[+]resolved {task_name} before. no need to repeat action.")
         tsk = self.tasks[task_name]
@@ -96,18 +98,36 @@ if __name__ == "__main__":
     def with_cycle():
         deps_resolver = DepsResolver()
         deps_resolver.add_task("publish", ["build-release"], "print publish")
-        deps_resolver.add_task("build-release", ["nim-installed"], "print exec command to build release mode")
-        deps_resolver.add_task("nim-installed", ["curl-installed"], "print curl LINK | bash")
-        deps_resolver.add_task("curl-installed", ["publish", "apt-installed"], "apt-get install curl")
+        deps_resolver.add_task(
+            "build-release",
+            ["nim-installed"],
+            "print exec command to build release mode",
+        )
+        deps_resolver.add_task(
+            "nim-installed", ["curl-installed"], "print curl LINK | bash"
+        )
+        deps_resolver.add_task(
+            "curl-installed",
+            ["publish", "apt-installed"],
+            "apt-get install curl",
+        )
         deps_resolver.add_task("apt-installed", [], "code to install apt...")
         deps_resolver.run_task("publish")
 
     def without_cycle():
         deps_resolver = DepsResolver()
         deps_resolver.add_task("publish", ["build-release"], "print publish")
-        deps_resolver.add_task("build-release", ["nim-installed"], "print exec command to build release mode")
-        deps_resolver.add_task("nim-installed", ["curl-installed"], "print curl LINK | bash")
-        deps_resolver.add_task("curl-installed", ["apt-installed"], "apt-get install curl")
+        deps_resolver.add_task(
+            "build-release",
+            ["nim-installed"],
+            "print exec command to build release mode",
+        )
+        deps_resolver.add_task(
+            "nim-installed", ["curl-installed"], "print curl LINK | bash"
+        )
+        deps_resolver.add_task(
+            "curl-installed", ["apt-installed"], "apt-get install curl"
+        )
         deps_resolver.add_task("apt-installed", [], "code to install apt...")
         deps_resolver.run_task("publish")
 

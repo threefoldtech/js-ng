@@ -1,6 +1,11 @@
 import os, pwd, grp
 
-__all__ = ["get_user_pwd", "get_current_pwd", "get_group_grp", "get_current_grp"]
+__all__ = [
+    "get_user_pwd",
+    "get_current_pwd",
+    "get_group_grp",
+    "get_current_grp",
+]
 
 
 def get_user_pwd(uid):

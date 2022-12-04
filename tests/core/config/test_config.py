@@ -17,10 +17,16 @@ class TestConfig(BaseTests):
         self.info("Get the default config.")
         default_config = j.core.config.get_default_config()
 
-        self.info("Check that some of these config are having the default values.")
+        self.info(
+            "Check that some of these config are having the default values."
+        )
         self.assertEqual(default_config.get("store"), "filesystem")
-        self.assertEqual(default_config.get("factory"), {"always_reload": False})
-        self.assertEqual(default_config.get("alerts"), {"enabled": True, "level": 40})
+        self.assertEqual(
+            default_config.get("factory"), {"always_reload": False}
+        )
+        self.assertEqual(
+            default_config.get("alerts"), {"enabled": True, "level": 40}
+        )
 
     def test_02_get_config(self):
         """Test case for getting jsng config.
@@ -115,7 +121,9 @@ class TestConfig(BaseTests):
         j.sals.fs.mkdir(dir_path)
 
         self.info("Generate a key in the this directory.")
-        key_file_path = j.sals.fs.join_paths(dir_path, self.generate_random_text())
+        key_file_path = j.sals.fs.join_paths(
+            dir_path, self.generate_random_text()
+        )
         j.core.config.config.generate_key(key_file_path)
 
         self.info("Check that the key has been generated.")
@@ -125,7 +133,9 @@ class TestConfig(BaseTests):
         self.info("Remove this directory.")
         j.sals.fs.rmtree(dir_path)
 
-    @parameterized.expand(["logging_config", "private_key", "private_key_path", "threebot_data"])
+    @parameterized.expand(
+        ["logging_config", "private_key", "private_key_path", "threebot_data"]
+    )
     def test_06_get_environment_config(self, config_name):
         """Test case for getting environment config.
 
@@ -142,7 +152,9 @@ class TestConfig(BaseTests):
         env = j.core.config.Environment()
         conf = getattr(env, f"get_{config_name}")
 
-        self.info("Check that the environment config is the same as the one used in config.")
+        self.info(
+            "Check that the environment config is the same as the one used in config."
+        )
         if config_name == "private_key":
             priv_key_path = config.get("private_key_path")
             result = j.sals.fs.read_binary(priv_key_path)
@@ -174,11 +186,15 @@ class TestConfig(BaseTests):
         redis = env.get_store_config("redis")
         whoosh = env.get_store_config("whoosh")
 
-        self.info("Check that the store config is the same as the one used in config.")
+        self.info(
+            "Check that the store config is the same as the one used in config."
+        )
         self.assertEqual(filesystem, config.get("stores").get("filesystem"))
         self.assertEqual(redis, config.get("stores").get("redis"))
         self.assertEqual(whoosh, config.get("stores").get("whoosh"))
 
-        self.info("Try to get store config for random store name, should raise error.")
+        self.info(
+            "Try to get store config for random store name, should raise error."
+        )
         with self.assertRaises(Exception):
             env.get_store_config(self.generate_random_text())

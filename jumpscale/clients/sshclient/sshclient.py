@@ -76,7 +76,9 @@ class SSHClient(Client):
     def sshclient(self):
         self.validate()
         if not self.__client:
-            self.connection_kwargs["key_filename"] = self._sshkey.private_key_path
+            self.connection_kwargs[
+                "key_filename"
+            ] = self._sshkey.private_key_path
             connection_kwargs = dict(
                 host=self.host,
                 user=self.user,
@@ -86,7 +88,9 @@ class SSHClient(Client):
                 connect_kwargs=self.connection_kwargs,
             )
             if self._sshkey.passphrase:
-                connection_kwargs["connect_kwargs"]["passphrase"] = self._sshkey.passphrase
+                connection_kwargs["connect_kwargs"][
+                    "passphrase"
+                ] = self._sshkey.passphrase
 
             self.__client = j.core.executors.RemoteExecutor(**connection_kwargs)
 

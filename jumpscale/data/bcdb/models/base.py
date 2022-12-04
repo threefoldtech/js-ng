@@ -64,7 +64,9 @@ class ModelBase:
             if prop.unique:
                 dbobj = self.get_by(prop.name, getattr(obj, prop.name))
                 if dbobj is not None and dbobj.id != obj.id:
-                    raise RuntimeError(f"{prop.name} is unique. One already exists.")
+                    raise RuntimeError(
+                        f"{prop.name} is unique. One already exists."
+                    )
 
     def save_obj(self, obj):
         """Saves the object to the db. It forwards the call to the bcdb client.
@@ -165,7 +167,9 @@ class ModelBase:
                     raise ValueError("Wrong form")
                 if isinstance(prop.type, JSObject):
                     obj_model = self.bcdb.get_model_by_name(prop.defaultvalue)
-                    setattr(o, prop_name, obj_model.load_obj_from_dict(d[prop_name]))
+                    setattr(
+                        o, prop_name, obj_model.load_obj_from_dict(d[prop_name])
+                    )
                 else:
                     setattr(o, prop_name, prop.type.from_str(d[prop_name]))
             else:

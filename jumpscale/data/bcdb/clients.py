@@ -14,18 +14,23 @@ class JSONSerializer(SerializerInterface):
 
 
 class RedisStorageClient(StorageInterface):
-    def __init__(self, bcdb_namespace, host="localhost", port=6379, serializer=None):
+    def __init__(
+        self, bcdb_namespace, host="localhost", port=6379, serializer=None
+    ):
         self.redis_client = Redis(host=host, port=port)
         self.serializer = serializer or JSONSerializer()
         self.bcdb_namespace = bcdb_namespace
 
     def get(self, model, obj_id):
-        obj_str = self.redis_client.get(f"{self.bcdb_namespace}.{model.name}://{obj_id}")
+        obj_str = self.redis_client.get(
+            f"{self.bcdb_namespace}.{model.name}://{obj_id}"
+        )
         return self.serializer.loads(model, obj_str) if obj_str else None
 
     def set(self, model, obj_id, value):
         return self.redis_client.set(
-            f"{self.bcdb_namespace}.{model.name}://{obj_id}", self.serializer.dumps(model, value)
+            f"{self.bcdb_namespace}.{model.name}://{obj_id}",
+            self.serializer.dumps(model, value),
         )
 
     def get_keys_in_model(self, model):
@@ -34,12 +39,16 @@ class RedisStorageClient(StorageInterface):
         cur, keys = self.redis_client.scan(cursor=0, match=pattern, count=2)
         result.extend(keys)
         while cur != 0:
-            cur, keys = self.redis_client.scan(cursor=cur, match=pattern, count=2)
+            cur, keys = self.redis_client.scan(
+                cursor=cur, match=pattern, count=2
+            )
             result.extend(keys)
         return [self.get(model, int(x.split(b"://")[1])) for x in result]
 
     def incr_id(self, model):
-        return self.redis_client.incr(f"{self.bcdb_namespace}.{model.name}.lastid")
+        return self.redis_client.incr(
+            f"{self.bcdb_namespace}.{model.name}.lastid"
+        )
 
 
 class RedisIndexClient(IndexInterface):
@@ -48,13 +57,20 @@ class RedisIndexClient(IndexInterface):
         self.bcdb_namespace = bcdb_namespace
 
     def get(self, model, index_prop, index_value):
-        res = self.redis_client.get(f"{self.bcdb_namespace}.indexer.{model.name}.{index_prop}://{index_value}")
+        res = self.redis_client.get(
+            f"{self.bcdb_namespace}.indexer.{model.name}.{index_prop}://{index_value}"
+        )
         return int(res) if res else None
 
     def set(self, model, index_prop, index_value, obj_id, old_value=None):
         if old_value:
-            self.redis_client.delete(f"{self.bcdb_namespace}.indexer.{model.name}.{index_prop}://{old_value}")
-        return self.redis_client.set(f"{self.bcdb_namespace}.indexer.{model.name}.{index_prop}://{index_value}", obj_id)
+            self.redis_client.delete(
+                f"{self.bcdb_namespace}.indexer.{model.name}.{index_prop}://{old_value}"
+            )
+        return self.redis_client.set(
+            f"{self.bcdb_namespace}.indexer.{model.name}.{index_prop}://{index_value}",
+            obj_id,
+        )
 
 
 class SQLiteIndexSetClient(IndexSetInterface):
@@ -65,20 +81,30 @@ class SQLiteIndexSetClient(IndexSetInterface):
         conn = sqlite3.connect(f"{self.bcdb_namespace}_index.db")
         c = conn.cursor()
         table_name = f"{model.name}"
-        c.execute(f"SELECT count(*) FROM sqlite_master WHERE type='table' AND name='{table_name}'")
+        c.execute(
+            f"SELECT count(*) FROM sqlite_master WHERE type='table' AND name='{table_name}'"
+        )
         if c.fetchone()[0] != 0:
             return None
         props = []
         props_str = ""
         for prop in model.schema.props.values():
             if prop.name != "id" and prop.index_key:
-                prop_type = "INTEGER" if isinstance(prop.type, j.data.types.Integer) else "TEXT"
+                prop_type = (
+                    "INTEGER"
+                    if isinstance(prop.type, j.data.types.Integer)
+                    else "TEXT"
+                )
                 props_str += f", {prop.name} {prop_type}"
                 props.append(prop.name)
 
-        c.execute(f"CREATE TABLE IF NOT EXISTS {table_name} (id int primary key{props_str})")
+        c.execute(
+            f"CREATE TABLE IF NOT EXISTS {table_name} (id int primary key{props_str})"
+        )
         for prop in props:
-            c.execute(f"CREATE INDEX IF NOT EXISTS {table_name}_{prop}_index on {table_name}({prop})")
+            c.execute(
+                f"CREATE INDEX IF NOT EXISTS {table_name}_{prop}_index on {table_name}({prop})"
+            )
         conn.commit()
         conn.close()
 
@@ -87,7 +113,10 @@ class SQLiteIndexSetClient(IndexSetInterface):
         conn = sqlite3.connect(f"{self.bcdb_namespace}_index.db")
         c = conn.cursor()
         table_name = f"{model.name}"
-        c.execute(f"SELECT id FROM {table_name} WHERE {index_prop} >= ? and {index_prop} <= ?", (min, max))
+        c.execute(
+            f"SELECT id FROM {table_name} WHERE {index_prop} >= ? and {index_prop} <= ?",
+            (min, max),
+        )
         res = c.fetchall()
         conn.close()
         return res
@@ -104,7 +133,10 @@ class SQLiteIndexSetClient(IndexSetInterface):
                 props_str += f", {prop.name}"
                 props.append(getattr(obj, prop.name))
 
-        c.execute(f"REPLACE INTO {table_name} ({props_str}) VALUES (?{', ?' * (len(props) - 1)})", props)
+        c.execute(
+            f"REPLACE INTO {table_name} ({props_str}) VALUES (?{', ?' * (len(props) - 1)})",
+            props,
+        )
         conn.commit()
         conn.close()
 
@@ -121,8 +153,13 @@ class SonicIndexTextClient(IndexTextInterface):
         for prop in model.schema.props.values():
             if prop.index_text:
                 self.sonic_client.push(
-                    self.bcdb_namespace, f"{model.name}_{prop.name}", str(obj.id), str(getattr(obj, prop.name))
+                    self.bcdb_namespace,
+                    f"{model.name}_{prop.name}",
+                    str(obj.id),
+                    str(getattr(obj, prop.name)),
                 )
 
     def get(self, model, index_prop, pattern):
-        return self.sonic_client.query(self.bcdb_namespace, f"{model.name}_{index_prop}", pattern)
+        return self.sonic_client.query(
+            self.bcdb_namespace, f"{model.name}_{index_prop}", pattern
+        )

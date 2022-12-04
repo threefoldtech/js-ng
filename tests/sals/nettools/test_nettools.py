@@ -6,7 +6,10 @@ from pathlib import Path
 from jumpscale.loader import j
 
 
-@pytest.mark.parametrize("ipaddr, port, timeout", [("1.1.1.1", 53, 5), ("8.8.8.8", 53, 5), ("www.google.com", 80, 5)])
+@pytest.mark.parametrize(
+    "ipaddr, port, timeout",
+    [("1.1.1.1", 53, 5), ("8.8.8.8", 53, 5), ("www.google.com", 80, 5)],
+)
 def test_01_tcp_connection_test_to_public_ipv4_succeed(ipaddr, port, timeout):
     """Test case to establish a connection to specified address and initiate
     the three-way handshake and check if the connection succeeded.
@@ -20,7 +23,10 @@ def test_01_tcp_connection_test_to_public_ipv4_succeed(ipaddr, port, timeout):
     assert nettools.tcp_connection_test(ipaddr, port, timeout)
 
 
-@pytest.mark.parametrize("ipaddr, port, timeout", [("1.1.1.1", 52, 2), ("8.8.8.8", 52, 2), ("www.google.com", 70, 2)])
+@pytest.mark.parametrize(
+    "ipaddr, port, timeout",
+    [("1.1.1.1", 52, 2), ("8.8.8.8", 52, 2), ("www.google.com", 70, 2)],
+)
 def test_02_tcp_connection_test_to_public_ipv4_timed_out(ipaddr, port, timeout):
     """Test case for establish a connection to specified address and initiate
     the three-way handshake where the port is unreachable and check if the
@@ -48,7 +54,9 @@ def test_03_wait_connection_test_ipv4_succeed():
     # getting random free port
     port, sock = nettools.get_free_port(return_socket=True)
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        future = executor.submit(nettools.wait_connection_test, "127.0.0.1", port, TIMEOUT)
+        future = executor.submit(
+            nettools.wait_connection_test, "127.0.0.1", port, TIMEOUT
+        )
         time.sleep(4)
         # subprocess.Popen(["nc", "-l", "127.0.0.1", str(port)])
         sock.listen()
@@ -72,7 +80,9 @@ def test_04_wait_connection_test_ipv6_succeed():
     port, sock = nettools.get_free_port(ipv6=True, return_socket=True)
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        future = executor.submit(nettools.wait_connection_test, "::1", port, TIMEOUT)
+        future = executor.submit(
+            nettools.wait_connection_test, "::1", port, TIMEOUT
+        )
         time.sleep(1)
         sock.listen()
         time.sleep(1)
@@ -81,7 +91,9 @@ def test_04_wait_connection_test_ipv6_succeed():
     assert return_value
 
 
-@pytest.mark.parametrize("server_status_code", [200, 201, 202, 203, 204, 205, 206])
+@pytest.mark.parametrize(
+    "server_status_code", [200, 201, 202, 203, 204, 205, 206]
+)
 def test_05_wait_http_test_succeed(server_status_code):
     """Test case for trying to reach specified url every default interval time sec
     until url become reachable (get 2xx http response) or {timeout} elapsed
@@ -112,7 +124,9 @@ def test_05_wait_http_test_succeed(server_status_code):
     server_port = nettools.get_free_port()
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        future = executor.submit(nettools.wait_http_test, f"http://{host_name}:{server_port}", 5)
+        future = executor.submit(
+            nettools.wait_http_test, f"http://{host_name}:{server_port}", 5
+        )
         time.sleep(2)
         executor.submit(start_http_server, host_name, server_port)
         return_value = future.result()
@@ -133,7 +147,9 @@ def test_06_wait_http_test_timed_out():
     # getting random free port
     server_port = nettools.get_free_port()
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        future = executor.submit(nettools.wait_http_test, f"http://{host_name}:{server_port}", 1)
+        future = executor.submit(
+            nettools.wait_http_test, f"http://{host_name}:{server_port}", 1
+        )
         time.sleep(2)
         has_timed_out = not future.running()
     assert has_timed_out
@@ -151,7 +167,9 @@ def test_06_wait_http_test_timed_out():
         (206, True, False),
     ],
 )
-def test_07_check_url_reachable_succeed(server_status_code, verify, fake_user_agent):
+def test_07_check_url_reachable_succeed(
+    server_status_code, verify, fake_user_agent
+):
     """Test case for sending get request to specified url and check if it is reachable
     (get 2xx http response) or {timeout} elapsed
 
@@ -165,7 +183,9 @@ def test_07_check_url_reachable_succeed(server_status_code, verify, fake_user_ag
     """
 
     url = f"https://httpbin.org/status/{server_status_code}"
-    is_reachable = nettools.check_url_reachable(url, verify=verify, fake_user_agent=fake_user_agent)
+    is_reachable = nettools.check_url_reachable(
+        url, verify=verify, fake_user_agent=fake_user_agent
+    )
 
     assert is_reachable
 
@@ -190,7 +210,14 @@ def test_08_check_url_reachable_failed(server_status_code):
 
 @pytest.mark.parametrize(
     "ipaddr, port, timeout, message",
-    [("8.8.8.8", 53, 5, b"\xaa\xaa\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00\x07example\x03com\x00\x00\x01\x00\x01")],
+    [
+        (
+            "8.8.8.8",
+            53,
+            5,
+            b"\xaa\xaa\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00\x07example\x03com\x00\x00\x01\x00\x01",
+        )
+    ],
 )
 def test_09_udp_connection_test(ipaddr, port, timeout, message):
     """Test case for create udp socket and sending specified message the specified ip and udp port
@@ -231,7 +258,10 @@ def test_11_get_reachable_ip_address_local(ip):
     assert result == ip
 
 
-@pytest.mark.parametrize("ip, expected", [("127.0.0.10", ("lo", "127.0.0.1")), ("::1", ("lo", "::1"))])
+@pytest.mark.parametrize(
+    "ip, expected",
+    [("127.0.0.10", ("lo", "127.0.0.1")), ("::1", ("lo", "::1"))],
+)
 def test_12_get_default_ip_config(ip, expected):
     """Test case for getting default nic name and its ip address
     that would be used if some traffic were to be sent out to specified ip
@@ -256,7 +286,9 @@ def test_13_get_network_info():
     results = nettools.get_network_info()
     assert isinstance(results, list) and len(results)
     for result in results:
-        assert isinstance(result, dict) and all(map(lambda k: k in result.keys(), ["ip", "ip6", "mac", "name"]))
+        assert isinstance(result, dict) and all(
+            map(lambda k: k in result.keys(), ["ip", "ip6", "mac", "name"])
+        )
 
 
 def test_14_get_network_info_specific_device_loopback():
@@ -269,7 +301,9 @@ def test_14_get_network_info_specific_device_loopback():
     """
     device = "lo"
     result = nettools.get_network_info(device)
-    assert isinstance(result, dict) and all(map(lambda k: k in result.keys(), ["ip", "ip6", "mac", "name"]))
+    assert isinstance(result, dict) and all(
+        map(lambda k: k in result.keys(), ["ip", "ip6", "mac", "name"])
+    )
 
 
 def test_15_get_mac_address():
@@ -316,7 +350,8 @@ def test_17_is_nic_connected(interface, expected):
 
 
 @pytest.mark.parametrize(
-    "ip, timeout, allowhostname", [("127.0.0.1", 4, False), ("localhost", 4, True), ("::1", 4, False)]
+    "ip, timeout, allowhostname",
+    [("127.0.0.1", 4, False), ("localhost", 4, True), ("::1", 4, False)],
 )
 def test_18_ping_machine_success(ip, timeout, allowhostname):
     """Test case for check whether machine is up/running and accessible
@@ -330,7 +365,9 @@ def test_18_ping_machine_success(ip, timeout, allowhostname):
     assert result
 
 
-@pytest.mark.parametrize("ip, timeout, allowhostname", [("10.200.199.198", 1, False)])
+@pytest.mark.parametrize(
+    "ip, timeout, allowhostname", [("10.200.199.198", 1, False)]
+)
 def test_19_ping_machine_timeout(ip, timeout, allowhostname):
     """Test case for check whether the ping_machine will timeout after specified number of seconds
 
@@ -341,14 +378,18 @@ def test_19_ping_machine_timeout(ip, timeout, allowhostname):
     - Check running thread if the function timed out or still running and if it returned False
     """
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        future = executor.submit(nettools.ping_machine, ip, timeout, allowhostname)
+        future = executor.submit(
+            nettools.ping_machine, ip, timeout, allowhostname
+        )
         time.sleep(2)
         has_timed_out = not future.running()
         is_false = not future.result()
     assert has_timed_out and is_false
 
 
-@pytest.mark.parametrize("ip, timeout, allowhostname", [("www.google.com", 2, False)])
+@pytest.mark.parametrize(
+    "ip, timeout, allowhostname", [("www.google.com", 2, False)]
+)
 def test_20_ping_machine_exception(ip, timeout, allowhostname):
     """Test case for check whether the ping_machine will raise exception when it receive a host name while allowhostname is false
 
@@ -363,9 +404,21 @@ def test_20_ping_machine_exception(ip, timeout, allowhostname):
 
 @pytest.mark.parametrize(
     "url, localpath, username, passwd, overwrite, append_to_home, name_from_url",
-    [("ftp://ftp.sas.com/techsup/download/TestSSLServer4.zip", "test_21_downloaded", None, None, True, False, False)],
+    [
+        (
+            "ftp://ftp.sas.com/techsup/download/TestSSLServer4.zip",
+            "test_21_downloaded",
+            None,
+            None,
+            True,
+            False,
+            False,
+        )
+    ],
 )
-def test_21_download_ftp(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
+def test_21_download_ftp(
+    url, localpath, username, passwd, overwrite, append_to_home, name_from_url
+):
     """Test case for download a resource from ftp server
 
     **Test Scenario**
@@ -376,7 +429,15 @@ def test_21_download_ftp(url, localpath, username, passwd, overwrite, append_to_
     - Assert the downloaded file exists in the current working directory
     - Remove the file
     """
-    result = nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
+    result = nettools.download(
+        url,
+        localpath,
+        username,
+        passwd,
+        overwrite,
+        append_to_home,
+        name_from_url,
+    )
     assert result.localpath.exists()
     assert result.localpath.name == "test_21_downloaded"
     assert Path.cwd().name in result.localpath.parts
@@ -392,9 +453,21 @@ def test_21_download_ftp(url, localpath, username, passwd, overwrite, append_to_
 
 @pytest.mark.parametrize(
     "url, localpath, username, passwd, overwrite, append_to_home, name_from_url",
-    [("https://statweb.stanford.edu/~jhf/ftp/README", "test_22_downloaded", None, None, True, False, False)],
+    [
+        (
+            "https://statweb.stanford.edu/~jhf/ftp/README",
+            "test_22_downloaded",
+            None,
+            None,
+            True,
+            False,
+            False,
+        )
+    ],
 )
-def test_22_download_https(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
+def test_22_download_https(
+    url, localpath, username, passwd, overwrite, append_to_home, name_from_url
+):
     """Test case for download a resource from https link
 
     **Test Scenario**
@@ -405,7 +478,15 @@ def test_22_download_https(url, localpath, username, passwd, overwrite, append_t
     - Assert the downloaded file exists in the current working directory
     - Remove the file
     """
-    result = nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
+    result = nettools.download(
+        url,
+        localpath,
+        username,
+        passwd,
+        overwrite,
+        append_to_home,
+        name_from_url,
+    )
     assert result.localpath.exists()
     assert result.localpath.name == "test_22_downloaded"
     assert Path.cwd().name in result.localpath.parts
@@ -420,9 +501,21 @@ def test_22_download_https(url, localpath, username, passwd, overwrite, append_t
 
 @pytest.mark.parametrize(
     "url, localpath, username, passwd, overwrite, append_to_home, name_from_url",
-    [("http://ftp.sas.com/techsup/download/TestSSLServer4.txt", "test_23_downloaded", None, None, True, False, False)],
+    [
+        (
+            "http://ftp.sas.com/techsup/download/TestSSLServer4.txt",
+            "test_23_downloaded",
+            None,
+            None,
+            True,
+            False,
+            False,
+        )
+    ],
 )
-def test_23_download_http(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
+def test_23_download_http(
+    url, localpath, username, passwd, overwrite, append_to_home, name_from_url
+):
     """Test case for download a resource from http link
 
     **Test Scenario**
@@ -433,7 +526,15 @@ def test_23_download_http(url, localpath, username, passwd, overwrite, append_to
     - Assert the downloaded file exists in the current working directory
     - Remove the file
     """
-    result = nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
+    result = nettools.download(
+        url,
+        localpath,
+        username,
+        passwd,
+        overwrite,
+        append_to_home,
+        name_from_url,
+    )
     assert result.localpath.exists()
     assert result.localpath.name == "test_23_downloaded"
     assert Path.cwd().name in result.localpath.parts
@@ -448,9 +549,21 @@ def test_23_download_http(url, localpath, username, passwd, overwrite, append_to
 
 @pytest.mark.parametrize(
     "url, localpath, username, passwd, overwrite, append_to_home, name_from_url",
-    [("ftp://ftp.sas.com/techsup/download/TestSSLServer4.zip", "test_24_downloaded", None, None, True, True, False)],
+    [
+        (
+            "ftp://ftp.sas.com/techsup/download/TestSSLServer4.zip",
+            "test_24_downloaded",
+            None,
+            None,
+            True,
+            True,
+            False,
+        )
+    ],
 )
-def test_24_download_append_to_home(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
+def test_24_download_append_to_home(
+    url, localpath, username, passwd, overwrite, append_to_home, name_from_url
+):
     """Test case for download a resource from url to localpath relative to user home directory
 
     **Test Scenario**
@@ -461,7 +574,15 @@ def test_24_download_append_to_home(url, localpath, username, passwd, overwrite,
     - Assert the downloaded file exists in the user home directory
     - Remove the file
     """
-    result = nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
+    result = nettools.download(
+        url,
+        localpath,
+        username,
+        passwd,
+        overwrite,
+        append_to_home,
+        name_from_url,
+    )
     assert result.localpath.exists()
     assert result.localpath.name == "test_24_downloaded"
     assert Path.home().name in result.localpath.parts
@@ -487,7 +608,9 @@ def test_24_download_append_to_home(url, localpath, username, passwd, overwrite,
         )
     ],
 )
-def test_25_download_create_parents(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
+def test_25_download_create_parents(
+    url, localpath, username, passwd, overwrite, append_to_home, name_from_url
+):
     """Test case for download a resource from url to localpath that don't exists
 
     **Test Scenario**
@@ -498,7 +621,15 @@ def test_25_download_create_parents(url, localpath, username, passwd, overwrite,
     - Assert the parents' directories successfully created
     - Remove the file, and its parents' dir
     """
-    result = nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
+    result = nettools.download(
+        url,
+        localpath,
+        username,
+        passwd,
+        overwrite,
+        append_to_home,
+        name_from_url,
+    )
     assert result.localpath.exists()
     assert result.localpath.name == "test_25_downloaded"
     assert "downloaded_test_25" in result.localpath.parts
@@ -517,9 +648,21 @@ def test_25_download_create_parents(url, localpath, username, passwd, overwrite,
 
 @pytest.mark.parametrize(
     "url, localpath, username, passwd, overwrite, append_to_home, name_from_url",
-    [("http://ftp.sas.com/techsup/download/TestSSLServer4.txt", "", None, None, True, False, True)],
+    [
+        (
+            "http://ftp.sas.com/techsup/download/TestSSLServer4.txt",
+            "",
+            None,
+            None,
+            True,
+            False,
+            True,
+        )
+    ],
 )
-def test_26_download_name_from_url(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
+def test_26_download_name_from_url(
+    url, localpath, username, passwd, overwrite, append_to_home, name_from_url
+):
     """Test case for download a resource from url to cwd and get the filename from the url
 
     **Test Scenario**
@@ -529,7 +672,15 @@ def test_26_download_name_from_url(url, localpath, username, passwd, overwrite, 
     - Assert tha downloaded file have correct name from the url
     - Remove the file
     """
-    result = nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
+    result = nettools.download(
+        url,
+        localpath,
+        username,
+        passwd,
+        overwrite,
+        append_to_home,
+        name_from_url,
+    )
     assert result.localpath.exists()
     assert result.localpath.name == "TestSSLServer4.txt"
     j.logger.debug(f"Going to delete the test file at: {result.localpath}")
@@ -542,9 +693,21 @@ def test_26_download_name_from_url(url, localpath, username, passwd, overwrite, 
 
 @pytest.mark.parametrize(
     "url, localpath, username, passwd, overwrite, append_to_home, name_from_url",
-    [("http://ftp.sas.com/techsup/download/TestSSLServer4.txt", "downloaded_test_27", None, None, False, False, False)],
+    [
+        (
+            "http://ftp.sas.com/techsup/download/TestSSLServer4.txt",
+            "downloaded_test_27",
+            None,
+            None,
+            False,
+            False,
+            False,
+        )
+    ],
 )
-def test_27_download_overwrite_False(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
+def test_27_download_overwrite_False(
+    url, localpath, username, passwd, overwrite, append_to_home, name_from_url
+):
     """Test case for download a resource from url to localpath when the file already exists
 
     **Test Scenario**
@@ -552,10 +715,26 @@ def test_27_download_overwrite_False(url, localpath, username, passwd, overwrite
     - Execute the function download passing in an url and a localpath consists of the desired filename and assigning False to overwrite
     - Assert the raised exception
     """
-    result = nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
+    result = nettools.download(
+        url,
+        localpath,
+        username,
+        passwd,
+        overwrite,
+        append_to_home,
+        name_from_url,
+    )
     assert result.localpath.exists()
     with pytest.raises(FileExistsError):
-        nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
+        nettools.download(
+            url,
+            localpath,
+            username,
+            passwd,
+            overwrite,
+            append_to_home,
+            name_from_url,
+        )
     j.logger.debug(f"Going to delete the test file at: {result.localpath}")
     try:
         result.localpath.unlink()
@@ -566,9 +745,21 @@ def test_27_download_overwrite_False(url, localpath, username, passwd, overwrite
 
 @pytest.mark.parametrize(
     "url, localpath, username, passwd, overwrite, append_to_home, name_from_url",
-    [("http://ftp.sas.com/techsup/download/TestSSLServer4.txt", "downloaded_test_28", None, None, True, False, False)],
+    [
+        (
+            "http://ftp.sas.com/techsup/download/TestSSLServer4.txt",
+            "downloaded_test_28",
+            None,
+            None,
+            True,
+            False,
+            False,
+        )
+    ],
 )
-def test_28_download_overwrite_True(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
+def test_28_download_overwrite_True(
+    url, localpath, username, passwd, overwrite, append_to_home, name_from_url
+):
     """Test case for download a resource from url to localpath when the file already exists
 
     **Test Scenario**
@@ -578,9 +769,25 @@ def test_28_download_overwrite_True(url, localpath, username, passwd, overwrite,
     - Execute the function download again passing in the same url and the same localpath and assigning True to overwrite
     - Remove the file
     """
-    result = nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
+    result = nettools.download(
+        url,
+        localpath,
+        username,
+        passwd,
+        overwrite,
+        append_to_home,
+        name_from_url,
+    )
     assert result.localpath.exists()
-    result = nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
+    result = nettools.download(
+        url,
+        localpath,
+        username,
+        passwd,
+        overwrite,
+        append_to_home,
+        name_from_url,
+    )
     j.logger.debug(f"Going to delete the test file at: {result.localpath}")
     try:
         result.localpath.unlink()
@@ -589,12 +796,26 @@ def test_28_download_overwrite_True(url, localpath, username, passwd, overwrite,
         pass
 
 
-@pytest.mark.xfail(reason="this test not work on github-hosted runner. looking into it")
+@pytest.mark.xfail(
+    reason="this test not work on github-hosted runner. looking into it"
+)
 @pytest.mark.parametrize(
     "url, localpath, username, passwd, overwrite, append_to_home, name_from_url",
-    [("http://ftp.sas.com/techsup/download/TestSSLServer4.txt", "unwriteable_dir", None, None, False, True, True)],
+    [
+        (
+            "http://ftp.sas.com/techsup/download/TestSSLServer4.txt",
+            "unwriteable_dir",
+            None,
+            None,
+            False,
+            True,
+            True,
+        )
+    ],
 )
-def test_29_download_to_unwritable_dir(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
+def test_29_download_to_unwritable_dir(
+    url, localpath, username, passwd, overwrite, append_to_home, name_from_url
+):
     """Test case for download a resource from url to localpath when user don't have proper Permissions
 
     **Test Scenario**
@@ -619,16 +840,36 @@ def test_29_download_to_unwritable_dir(url, localpath, username, passwd, overwri
     Path.mkdir(dir_path)
     edit_write_permissions(dir_path, NO_WRITING)
     with pytest.raises(PermissionError):
-        nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
+        nettools.download(
+            url,
+            localpath,
+            username,
+            passwd,
+            overwrite,
+            append_to_home,
+            name_from_url,
+        )
     edit_write_permissions(dir_path, WRITING)
     dir_path.rmdir()
 
 
 @pytest.mark.parametrize(
     "url, localpath, username, passwd, overwrite, append_to_home, name_from_url",
-    [("http://ftp.sas.com/techsup/download/TestSSLServer4.txt", None, None, None, False, False, True)],
+    [
+        (
+            "http://ftp.sas.com/techsup/download/TestSSLServer4.txt",
+            None,
+            None,
+            None,
+            False,
+            False,
+            True,
+        )
+    ],
 )
-def test_30_download_return_content(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
+def test_30_download_return_content(
+    url, localpath, username, passwd, overwrite, append_to_home, name_from_url
+):
     """Test case for download a resource from url and return the content
 
     **Test Scenario**
@@ -637,7 +878,15 @@ def test_30_download_return_content(url, localpath, username, passwd, overwrite,
     - Assert that we got the content
     - Assert that returned content size is equal to one from the response headers
     """
-    result = nettools.download(url, localpath, username, passwd, overwrite, append_to_home, name_from_url)
+    result = nettools.download(
+        url,
+        localpath,
+        username,
+        passwd,
+        overwrite,
+        append_to_home,
+        name_from_url,
+    )
     assert not result.localpath and result.content
     assert len(result.content) == int(result.content_length)
 

@@ -15,32 +15,47 @@ class TestFS(BaseTests):
 
     def create_tree(self):
         self.info("Create tree")
-        random_dir_dest = j.sals.fs.join_paths(self.temp_path, self.generate_random_text())
-        random_dir_dest_2 = j.sals.fs.join_paths(random_dir_dest, self.generate_random_text())
+        random_dir_dest = j.sals.fs.join_paths(
+            self.temp_path, self.generate_random_text()
+        )
+        random_dir_dest_2 = j.sals.fs.join_paths(
+            random_dir_dest, self.generate_random_text()
+        )
         j.sals.fs.mkdirs(random_dir_dest_2)
         self.info("Create dirs {}".format(random_dir_dest_2))
 
         random_files = []
         random_files_internal = []
         for _ in range(5):
-            random_file = j.sals.fs.join_paths(random_dir_dest, self.generate_random_text())
+            random_file = j.sals.fs.join_paths(
+                random_dir_dest, self.generate_random_text()
+            )
             self.info("Create {} file".format(random_file))
             j.sals.fs.touch(random_file)
             random_files.append(random_file)
 
         for _ in range(5):
-            random_file = j.sals.fs.join_paths(random_dir_dest_2, self.generate_random_text())
+            random_file = j.sals.fs.join_paths(
+                random_dir_dest_2, self.generate_random_text()
+            )
             self.info("Create {} file".format(random_file))
             j.sals.fs.touch(random_file)
             random_files_internal.append(random_file)
 
-        return random_dir_dest, random_dir_dest_2, random_files, random_files_internal
+        return (
+            random_dir_dest,
+            random_dir_dest_2,
+            random_files,
+            random_files_internal,
+        )
 
     def test001_is_ascii_file(self):
         pass
 
     def test002_is_empty_dir_with_empty_folder(self):
-        random_dir_path = j.sals.fs.join_paths(self.temp_path, self.generate_random_text())
+        random_dir_path = j.sals.fs.join_paths(
+            self.temp_path, self.generate_random_text()
+        )
         self.info("Create {} dir".format(random_dir_path))
         j.sals.fs.mkdirs(random_dir_path)
         self.info("Assert it is empty")
@@ -69,14 +84,20 @@ class TestFS(BaseTests):
         pass
 
     def test007_copy_file(self):
-        random_dir_1 = j.sals.fs.join_paths(self.temp_path, self.generate_random_text())
-        random_dir_2 = j.sals.fs.join_paths(self.temp_path, self.generate_random_text())
+        random_dir_1 = j.sals.fs.join_paths(
+            self.temp_path, self.generate_random_text()
+        )
+        random_dir_2 = j.sals.fs.join_paths(
+            self.temp_path, self.generate_random_text()
+        )
         random_file = self.generate_random_text()
         self.info("Create {}, {} dirs".format(random_dir_1, random_dir_2))
         j.sals.fs.mkdirs(random_dir_1)
         j.sals.fs.mkdirs(random_dir_2)
 
-        self.info("Create random file /tmp/{}/{}".format(random_dir_1, random_file))
+        self.info(
+            "Create random file /tmp/{}/{}".format(random_dir_1, random_file)
+        )
         src = j.sals.fs.join_paths(random_dir_1, random_file)
         dest = j.sals.fs.join_paths(random_dir_2, random_file)
         j.sals.fs.touch(src)
@@ -100,11 +121,18 @@ class TestFS(BaseTests):
         self.assertEqual(j.sals.fs.extension(dest, False), "py")
 
     def test009_walk(self):
-        random_dir_dest, random_dir_dest_2, random_files, random_files_internal = self.create_tree()
+        random_dir_dest, random_dir_dest_2, random_files, random_files_internal = (
+            self.create_tree()
+        )
         random_files.extend(random_files_internal)
 
         self.info("Assert walk with j.sals.fs.is_file as a filter works well")
-        files = [file for file in j.sals.fs.walk(random_dir_dest, filter_fun=j.sals.fs.is_file)]
+        files = [
+            file
+            for file in j.sals.fs.walk(
+                random_dir_dest, filter_fun=j.sals.fs.is_file
+            )
+        ]
         for file in random_files:
             self.assertIn(file, files)
 
@@ -112,10 +140,19 @@ class TestFS(BaseTests):
         self.assertNotIn(random_dir_dest_2, files)
 
     def test010_walk_non_recursive(self):
-        random_dir_dest, random_dir_dest_2, random_files, random_files_internal = self.create_tree()
+        random_dir_dest, random_dir_dest_2, random_files, random_files_internal = (
+            self.create_tree()
+        )
 
-        self.info("Assert walk non recursive with j.sals.fs.is_file as a filter works well")
-        files = [file for file in j.sals.fs.walk_non_recursive(random_dir_dest, filter_fun=j.sals.fs.is_file)]
+        self.info(
+            "Assert walk non recursive with j.sals.fs.is_file as a filter works well"
+        )
+        files = [
+            file
+            for file in j.sals.fs.walk_non_recursive(
+                random_dir_dest, filter_fun=j.sals.fs.is_file
+            )
+        ]
         for file in random_files:
             self.assertIn(file, files)
 
@@ -127,10 +164,18 @@ class TestFS(BaseTests):
 
     @parameterized.expand([(True,), (False,)])
     def test011_walk_files_recursive(self, recursive):
-        random_dir_dest, _, random_files, random_files_internal = self.create_tree()
+        random_dir_dest, _, random_files, random_files_internal = (
+            self.create_tree()
+        )
 
-        self.info("Assert walk_files returns only all files with respect of recursive as {}".format(recursive))
-        files = [file for file in j.sals.fs.walk_files(random_dir_dest, recursive)]
+        self.info(
+            "Assert walk_files returns only all files with respect of recursive as {}".format(
+                recursive
+            )
+        )
+        files = [
+            file for file in j.sals.fs.walk_files(random_dir_dest, recursive)
+        ]
         for file in random_files:
             self.assertIn(file, files)
 
@@ -143,12 +188,20 @@ class TestFS(BaseTests):
     @parameterized.expand([(True,), (False,)])
     def test012_walk_dirs(self, recursive):
         random_dir_dest, random_dir_dest_2, _, _ = self.create_tree()
-        random_dir_dest_3 = j.sals.fs.join_paths(random_dir_dest_2, self.generate_random_text())
+        random_dir_dest_3 = j.sals.fs.join_paths(
+            random_dir_dest_2, self.generate_random_text()
+        )
         self.info("Create dir {}".format(random_dir_dest_3))
         j.sals.fs.mkdirs(random_dir_dest_3)
 
-        self.info("Assert walk_dirs returns only all dirs with respect of recursive as {}".format(recursive))
-        dirs = [dir_ for dir_ in j.sals.fs.walk_dirs(random_dir_dest, recursive)]
+        self.info(
+            "Assert walk_dirs returns only all dirs with respect of recursive as {}".format(
+                recursive
+            )
+        )
+        dirs = [
+            dir_ for dir_ in j.sals.fs.walk_dirs(random_dir_dest, recursive)
+        ]
 
         self.assertIn(random_dir_dest_2, dirs)
         if recursive:

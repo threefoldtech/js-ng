@@ -74,10 +74,20 @@ class RedisStoreTests(BaseTests):
         street = self.randstr()
         building = randint(1, 100)
 
-        student_details = {"name": name, "age": age, "mobile": mobile, "grades": grades}
+        student_details = {
+            "name": name,
+            "age": age,
+            "mobile": mobile,
+            "grades": grades,
+        }
         for d in student_details.keys():
             setattr(student_1, d, student_details[d])
-        address = {"country": country, "city": city, "street": street, "building": building}
+        address = {
+            "country": country,
+            "city": city,
+            "street": street,
+            "building": building,
+        }
         for a in address.keys():
             setattr(student_1.address, a, address[a])
 

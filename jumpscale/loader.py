@@ -65,10 +65,16 @@ def expose_all(root_module: types.ModuleType, container_type: type):
 
     for path in root_module.__path__:
         for name in os.listdir(path):
-            if not os.path.isdir(os.path.join(path, name)) or name == "__pycache__" or name.startswith("_"):
+            if (
+                not os.path.isdir(os.path.join(path, name))
+                or name == "__pycache__"
+                or name.startswith("_")
+            ):
                 continue
 
-            lazy_import_property = get_lazy_import_property(name, root_module, container_type)
+            lazy_import_property = get_lazy_import_property(
+                name, root_module, container_type
+            )
             setattr(container_type, name, lazy_import_property)
 
 
@@ -97,7 +103,9 @@ j = J()
 alerts_config = j.config.get("alerts")
 if alerts_config and alerts_config.get("enabled"):
     level = alerts_config.get("level", 40)
-    j.tools.errorhandler.register_handler(j.tools.alerthandler.alert_raise, level=level)
+    j.tools.errorhandler.register_handler(
+        j.tools.alerthandler.alert_raise, level=level
+    )
 
 # Catch any exception and handle it using the error handler
 sys.excepthook = j.tools.errorhandler.excepthook
