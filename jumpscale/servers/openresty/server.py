@@ -82,10 +82,11 @@ class OpenRestyServer(Base):
         return self._logs_dir
 
     def configure(self):
-        # clean old websites config
-        self.cleanup()
         """configures main nginx conf
         """
+        # clean old websites config
+        self.cleanup()
+        
         # self.install() This is commented for now until the repo and necessary deps are handled
         configtext = j.tools.jinja2.render_template(
             template_path=j.sals.fs.join_paths(DIR_PATH, "templates", "nginx.conf"), logs_dir=self.logs_dir
