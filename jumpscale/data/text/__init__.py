@@ -28,9 +28,10 @@ def removeprefix(s: str, prefix: str) -> str:
 
     """
     if s.startswith(prefix):
-        return s[len(prefix):]
+        return s[len(prefix) :]
     else:
         return s[:]
+
 
 def removesuffix(s: str, suffix: str) -> str:
     """Remove a suffix string `suffix` from a string `s`.
@@ -44,6 +45,6 @@ def removesuffix(s: str, suffix: str) -> str:
 
     """
     if suffix and s.endswith(suffix):
-        return s[:-len(suffix)]
+        return s[: -len(suffix)]
     else:
         return s[:]

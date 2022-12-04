@@ -31,8 +31,7 @@ class Website(Base):
         return self.parent.path_web
 
     def configure(self):
-        """Writes configuration of the website and its locations
-        """
+        """Writes configuration of the website and its locations"""
 
         j.sals.fs.mkdir(self.path_cfg_dir)
         config = render_config_template("website", base_dir=j.core.dirs.BASEDIR, website=self)
@@ -82,13 +81,13 @@ class OpenRestyServer(Base):
         return self._logs_dir
 
     def configure(self):
+        """configures main nginx conf"""
         # clean old websites config
         self.cleanup()
-        """configures main nginx conf
-        """
+
         # self.install() This is commented for now until the repo and necessary deps are handled
         configtext = j.tools.jinja2.render_template(
-            template_path=j.sals.fs.join_paths(DIR_PATH, "templates", "nginx.conf"), logs_dir=self.logs_dir,
+            template_path=j.sals.fs.join_paths(DIR_PATH, "templates", "nginx.conf"), logs_dir=self.logs_dir
         )
         j.sals.fs.write_file(self.path_cfg, configtext)
 
@@ -133,9 +132,7 @@ class OpenRestyServer(Base):
             # copy the templates to the right location
             j.sals.fs.copy_tree(f"{DIR_PATH}/web_resources/", self.path_cfg_dir)
 
-            j.sals.fs.symlink(
-                f"{weblibs_path}/static", f"{self.path_web}/static/weblibs", overwrite=True,
-            )
+            j.sals.fs.symlink(f"{weblibs_path}/static", f"{self.path_web}/static/weblibs", overwrite=True)
             self.status = Status.INSTALLED
 
             self.save()
