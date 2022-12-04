@@ -69,7 +69,7 @@ class BCDB:
         """Search for objects whose key equal val.
         1. It searches in the redis index if key is indexed.
         2. Else, It's searched for in the sqlite index if the key is indexed for range search.
-        3. Else, All objects in the db belonging to the given model 
+        3. Else, All objects in the db belonging to the given model
         is scanned linearly to determine the matching object.
 
         Args:
