@@ -2,11 +2,11 @@ import msgpack
 
 
 def dumps(obj):
-    """dump dict object into msgpack stream 
-    
+    """dump dict object into msgpack stream
+
     Arguments:
-        obj (dict) : the dict which will be dumped     
-    
+        obj (dict) : the dict which will be dumped
+
     Returns:
         string : the msgpack stream
     """
@@ -15,10 +15,10 @@ def dumps(obj):
 
 def loads(s):
     """loads the data from msgpack string into dict
-    
+
     Arguments:
         s (string) : the msgpack stream
-    
+
     Returns:
         dict : the loaded data from msgpack stram
     """

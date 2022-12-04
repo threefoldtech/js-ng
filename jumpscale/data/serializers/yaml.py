@@ -2,11 +2,11 @@ import yaml
 
 
 def dumps(obj):
-    """dump dict object into yaml stream 
-    
+    """dump dict object into yaml stream
+
     Arguments:
-        obj (dict) : the dict which will be dumped     
-    
+        obj (dict) : the dict which will be dumped
+
     Returns:
         string : the yaml stream
     """
@@ -15,10 +15,10 @@ def dumps(obj):
 
 def loads(s):
     """loads the data from yaml string into dict
-    
+
     Arguments:
         s (string) : the yaml stream
-    
+
     Returns:
         dict : the loaded data from yaml stram
     """
