@@ -3,6 +3,7 @@ import json
 from jumpscale.data.bcdb import models as models
 from .clients import RedisStorageClient, RedisIndexClient, SonicIndexTextClient, SQLiteIndexSetClient
 
+
 class BCDB:
     def __init__(self, ns):
         self.ns = ns
@@ -10,12 +11,8 @@ class BCDB:
         self.indexer = RedisIndexClient(ns)
         self.indexer_set = SQLiteIndexSetClient(ns)
         self.indexer_text = SonicIndexTextClient(ns)
-        self.models = {
-            
-        }
-        self.loaded_models = {
-
-        }
+        self.models = {}
+        self.loaded_models = {}
         self.detect_models()
         self.model_model = self.models["model"](self)
 
@@ -25,7 +22,7 @@ class BCDB:
             model = getattr(models, model_name)
             if isinstance(model, type) and issubclass(model, models.ModelBase):
                 self.models[model._name] = model
-    
+
     def save_obj(self, model, obj):
         """Saves the given objects which belongs to model in the db and update the indexes.
         
@@ -36,7 +33,7 @@ class BCDB:
         self.indexer_set.set(model, obj)
         self.indexer_text.set(model, obj)
         for prop in model.schema.props.values():
-            old_obj = model.get_by('id', obj.id)
+            old_obj = model.get_by("id", obj.id)
             prop_name = prop.name
             index_prop = getattr(obj, prop.name)
             old_index = getattr(old_obj, prop.name) if old_obj else None
@@ -121,11 +118,10 @@ class BCDB:
         else:
             result = []
             for obj in self.storage.get_keys_in_model(model):
-                    obj_val = getattr(obj, key)
-                    if obj_val >= min and obj_val <= max:
-                        result.append(obj)
+                obj_val = getattr(obj, key)
+                if obj_val >= min and obj_val <= max:
+                    result.append(obj)
             return result
-            
 
     def get_item_from_index(self, model, key, val):
         """Search for objects whose key equal val. The key must be indexed for search.
@@ -170,7 +166,6 @@ class BCDB:
         if not model.schema.props[key].index_key:
             raise RuntimeError(f"{key} is not indexed.")
         return [self.get_item_by_id(model, x[0]) for x in self.indexer_set.get(model, key, min, max)]
-        
 
     def get_item_from_index_text(self, model, key, pattern):
         """Searches for objects whose key matches the given pattern inside model. The key must be registered in the text index.

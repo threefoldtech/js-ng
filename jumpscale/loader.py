@@ -24,7 +24,7 @@ def get_container_type(full_name: str) -> type:
 
     """
     cls_name = "".join([name.capitalize() for name in full_name.split(".")])
-    return type(cls_name, (object,), {"__fullname": full_name,})
+    return type(cls_name, (object,), {"__fullname": full_name})
 
 
 def get_lazy_import_property(name, root_module, container_type):

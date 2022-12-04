@@ -25,4 +25,3 @@ def loads(s):
     """
     d = pytoml.loads(s)
     return d
-

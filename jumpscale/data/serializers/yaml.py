@@ -23,4 +23,3 @@ def loads(s):
         dict : the loaded data from yaml stram
     """
     return yaml.load(s)
-

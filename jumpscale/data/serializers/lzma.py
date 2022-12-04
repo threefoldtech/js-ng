@@ -1,5 +1,6 @@
 import pylzma
 
+
 def compress(obj):
     """compress string with lzma algorithm
     
@@ -10,6 +11,7 @@ def compress(obj):
         bytes : the compressed bytes
     """
     return pylzma.compress(obj)
+
 
 def decompress(s):
     """decompress lzma bytes to original obj

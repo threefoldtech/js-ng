@@ -88,7 +88,7 @@ class OpenRestyServer(Base):
         """
         # self.install() This is commented for now until the repo and necessary deps are handled
         configtext = j.tools.jinja2.render_template(
-            template_path=j.sals.fs.join_paths(DIR_PATH, "templates", "nginx.conf"), logs_dir=self.logs_dir,
+            template_path=j.sals.fs.join_paths(DIR_PATH, "templates", "nginx.conf"), logs_dir=self.logs_dir
         )
         j.sals.fs.write_file(self.path_cfg, configtext)
 
@@ -133,9 +133,7 @@ class OpenRestyServer(Base):
             # copy the templates to the right location
             j.sals.fs.copy_tree(f"{DIR_PATH}/web_resources/", self.path_cfg_dir)
 
-            j.sals.fs.symlink(
-                f"{weblibs_path}/static", f"{self.path_web}/static/weblibs", overwrite=True,
-            )
+            j.sals.fs.symlink(f"{weblibs_path}/static", f"{self.path_web}/static/weblibs", overwrite=True)
             self.status = Status.INSTALLED
 
             self.save()

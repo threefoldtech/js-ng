@@ -137,4 +137,3 @@ class IniFile:
             property_key (str) : the name of the property
         """
         self.parser.remove_option(section_name, property_name)
-
