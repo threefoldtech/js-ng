@@ -31,8 +31,7 @@ class Website(Base):
         return self.parent.path_web
 
     def configure(self):
-        """Writes configuration of the website and its locations
-        """
+        """Writes configuration of the website and its locations"""
 
         j.sals.fs.mkdir(self.path_cfg_dir)
         config = render_config_template("website", base_dir=j.core.dirs.BASEDIR, website=self)
@@ -82,8 +81,7 @@ class OpenRestyServer(Base):
         return self._logs_dir
 
     def configure(self):
-        """configures main nginx conf
-        """
+        """configures main nginx conf"""
         # clean old websites config
         self.cleanup()
 
