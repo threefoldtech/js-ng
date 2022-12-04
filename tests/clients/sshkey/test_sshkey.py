@@ -11,9 +11,7 @@ class SshKeyTests(BaseTests):
 
         j.sals.fs.mkdir(self.sshkey_dir)
         self.ssh_cl = j.clients.sshkey.get(name=self.instance_name)
-        self.ssh_cl.private_key_path = j.sals.fs.join_paths(
-            self.sshkey_dir, self.private_key_file_name
-        )
+        self.ssh_cl.private_key_path = j.sals.fs.join_paths(self.sshkey_dir, self.private_key_file_name)
 
     def tearDown(self):
         j.clients.sshkey.delete(self.instance_name)
@@ -27,9 +25,7 @@ class SshKeyTests(BaseTests):
         - Check sshkey public path.
         """
         self.info("Check sshkey public path")
-        public_key_path = j.sals.fs.join_paths(
-            self.sshkey_dir, f"{self.private_key_file_name}.pub"
-        )
+        public_key_path = j.sals.fs.join_paths(self.sshkey_dir, f"{self.private_key_file_name}.pub")
         self.assertEqual(public_key_path, self.ssh_cl.public_key_path)
 
     def test02_check_generate_keys(self):
@@ -43,9 +39,7 @@ class SshKeyTests(BaseTests):
         self.info("Generate keys")
         self.ssh_cl.generate_keys()
 
-        self.info(
-            "Check that the public key has been generated belongs to the private key"
-        )
+        self.info("Check that the public key has been generated belongs to the private key")
         res, stdout, _ = j.sals.process.execute(
             f'diff <( ssh-keygen -y -e -f "{self.private_key_file_name}" ) <( ssh-keygen -y -e -f "{self.private_key_file_name}.pub" )',
             cwd=self.sshkey_dir,
@@ -64,9 +58,7 @@ class SshKeyTests(BaseTests):
         wrong_path = self.random_name()
         self.info("Set private key to wrong path")
         self.ssh_cl.private_key_path = f"/te/{wrong_path}"
-        self.info(
-            "Try to generate keys with wrong path it should raise an error"
-        )
+        self.info("Try to generate keys with wrong path it should raise an error")
         with self.assertRaises(Exception):
             self.ssh_cl.generate_keys()
 
@@ -87,9 +79,7 @@ class SshKeyTests(BaseTests):
         dir_path = j.sals.fs.join_paths(self.sshkey_dir, self.random_name())
         key_file_name = self.random_name()
         j.sals.fs.mkdir(dir_path)
-        self.ssh_cl.private_key_path = j.sals.fs.join_paths(
-            dir_path, key_file_name
-        )
+        self.ssh_cl.private_key_path = j.sals.fs.join_paths(dir_path, key_file_name)
 
         self.info("Writing keys to file system")
         self.ssh_cl.write_to_filesystem()
@@ -100,12 +90,8 @@ class SshKeyTests(BaseTests):
         self.assertTrue(j.sals.fs.is_file(private_key_path))
         self.assertTrue(j.sals.fs.is_file(public_key_path))
 
-        self.assertEqual(
-            self.ssh_cl.private_key, j.sals.fs.read_file(private_key_path)
-        )
-        self.assertEqual(
-            self.ssh_cl.public_key, j.sals.fs.read_file(public_key_path)
-        )
+        self.assertEqual(self.ssh_cl.private_key, j.sals.fs.read_file(private_key_path))
+        self.assertEqual(self.ssh_cl.public_key, j.sals.fs.read_file(public_key_path))
 
     def test05_load_from_filesystem(self):
         """Test case for loading keys from file system.

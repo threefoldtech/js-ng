@@ -55,11 +55,7 @@ class GitClient(Client):
             j.exceptions.Input: if there is locaal changes
         """
         if self.get_modified_files():
-            raise j.exceptions.Input(
-                message="Cannot pull:{}, files waiting to commit".format(
-                    self.path
-                )
-            )
+            raise j.exceptions.Input(message="Cannot pull:{}, files waiting to commit".format(self.path))
         self.repo.git.pull()
 
     def commit(self, message, add_all=True):

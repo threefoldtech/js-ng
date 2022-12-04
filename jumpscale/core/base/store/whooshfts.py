@@ -1,11 +1,6 @@
 from whoosh import fields
 from whoosh.index import create_in, exists_in, open_dir
-from whoosh.qparser import (
-    FuzzyTermPlugin,
-    GtLtPlugin,
-    MultifieldParser,
-    PhrasePlugin,
-)
+from whoosh.qparser import FuzzyTermPlugin, GtLtPlugin, MultifieldParser, PhrasePlugin
 from whoosh.writing import AsyncWriter
 
 from . import ConfigNotFound, EncryptedConfigStore, KEY_FIELD_NAME
@@ -130,9 +125,7 @@ class WhooshStore(EncryptedConfigStore):
             doc = searcher.document(**kw)
 
             if not doc:
-                raise ConfigNotFound(
-                    f"cannot find config for {instance_name} in the index"
-                )
+                raise ConfigNotFound(f"cannot find config for {instance_name} in the index")
 
             for name, field in self.type_fields:
                 # whoosh does not store None values, so, we just set them

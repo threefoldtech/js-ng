@@ -54,15 +54,7 @@ class Schema:
         for prop_name, prop in self.props.items():
             if prop.prop_type == "E":
                 cleanname = pascalify_name(prop.name)
-                enums.append(
-                    {
-                        "name": cleanname,
-                        "vals": [
-                            pascalify_name(x)
-                            for x in prop.defaultvalue.split(",")
-                        ],
-                    }
-                )
+                enums.append({"name": cleanname, "vals": [pascalify_name(x) for x in prop.defaultvalue.split(",")]})
         return enums
 
     def get_classes_required(self):
@@ -74,10 +66,7 @@ class Schema:
 
     def get_dependencies(self):
 
-        return {
-            enum: self.get_enums_required(),
-            classes: self.get_classes_requireds(),
-        }
+        return {enum: self.get_enums_required(), classes: self.get_classes_requireds()}
 
 
 def _normalize_string(text):
@@ -149,9 +138,7 @@ def _name_in_correct_form(name):
     Returns:
         bool: True if the name is well formed. False otherwise.
     """
-    return (
-        name[0] == "_" or name[0].isalpha() and name.replace("_", "").isalnum()
-    )
+    return name[0] == "_" or name[0].isalpha() and name.replace("_", "").isalnum()
 
 
 def _is_float(value):
@@ -187,12 +174,7 @@ def _infer_type(value):
     Returns:
         str: The type of the value.
     """
-    if len(value) >= 2 and (
-        value[0] == '"'
-        and value[-1] == '"'
-        or value[0] == "'"
-        and value[-1] == "'"
-    ):
+    if len(value) >= 2 and (value[0] == '"' and value[-1] == '"' or value[0] == "'" and value[-1] == "'"):
         return "S"
     elif _is_float(value):
         return "F"
@@ -223,9 +205,7 @@ def _parse_prop(line):
     if match is None:
         raise RuntimeError("Can't parse schema")
     prop = Property()
-    unique, name, qualifier, default_value, prop_type, pointer_type, comment = (
-        match.groups()
-    )
+    unique, name, qualifier, default_value, prop_type, pointer_type, comment = match.groups()
     if name == "id":
         raise NameError("id is reserved and can't be a name of property.")
     pointer_type = pointer_type[1:] if pointer_type else pointer_type
@@ -244,10 +224,7 @@ def _parse_prop(line):
     prop.index_text = qualifier == "***"
     prop_type = prop_type or _infer_type(default_value)
     if len(default_value) >= 2 and (
-        default_value[0] == "'"
-        and default_value[-1] == "'"
-        or default_value[0] == '"'
-        and default_value[-1] == '"'
+        default_value[0] == "'" and default_value[-1] == "'" or default_value[0] == '"' and default_value[-1] == '"'
     ):
         default_value = default_value[1:-1]
     prop.defaultvalue = pointer_type or default_value

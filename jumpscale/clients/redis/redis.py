@@ -40,9 +40,7 @@ class RedisClient(Client):
     def redis_client(self):
         if not self.__client:
             if self.password:
-                self.__client = Redis(
-                    self.hostname, self.port, password=self.password
-                )
+                self.__client = Redis(self.hostname, self.port, password=self.password)
             else:
                 self.__client = Redis(self.hostname, self.port)
 

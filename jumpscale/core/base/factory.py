@@ -42,11 +42,7 @@ from .store.redis import RedisStore
 from .store.whooshfts import WhooshStore
 
 
-STORES = {
-    "filesystem": FileSystemStore,
-    "redis": RedisStore,
-    "whoosh": WhooshStore,
-}
+STORES = {"filesystem": FileSystemStore, "redis": RedisStore, "whoosh": WhooshStore}
 
 
 class DuplicateError(Exception):
@@ -77,9 +73,7 @@ class Factory:
     ```
     """
 
-    def __init__(
-        self, type_, name_=None, parent_instance_=None, parent_factory_=None
-    ):
+    def __init__(self, type_, name_=None, parent_instance_=None, parent_factory_=None):
         """
         get a new factory given the type to create instances for.
 
@@ -283,9 +277,7 @@ class StoredFactory(events.Handler, Factory):
 
     STORE = STORES[config.get("store")]
 
-    def __init__(
-        self, type_, name_=None, parent_instance_=None, parent_factory_=None
-    ):
+    def __init__(self, type_, name_=None, parent_instance_=None, parent_factory_=None):
         """
         get a new stored factory given the type to create and store instances for.
 
@@ -299,12 +291,7 @@ class StoredFactory(events.Handler, Factory):
             parent_instance_ (Base, optional): a parent `Base` instance. Defaults to None.
             parent_factory_ (Factory, optional): a parent `Factory`. Defaults to None.
         """
-        super().__init__(
-            type_,
-            name_=name_,
-            parent_instance_=parent_instance_,
-            parent_factory_=parent_factory_,
-        )
+        super().__init__(type_, name_=name_, parent_instance_=parent_instance_, parent_factory_=parent_factory_)
         self.__store = None
 
         if not parent_instance_:
@@ -321,9 +308,7 @@ class StoredFactory(events.Handler, Factory):
     @property
     def parent_location(self):
         if not self.parent_factory:
-            raise ValueError(
-                "cannot get parent location if parent factory is not set"
-            )
+            raise ValueError("cannot get parent location if parent factory is not set")
         return self.parent_factory.location
 
     @property
@@ -386,10 +371,7 @@ class StoredFactory(events.Handler, Factory):
 
         # handle deletion of children
         if isinstance(ev, InstanceDeleteEvent):
-            if (
-                ev.factory == self.parent_factory
-                and ev.name == self.parent_instance.instance_name
-            ):
+            if ev.factory == self.parent_factory and ev.name == self.parent_instance.instance_name:
                 for name in self.list_all():
                     self.delete(name)
 
@@ -507,9 +489,7 @@ class StoredFactory(events.Handler, Factory):
             if inner_name in factory.__dict__:
                 return getattr(factory, inner_name)
 
-            instance = self._get_object_from_config(
-                name, factory.store.get(name)
-            )
+            instance = self._get_object_from_config(name, factory.store.get(name))
             setattr(factory, inner_name, instance)
             return instance
 
@@ -571,21 +551,10 @@ class StoredFactory(events.Handler, Factory):
             tuple: the new cursor, total results count, and a list of objects as a result
         """
         if not query:
-            raise ValueError(
-                "at least one query parameter is required, e.g. age=10"
-            )
+            raise ValueError("at least one query parameter is required, e.g. age=10")
 
-        new_cursor, count, result = self.store.find(
-            cursor_=cursor_, limit_=limit_, **query
-        )
-        return (
-            new_cursor,
-            count,
-            (
-                self._get_object_from_config(data[KEY_FIELD_NAME], data)
-                for data in result
-            ),
-        )
+        new_cursor, count, result = self.store.find(cursor_=cursor_, limit_=limit_, **query)
+        return (new_cursor, count, (self._get_object_from_config(data[KEY_FIELD_NAME], data) for data in result))
 
     def list_all(self):
         """

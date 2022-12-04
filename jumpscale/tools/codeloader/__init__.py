@@ -25,9 +25,7 @@ import types
 from jumpscale.sals.fs import stem
 
 
-def load_python_module(
-    module_path: str, force_reload: bool = False
-) -> types.ModuleType:
+def load_python_module(module_path: str, force_reload: bool = False) -> types.ModuleType:
     """
     Loads python module by path
 

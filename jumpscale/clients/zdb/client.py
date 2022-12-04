@@ -131,9 +131,7 @@ class ZDBClient(Client):
         :rtype: [str]
         """
         result = []
-        for key, data in self.iterate(
-            key_start=key_start, reverse=reverse, keyonly=True
-        ):
+        for key, data in self.iterate(key_start=key_start, reverse=reverse, keyonly=True):
             result.append(key)
         return result
 
@@ -157,9 +155,7 @@ class ZDBClient(Client):
         data = None
 
         if key_start is not None:
-            next = self.redis.execute_command(
-                "KEYCUR", self._key_encode(key_start)
-            )
+            next = self.redis.execute_command("KEYCUR", self._key_encode(key_start))
             if not keyonly:
                 data = self.get(key_start)
             yield (key_start, data)
@@ -256,14 +252,7 @@ class ZDBConnection(redis.Connection):
     on 0-DB
     """
 
-    def __init__(
-        self,
-        namespace=None,
-        namespace_password=None,
-        admin=False,
-        *args,
-        **kwargs,
-    ):
+    def __init__(self, namespace=None, namespace_password=None, admin=False, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.namespace = namespace or "default"
         self.namespace_password = namespace_password
@@ -291,9 +280,7 @@ class ZDBConnection(redis.Connection):
 
             self.send_command("SELECT", *args)
             if redis.connection.nativestr(self.read_response()) != "OK":
-                raise redis.connection.ConnectionError(
-                    f"Failed to select namespace {self.namespace}"
-                )
+                raise redis.connection.ConnectionError(f"Failed to select namespace {self.namespace}")
 
 
 class ZDBAdminClient(ZDBClient):
@@ -311,9 +298,7 @@ class ZDBAdminClient(ZDBClient):
             return True
         except Exception as e:
             if not "Namespace not found" in str(e):
-                raise j.exceptions.Base(
-                    "could not check namespace:%s, error:%s" % (name, e)
-                )
+                raise j.exceptions.Base("could not check namespace:%s, error:%s" % (name, e))
             return False
 
     def namespaces_list(self):
@@ -348,12 +333,7 @@ class ZDBAdminClient(ZDBClient):
             self.redis.execute_command("NSSET", name, "maxsize", maxsize)
 
         ns = j.clients.zdb.client_get(
-            name="temp_%s" % name,
-            addr=self.addr,
-            port=self.port,
-            mode=self.mode,
-            secret=secret,
-            namespace=name,
+            name="temp_%s" % name, addr=self.addr, port=self.port, mode=self.mode, secret=secret, namespace=name
         )
 
         assert ns.ping()

@@ -48,9 +48,7 @@ class Syncer(PatternMatchingEventHandler):
             Syncer -- Syncer object
         """
         ignore_patterns = ignore_patterns or DEFAULT_IGNORED_PATTERNS
-        super().__init__(
-            patterns, ignore_patterns, ignore_directories, case_sensitive
-        )
+        super().__init__(patterns, ignore_patterns, ignore_directories, case_sensitive)
         self.observer = Observer()
         self.sshclients_names = sshclients_names
         self.paths = paths or {}  # src:dst
@@ -163,31 +161,21 @@ class Syncer(PatternMatchingEventHandler):
         super().on_moved(event)
 
         what = "directory" if event.is_directory else "file"
-        j.logger.info(
-            f"Moved {what}: from {event.src_path} to {event.dest_path}"
-        )
+        j.logger.info(f"Moved {what}: from {event.src_path} to {event.dest_path}")
         dest_path = self._rewrite_path_for_dest(event.dest_path)
         j.logger.debug(f"will move to {dest_path}")
-        j.logger.debug(
-            f"will delete original in {self._rewrite_path_for_dest(event.src_path)}"
-        )
+        j.logger.debug(f"will delete original in {self._rewrite_path_for_dest(event.src_path)}")
         for cl in self._get_sshclients():
             if not event.is_directory:
                 try:
                     # in case file is moved
                     cl.sshclient.sftp.put(event.dest_path, dest_path)
-                    cl.sshclient.run(
-                        f"rm {self._rewrite_path_for_dest(event.src_path)}"
-                    )
+                    cl.sshclient.run(f"rm {self._rewrite_path_for_dest(event.src_path)}")
                 except:
-                    j.logger.debug(
-                        f"Ignoring {dest_path}. Path was not found during move event"
-                    )
+                    j.logger.debug(f"Ignoring {dest_path}. Path was not found during move event")
             else:
                 # in case file is directory
-                cl.sshclient.sftp.posix_rename(
-                    self._rewrite_path_for_dest(event.src_path), dest_path
-                )
+                cl.sshclient.sftp.posix_rename(self._rewrite_path_for_dest(event.src_path), dest_path)
 
     def on_created(self, event):
         super().on_created(event)
@@ -206,9 +194,7 @@ class Syncer(PatternMatchingEventHandler):
                     cl.sshclient.run(f"mkdir -p {j.sals.fs.parent(dest_path)}")
                     cl.sshclient.run(f"touch {dest_path}")
                 except:
-                    j.logger.debug(
-                        f"Ignoring {dest_path}. Path was not found during create event"
-                    )
+                    j.logger.debug(f"Ignoring {dest_path}. Path was not found during create event")
 
     def on_deleted(self, event):
         super().on_deleted(event)
@@ -225,9 +211,7 @@ class Syncer(PatternMatchingEventHandler):
                 try:
                     cl.sshclient.run(f"rm {dest_path}")
                 except:
-                    j.logger.debug(
-                        f"Ignoring {dest_path}. Path was not found during delete event"
-                    )
+                    j.logger.debug(f"Ignoring {dest_path}. Path was not found during delete event")
 
     def on_modified(self, event):
         super().on_modified(event)
@@ -244,6 +228,4 @@ class Syncer(PatternMatchingEventHandler):
                 try:
                     cl.sshclient.sftp.put(event.src_path, dest_path)
                 except:
-                    j.logger.debug(
-                        f"Ignoring {dest_path}. Path was not found during modify event"
-                    )
+                    j.logger.debug(f"Ignoring {dest_path}. Path was not found during modify event")

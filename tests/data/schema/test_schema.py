@@ -79,10 +79,7 @@ def test_schema():
         "name": "llist3",
     }
     assert "nr" in schema.props
-    assert (
-        isinstance(schema.props["nr"].type, j.data.types.Integer)
-        and schema.props["nr"].type.default == 4
-    )
+    assert isinstance(schema.props["nr"].type, j.data.types.Integer) and schema.props["nr"].type.default == 4
     del schema.props["nr"].type
     assert schema.props["nr"].__dict__ == {
         "defaultvalue": "4",
@@ -143,9 +140,7 @@ def test_schema():
     assert "llist4" in schema.props
     assert (
         isinstance(schema.props["llist4"].type, j.data.types.List)
-        and isinstance(
-            schema.props["llist4"].type.subtype, j.data.types.Integer
-        )
+        and isinstance(schema.props["llist4"].type.subtype, j.data.types.Integer)
         and schema.props["llist4"].type.default == [1, 2, 3]
     )
     del schema.props["llist4"].type
@@ -161,9 +156,7 @@ def test_schema():
     assert "llist5" in schema.props
     assert (
         isinstance(schema.props["llist5"].type, j.data.types.List)
-        and isinstance(
-            schema.props["llist5"].type.subtype, j.data.types.Integer
-        )
+        and isinstance(schema.props["llist5"].type.subtype, j.data.types.Integer)
         and schema.props["llist5"].type.default == [1, 2, 3]
     )
     del schema.props["llist5"].type
@@ -179,9 +172,7 @@ def test_schema():
     assert "llist6" in schema.props
     assert (
         isinstance(schema.props["llist6"].type, j.data.types.List)
-        and isinstance(
-            schema.props["llist6"].type.subtype, j.data.types.Integer
-        )
+        and isinstance(schema.props["llist6"].type.subtype, j.data.types.Integer)
         and schema.props["llist6"].type.default == [1, 2, 3]
     )
     del schema.props["llist6"].type
@@ -195,10 +186,7 @@ def test_schema():
         "name": "llist6",
     }
     assert "U" in schema.props
-    assert (
-        isinstance(schema.props["U"].type, j.data.types.Float)
-        and schema.props["U"].type.default == 0.0
-    )
+    assert isinstance(schema.props["U"].type, j.data.types.Float) and schema.props["U"].type.default == 0.0
     del schema.props["U"].type
     assert schema.props["U"].__dict__ == {
         "defaultvalue": "0.0",
@@ -211,8 +199,7 @@ def test_schema():
     }
     assert "nrdefault" in schema.props
     assert (
-        isinstance(schema.props["nrdefault"].type, j.data.types.Integer)
-        and schema.props["nrdefault"].type.default == 0
+        isinstance(schema.props["nrdefault"].type, j.data.types.Integer) and schema.props["nrdefault"].type.default == 0
     )
     del schema.props["nrdefault"].type
     assert schema.props["nrdefault"].__dict__ == {
@@ -256,8 +243,7 @@ def test_schema():
     }
     assert "obj" in schema.props
     assert (
-        isinstance(schema.props["obj"].type, j.data.types.JSObject)
-        and schema.props["obj"].type.default == "7mada.test"
+        isinstance(schema.props["obj"].type, j.data.types.JSObject) and schema.props["obj"].type.default == "7mada.test"
     )
     del schema.props["obj"].type
     assert schema.props["obj"].__dict__ == {

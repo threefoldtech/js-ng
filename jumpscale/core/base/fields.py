@@ -202,9 +202,7 @@ class Typed(Field):
         super().validate(value)
         if value is not None:
             if not isinstance(value, self.type):
-                raise ValidationError(
-                    f"value '{value}' is not of type {self.type.__name__}"
-                )
+                raise ValidationError(f"value '{value}' is not of type {self.type.__name__}")
 
 
 class Boolean(Typed):
@@ -278,9 +276,7 @@ class Integer(Typed):
 
         if value and self.max is not None:
             if value > self.max:
-                raise ValidationError(
-                    f"cannot set values greater than {self.max}"
-                )
+                raise ValidationError(f"cannot set values greater than {self.max}")
 
     def from_raw(self, value):
         if isinstance(value, str):
@@ -342,9 +338,7 @@ class String(Typed):
 
         if self.maxlen is not None:
             if value and len(value) > self.maxlen:
-                raise ValidationError(
-                    f"length of the string exceeds {self.maxlen}"
-                )
+                raise ValidationError(f"length of the string exceeds {self.maxlen}")
 
 
 class Secret(String):
@@ -731,9 +725,7 @@ class IPMixin:
         Returns:
             bool: `True` if it's a valid v4/v6 IP interface
         """
-        return self.is_a(
-            value, ipaddress.IPv4Interface, ipaddress.IPv6Interface
-        )
+        return self.is_a(value, ipaddress.IPv4Interface, ipaddress.IPv6Interface)
 
 
 class IPAddress(IPMixin, String):
@@ -798,9 +790,7 @@ class IPRange(IPMixin, String):
 
         super().validate(value)
         if value and not self.is_iface(value):
-            raise ValidationError(
-                f"'{value}' is not a valid IP range/interface"
-            )
+            raise ValidationError(f"'{value}' is not a valid IP range/interface")
 
 
 class Port(Integer):
@@ -853,9 +843,7 @@ class GUID(String):
         try:
             uuid.UUID(value, version=4)
         except ValueError as valexc:
-            raise ValidationError(
-                f"''{value}'' is invalid, {valexc}"
-            ) from valexc
+            raise ValidationError(f"''{value}'' is invalid, {valexc}") from valexc
 
     def from_raw(self, value):
         """
@@ -966,9 +954,7 @@ class DateTimeMixin:
     def validate(self, value):
         if isinstance(self.from_raw(value), str):
             # cannot convert from string, still an invalid format
-            raise ValidationError(
-                f"'{value}' is not in the format of '{self.format}'"
-            )
+            raise ValidationError(f"'{value}' is not in the format of '{self.format}'")
 
         super().validate(value)
 

@@ -75,9 +75,7 @@ class StartupCmd(Base):
     @property
     def cmd_path(self):
         if not self._cmd_path:
-            self._cmd_path = j.sals.fs.join_paths(
-                j.core.dirs.VARDIR, "cmds", f"{self.instance_name}.sh"
-            )
+            self._cmd_path = j.sals.fs.join_paths(j.core.dirs.VARDIR, "cmds", f"{self.instance_name}.sh")
             j.sals.fs.mkdirs(j.sals.fs.dirname(self._cmd_path))
         return self._cmd_path
 
@@ -89,9 +87,7 @@ class StartupCmd(Base):
     def process(self):
         if not self._process:
             if self.pid:
-                self._process = j.sals.process.get_process_object(
-                    self.pid, die=False
-                )
+                self._process = j.sals.process.get_process_object(self.pid, die=False)
                 if not self._process:
                     self.pid = None
             else:
@@ -104,9 +100,7 @@ class StartupCmd(Base):
     def _tmux_window(self):
         if self.executor.value == Executor.TMUX.value:
             if self.__tmux_window is None:
-                self.__tmux_window = j.core.executors.tmux.get_js_window(
-                    self.instance_name
-                )
+                self.__tmux_window = j.core.executors.tmux.get_js_window(self.instance_name)
         return self.__tmux_window
 
     def _get_processes_by_port_or_filter(self):
@@ -137,9 +131,7 @@ class StartupCmd(Base):
                 process = j.sals.process.get_process_object(pid, die=False)
                 _add_to_result(process)
 
-        for pid in j.sals.process.get_pids_filtered_by_regex(
-            self.process_strings_regex
-        ):
+        for pid in j.sals.process.get_pids_filtered_by_regex(self.process_strings_regex):
             process = j.sals.process.get_process_object(pid, die=False)
             _add_to_result(process)
 
@@ -171,9 +163,7 @@ class StartupCmd(Base):
             bool: True if was killed
         """
         if self.stop_cmd:
-            cmd = j.tools.jinja2.render_template(
-                template_text=self.stop_cmd, args=self._get_data()
-            )
+            cmd = j.tools.jinja2.render_template(template_text=self.stop_cmd, args=self._get_data())
             exit_code, _, _ = j.sals.process.execute(cmd, die=False)
             self.reset()
             return exit_code == 0
@@ -255,9 +245,7 @@ class StartupCmd(Base):
             time.sleep(0.05)
         else:
             if die:
-                raise j.exceptions.Timeout(
-                    f"Wait operation exceeded timeout: {timeout}"
-                )
+                raise j.exceptions.Timeout(f"Wait operation exceeded timeout: {timeout}")
 
     def wait_for_stop(self, die=True, timeout=10):
         """Wait for stop to finishes

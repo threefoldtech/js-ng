@@ -116,9 +116,7 @@ class TestFields(unittest.TestCase):
         value = "2020-12-03 12:30"
         dt_field = fields.DateTime(default=value)
         from_raw = dt_field.from_raw(dt_field.default)
-        dt_obj = datetime.datetime.strptime(value, dt_field.format).replace(
-            tzinfo=datetime.timezone.utc
-        )
+        dt_obj = datetime.datetime.strptime(value, dt_field.format).replace(tzinfo=datetime.timezone.utc)
         self.assertEqual(from_raw, dt_obj)
 
         # check conversion (utc)
@@ -137,9 +135,7 @@ class TestFields(unittest.TestCase):
 
         dt_field = fields.Date(default=value)
         from_raw = dt_field.from_raw(dt_field.default)
-        dt_obj = datetime.datetime.strptime(value, dt_field.format).replace(
-            tzinfo=datetime.timezone.utc
-        )
+        dt_obj = datetime.datetime.strptime(value, dt_field.format).replace(tzinfo=datetime.timezone.utc)
         dt_obj = dt_obj.date()
         self.assertEqual(from_raw, dt_obj)
 
@@ -158,11 +154,7 @@ class TestFields(unittest.TestCase):
         value = "12:30"
         t_field = fields.Time(default=value)
         from_raw = t_field.from_raw(t_field.default)
-        t_obj = (
-            datetime.datetime.strptime(value, t_field.format)
-            .replace(tzinfo=datetime.timezone.utc)
-            .time()
-        )
+        t_obj = datetime.datetime.strptime(value, t_field.format).replace(tzinfo=datetime.timezone.utc).time()
         self.assertEqual(from_raw, t_obj)
         # check conversion
         # -2208943800 => 1/1/1 12:30:00

@@ -136,13 +136,9 @@ class List:
         if not isinstance(value, list):
             return False
         for e in value:
-            if isinstance(self.subtype, List) and not self.subtype._deep_check(
-                e
-            ):
+            if isinstance(self.subtype, List) and not self.subtype._deep_check(e):
                 return False
-            elif not isinstance(self.subtype, List) and not self.subtype.check(
-                str(e)
-            ):
+            elif not isinstance(self.subtype, List) and not self.subtype.check(str(e)):
                 return False
         return True
 

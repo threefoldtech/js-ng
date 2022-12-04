@@ -213,9 +213,7 @@ class TestBaseWithFields(unittest.TestCase):
         self.assertEqual(server.uid, str_uuid)
 
         # test with UUID object
-        server.uid = uuid.UUID(
-            int=0x12345678123456781234567812345678, version=4
-        )
+        server.uid = uuid.UUID(int=0x12345678123456781234567812345678, version=4)
         self.assertEqual(server.uid, str_uuid)
 
         with self.assertRaises(ValidationError):
@@ -294,9 +292,7 @@ class TestBaseWithFields(unittest.TestCase):
         child_field = ChildWithTheSameField()._get_fields()["name"]
         self.assertEqual(child_field.default, "C")
 
-    def test_field_resolution_multiple_inheritance_without_child_field_defined(
-        self
-    ):
+    def test_field_resolution_multiple_inheritance_without_child_field_defined(self):
         """Test for field resolution in case of multiple inheritance without the same field in ChildWithMultipleParents and ChildWithMultipleParentsWithDifferntOrder.
 
         **Test Scenario**
@@ -309,14 +305,10 @@ class TestBaseWithFields(unittest.TestCase):
         self.assertEqual(parent_b_field.default, "B")
         self.assertEqual(child_field.default, "A")
 
-        child_field = ChildWithMultipleParentsWithDifferntOrder()._get_fields()[
-            "name"
-        ]
+        child_field = ChildWithMultipleParentsWithDifferntOrder()._get_fields()["name"]
         self.assertEqual(child_field.default, "B")
 
-    def test_field_resolution_multiple_inheritance_with_child_field_defined(
-        self
-    ):
+    def test_field_resolution_multiple_inheritance_with_child_field_defined(self):
         """Test for field resolution in case of multiple inheritance with the same field defined in ChildWithMultipleParentsAndTheSameField.
 
         **Test Scenario**
@@ -324,7 +316,5 @@ class TestBaseWithFields(unittest.TestCase):
         - Create an instance of ChildWithMultipleParentsAndTheSameField
         - Check the name field default value
         """
-        child_field = ChildWithMultipleParentsAndTheSameField()._get_fields()[
-            "name"
-        ]
+        child_field = ChildWithMultipleParentsAndTheSameField()._get_fields()["name"]
         self.assertEqual(child_field.default, "C")

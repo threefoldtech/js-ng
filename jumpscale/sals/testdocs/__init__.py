@@ -48,14 +48,10 @@ class Collector:
             target_content = j.sals.fs.read_file(location)
             if name in target_content:
                 return 0
-            test_doc = j.tools.jinja2.render_template(
-                template_text=test_template, name=name, body=doc, new_line=True
-            )
+            test_doc = j.tools.jinja2.render_template(template_text=test_template, name=name, body=doc, new_line=True)
             return j.sals.fs.write_file(location, test_doc, append=True)
         else:
-            test_doc = j.tools.jinja2.render_template(
-                template_text=test_template, name=name, body=doc, new_line=False
-            )
+            test_doc = j.tools.jinja2.render_template(template_text=test_template, name=name, body=doc, new_line=False)
             return j.sals.fs.write_file(location, test_doc)
 
     def _generate_docs_for_item(self, item):
@@ -72,13 +68,9 @@ class Collector:
 
         # Get target docs locations.
         absolute_test_location = str(item.fspath)
-        relative_test_location = absolute_test_location.split(self.source)[1][
-            1:
-        ]
+        relative_test_location = absolute_test_location.split(self.source)[1][1:]
         relative_test_location = relative_test_location.replace(".py", ".md")
-        target_location = j.sals.fs.join_paths(
-            self.target, relative_test_location
-        )
+        target_location = j.sals.fs.join_paths(self.target, relative_test_location)
 
         self._remove_destination_if_exists(target_location)
         wrote = self._write_docs(name, doc, target_location)
@@ -108,41 +100,27 @@ class Collector:
             readme = j.sals.fs.read_file(readme_location)
         if category:
             category = j.tools.jinja2.render_template(
-                template_text=category_template,
-                category=category,
-                new_line=readme,
+                template_text=category_template, category=category, new_line=readme
             )
         new_entry = j.tools.jinja2.render_template(
-            template_text=entry_template,
-            name=file_name,
-            location=relative_location,
+            template_text=entry_template, name=file_name, location=relative_location
         )
         if not new_entry in readme:
             if not category.lstrip() in readme:
                 readme = f"{readme}{category}"
 
             # Get the entry location in readme file.
-            first_line_in_category = readme.find(category.lstrip()) + len(
-                category.lstrip()
-            )
-            last_line_in_category = (
-                readme.find("###", first_line_in_category) - 1
-            )
+            first_line_in_category = readme.find(category.lstrip()) + len(category.lstrip())
+            last_line_in_category = readme.find("###", first_line_in_category) - 1
             entry_location = first_line_in_category
             if last_line_in_category < 0:
                 last_line_in_category = len(readme)
-            for line in readme[
-                first_line_in_category:last_line_in_category
-            ].splitlines():
+            for line in readme[first_line_in_category:last_line_in_category].splitlines():
                 if new_entry > line:
-                    entry_location += (
-                        len(line) + 1
-                    )  # this one for the new line.
+                    entry_location += len(line) + 1  # this one for the new line.
                 else:
                     break
-            new_readme = (
-                f"{readme[:entry_location]}{new_entry}{readme[entry_location:]}"
-            )
+            new_readme = f"{readme[:entry_location]}{new_entry}{readme[entry_location:]}"
             j.sals.fs.rmtree(readme_location)
             j.sals.fs.write_file(readme_location, new_readme)
 

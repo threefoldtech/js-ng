@@ -17,8 +17,6 @@ def payload_build(self, *args):
             elif isinstance(item, dict):
                 item = dumps(item).encode()
             else:
-                raise ValueError(
-                    f"Got {item} supported types are bytes,str,int,float,dict"
-                )
+                raise ValueError(f"Got {item} supported types are bytes,str,int,float,dict")
         buffer.write(item)
     return buffer.getvalue()

@@ -10,9 +10,7 @@ class GitTests(BaseTests):
         self.repo_name = "js-ng"
         self.repo_url = "https://github.com/threefoldtech/js-ng"
         j.sals.fs.mkdir(f"{self.repo_dir}")
-        j.sals.process.execute(
-            f"git clone {self.repo_url}", cwd=f"{self.repo_dir}"
-        )
+        j.sals.process.execute(f"git clone {self.repo_url}", cwd=f"{self.repo_dir}")
         path = j.sals.fs.join_paths(self.repo_dir, self.repo_name)
         self.git_client = j.clients.git.new(name=self.instance_name, path=path)
 
@@ -30,9 +28,7 @@ class GitTests(BaseTests):
         - Check that url equal to remote_url.
         """
         self.info("Read the git.config file")
-        path = j.sals.fs.join_paths(
-            self.repo_dir, self.repo_name, ".git/config"
-        )
+        path = j.sals.fs.join_paths(self.repo_dir, self.repo_name, ".git/config")
         git_config = j.sals.fs.read_file(path)
 
         self.info("Check that remote_url equal to repo_url")
@@ -56,9 +52,7 @@ class GitTests(BaseTests):
         self.git_client.set_remote_url(repo_ssh_url)
 
         self.info("Read the git config file")
-        path = j.sals.fs.join_paths(
-            self.repo_dir, self.repo_name, ".git/config"
-        )
+        path = j.sals.fs.join_paths(self.repo_dir, self.repo_name, ".git/config")
         git_config = j.sals.fs.read_file(path)
 
         self.info("Check that remote_url equals to repo ssh url")
@@ -75,9 +69,7 @@ class GitTests(BaseTests):
         """
         self.info("Get the branch name")
         path = j.sals.fs.join_paths(self.repo_dir, self.repo_name)
-        branch_name = j.sals.process.execute(
-            "git branch --show-current", cwd=path
-        )
+        branch_name = j.sals.process.execute("git branch --show-current", cwd=path)
 
         self.info("Check branch name")
         self.assertIn(self.git_client.branch_name, branch_name[1])
@@ -168,20 +160,13 @@ class GitTests(BaseTests):
         file2_name = self.random_name()
 
         self.info("Create a two file in repository path")
-        path_file1 = j.sals.fs.join_paths(
-            self.repo_dir, self.repo_name, file1_name
-        )
-        path_file2 = j.sals.fs.join_paths(
-            self.repo_dir, self.repo_name, file2_name
-        )
+        path_file1 = j.sals.fs.join_paths(self.repo_dir, self.repo_name, file1_name)
+        path_file2 = j.sals.fs.join_paths(self.repo_dir, self.repo_name, file2_name)
         j.sals.fs.touch(path_file1)
         j.sals.fs.touch(path_file2)
 
         self.info("Check that two file has been added.")
-        self.assertEqual(
-            [file2_name, file1_name].sort(),
-            self.git_client.get_modified_files()["N"].sort(),
-        )
+        self.assertEqual([file2_name, file1_name].sort(), self.git_client.get_modified_files()["N"].sort())
 
         self.info("Commit the file 1")
         path = j.sals.fs.join_paths(self.repo_dir, self.repo_name)

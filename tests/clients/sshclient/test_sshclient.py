@@ -15,9 +15,7 @@ class SshClientTests(BaseTests):
         j.sals.fs.mkdir(self.sshkey_dir)
 
         self.ssh_cl = j.clients.sshkey.get(self.ssh_client_name)
-        self.ssh_cl.private_key_path = j.sals.fs.join_paths(
-            self.sshkey_dir, self.sshkey_file_name
-        )
+        self.ssh_cl.private_key_path = j.sals.fs.join_paths(self.sshkey_dir, self.sshkey_file_name)
         self.ssh_cl.generate_keys()
         pub_key = self.ssh_cl.public_key
 
@@ -32,10 +30,7 @@ class SshClientTests(BaseTests):
 
         self.docker_client = j.clients.docker.get(self.docker_client_name)
         self.docker_client.run(
-            self.docker_name,
-            self.docker_image,
-            environment={"pub_key": pub_key},
-            entrypoint="tail -f /dev/null",
+            self.docker_name, self.docker_image, environment={"pub_key": pub_key}, entrypoint="tail -f /dev/null"
         )
 
         cmds = """
@@ -50,9 +45,7 @@ class SshClientTests(BaseTests):
         self.docker_client.exec(self.docker_name, f"/bin/bash -c '{cmds}'")
 
         self.container = self.docker_client.get(self.docker_name)
-        self.localclient.host = self.container.attrs["NetworkSettings"][
-            "IPAddress"
-        ]
+        self.localclient.host = self.container.attrs["NetworkSettings"]["IPAddress"]
 
     def tearDown(self):
         j.clients.sshkey.delete(self.ssh_client_name)

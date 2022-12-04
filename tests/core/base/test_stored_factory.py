@@ -8,13 +8,7 @@ from enum import Enum
 
 # TODO: move fields to fields or types module
 
-from jumpscale.core.base import (
-    Base,
-    DuplicateError,
-    Factory,
-    StoredFactory,
-    fields,
-)
+from jumpscale.core.base import Base, DuplicateError, Factory, StoredFactory, fields
 from jumpscale.core.base.store import filesystem, redis, whooshfts
 from parameterized import parameterized_class
 from jumpscale.loader import j
@@ -89,9 +83,7 @@ class User(Base):
         return Greeter(self.full_name)
 
     my_greeter = fields.Typed(Greeter, stored=False, compute=get_my_greeter)
-    ahmed_greeter = fields.Typed(
-        Greeter, stored=False, default=Greeter("ahmed")
-    )
+    ahmed_greeter = fields.Typed(Greeter, stored=False, default=Greeter("ahmed"))
 
 
 class Client(Base):
@@ -112,11 +104,7 @@ class WhooshFactory(StoredFactory):
 
 
 @parameterized_class(
-    [
-        {"factory_class": FilesystemFactory},
-        {"factory_class": RedisFactory},
-        {"factory_class": WhooshFactory},
-    ]
+    [{"factory_class": FilesystemFactory}, {"factory_class": RedisFactory}, {"factory_class": WhooshFactory}]
 )
 class TestStoredFactory(unittest.TestCase):
 
@@ -125,9 +113,7 @@ class TestStoredFactory(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.cmd = None
-        if issubclass(
-            cls.factory_class, RedisFactory
-        ) and not j.sals.nettools.tcp_connection_test(
+        if issubclass(cls.factory_class, RedisFactory) and not j.sals.nettools.tcp_connection_test(
             "127.0.0.1", REDIS_PORT, 1
         ):
             cls.cmd = j.tools.startupcmd.get("test_store_factory")

@@ -56,12 +56,7 @@ class TestLogging(BaseTests):
 
         for i in range(test_records_count):
             test_value = i + 1
-            j.logger.info(
-                "message {}",
-                test_value,
-                category=str(test_value),
-                data={"key": test_value},
-            )
+            j.logger.info("message {}", test_value, category=str(test_value), data={"key": test_value})
 
         records_count = j.logger.redis.records_count(TEST_APP_NAME)
         self.assertEqual(records_count, test_records_count)

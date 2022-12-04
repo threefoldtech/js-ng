@@ -8,18 +8,10 @@ from jumpscale.loader import j
 
 
 def test_base64():
-    assert j.data.serializers.base64.encode("omar") == base64.b64encode(
-        "omar".encode()
-    )
-    assert j.data.serializers.base64.encode(b"omar") == base64.b64encode(
-        b"omar"
-    )
-    assert j.data.serializers.base64.decode("omar") == base64.b64decode(
-        "omar".encode()
-    )
-    assert j.data.serializers.base64.decode(b"omar") == base64.b64decode(
-        b"omar"
-    )
+    assert j.data.serializers.base64.encode("omar") == base64.b64encode("omar".encode())
+    assert j.data.serializers.base64.encode(b"omar") == base64.b64encode(b"omar")
+    assert j.data.serializers.base64.decode("omar") == base64.b64decode("omar".encode())
+    assert j.data.serializers.base64.decode(b"omar") == base64.b64decode(b"omar")
 
 
 def test_pickle():
@@ -72,9 +64,7 @@ def test_lzma():
 def test_msgpack():
     obj = msgpack.packb(b"omar", use_bin_type=True)
     assert j.data.serializers.msgpack.dumps(b"omar") == obj
-    assert j.data.serializers.msgpack.loads(obj) == msgpack.unpackb(
-        obj, raw=False
-    )
+    assert j.data.serializers.msgpack.loads(obj) == msgpack.unpackb(obj, raw=False)
     assert j.data.serializers.msgpack.loads("omar") == False
 
 

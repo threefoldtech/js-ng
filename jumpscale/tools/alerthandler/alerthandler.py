@@ -3,9 +3,7 @@ import gevent
 
 
 def _get_identifier(app_name, message, public_message, category, alert_type):
-    return j.data.hash.md5(
-        ":".join([app_name, message, public_message, category, alert_type])
-    )
+    return j.data.hash.md5(":".join([app_name, message, public_message, category, alert_type]))
 
 
 class Alert:
@@ -34,13 +32,7 @@ class Alert:
 
     @property
     def identifier(self):
-        return _get_identifier(
-            self.app_name,
-            self.message,
-            self.public_message,
-            self.category,
-            self.type,
-        )
+        return _get_identifier(self.app_name, self.message, self.public_message, self.category, self.type)
 
     @property
     def json(self):
@@ -59,15 +51,7 @@ class AlertsHandler:
         self.handlers = []
 
     def __dir__(self):
-        return (
-            "get",
-            "find",
-            "alert_raise",
-            "count",
-            "reset",
-            "delete",
-            "delete_all",
-        )
+        return ("get", "find", "alert_raise", "count", "reset", "delete", "delete_all")
 
     @property
     def db(self):
@@ -75,9 +59,7 @@ class AlertsHandler:
             self._db = j.core.db
         return self._db
 
-    def get(
-        self, alert_id: int = None, identifier: str = None, die: bool = True
-    ) -> Alert:
+    def get(self, alert_id: int = None, identifier: str = None, die: bool = True) -> Alert:
         """Get alert by its id or identifier
 
         Keyword Arguments:
@@ -93,9 +75,7 @@ class AlertsHandler:
             Alert -- [description]
         """
         if not (alert_id or identifier):
-            raise j.core.exceptions.Value(
-                "Either alert id or alert identifier are required"
-            )
+            raise j.core.exceptions.Value("Either alert id or alert identifier are required")
 
         alert_id = alert_id or self.db.hget(self._rkey_id, identifier)
         if alert_id:
@@ -146,8 +126,7 @@ class AlertsHandler:
                 continue
 
             if message and (
-                message not in alert.message.strip().lower()
-                and message not in alert.public_message.strip().lower()
+                message not in alert.message.strip().lower() and message not in alert.public_message.strip().lower()
             ):
                 continue
 
@@ -198,9 +177,7 @@ class AlertsHandler:
         if not self.db.is_running():
             return
 
-        identifier = _get_identifier(
-            app_name, message, public_message, category, alert_type
-        )
+        identifier = _get_identifier(app_name, message, public_message, category, alert_type)
         alert = self.get(identifier=identifier, die=False) or Alert()
 
         if alert.id:
@@ -263,9 +240,7 @@ class AlertsHandler:
             identifier {str} -- alert identifier (default: {None})
         """
         if not (alert_id or identifier):
-            raise j.core.exceptions.Value(
-                "Either alert id or alert identifier are required"
-            )
+            raise j.core.exceptions.Value("Either alert id or alert identifier are required")
 
         alert_id = alert_id or self.db.hget(self._rkey_id, identifier)
         if alert_id:

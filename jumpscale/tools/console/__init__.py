@@ -166,9 +166,7 @@ def ask_choice(prompt="Type choice number : ", choices_list=[]):
         return ask_choice(prompt, choices_list)
 
 
-def ask_multi_choices(
-    prompt="Add to choices : ", choices_list=[], to_save="s", to_quit="q"
-):
+def ask_multi_choices(prompt="Add to choices : ", choices_list=[], to_save="s", to_quit="q"):
     """Collect multi choices from list
     
     Keyword Arguments:

@@ -203,21 +203,13 @@ def kill(proc, sig=signal.SIGTERM, timeout=5, sure_kill=False):
                     # the process with PID: {proc.pid} becomes a zombie and should be considered a dead.
                     return
                 # the process may be in an uninterruptible sleep
-                j.logger.warning(
-                    f"Could not kill the process with pid: {proc.pid} with {sig}. Timeout: {timeout}"
-                )
-                raise j.exceptions.Runtime(
-                    f"Could not kill process with pid {proc.pid}, {proc.status()}"
-                ) from e
+                j.logger.warning(f"Could not kill the process with pid: {proc.pid} with {sig}. Timeout: {timeout}")
+                raise j.exceptions.Runtime(f"Could not kill process with pid {proc.pid}, {proc.status()}") from e
         else:
-            raise j.exceptions.Runtime(
-                f"Could not kill process with pid {proc.pid}"
-            ) from e
+            raise j.exceptions.Runtime(f"Could not kill process with pid {proc.pid}") from e
     except psutil.AccessDenied as e:
         # permission to perform an action is denied
-        raise j.exceptions.Permission(
-            "Permission to perform this action is denied!"
-        ) from e
+        raise j.exceptions.Permission("Permission to perform this action is denied!") from e
     except psutil.NoSuchProcess:
         # Process no longer exists or Zombie (already dead)
         pass
@@ -276,12 +268,7 @@ def get_pids_filtered_sorted(filterstr, sortkey=None, desc=False):
     if sortkey is None:  # mimic default ps commnad sorting behavior
         sortkey = "pid"
     # return pids from process objects
-    return [
-        p["pid"]
-        for p in get_processes_info(
-            sort=ps_to_psutil_map[sortkey], filterstr=filterstr, desc=desc
-        )
-    ]
+    return [p["pid"] for p in get_processes_info(sort=ps_to_psutil_map[sortkey], filterstr=filterstr, desc=desc)]
 
 
 def get_filtered_pids(filterstr, excludes=None):
@@ -349,22 +336,12 @@ def check_start(cmd, filterstr, n_instances=1, retry=1, timeout=2, delay=0.5):
     for i in range(retry):
         if isinstance(cmd, str):
             args = shlex.split(cmd)
-        proc = psutil.Popen(
-            args,
-            close_fds=True,
-            stdout=subprocess.PIPE,
-            stdin=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        )
+        proc = psutil.Popen(args, close_fds=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
         try:
             rc = proc.wait(timeout)  # makesure the process is stable
-            if (
-                rc != 0
-            ):  # executing the command succeeded but exited immediately!
+            if rc != 0:  # executing the command succeeded but exited immediately!
                 output, error_output = proc.communicate()
-                j.logger.error(
-                    f"the start command exited with error: {error_output}"
-                )  # the process exited with error
+                j.logger.error(f"the start command exited with error: {error_output}")  # the process exited with error
         except psutil.TimeoutExpired:
             pass  # still running
         # wait extra delay to allow any subprocess spawned from the process we just started to finish
@@ -377,12 +354,8 @@ def check_start(cmd, filterstr, n_instances=1, retry=1, timeout=2, delay=0.5):
         else:
             # the required number of instances using the filter string {filterstr} not found yet!
             continue
-    j.logger.error(
-        f"could not start the required number of instances ({n_instances}) after {i} attempts."
-    )
-    raise j.exceptions.Runtime(
-        "could not start the required number of instances."
-    )
+    j.logger.error(f"could not start the required number of instances ({n_instances}) after {i} attempts.")
+    raise j.exceptions.Runtime("could not start the required number of instances.")
 
 
 def check_stop(cmd, filterstr, retry=1, n_instances=0, timeout=2, delay=0.5):
@@ -403,22 +376,14 @@ def check_stop(cmd, filterstr, retry=1, n_instances=0, timeout=2, delay=0.5):
     for i in range(retry):
         if isinstance(cmd, str):
             args = shlex.split(cmd)
-        proc = psutil.Popen(
-            args,
-            close_fds=True,
-            stdout=subprocess.PIPE,
-            stdin=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        )
+        proc = psutil.Popen(args, close_fds=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
         try:
             rc = proc.wait(timeout)  # makesure the process is stable
             # print(f'rc: {rc}')
             if rc != 0:
                 # the process exited with error
                 output, error_output = proc.communicate()
-                j.logger.warnnig(
-                    f"the stop command exited with error: {error_output}"
-                )
+                j.logger.warnnig(f"the stop command exited with error: {error_output}")
         except psutil.TimeoutExpired:
             # still running
             pass
@@ -433,19 +398,10 @@ def check_stop(cmd, filterstr, retry=1, n_instances=0, timeout=2, delay=0.5):
             # the required {n_instances} not matching the instances number found using the filter string: {filterstr} yet
             continue
     # could not match the required number of instances {n_instances} after {i} attempts.
-    raise j.exceptions.Runtime(
-        f"could not stop {cmd}, found {len(found)} of instances instead of {n_instances}"
-    )
+    raise j.exceptions.Runtime(f"could not stop {cmd}, found {len(found)} of instances instead of {n_instances}")
 
 
-def get_pids(
-    process_name,
-    match_predicate=None,
-    limit=0,
-    _alt_source=None,
-    include_zombie=False,
-    full_cmd_line=False,
-):
+def get_pids(process_name, match_predicate=None, limit=0, _alt_source=None, include_zombie=False, full_cmd_line=False):
     """Return a list of processes ID(s) matching a given process name.
 
     Function will check string against Process.name(), Process.exe() and Process.cmdline()
@@ -493,12 +449,7 @@ def get_pids(
                 else:
                     candidates.append(os.path.basename(proc.info["cmdline"][0]))
 
-            if any(
-                [
-                    match_predicate(process_name, candidate)
-                    for candidate in candidates
-                ]
-            ):
+            if any([match_predicate(process_name, candidate) for candidate in candidates]):
                 pids.append(proc.pid)
                 # return early if no need to iterate over all running process
                 if limit and len(pids) == limit:
@@ -576,10 +527,7 @@ def kill_user_processes(user, sig=signal.SIGTERM, timeout=5, sure_kill=False):
         try:
             kill(proc, sig=sig, timeout=timeout, sure_kill=sure_kill)
         except (j.exceptions.Runtime, j.exceptions.Permission) as e:
-            j.logger.exception(
-                "ignoring an exception that occurred while iterating over user processes",
-                exception=e,
-            )
+            j.logger.exception("ignoring an exception that occurred while iterating over user processes", exception=e)
             failed_processes.append(proc)
 
     # making sure
@@ -605,11 +553,7 @@ def get_similar_processes(target_proc=None):
         elif isinstance(target_proc, int):
             target_proc = get_process_object(target_proc, die=True)
         for proc in psutil.process_iter(["name", "exe", "cmdline"]):
-            if (
-                proc.info["cmdline"]
-                and target_proc.cmdline()
-                and proc.info["cmdline"] == target_proc.cmdline()
-            ):
+            if proc.info["cmdline"] and target_proc.cmdline() and proc.info["cmdline"] == target_proc.cmdline():
                 yield proc
     except (psutil.AccessDenied, psutil.NoSuchProcess):
         pass
@@ -685,13 +629,7 @@ def get_pid_by_port(port, ipv6=False, udp=False):
         return process.pid
 
 
-def kill_process_by_name(
-    process_name,
-    sig=signal.SIGTERM,
-    match_predicate=None,
-    timeout=5,
-    sure_kill=False,
-):
+def kill_process_by_name(process_name, sig=signal.SIGTERM, match_predicate=None, timeout=5, sure_kill=False):
     """Kill all processes that match 'process_name'.
 
     Args:
@@ -740,9 +678,7 @@ def kill_all_pids(pids, sig=signal.SIGTERM, timeout=5, sure_kill=False):
     return failed_processes
 
 
-def kill_process_by_port(
-    port, ipv6=False, udp=False, sig=signal.SIGTERM, timeout=5, sure_kill=False
-):
+def kill_process_by_port(port, ipv6=False, udp=False, sig=signal.SIGTERM, timeout=5, sure_kill=False):
     """Kill process by port.
 
     Args:
@@ -808,9 +744,7 @@ def get_process_by_port(port, ipv6=False, udp=False):
                 if conn.pid:
                     return psutil.Process(conn.pid)
                 else:
-                    raise j.exceptions.Runtime(
-                        "pid is not retrievable, not root?"
-                    )
+                    raise j.exceptions.Runtime("pid is not retrievable, not root?")
         except psutil.NoSuchProcess:
             raise j.exceptions.NotFound("Process is no longer exists")
         except psutil.AccessDenied:
@@ -842,9 +776,7 @@ def get_processes():
     yield from psutil.process_iter()
 
 
-def get_processes_info(
-    user=None, sort="mem", filterstr=None, limit=25, desc=True
-):
+def get_processes_info(user=None, sort="mem", filterstr=None, limit=25, desc=True):
     """Get information for top running processes sorted by memory usage or CPU usage.
 
     Args:
@@ -915,18 +847,11 @@ def get_processes_info(
     else:
         # it makes sense that get_pids func should returns list of psutil.Process objects instead of list of pids
         if user:
-            p_source = map(
-                get_process_object,
-                get_pids(
-                    process_name=filterstr, _alt_source=get_user_processes(user)
-                ),
-            )
+            p_source = map(get_process_object, get_pids(process_name=filterstr, _alt_source=get_user_processes(user)))
         else:
             p_source = map(get_process_object, get_pids(process_name=filterstr))
     for proc in p_source:
-        if (
-            proc
-        ):  # in case a race condition happened, and get_process_object returned None
+        if proc:  # in case a race condition happened, and get_process_object returned None
             try:
                 # Fetch process details as dict
                 pinfo = proc.as_dict(
@@ -948,9 +873,7 @@ def get_processes_info(
                 pinfo["rss"] = proc.memory_info().rss / (
                     1024 * 1024
                 )  # the non-swapped physical memory a process has used in Mb
-                pinfo["cpu_time"] = sum(
-                    pinfo["cpu_times"][:2]
-                )  # cumulative, excluding children and iowait
+                pinfo["cpu_time"] = sum(pinfo["cpu_times"][:2])  # cumulative, excluding children and iowait
                 pinfo["ports"] = []
                 try:
                     connections = proc.connections()  # need root
@@ -959,25 +882,17 @@ def get_processes_info(
                 else:
                     if connections:
                         for conn in connections:
-                            pinfo["ports"].append(
-                                {"port": conn.laddr.port, "status": conn.status}
-                            )
+                            pinfo["ports"].append({"port": conn.laddr.port, "status": conn.status})
                 # Append dict to list
                 processes_list.append(pinfo)
-            except (
-                psutil.NoSuchProcess,
-                psutil.AccessDenied,
-                psutil.ZombieProcess,
-            ) as e:
+            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess) as e:
                 j.logger.exception(
                     "ignoring and logging an exception that occurred while iterating over system processes, not root?",
                     exception=e,
                 )
                 pass
     # sort the processes list by sort_key
-    sorted_processes = sorted(processes_list, key=_get_sort_key, reverse=desc)[
-        :limit
-    ]
+    sorted_processes = sorted(processes_list, key=_get_sort_key, reverse=desc)[:limit]
     return sorted_processes
 
 
@@ -1030,9 +945,7 @@ def get_memory_usage():
     memory_usage["total"] = math.ceil(
         memory_data.get("total") / (1024 * 1024 * 1024)
     )  # total physical memory (exclusive swap).
-    memory_usage["used"] = math.ceil(
-        memory_data.get("used") / (1024 * 1024 * 1024)
-    )
+    memory_usage["used"] = math.ceil(memory_data.get("used") / (1024 * 1024 * 1024))
     memory_usage["percent"] = memory_data.get("percent")
     return memory_usage
 
@@ -1060,12 +973,7 @@ def get_environ(pid):
 
 
 def kill_proc_tree(
-    parent,
-    sig=signal.SIGTERM,
-    include_parent=True,
-    include_grand_children=True,
-    timeout=5,
-    sure_kill=False,
+    parent, sig=signal.SIGTERM, include_parent=True, include_grand_children=True, timeout=5, sure_kill=False
 ):
     """Kill a process and its children (including grandchildren) with signal `sig`
 
@@ -1117,9 +1025,7 @@ def in_docker():
     Returns:
         bool: True if in docker. False otherwise.
     """
-    rc, out, _ = j.sals.process.execute(
-        "cat /proc/1/cgroup", die=False, showout=False
-    )
+    rc, out, _ = j.sals.process.execute("cat /proc/1/cgroup", die=False, showout=False)
     return rc == 0 and "/docker/" in out
 
 

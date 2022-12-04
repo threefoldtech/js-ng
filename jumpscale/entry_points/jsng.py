@@ -31,13 +31,6 @@ def run(command):
             from jumpscale.shell import ptconfig
             from ptpython.repl import embed
 
-            sys.exit(
-                embed(
-                    globals(),
-                    locals(),
-                    configure=ptconfig,
-                    history_filename=HISTORY_FILENAME,
-                )
-            )
+            sys.exit(embed(globals(), locals(), configure=ptconfig, history_filename=HISTORY_FILENAME))
     else:
         sys.exit(print(exec(command)))

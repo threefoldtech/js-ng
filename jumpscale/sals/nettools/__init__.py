@@ -20,12 +20,7 @@ from typing import Optional
 from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
 from urllib.parse import urlparse
-from urllib.request import (
-    build_opener,
-    HTTPPasswordMgrWithDefaultRealm,
-    HTTPBasicAuthHandler,
-    install_opener,
-)
+from urllib.request import build_opener, HTTPPasswordMgrWithDefaultRealm, HTTPBasicAuthHandler, install_opener
 from pathlib import Path
 from collections import namedtuple
 from jumpscale.loader import j
@@ -36,9 +31,7 @@ import jumpscale.sals.fs
 import jumpscale.core.executors
 
 
-def tcp_connection_test(
-    ipaddr: str, port: int, timeout: Optional[int] = None
-) -> bool:
+def tcp_connection_test(ipaddr: str, port: int, timeout: Optional[int] = None) -> bool:
     """tests tcp connection on specified port, compatible with both IPv4 and IPv6.
     ensures that each side of the connection is reachable in the network.
 
@@ -61,12 +54,7 @@ def tcp_connection_test(
         return False
 
 
-def udp_connection_test(
-    ipaddr: str,
-    port: int,
-    timeout: Optional[int] = 1,
-    message: Optional[bytes] = b"",
-) -> bool:
+def udp_connection_test(ipaddr: str, port: int, timeout: Optional[int] = 1, message: Optional[bytes] = b"") -> bool:
     """tests udp connection on specified port by sending specified message and expecting
     to receive at least one byte from the socket as an indicator of connection success
 
@@ -101,9 +89,7 @@ def udp_connection_test(
             return False
 
 
-def wait_connection_test(
-    ipaddr: str, port: int, timeout: Optional[int] = 6
-) -> bool:
+def wait_connection_test(ipaddr: str, port: int, timeout: Optional[int] = 6) -> bool:
     """Will wait until port listens on the specified address or `timeout` sec elapsed
 
     under the hood the function will try to connect every `interval` sec, if waiting time `timeout` set
@@ -133,10 +119,7 @@ def wait_connection_test(
 
 
 def wait_http_test(
-    url: str,
-    timeout: Optional[int] = 60,
-    verify: Optional[bool] = True,
-    interval_time: Optional[int] = 2,
+    url: str, timeout: Optional[int] = 60, verify: Optional[bool] = True, interval_time: Optional[int] = 2
 ) -> bool:
     """Will keep try to reach specified url every {interval_time} sec until url become reachable or {timeout} sec elapsed
 
@@ -165,10 +148,7 @@ def wait_http_test(
 
 
 def check_url_reachable(
-    url: str,
-    timeout: Optional[int] = 5,
-    verify: Optional[bool] = True,
-    fake_user_agent: Optional[bool] = True,
+    url: str, timeout: Optional[int] = 5, verify: Optional[bool] = True, fake_user_agent: Optional[bool] = True
 ) -> bool:
     """Check that given url is reachable
 
@@ -202,9 +182,7 @@ def check_url_reachable(
         # opt out of certificate verification on a single connection
         context = ssl._create_unverified_context()
 
-    req = Request(
-        url, headers=HEADERS if fake_user_agent else {}, method=METHOD
-    )
+    req = Request(url, headers=HEADERS if fake_user_agent else {}, method=METHOD)
     try:
         with urlopen(req, timeout=timeout, context=context):
             return True
@@ -237,27 +215,19 @@ def get_nic_type(interface: str) -> str:
     output = ""
     if jumpscale.data.platform.is_linux():
         if jumpscale.sals.fs.exists(f"/sys/class/net/{interface}"):
-            output = jumpscale.sals.fs.read_file(
-                f"/sys/class/net/{interface}/type"
-            )
+            output = jumpscale.sals.fs.read_file(f"/sys/class/net/{interface}/type")
         if output.strip() == "32":
             return "INFINIBAND"
         else:
             if jumpscale.sals.fs.exists("/proc/net/vlan/%s" % (interface)):
                 return "VLAN"
-            exitcode, _, _ = jumpscale.core.executors.run_local(
-                "which ethtool", hide=True, warn=True
-            )
+            exitcode, _, _ = jumpscale.core.executors.run_local("which ethtool", hide=True, warn=True)
             if exitcode != 0:
                 raise Runtime("Ethtool is not installed on this system!")
-            exitcode, output, _ = jumpscale.core.executors.run_local(
-                f"ethtool -i {interface}", hide=True, warn=True
-            )
+            exitcode, output, _ = jumpscale.core.executors.run_local(f"ethtool -i {interface}", hide=True, warn=True)
             if exitcode != 0:
                 return "VIRTUAL"
-            match = re.search(
-                r"^driver:\s+(?P<driver>\w+)\s*$", output, re.MULTILINE
-            )
+            match = re.search(r"^driver:\s+(?P<driver>\w+)\s*$", output, re.MULTILINE)
             if match and match.group("driver") == "tun":
                 return "VIRTUAL"
             if match and match.group("driver") == "bridge":
@@ -266,15 +236,11 @@ def get_nic_type(interface: str) -> str:
 
     elif jumpscale.data.platform.is_osx():
         command = f"ifconfig {interface}"
-        exitcode, output, err = jumpscale.core.executors.run_local(
-            command, hide=True, warn=True
-        )
+        exitcode, output, err = jumpscale.core.executors.run_local(command, hide=True, warn=True)
         if exitcode != 0:
             # temporary plumb the interface to lookup its mac
             jumpscale.core.executors.run_local(f"{command} plumb", hide=True)
-            exitcode, output, err = jumpscale.core.executors.run_local(
-                command, hide=True
-            )
+            exitcode, output, err = jumpscale.core.executors.run_local(command, hide=True)
             jumpscale.core.executors.run_local(f"{command} unplumb", hide=True)
         if output.find("ipib") >= 0:
             return "INFINIBAND"
@@ -282,9 +248,7 @@ def get_nic_type(interface: str) -> str:
             # work with interfaces which are subnetted on vlans eq e1000g5000:1
             interfacepieces = interface.split(":")
             interface = interfacepieces[0]
-            match = re.search(
-                r"^\w+?(?P<interfaceid>\d+)$", interface, re.MULTILINE
-            )
+            match = re.search(r"^\w+?(?P<interfaceid>\d+)$", interface, re.MULTILINE)
             if not match:
                 raise Value(f"Invalid interface {interface}")
             if len(match.group("interfaceid")) >= 4:
@@ -324,9 +288,7 @@ def get_reachable_ip_address(ip: str, port: Optional[int] = 0) -> str:
         except OSError as e:
             # (ConnectionRefusedError, socket.timeout, socket.herror, socket.gaierror)
             reason = e.error if hasattr(e, "error") else repr(e)
-            raise RuntimeError(
-                f"Cannot connect to {ip}:{port} because of this error: {reason}"
-            )
+            raise RuntimeError(f"Cannot connect to {ip}:{port} because of this error: {reason}")
         except (ValueError, TypeError, OverflowError) as e:
             # incorrect port numper or type
             raise ValueError(repr(e))
@@ -382,16 +344,8 @@ def get_network_info(device: Optional[str] = None) -> list:
 
     def _clean(nic_info: dict):
         result = {
-            "ip": [
-                (addr["local"], addr["prefixlen"])
-                for addr in nic_info["addr_info"]
-                if addr["family"] == "inet"
-            ],
-            "ip6": [
-                (addr["local"], addr["prefixlen"])
-                for addr in nic_info["addr_info"]
-                if addr["family"] == "inet6"
-            ],
+            "ip": [(addr["local"], addr["prefixlen"]) for addr in nic_info["addr_info"] if addr["family"] == "inet"],
+            "ip6": [(addr["local"], addr["prefixlen"]) for addr in nic_info["addr_info"] if addr["family"] == "inet6"],
             "mac": nic_info["address"],
             "name": nic_info["ifname"],
         }
@@ -403,15 +357,11 @@ def get_network_info(device: Optional[str] = None) -> list:
             # if exitcode != 0:
             #    raise Runtime("could not find device")
             try:
-                output = subprocess.check_output(
-                    f"ip -j addr show {device}", shell=True
-                )
+                output = subprocess.check_output(f"ip -j addr show {device}", shell=True)
             except subprocess.CalledProcessError as e:
                 # the process returns a non-zero exit status.
                 # This probably happened because specified interface name does not exists
-                j.logger.exception(
-                    f"cmd: {e.cmd} returns a non-zero exit status.", exception=e
-                )
+                j.logger.exception(f"cmd: {e.cmd} returns a non-zero exit status.", exception=e)
                 raise RuntimeError(f"could not find this interface: {device}")
         else:
             # _, output, _ = jumpscale.core.executors.run_local("ip -j addr show", hide=True, warn=True)
@@ -438,9 +388,7 @@ def get_network_info(device: Optional[str] = None) -> list:
 
     else:
         # TODO: make it OSX Compatible
-        raise NotImplementedError(
-            "this function supports only linux at the moment."
-        )
+        raise NotImplementedError("this function supports only linux at the moment.")
 
 
 def get_mac_address(interface: str) -> str:
@@ -486,17 +434,13 @@ def is_nic_connected(interface: str) -> bool:
         # superuser.com/questions/203272/
         command = "ifconfig -{} | sed -E 's/[[:space:]:].*//;/^$/d"
         option = {"up": "u", "down": "d"}
-        stdout = subprocess.check_output(
-            command.format(option["up"]), shell=True
-        )
+        stdout = subprocess.check_output(command.format(option["up"]), shell=True)
         output = stdout.decode("utf-8")
         up_interfaces = output.split()
         return interface in up_interfaces
 
 
-def get_host_by_name(
-    dnsHostname: str
-) -> str:  # pragma: no cover - we're just proxying
+def get_host_by_name(dnsHostname: str) -> str:  # pragma: no cover - we're just proxying
     """get host address by its name
 
     Args:
@@ -508,9 +452,7 @@ def get_host_by_name(
     return socket.gethostbyname(dnsHostname)
 
 
-def ping_machine(
-    ip: str, timeout: Optional[int] = 60, allowhostname: Optional[bool] = True
-) -> bool:
+def ping_machine(ip: str, timeout: Optional[int] = 60, allowhostname: Optional[bool] = True) -> bool:
     """Ping a machine to check if it's up/running and accessible
     Note: Any well-behaved device on an LAN or WAN is free to ignore nearly any traffic,
     so PINGs, port scans, and the like are all unreliable.
@@ -532,18 +474,14 @@ def ping_machine(
 
     if jumpscale.data.platform.is_linux():
         try:
-            _ = subprocess.check_output(
-                f"ping -c 1 -w {timeout} {ip}", shell=True
-            )
+            _ = subprocess.check_output(f"ping -c 1 -w {timeout} {ip}", shell=True)
             exitcode = 0
         except subprocess.CalledProcessError as e:
             exitcode = e.returncode
         # exitcode, output, err = jumpscale.core.executors.run_local(f"ping -c 1 -w {timeout} {ip}", warn=True, hide=True)
     elif jumpscale.data.platform.is_osx():
         try:
-            _ = subprocess.check_output(
-                f"ping -o -t {timeout} {ip}", shell=True
-            )
+            _ = subprocess.check_output(f"ping -o -t {timeout} {ip}", shell=True)
             exitcode = 0
         except subprocess.CalledProcessError as e:
             exitcode = e.returncode
@@ -601,9 +539,7 @@ def download(
         DownloadResult(localpath=PosixPath('/home/sameh/projects/js-ng/7z1900-extra.7z'), content=None, content_length='929117')
 
     """
-    DownloadResult = namedtuple(
-        "DownloadResult", ["localpath", "content", "content_length"]
-    )
+    DownloadResult = namedtuple("DownloadResult", ["localpath", "content", "content_length"])
     file_name = ""
 
     try:
@@ -613,13 +549,9 @@ def download(
         raise
 
     if name_from_url:
-        file_name = basename(
-            parsed_url.path
-        )  # TODO: insure safe file name and fall back if can't get the file name
+        file_name = basename(parsed_url.path)  # TODO: insure safe file name and fall back if can't get the file name
     elif localpath == "":
-        j.logger.error(
-            f"Improper args used.\nname_from_url: {name_from_url}\nlocalpath: {localpath}"
-        )
+        j.logger.error(f"Improper args used.\nname_from_url: {name_from_url}\nlocalpath: {localpath}")
         raise ValueError("localpath can't be empty when name_from_url is False")
 
     if username and passwd:
@@ -656,11 +588,7 @@ def download(
         raise
 
     if localpath is None:
-        return DownloadResult(
-            localpath=None,
-            content=response.read(),
-            content_length=content_length,
-        )
+        return DownloadResult(localpath=None, content=response.read(), content_length=content_length)
 
     file_path = Path(localpath) / file_name
     if not file_path.is_absolute() and append_to_home:
@@ -682,26 +610,18 @@ def download(
     try:
         with file_path.open(file_mode) as f_handler:
             shutil.copyfileobj(response, f_handler, length=8 * 1024 * 1024)
-            return DownloadResult(
-                localpath=file_path.resolve(),
-                content=None,
-                content_length=content_length,
-            )
+            return DownloadResult(localpath=file_path.resolve(), content=None, content_length=content_length)
     finally:
         response.close()
 
 
 def _netobject_get(device: str) -> ipaddress.IPv4Network:
     n = get_network_info(device)
-    net = ipaddress.IPv4Network(
-        n["ip"][0][0] + "/" + str(n["ip"][0][1]), sdirnametrict=False
-    )
+    net = ipaddress.IPv4Network(n["ip"][0][0] + "/" + str(n["ip"][0][1]), sdirnametrict=False)
     return net
 
 
-def netrange_get(
-    device: str, skip_begin: Optional[int] = 10, skip_end: Optional[int] = 10
-) -> tuple:
+def netrange_get(device: str, skip_begin: Optional[int] = 10, skip_end: Optional[int] = 10) -> tuple:
     """Get ($fromip,$topip) from range attached to device, skip the mentioned ip addresses.
 
     Args:
@@ -716,11 +636,7 @@ def netrange_get(
     return (str(n[0] + skip_begin), str(n[-1] - skip_end))
 
 
-def get_free_port(
-    ipv6: Optional[bool] = False,
-    udp: Optional[bool] = False,
-    return_socket: Optional[bool] = False,
-):
+def get_free_port(ipv6: Optional[bool] = False, udp: Optional[bool] = False, return_socket: Optional[bool] = False):
     """Bind an ipv4 or ipv6 socket to port 0 to make OS pick a random, free and
     available port from 1024 to 65535.
 

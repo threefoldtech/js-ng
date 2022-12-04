@@ -145,13 +145,9 @@ class List:
         if not isinstance(value, list):
             return False
         for e in value:
-            if isinstance(self.subtype, List) and not self.subtype._deep_check(
-                e
-            ):
+            if isinstance(self.subtype, List) and not self.subtype._deep_check(e):
                 return False
-            elif not isinstance(self.subtype, List) and not self.subtype.check(
-                str(e)
-            ):
+            elif not isinstance(self.subtype, List) and not self.subtype.check(str(e)):
                 return False
         return True
 
@@ -224,14 +220,7 @@ def get_js_type(type_str, default_value=None):
     Returns:
         Object: A js type object.
     """
-    types = {
-        "": String,
-        "S": String,
-        "I": Integer,
-        "B": Boolean,
-        "F": Float,
-        "O": JSObject,
-    }
+    types = {"": String, "S": String, "I": Integer, "B": Boolean, "F": Float, "O": JSObject}
     if len(type_str) == 0 or type_str[0] != "L":
         return types[type_str](default_value)
     else:
