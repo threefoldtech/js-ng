@@ -330,7 +330,7 @@ def test_18_ping_machine_success(ip, timeout, allowhostname):
     assert result
 
 
-@pytest.mark.parametrize("ip, timeout, allowhostname", [("10.200.199.198", 1, False),])
+@pytest.mark.parametrize("ip, timeout, allowhostname", [("10.200.199.198", 1, False)])
 def test_19_ping_machine_timeout(ip, timeout, allowhostname):
     """Test case for check whether the ping_machine will timeout after specified number of seconds
 
@@ -348,7 +348,7 @@ def test_19_ping_machine_timeout(ip, timeout, allowhostname):
     assert has_timed_out and is_false
 
 
-@pytest.mark.parametrize("ip, timeout, allowhostname", [("www.google.com", 2, False),])
+@pytest.mark.parametrize("ip, timeout, allowhostname", [("www.google.com", 2, False)])
 def test_20_ping_machine_exception(ip, timeout, allowhostname):
     """Test case for check whether the ping_machine will raise exception when it receive a host name while allowhostname is false
 
@@ -363,7 +363,7 @@ def test_20_ping_machine_exception(ip, timeout, allowhostname):
 
 @pytest.mark.parametrize(
     "url, localpath, username, passwd, overwrite, append_to_home, name_from_url",
-    [("ftp://ftp.sas.com/techsup/download/TestSSLServer4.zip", "test_21_downloaded", None, None, True, False, False),],
+    [("ftp://ftp.sas.com/techsup/download/TestSSLServer4.zip", "test_21_downloaded", None, None, True, False, False)],
 )
 def test_21_download_ftp(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
     """Test case for download a resource from ftp server
@@ -392,7 +392,7 @@ def test_21_download_ftp(url, localpath, username, passwd, overwrite, append_to_
 
 @pytest.mark.parametrize(
     "url, localpath, username, passwd, overwrite, append_to_home, name_from_url",
-    [("https://statweb.stanford.edu/~jhf/ftp/README", "test_22_downloaded", None, None, True, False, False),],
+    [("https://statweb.stanford.edu/~jhf/ftp/README", "test_22_downloaded", None, None, True, False, False)],
 )
 def test_22_download_https(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
     """Test case for download a resource from https link
@@ -420,7 +420,7 @@ def test_22_download_https(url, localpath, username, passwd, overwrite, append_t
 
 @pytest.mark.parametrize(
     "url, localpath, username, passwd, overwrite, append_to_home, name_from_url",
-    [("http://ftp.sas.com/techsup/download/TestSSLServer4.txt", "test_23_downloaded", None, None, True, False, False),],
+    [("http://ftp.sas.com/techsup/download/TestSSLServer4.txt", "test_23_downloaded", None, None, True, False, False)],
 )
 def test_23_download_http(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
     """Test case for download a resource from http link
@@ -448,7 +448,7 @@ def test_23_download_http(url, localpath, username, passwd, overwrite, append_to
 
 @pytest.mark.parametrize(
     "url, localpath, username, passwd, overwrite, append_to_home, name_from_url",
-    [("ftp://ftp.sas.com/techsup/download/TestSSLServer4.zip", "test_24_downloaded", None, None, True, True, False),],
+    [("ftp://ftp.sas.com/techsup/download/TestSSLServer4.zip", "test_24_downloaded", None, None, True, True, False)],
 )
 def test_24_download_append_to_home(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
     """Test case for download a resource from url to localpath relative to user home directory
@@ -484,7 +484,7 @@ def test_24_download_append_to_home(url, localpath, username, passwd, overwrite,
             True,
             False,
             False,
-        ),
+        )
     ],
 )
 def test_25_download_create_parents(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
@@ -517,7 +517,7 @@ def test_25_download_create_parents(url, localpath, username, passwd, overwrite,
 
 @pytest.mark.parametrize(
     "url, localpath, username, passwd, overwrite, append_to_home, name_from_url",
-    [("http://ftp.sas.com/techsup/download/TestSSLServer4.txt", "", None, None, True, False, True),],
+    [("http://ftp.sas.com/techsup/download/TestSSLServer4.txt", "", None, None, True, False, True)],
 )
 def test_26_download_name_from_url(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
     """Test case for download a resource from url to cwd and get the filename from the url
@@ -542,17 +542,7 @@ def test_26_download_name_from_url(url, localpath, username, passwd, overwrite, 
 
 @pytest.mark.parametrize(
     "url, localpath, username, passwd, overwrite, append_to_home, name_from_url",
-    [
-        (
-            "http://ftp.sas.com/techsup/download/TestSSLServer4.txt",
-            "downloaded_test_27",
-            None,
-            None,
-            False,
-            False,
-            False,
-        ),
-    ],
+    [("http://ftp.sas.com/techsup/download/TestSSLServer4.txt", "downloaded_test_27", None, None, False, False, False)],
 )
 def test_27_download_overwrite_False(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
     """Test case for download a resource from url to localpath when the file already exists
@@ -576,7 +566,7 @@ def test_27_download_overwrite_False(url, localpath, username, passwd, overwrite
 
 @pytest.mark.parametrize(
     "url, localpath, username, passwd, overwrite, append_to_home, name_from_url",
-    [("http://ftp.sas.com/techsup/download/TestSSLServer4.txt", "downloaded_test_28", None, None, True, False, False),],
+    [("http://ftp.sas.com/techsup/download/TestSSLServer4.txt", "downloaded_test_28", None, None, True, False, False)],
 )
 def test_28_download_overwrite_True(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
     """Test case for download a resource from url to localpath when the file already exists
@@ -602,7 +592,7 @@ def test_28_download_overwrite_True(url, localpath, username, passwd, overwrite,
 @pytest.mark.xfail(reason="this test not work on github-hosted runner. looking into it")
 @pytest.mark.parametrize(
     "url, localpath, username, passwd, overwrite, append_to_home, name_from_url",
-    [("http://ftp.sas.com/techsup/download/TestSSLServer4.txt", "unwriteable_dir", None, None, False, True, True),],
+    [("http://ftp.sas.com/techsup/download/TestSSLServer4.txt", "unwriteable_dir", None, None, False, True, True)],
 )
 def test_29_download_to_unwritable_dir(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
     """Test case for download a resource from url to localpath when user don't have proper Permissions
@@ -636,7 +626,7 @@ def test_29_download_to_unwritable_dir(url, localpath, username, passwd, overwri
 
 @pytest.mark.parametrize(
     "url, localpath, username, passwd, overwrite, append_to_home, name_from_url",
-    [("http://ftp.sas.com/techsup/download/TestSSLServer4.txt", None, None, None, False, False, True),],
+    [("http://ftp.sas.com/techsup/download/TestSSLServer4.txt", None, None, None, False, False, True)],
 )
 def test_30_download_return_content(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
     """Test case for download a resource from url and return the content

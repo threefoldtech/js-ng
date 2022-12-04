@@ -13,9 +13,7 @@ CMD_LIST = ["which", "ls"]
 
 
 class TestLocal(BaseTests):
-    @parameterized.expand(
-        [(CMD_STR, True,), (CMD_LIST, False,),]
-    )
+    @parameterized.expand([(CMD_STR, True), (CMD_LIST, False)])
     def test001_execute_local_command(self, cmd, warn):
         self.info(f"Execute `{cmd}` as local command with warn {warn}")
         code, stdout, stderr = j.core.executors.run_local(cmd, warn=warn)
@@ -33,9 +31,7 @@ class TestLocal(BaseTests):
         self.assertEqual("", stdout)
         self.assertIn("random: command not found", stderr)
 
-    @parameterized.expand(
-        [(CMD_STR, True,), (CMD_LIST, False,),]
-    )
+    @parameterized.expand([(CMD_STR, True), (CMD_LIST, False)])
     def test004_execute_local_command_with_hide(self, cmd, hide):
         self.info(f"Execute command `{cmd}` with hide {hide} and assert that sout is okay")
         capture = io.StringIO()
@@ -49,9 +45,7 @@ class TestLocal(BaseTests):
         else:
             self.assertEqual(output, stdout)
 
-    @parameterized.expand(
-        [(CMD_STR, True,), (CMD_LIST, False,),]
-    )
+    @parameterized.expand([(CMD_STR, True), (CMD_LIST, False)])
     def test005_execute_local_command_with_echo(self, cmd, echo):
         self.info(f"Execute command `{cmd}`with echo {echo} and assert that sout is okay")
         capture = io.StringIO()
@@ -65,9 +59,7 @@ class TestLocal(BaseTests):
         else:
             self.assertNotIn(CMD_STR, output)
 
-    @parameterized.expand(
-        [(CMD_STR,), (CMD_LIST,),]
-    )
+    @parameterized.expand([(CMD_STR,), (CMD_LIST,)])
     def test006_execute_local_command_hide_overwrite_echo(self, cmd):
         self.info(f"Execute command `{cmd}` and assert that hide overwrites echo")
         capture = io.StringIO()

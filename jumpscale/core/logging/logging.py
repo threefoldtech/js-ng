@@ -11,13 +11,7 @@ from jumpscale.core.exceptions import Value
 from jumpscale.loader import j
 
 
-LEVELS = {
-    10: "DEBUG",
-    20: "INFO",
-    30: "WARNING",
-    40: "ERROR",
-    50: "CRITICAL",
-}
+LEVELS = {10: "DEBUG", 20: "INFO", 30: "WARNING", 40: "ERROR", 50: "CRITICAL"}
 
 # init is kept as a name for backward compatibility
 DEFAULT_APP_NAME = "init"

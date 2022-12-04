@@ -1,5 +1,6 @@
 from .base import ModelBase
 
+
 class QuoteModel(ModelBase):
     _schema = """
     @url = quote

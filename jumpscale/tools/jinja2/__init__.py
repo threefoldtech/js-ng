@@ -40,13 +40,7 @@ e.g
 """
 
 from jumpscale.loader import j
-from jinja2 import (
-    Environment,
-    FileSystemLoader,
-    select_autoescape,
-    StrictUndefined,
-    Template,
-)
+from jinja2 import Environment, FileSystemLoader, select_autoescape, StrictUndefined, Template
 
 
 def get_env(templates_path):
@@ -58,7 +52,7 @@ def get_env(templates_path):
     Returns:
         jinja2.Environment: Jinja2 env
     """
-    return Environment(loader=FileSystemLoader(templates_path), autoescape=select_autoescape(["html", "xml"]),)
+    return Environment(loader=FileSystemLoader(templates_path), autoescape=select_autoescape(["html", "xml"]))
 
 
 def get_template(template_path=None, template_text=None):
@@ -115,7 +109,7 @@ def render_template(template_path=None, template_text=None, dest=None, **kwargs)
 
 
 def render_code_python(
-    obj_key=None, template_path=None, template_text=None, dest=None, objForHash=None, name=None, **kwargs,
+    obj_key=None, template_path=None, template_text=None, dest=None, objForHash=None, name=None, **kwargs
 ):
     # TODO
     pass

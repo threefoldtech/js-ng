@@ -34,7 +34,7 @@ class TestFS(BaseTests):
             j.sals.fs.touch(random_file)
             random_files_internal.append(random_file)
 
-        return random_dir_dest, random_dir_dest_2, random_files, random_files_internal
+        return (random_dir_dest, random_dir_dest_2, random_files, random_files_internal)
 
     def test001_is_ascii_file(self):
         pass

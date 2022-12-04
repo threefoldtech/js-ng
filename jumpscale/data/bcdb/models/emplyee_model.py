@@ -1,5 +1,6 @@
 from .base import ModelBase
 
+
 class EmployeeModel(ModelBase):
     _schema = """
     @url = employee

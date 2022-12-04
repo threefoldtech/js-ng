@@ -2,11 +2,11 @@ import pickle
 
 
 def decompress(obj):
-    """dump pickle bytes object into string 
-    
+    """dump pickle bytes object into string
+
     Arguments:
-        obj (pickle bytes) : the pickle bytes which will be dumped     
-    
+        obj (pickle bytes) : the pickle bytes which will be dumped
+
     Returns:
         string : the string
     """
@@ -15,10 +15,10 @@ def decompress(obj):
 
 def compress(obj):
     """loads the data from pickle string into pickle bytes
-    
+
     Arguments:
         obj (string) : the string
-    
+
     Returns:
         pickle bytes : the loaded data from pickle stram
     """
