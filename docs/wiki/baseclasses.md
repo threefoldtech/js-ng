@@ -168,9 +168,16 @@ In your instance, you can handle data updates in many ways, from triggering a ha
 
 The following are three different ways to do it:
 
-- [Single field updates](#single-field-updates)
-- [Computed and non-stored fields](#computed-and-non-stored-fields)
-- [Attribute updates and events](#attribute-updates-and-events)
+- [Base classes](#base-classes)
+  - [Base](#base)
+    - [Overriding constructor for Base sub-classes](#overriding-constructor-for-base-sub-classes)
+  - [Stored factory](#stored-factory)
+  - [Fields](#fields)
+  - [Clients](#clients)
+  - [Data updates and computed fields](#data-updates-and-computed-fields)
+    - [Single field updates](#single-field-updates)
+    - [Computed and non-stored fields](#computed-and-non-stored-fields)
+    - [Attribute updates and events](#attribute-updates-and-events)
 
 ### Single field updates
 

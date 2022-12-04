@@ -1,5 +1,6 @@
 from .base import ModelBase
 
+
 class DBModel(ModelBase):
     _schema = """
     @url = db

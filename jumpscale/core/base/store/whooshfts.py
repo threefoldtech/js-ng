@@ -78,9 +78,7 @@ class WhooshStore(EncryptedConfigStore):
         return self.location.type._fields.items()
 
     def get_schema(self):
-        schema_fields = {
-            KEY_FIELD_NAME: fields.ID(unique=True, stored=True),
-        }
+        schema_fields = {KEY_FIELD_NAME: fields.ID(unique=True, stored=True)}
 
         for name, field in self.type_fields:
             field_type_name = field.__class__.__name__

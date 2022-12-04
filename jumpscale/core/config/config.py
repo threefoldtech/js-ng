@@ -114,10 +114,7 @@ def get_default_config():
         "debug": True,
         "shell": "ptpython",
         "logging": {
-            "default": {
-                "enabled": True,
-                "level": 10,
-            },
+            "default": {"enabled": True, "level": 10},
             "redis": {
                 "enabled": True,
                 "level": 15,
@@ -142,9 +139,7 @@ def get_default_config():
         },
         "factory": {"always_reload": False},
         "store": "filesystem",
-        "threebot": {
-            "default": "",
-        },
+        "threebot": {"default": ""},
     }
 
 

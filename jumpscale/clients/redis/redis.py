@@ -45,7 +45,7 @@ class RedisClient(Client):
                 self.__client = Redis(self.hostname, self.port)
 
         return self.__client
-    
+
     def is_running(self):
         try:
             return self.redis_client.ping()

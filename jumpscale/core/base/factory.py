@@ -554,7 +554,7 @@ class StoredFactory(events.Handler, Factory):
             raise ValueError("at least one query parameter is required, e.g. age=10")
 
         new_cursor, count, result = self.store.find(cursor_=cursor_, limit_=limit_, **query)
-        return new_cursor, count, (self._get_object_from_config(data[KEY_FIELD_NAME], data) for data in result)
+        return (new_cursor, count, (self._get_object_from_config(data[KEY_FIELD_NAME], data) for data in result))
 
     def list_all(self):
         """

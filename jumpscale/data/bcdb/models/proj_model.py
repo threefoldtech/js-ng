@@ -1,5 +1,6 @@
 from .base import ModelBase
 
+
 class ProjModel(ModelBase):
     _schema = """
     @url = proj

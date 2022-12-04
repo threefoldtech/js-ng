@@ -1,4 +1,3 @@
-
 class StorageInterface:
     def get(self, model, obj_id):
         pass
@@ -12,6 +11,7 @@ class StorageInterface:
     def incr_id(self, model):
         pass
 
+
 class IndexInterface:
     def __init__(self, bcdb_namespace):
         pass
@@ -21,6 +21,7 @@ class IndexInterface:
 
     def set(self, model, index_prop, index_value, obj_id, old_value=None):
         pass
+
 
 class IndexSetInterface:
     def __init__(self, bcdb_namespace):
@@ -32,15 +33,17 @@ class IndexSetInterface:
     def set(self, model, obj):
         pass
 
+
 class IndexTextInterface:
     def __init__(self, bcdb_namespace):
         pass
 
     def set(self, model, obj):
-       pass
+        pass
 
     def get(self, model, index_prop, pattern):
-        pass 
+        pass
+
 
 class SerializerInterface:
     def loads(self, model, s):
