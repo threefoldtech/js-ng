@@ -394,7 +394,7 @@ def test_21_download_ftp(url, localpath, username, passwd, overwrite, append_to_
     "url, localpath, username, passwd, overwrite, append_to_home, name_from_url",
     [
         (
-            "https://github.com/threefoldtech/js-ng/blob/development/README",
+            "https://github.com/threefoldtech/js-ng/blob/development/README.md",
             "test_22_downloaded",
             None,
             None,
@@ -487,7 +487,7 @@ def test_24_download_append_to_home(url, localpath, username, passwd, overwrite,
     "url, localpath, username, passwd, overwrite, append_to_home, name_from_url",
     [
         (
-            "https://github.com/threefoldtech/js-ng/blob/development/README",
+            "https://github.com/threefoldtech/js-ng/blob/development/README.md",
             "downloaded_test_25/files/test_25_downloaded",
             None,
             None,
