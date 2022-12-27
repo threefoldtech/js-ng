@@ -64,7 +64,7 @@ python3 -m pip install setuptools -U
 
 - Create a branch `development_VERSION`
 - Generate documentation `make docs`
-- Update js-sdk version in `pyproject.toml` to the branch version
+- Update js-ng version in `pyproject.toml` to the branch version
 - Create a pull request against the development branch
 - Merge the pull request into development
 - Create a pull request from development against the master branch
