@@ -24,7 +24,7 @@ class Integer:
 
     def check(self, value):
         """Check whether provided string represent integer value
-        
+
         Arguments:
             value (str)
         """
@@ -36,7 +36,7 @@ class Integer:
 
     def from_str(self, value):
         """get integer value from tha string
-        
+
         Arguments:
             value (str)
         """
@@ -83,7 +83,7 @@ class Float:
 
     def check(self, value):
         """Check whether provided string represent integer value
-        
+
         Arguments:
             value (str)
         """
@@ -95,7 +95,7 @@ class Float:
 
     def from_str(self, value):
         """get integer value from tha string
-        
+
         Arguments:
             value (str)
         """
@@ -112,7 +112,7 @@ class JSObject:
 
     def check(self, value):
         """Check whether provided string represent JSObject value. (Any string will do).
-        
+
         Arguments:
             value (str)
         """
@@ -120,7 +120,7 @@ class JSObject:
 
     def from_str(self, value):
         """Return value as is.
-        
+
         Arguments:
             value (str)
         """
@@ -135,10 +135,10 @@ class List:
 
     def _deep_check(self, value):
         """Check that the value represents a list with proper elements of the specified subtype.
-        
+
         Args:
             value (list): The list to be checked.
-        
+
         Returns:
             Boolean: True if the list is valid.
         """
@@ -153,10 +153,10 @@ class List:
 
     def check(self, value):
         """Check that the value represents a list with proper elements of the specified subtype.
-        
+
         Args:
             value (list): The list to be checked.
-        
+
         Returns:
             Boolean: True if the list is valid.
         """
@@ -171,10 +171,10 @@ class List:
 
     def _deep_parse(self, value):
         """parses the subelements (if they are of different python type it's converted using the subtype parser)
-        
+
         Args:
             value (list): The list to be parsed.
-        
+
         Returns:
             list: The parsed list.
         """
@@ -189,10 +189,10 @@ class List:
 
     def from_str(self, value):
         """parses the string value into a list.
-        
+
         Args:
             value (str): The string to be parsed.
-        
+
         Returns:
             list: The parsed list.
         """
@@ -212,11 +212,11 @@ def get_js_type(type_str, default_value=None):
     4. "F" -> Float
     5. "L.*" -> List with subtype .*
     6. "" -> empty defaults to String
-    
+
     Args:
         type_str (str): type description.
         default_value (any, optional): The default value. Defaults to None.
-    
+
     Returns:
         Object: A js type object.
     """

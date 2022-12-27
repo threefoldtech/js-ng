@@ -112,4 +112,4 @@ def capnp_id() -> str:
         str -- capnp id
     """
     # the bitwise is for validating the id check capnp/parser.c++
-    return hex(random.randint(0, 2 ** 64) | 1 << 63)
+    return hex(random.randint(0, 2**64) | 1 << 63)

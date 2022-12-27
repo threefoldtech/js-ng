@@ -294,7 +294,7 @@ def hash_file(path, hash_type):
     with open(path, "rb") as f:
         h = hashlib.new(hash_type)
         while True:
-            data = f.read(2 ** 20)
+            data = f.read(2**20)
             if not data:
                 break
             h.update(data)

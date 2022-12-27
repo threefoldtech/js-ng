@@ -162,22 +162,7 @@ Test case for getting and killing process by pids.
 - Kill the process.
 - Check that the process has been killed.
 
-### test_16_get_kill_user_process_0_kill_all
-
-Test case for getting and killing user process/ killall processes [with kill_method='kill_all'].
-
-**Test Scenario**
-
-- Start a tail process in tmux with the current user.
-- Check that the process has been started.
-- Create a user.
-- Start another tail process in tmux with new user.
-- Check that the process has been started.
-- Get the user process.
-- Check that the process is the new user process.
-- Kill the user/killall process, and check that the target process killed.
-
-### test_16_get_kill_user_process_1_kill_user_processes
+### test_16_get_kill_user_process_0_kill_user_processes
 
 Test case for getting and killing user process/ killall processes [with kill_method='kill_user_processes'].
 
@@ -192,7 +177,7 @@ Test case for getting and killing user process/ killall processes [with kill_met
 - Check that the process is the new user process.
 - Kill the user/killall process, and check that the target process killed.
 
-### test_16_get_kill_user_process_2_kill_process_by_name
+### test_16_get_kill_user_process_1_kill_process_by_name
 
 Test case for getting and killing user process/ killall processes [with kill_method='kill_process_by_name'].
 

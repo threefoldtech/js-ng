@@ -37,8 +37,7 @@ class Location(Base):
         j.sals.fs.write_file(self.path_cfg, content)
 
     def configure(self):
-        """Config is a server config file of nginx (in text format)
-        """
+        """Config is a server config file of nginx (in text format)"""
         j.sals.fs.mkdir(self.path_cfg_dir)
 
         if self.location_type in ["static", "spa"]:

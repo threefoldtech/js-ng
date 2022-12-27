@@ -53,7 +53,7 @@ class HostsFile:
         update the hostname for ip
         Args:
             ip (str) : the ip address
-            domain (str) : the host name           
+            domain (str) : the host name
         """
         self.content[ip] = domain
 

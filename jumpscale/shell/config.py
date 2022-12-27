@@ -191,7 +191,7 @@ def ptconfig(repl):
 
     @repl.add_key_binding(Keys.ControlB)
     def _debug_event(event):
-        ' Pressing Control-B will insert "pdb.set_trace()" '
+        'Pressing Control-B will insert "pdb.set_trace()"'
         event.cli.current_buffer.insert_text("\nimport pdb; pdb.set_trace()\n")
 
     @repl.add_key_binding(Keys.ControlJ)
@@ -218,7 +218,7 @@ def ptconfig(repl):
 
     @repl.add_key_binding(" ")
     def _(event):
-        " When a space is pressed. Check & correct word before cursor. "
+        "When a space is pressed. Check & correct word before cursor."
         b = event.cli.current_buffer
         w = b.document.get_word_before_cursor()
         if w is not None:
