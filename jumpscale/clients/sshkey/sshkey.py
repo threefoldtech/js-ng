@@ -45,7 +45,7 @@ class SSHKeyClient(Client):
             self.load_from_file_system()
 
     def load_from_file_system(self):
-        """ Load public key and private key from files using private key path and public key path
+        """Load public key and private key from files using private key path and public key path
         e.g
             ssh_cl = j.clients.sshkey.get("ssh_test")
             ssh_cl.load_from_file_system()
@@ -76,7 +76,7 @@ class SSHKeyClient(Client):
 
     @property
     def public_key_path(self):
-        """ Get the public key path
+        """Get the public key path
         e.g
             ssh_cl = j.clients.sshkey.get("ssh_test")
             ssh_cl.public_key_path  -> "/root/.config/jumpscale/sshkeys/tU59lc6P.pub"
@@ -87,7 +87,7 @@ class SSHKeyClient(Client):
         return "{}.pub".format(self.private_key_path)
 
     def write_to_filesystem(self):
-        """ Write public key and private key to files using private key path and public key path.
+        """Write public key and private key to files using private key path and public key path.
         e.g
             ssh_cl = j.clients.sshkey.get("ssh_test")
             ssh_cl.write_to_filesystem()

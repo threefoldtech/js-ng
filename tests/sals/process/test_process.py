@@ -358,9 +358,9 @@ class ProcessTests(BaseTests):
         for i, name in enumerate(names):
             memory_info[name] = int(values[i])
 
-        total = ceil(memory_info["total"] / (1024 ** 2))
-        used = ceil(memory_info["used"] / (1024 ** 2))
-        available = ceil(memory_info["available"] / (1024 ** 2))
+        total = ceil(memory_info["total"] / (1024**2))
+        used = ceil(memory_info["used"] / (1024**2))
+        available = ceil(memory_info["available"] / (1024**2))
         percent = (total - available) / (total) * 100
 
         self.info("Check that memory usage from both ways almost the same.")

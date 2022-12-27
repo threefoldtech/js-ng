@@ -62,7 +62,7 @@ class SSHClient(Client):
 
     @property
     def _sshkey(self):
-        """ Get sshkey client that you have loaded
+        """Get sshkey client that you have loaded
         e.g
             JS-NG> localconnection = j.clients.sshclient.new("localconnection")
             JS-NG> localconnection.sshkey = "xmonader"
@@ -93,7 +93,7 @@ class SSHClient(Client):
         return self.__client
 
     def reset_connection(self):
-        """ Reset the connection
+        """Reset the connection
         e.g
             localconnection = j.clients.sshclient.new("localconnection")
             localconnection.reset_connection()

@@ -139,8 +139,7 @@ class StartupCmd(Base):
         return result
 
     def _kill_processes_by_port_or_filter(self):
-        """Kills processes that matches object properties
-        """
+        """Kills processes that matches object properties"""
         processes = self._get_processes_by_port_or_filter()
         self._kill_processes(processes)
 
@@ -176,8 +175,7 @@ class StartupCmd(Base):
         return False
 
     def _hard_kill(self):
-        """Force Kills the process
-        """
+        """Force Kills the process"""
         if self.process:
             self._kill_processes([self.process])
             self.reset()
@@ -272,8 +270,7 @@ class StartupCmd(Base):
         self._wait(True, die, timeout)
 
     def start(self):
-        """Starts the process
-        """
+        """Starts the process"""
         if self.is_running():
             return
 

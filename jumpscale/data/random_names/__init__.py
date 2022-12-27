@@ -179,7 +179,7 @@ right_names = [
 
 
 def random_name():
-    """ Returns a random name "first name" & "last name """
+    """Returns a random name "first name" & "last name"""
 
     name = "%s_%s" % (choice(right_names), choice(left_names))
 

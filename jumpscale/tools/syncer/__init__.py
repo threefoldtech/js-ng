@@ -97,15 +97,11 @@ class Syncer(PatternMatchingEventHandler):
         return clients
 
     def sync(self):
-        """Sync directory structure and files
-
-        """
+        """Sync directory structure and files"""
         j.logger.debug(f"paths: {self.paths}")
 
         def ensure_dirs():
-            """For every directory in watched paths we make sure it's full path exists on remote.
-
-            """
+            """For every directory in watched paths we make sure it's full path exists on remote."""
             for path in self.paths:
                 for src_dir in j.sals.fs.walk_dirs(path):
                     dest_dir = str(self._rewrite_path_for_dest(src_dir))

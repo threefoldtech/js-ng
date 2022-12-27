@@ -30,24 +30,24 @@ def format(s):
 
 def printcolors(s):
     """
-	>>> j.tools.console.printcolors("{RED}Hello world")
-	Hello world
-	>>> j.tools.console.printcolors("{GREEN}Hello world")
-	Hello world
+    >>> j.tools.console.printcolors("{RED}Hello world")
+    Hello world
+    >>> j.tools.console.printcolors("{GREEN}Hello world")
+    Hello world
 
-	Arguments:
-	s {[type]} -- [description]
-	"""
+    Arguments:
+    s {[type]} -- [description]
+    """
     print(format(s))
 
 
 def ask_password(prompt="Password : ", forbiddens=[]):
     """Prompt the user for a password without echoing
-    
+
     Keyword Arguments:
         prompt {str} -- the question message (default: {"Password : "})
         forbiddens {list} -- the list of bad passwords (default: {[]})
-    
+
     Returns:
         str -- the appropriate input password
     """
@@ -60,12 +60,12 @@ def ask_password(prompt="Password : ", forbiddens=[]):
 
 def ask_yes_no(prompt="[y/n] :", default="y", valid=["y", "n"]):
     """Display a yes/no question and loop until a valid answer is entered
-    
+
     Keyword Arguments:
         prompt {str} -- the question message (default: {'[y/n] :'})
         default {str} -- the default answer if there is no answer (default: {"y"})
         valid {list} -- the list of appropriate answers (default: {["y", "n"]})
-    
+
     Returns:
         str -- the answer
     """
@@ -88,14 +88,14 @@ def ask_int(prompt="Type int :"):
 
 def ask_int_in_range(mini, maxi, prompt="Type int :"):
     """Get an integer response between two integer on asked question
-    
+
     Arguments:
         mini {int} -- the minimum value for the number
         maxi {int} -- the maximum value for the number
-    
+
     Keyword Arguments:
         prompt {str} -- the question message (default: {"Type int :"})
-    
+
     Returns:
         int -- the input number on the range provided
     """
@@ -118,14 +118,14 @@ def ask_float(prompt="Type float :"):
 
 def ask_float_in_range(mini, maxi, prompt="Type float :"):
     """Get an float response between two float on asked question
-    
+
     Arguments:
         mini {float} -- the minimum value for the number
         maxi {float} -- the maximum value for the number
-    
+
     Keyword Arguments:
         prompt {str} -- the question message (default: {"Type float :"})
-    
+
     Returns:
         float -- the input number on the range provided
     """
@@ -150,11 +150,11 @@ def _print_choices(choices_list):
 
 def ask_choice(prompt="Type choice number : ", choices_list=[]):
     """Get an option from provided list
-    
+
     Keyword Arguments:
         prompt {str} -- the question message (default: {"Type choice number : "})
         choices_list {list} -- the available options (default: {[]})
-    
+
     Returns:
         str -- the chosen option
     """
@@ -168,13 +168,13 @@ def ask_choice(prompt="Type choice number : ", choices_list=[]):
 
 def ask_multi_choices(prompt="Add to choices : ", choices_list=[], to_save="s", to_quit="q"):
     """Collect multi choices from list
-    
+
     Keyword Arguments:
         prompt {str} -- the question method (default: {"Add to choices : "})
         choices_list {list} -- the available options (default: {[]})
         to_save {str} -- escape and save choices (default: {"s"})
         to_quit {str} -- escape without saving (default: {"q"})
-    
+
     Returns:
         list -- list of the selected choices
     """
@@ -197,11 +197,11 @@ def ask_multi_choices(prompt="Add to choices : ", choices_list=[], to_save="s", 
 
 def ask_multi_lines(prompt="Type :", escape_string="."):
     """Get input from user provided multilines
-    
+
     Keyword Arguments:
         prompt {str} -- the question message (default: {"Type :"})
         escape_string {str} -- escape character (default: {"."})
-    
+
     Returns:
         str -- the text seperated by lines
     """
@@ -215,10 +215,10 @@ def ask_multi_lines(prompt="Type :", escape_string="."):
 
 def ask_string(prompt="Type :"):
     """Just input function
-    
+
     Keyword Arguments:
         prompt {str} -- the question message (default: {"Type :"})
-    
+
     Returns:
         str -- the string input
     """
