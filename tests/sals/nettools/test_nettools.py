@@ -392,7 +392,7 @@ def test_21_download_ftp(url, localpath, username, passwd, overwrite, append_to_
 
 @pytest.mark.parametrize(
     "url, localpath, username, passwd, overwrite, append_to_home, name_from_url",
-    [("https://statweb.stanford.edu/~jhf/ftp/README", "test_22_downloaded", None, None, True, False, False)],
+    [("https://github.com/threefoldtech/js-ng/blob/development/README", "test_22_downloaded", None, None, True, False, False)],
 )
 def test_22_download_https(url, localpath, username, passwd, overwrite, append_to_home, name_from_url):
     """Test case for download a resource from https link
@@ -477,7 +477,7 @@ def test_24_download_append_to_home(url, localpath, username, passwd, overwrite,
     "url, localpath, username, passwd, overwrite, append_to_home, name_from_url",
     [
         (
-            "https://statweb.stanford.edu/~jhf/ftp/README",
+            "https://github.com/threefoldtech/js-ng/blob/development/README",
             "downloaded_test_25/files/test_25_downloaded",
             None,
             None,

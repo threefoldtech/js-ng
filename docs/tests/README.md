@@ -17,7 +17,3 @@
 
 - [test_nettools](sals/nettools/test_nettools.md)
 - [test_process](sals/process/test_process.md)
-
-### Servers
-
-- [test_gedis](servers/gedis/test_gedis.md)
