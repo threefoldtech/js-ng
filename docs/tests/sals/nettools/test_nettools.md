@@ -497,7 +497,7 @@ Test case for download a resource from ftp server
 - Assert the downloaded file exists in the current working directory
 - Remove the file
 
-### test_22_download_https[https://github.com/threefoldtech/js-ng/blob/development/README.md-test_22_downloaded-None-None-True-False-False]
+### test_22_download_https[https://pypi.org/project/js-ng/-test_22_downloaded-None-None-True-False-False]
 
 Test case for download a resource from https link
 
@@ -533,7 +533,7 @@ Test case for download a resource from url to localpath relative to user home di
 - Assert the downloaded file exists in the user home directory
 - Remove the file
 
-### test_25_download_create_parents[https://github.com/threefoldtech/js-ng/blob/development/README.md-downloaded_test_25/files/test_25_downloaded-None-None-True-False-False]
+### test_25_download_create_parents[https://pypi.org/project/js-ng/-downloaded_test_25/files/test_25_downloaded-None-None-True-False-False]
 
 Test case for download a resource from url to localpath that don't exists
 
