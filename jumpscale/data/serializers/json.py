@@ -16,10 +16,10 @@ def dumps(obj):
 def dump_to_file(file_path, obj):
     """Writes the dumped obj to a file
 
-   Args:
-       file_path (str): path to write to
-       obj (dict): the dict which will be dumped
-   """
+    Args:
+        file_path (str): path to write to
+        obj (dict): the dict which will be dumped
+    """
     with open(file_path, "w") as fp:
         json.dump(obj, fp)
 

@@ -3,7 +3,7 @@ import tarfile
 
 def istar(path):
     """check if the file is .tar format
-    
+
     Arguments:
         path (str) : the path for the file
     """
@@ -12,7 +12,7 @@ def istar(path):
 
 def compress(source, output):
     """make an archive file from directory or file
-    
+
     Arguments:
         source (str) : the path for the file or the directory
         output (str) : the path for the output
@@ -23,7 +23,7 @@ def compress(source, output):
 
 class Reader:
     """handle the reading operation on tar file
-    
+
     Arguments:
         path (str) : the path for tar file
     """
