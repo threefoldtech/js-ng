@@ -4,7 +4,7 @@ description = "system automation, configuration management and RPC framework"
 license = "MIT"
 name = "js-ng"
 packages = [{include = "jumpscale"}]
-version = "12.0"
+version = "12.0.0"
 
 [tool.poetry.dependencies]
 GitPython = "^3.0"
