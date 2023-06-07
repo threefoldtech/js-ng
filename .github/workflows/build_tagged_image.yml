@@ -1,24 +1,23 @@
 name: Build docker image
 
 on:
+  workflow_dispatch:
   push:
     tags:
-      - '**'
+      - "**"
 jobs:
-    build-tagged-docker:
-        runs-on: ubuntu-latest
-        steps:
-        - uses: actions/checkout@v2
-        - uses: olegtarasov/get-tag@v2 # getting tagname
-          id: tagName
-        - uses: docker/build-push-action@v1
-          with:
-            repository: threefoldtech/js-ng
-            username: ${{ secrets.DOCKERHUB_USERNAME }}
-            password: ${{ secrets.DOCKERHUB_PASSWORD }}
-            dockerfile: jumpscale/install/Dockerfile
-            tags: ${{ steps.tagName.outputs.tag }}
-        - name: upload to flist
-          run: |
-            docker save threefoldtech/js-ng:${{ steps.tagName.outputs.tag }} docker save threefoldtech/js-ng:latest | gzip > js-ng-${{ steps.tagName.outputs.tag }}.tar.gz
-            curl -X POST  -H 'Authorization: bearer ${{secrets.ZEROHUB_TOKEN}}' ${{secrets.ZEROHUB_URL}}/api/flist/me/upload -F 'file=@js-ng-${{ steps.tagName.outputs.tag }}.tar.gz'
+  build-tagged-docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: docker/build-push-action@v1
+        with:
+          repository: threefoldtech/js-ng
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          dockerfile: jumpscale/install/Dockerfile
+          tags: ${{ github.ref_name }}
+      - name: upload to flist
+        run: |
+          docker save threefoldtech/js-ng:${{ github.ref_name }} docker save threefoldtech/js-ng:latest | gzip > js-ng-${{ github.ref_name }}.tar.gz
+          curl -X POST  -H 'Authorization: bearer ${{secrets.ZEROHUB_TOKEN}}' ${{secrets.ZEROHUB_URL}}/api/flist/me/upload -F 'file=@js-ng-${{ github.ref_name }}.tar.gz'
